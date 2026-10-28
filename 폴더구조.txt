@@ -1,0 +1,114 @@
+src/
+├── assets/
+│   ├── images/                 # 배경, 배너, 포스터 이미지
+│   ├── icons/                  # 아이콘
+│   └── fonts/                  # 폰트
+│
+├── components/                 # 여러 페이지에서 재사용
+│   ├── layout/
+│   │   ├── Header.jsx
+│   │   ├── Header.scss
+│   │   ├── Footer.jsx
+│   │   ├── Footer.scss
+│   │   └── MainLayout.jsx      # 헤더 + 페이지 + 푸터
+│   │
+│   ├── common/
+│   │   ├── Button.jsx
+│   │   ├── Modal.jsx
+│   │   ├── Loading.jsx
+│   │   └── ProtectedRoute.jsx  # 로그인 필요한 페이지 처리
+│   │
+│   └── content/
+│       ├── ContentCard.jsx     # 영화·시리즈 카드
+│       ├── ContentCard.scss
+│       ├── ContentSlider.jsx   # Swiper 콘텐츠 목록
+│       ├── ContentSlider.scss
+│       ├── ContentInfo.jsx     # 제목·장르·설명
+│       └── HeartButton.jsx     # 찜 버튼
+│
+├── pages/                      # 주소별 페이지
+│   ├── home/
+│   │   ├── Home.jsx
+│   │   ├── Home.scss
+│   │   └── components/         # 홈에서만 사용하는 컴포넌트
+│   │       ├── MainVisual.jsx
+│   │       └── RankingSection.jsx
+│   │
+│   ├── movie/
+│   │   ├── Movie.jsx
+│   │   └── Movie.scss
+│   │
+│   ├── series/
+│   │   ├── Series.jsx
+│   │   └── Series.scss
+│   │
+│   ├── sports/
+│   │   ├── Sports.jsx
+│   │   ├── Sports.scss
+│   │   └── components/
+│   │       ├── LeagueAccordion.jsx
+│   │       └── MatchCard.jsx
+│   │
+│   ├── detail/
+│   │   ├── Detail.jsx
+│   │   ├── Detail.scss
+│   │   └── components/
+│   │       ├── EpisodeList.jsx
+│   │       ├── CommentList.jsx
+│   │       └── CommentForm.jsx
+│   │
+│   ├── search/
+│   │   ├── Search.jsx
+│   │   └── Search.scss
+│   │
+│   ├── login/
+│   │   ├── Login.jsx
+│   │   └── Login.scss
+│   │
+│   ├── my/
+│   │   ├── MyPage.jsx
+│   │   ├── MyPage.scss
+│   │   └── components/
+│   │       ├── ProfileSelect.jsx
+│   │       └── HeartList.jsx
+│   │
+│   └── notFound/
+│       └── NotFound.jsx
+│
+├── store/                      # Zustand 전역 상태
+│   ├── useAuthStore.js          # 로그인·로그아웃·현재 프로필
+│   ├── useHeartStore.js         # 찜 목록
+│   └── useUIStore.js            # 여러 페이지가 공유하는 UI 상태
+│
+├── services/                   # 외부 데이터 요청
+│   ├── contentService.js        # 콘텐츠 조회·검색
+│   ├── heartService.js          # Firestore 찜 저장·조회
+│   └── commentService.js        # Firestore 댓글 저장·조회
+│
+├── firebase/
+│   └── firebase.js             # Firebase 초기화, auth·db 내보내기
+│
+├── hooks/
+│   └── useDebounce.js           # 검색 입력 지연 처리
+│
+├── data/                       # 직접 작성한 고정 데이터
+│   ├── menuData.js
+│   └── leagueData.js
+│
+├── utils/                      # 공통 계산·변환 함수
+│   └── formatDate.js
+│
+├── styles/                     # 전역 Sass
+│   ├── _reset.scss
+│   ├── _variables.scss         # 색상·간격·폰트 크기
+│   ├── _mixins.scss            # 반응형 등 재사용 스타일
+│   └── global.scss
+│
+├── App.jsx                     # 라우터 구성
+└── main.jsx                    # 앱 실행·전역 스타일 불러오기
+
+public/
+└── favicon.svg
+
+.env.local                      # 환경변수 — Git에 올리지 않기
+.env.example                    # 팀 공유용 환경변수 이름만 작성

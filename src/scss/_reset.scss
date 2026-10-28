@@ -1,0 +1,104 @@
+@use './variables' as *;
+
+*, ::before, ::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+li, ol {list-style: none;}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+img, picture, video, canvas, svg {
+  max-width: 100%;
+  vertical-align: middle;
+}
+address, i {font-style: normal;}
+body {
+  font-family: $font-main;
+  line-height: 1.4;
+  font-size: 100%;
+  color: $color-text-pri;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit; 
+}
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+input, button, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+::placeholder {
+  font:inherit;
+  color: inherit;
+}
+
+/* 1. 모든 Input 기본 스타일 리셋 */
+input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  border-radius: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+  outline: none;
+}
+
+/* 2. search 타입의 돋보기 아이콘 및 X 버튼 제거 */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  display: none;
+}
+
+/* 3. number 타입의 상/하증감 화살표(Spin Button) 제거 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield; /* 파이어폭스 대응 */
+}
+
+/* 4. 크롬/사파리 자동완성 시 배경색(노란색/파란색) 변경 방지 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: currentColor;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* 5. 비밀번호 표시/숨김 눈모양 아이콘 제거 (Edge 브라우저) */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* 스크롤 숨기기 */
+html, body {
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.container::-webkit-scrollbar {
+  display: none;            /* Chrome, Safari, Opera */
+}

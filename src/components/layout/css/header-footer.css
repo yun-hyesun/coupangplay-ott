@@ -1,0 +1,8 @@
+/* size */
+/* size */
+/* size */
+.header {
+  height: 80px;
+  padding-inline: clamp(20px, 4vw, 80px);
+  border-bottom: 1px solid #000;
+}

@@ -1,0 +1,6 @@
+/* size */
+/* size */
+/* size */
+.header {
+  padding: clamp(20px, 4vw, 80px);
+}

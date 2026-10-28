@@ -1,0 +1,74 @@
+// #################### header
+
+.header {height: 95px; background: rgba(0,0,0,.9);  padding-inline: $padding-main; font-size: 21px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000;
+
+  .inner {@include flex-between(); height: 100%;
+
+    .header-left {@include flex-center($gap: 50px);
+    
+      .header-logo {width: 200px;
+        img {width: 100%;}
+      }
+
+      .header-nav-menu {@include flex-center($gap: 40px);}
+    }
+
+    .header-right {@include flex-center($gap: 20px);
+
+      .header-login {background: $color-pri; font-size: 18px; padding: 9px 18px; border-radius: 30px;}
+
+      .header-search {@include flex-center(); height: 60px; padding: 5px 20px; background: $color-border; border: 1px solid $color-border-light; border-radius: 30px;
+        
+        .header-search-form {@include flex-between($gap: 20px);
+  
+          .header-search-btn {width: 25px; height: 25px; background: url(images/search.svg) no-repeat center / contain;}
+        }
+
+      }
+
+      .myPage-btn {width: 40px;
+        img {width: 100%;}
+      }
+    }
+  }
+}
+
+
+// #################### footer
+.footer {padding: 60px $padding-main; color: $color-text-sec2;
+  .inner {@include flex-between($ai:flex-start);
+
+    .footer-left {font-size: 20px;
+
+      .footer-logo {width: 240px; margin-bottom: 40px;
+        img {width: 100%;}
+      }
+
+      .footer-address {line-height: 1.8;}
+      .footer-nav-menu {@include flex-center($gap: 40px); font-size: 22px; margin-top: 50px;
+
+        &:first-of-type {font-weight: $font-w-SB-600;}
+      }
+    } 
+
+    .footer-right {
+      .footer-inquiry {@include flex-center($gap: 60px, $jc: flex-start); font-size: 26px; font-weight: $font-w-SB-600;}
+
+      .footer-info {font-size: 22px; margin-block: 40px 40px;
+
+        &-list {@include flex-center($gap: 60px, $jc: flex-start);
+
+          dt {width: 150px;}
+          dd {color: $color-text-sec1;}
+        }
+      }
+
+      .footer-sns {@include flex-center($gap: 10px, $jc: flex-start);
+        a {display: block; width: 60px;
+          img {width: 100%;}
+        }
+      }
+    }
+
+  }
+}

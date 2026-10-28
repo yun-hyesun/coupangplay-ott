@@ -1,0 +1,8 @@
+@use './reset';
+@use './fonts';
+
+#root {width: $width; background: $color-bg;}
+// width: 3420px 2560px 1920px;
+// #root {background: $color-bg url(/images/guide/main.png) no-repeat right 0 / 2560px;}
+.main {min-height: 100vh;}
+

@@ -1,0 +1,34 @@
+/* size */
+$width: 100%;
+$padding-main: clamp(20px, 4vw, 80px);
+
+/* size */
+$font-main: 'Pretendard', sans-serif;
+$font-number: 'Barlow Condensed', sans-serif;
+$font-w-ExL-200: 200;
+$font-w-L-300: 300;
+$font-w-R-400: 400;
+$font-w-M-500: 500;
+$font-w-SB-600: 600;
+$font-w-B-700: 700;
+$font-w-ExB-800: 800;
+$font-w-BK-900: 900;
+
+/* size */
+$color-bg: #080B12;
+$color-pri: #0084FF;
+$color-sec: #006bc6;
+$color-text-pri: #FFFFFF;
+$color-text-sec1: #D4D4D4;
+$color-text-sec2: #A3A3A3;
+$color-text-blue: #5d9eff;
+// 배지
+$color-badgeB: #0065ff;
+$color-badgeO: #ff6e00;
+$color-badgeR: #cd2626;
+$color-badgeBG: #000000;
+// 테두리
+$color-border: #262626;
+$color-border-light: rgba(255, 255, 255, 0.15);
+// 재생 진행바
+$color-progress: #525252;
