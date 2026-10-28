@@ -8,21 +8,25 @@ import { Movie } from './page/movie/Movie'
 import { Store } from './page/store/Store'
 import { Drama } from './page/drama/Drama'
 import { Kids } from './page/kids/Kids'
+import { MyPage } from './page/my/MyPage'
 
 function App() {
   return (
     <>
       <Routes>
         <Route element={<MainLayout />}>
-          <Route path='/' element={<Home/>}/>
+          <Route path='/' element={<Home />} />
 
           {/* 메뉴페이지 */}
-          <Route path='/sports' element={<Sports />}/>
-          <Route path='/drama' element={<Drama />}/>
-          <Route path='/entertainment' element={<Entertainment />}/>
-          <Route path='/movie' element={<Movie />}/>
-          <Route path='/store' element={<Store />}/>
-          <Route path='/kids' element={<Kids />}/>
+          <Route path='/sports' element={<Sports />} />
+          <Route path='/drama' element={<Drama />} />
+          <Route path='/entertainment' element={<Entertainment />} />
+          <Route path='/movie' element={<Movie />} />
+          <Route path='/store' element={<Store />} />
+          <Route path='/kids' element={<Kids />} />
+
+          {/* 마이페이지 */}
+          <Route path='/my' element={<MyPage />} />
         </Route>
       </Routes>
     </>
