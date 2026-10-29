@@ -1,0 +1,13 @@
+.channel {padding-inline: $padding-main;
+
+  .channel-flex {@include flex-center($gap: 20px);}
+  .swiper {overflow: initial;
+  
+    .swiper-slide {width: auto;}
+  }
+  .channel-item {@include flex-center(); width: 200px; height: 100px; background: linear-gradient(90deg,#414040 0%, #595959 25%, #636363 50%, #595959 75%, #414040 100%); border: 1px solid rgba(255, 255, 255, .2); border-radius: 20px;
+  
+    img {width: 100%; max-width: 60%; max-height: 70%;}
+  }
+
+}

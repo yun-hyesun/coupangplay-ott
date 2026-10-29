@@ -53,7 +53,7 @@ export const MainBanner = () => {
   return (
     <section className="main-banner" aria-label="추천 콘텐츠">
       <Swiper
-        modules={[, Navigation, Pagination, A11y]}
+        modules={[Navigation, Pagination, A11y]}
         slidesPerView={"auto"}
         spaceBetween={20}
         // speed={800}
@@ -92,14 +92,14 @@ export const MainBanner = () => {
                   {/* 콘텐츠 정보 */}
                   <div className="slide-list-info">
                     <h2 className="info-title">
-                        {title}
-                      </h2>
+                      {title}
+                    </h2>
 
-                      {item.overview && (
-                        <p className="info-description">
-                          {item.overview}
-                        </p>
-                      )}
+                    {item.overview && (
+                      <p className="info-description">
+                        {item.overview}
+                      </p>
+                    )}
 
                   </div>
                 </div>

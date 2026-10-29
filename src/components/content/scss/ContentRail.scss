@@ -1,0 +1,24 @@
+@use '../../../scss/variables' as rail;
+
+.contentRail {
+  min-width: 0;
+  padding: 36px rail.$padding-main;
+  color: rail.$color-text-pri;
+  > h3 { margin: 0 0 24px; font-size: clamp(20px, 1.5vw, 28px); font-weight: 700; }
+  &__card { display: flex; align-items: center; width: 100%; min-width: 0; gap: 12px; color: inherit; text-align: left; }
+  button.contentRail__card { padding: 0; border: 0; background: none; cursor: pointer; }
+  button.contentRail__card:focus-visible { outline: 2px solid rail.$color-pri; outline-offset: -2px; }
+  &__info { flex: 1; min-width: 0; }
+  &__visual { position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: 8px; background: #20242d; }
+  &__visual img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  &__placeholder { display: grid; place-items: center; height: 100%; color: rail.$color-text-sec2; }
+  h4 { margin: 12px 0 0; font-size: 16px; line-height: 1.5; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  &__rank { flex-shrink: 0; font-family: rail.$font-number; font-size: clamp(48px, 5vw, 90px); font-weight: 800; line-height: 1; }
+  &__meta { margin-top: 6px; font-size: 14px; color: rail.$color-text-sec2; }
+  &--poster &__visual { aspect-ratio: 2 / 3; }
+  &--sports &__visual { border-radius: 12px; }
+  progress { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; border: 0; appearance: none; background: rail.$color-progress; }
+  progress::-webkit-progress-bar { background: rail.$color-progress; }
+  progress::-webkit-progress-value { background: rail.$color-pri; }
+  progress::-moz-progress-bar { background: rail.$color-pri; }
+}
