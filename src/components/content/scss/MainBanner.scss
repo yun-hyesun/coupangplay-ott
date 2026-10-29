@@ -1,14 +1,44 @@
-.main-banner {padding-inline: $padding-main;
+.main-banner {padding-inline: $padding-main; margin-bottom: 40px;
 
   .swiper {width: 100%; height: 1250px; max-height: 80vh;  overflow: initial;
-  
-    .swiper-slide {
     
-      .banner-slide-list {width: 100%; height: 100%; border-radius: 30px; border: 2px solid rgba(255,255,255,.2); overflow: hidden;
+    .swiper-slide {position: relative; pointer-events: none;
+      &::after {content: ''; @include pos-abs($t:0, $l:0); width: 100%; height: 100%; background: rgba(0,0,0,0.4);}
+      &-active {pointer-events: auto;
+        
+        &::after {content: none;}
+      }
+    
+      .banner-slide-list {width: 100%; height: 100%; border-radius: 30px; border: 2px solid rgba(255,255,255,.1); overflow: hidden;
         
         .slide-list-image {width: 100%; height: 100%; object-fit: cover; object-position: center top}
-        .slide-list-info {@include pos-abs($b:10px, $l:10px)}
+        .slide-list-info {@include pos-abs($b:10%, $l:50px); width: 100%; text-shadow: 0 0 20px rgba(0,0,0,0.3);
+        
+          .info-title {font-size: 55px; font-weight: $font-w-B-700; margin-bottom: 20px;}
+
+          .info-description {
+            width: 50%;
+            font-size: 25px;
+            line-height: 1.5em;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2; /* 보여주고 싶은 최대 줄 수 (2줄로 설정) */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: keep-all; /* 단어 단위 줄바꿈 방지용 (필요에 따라 생략 가능) */
+          }
+        }
       }
     }
+
+    .swiper-pagination {@include flex-center(); bottom: 5%;
+
+      .swiper-pagination-bullet {width: 12px; height: 12px; background: rgba(255,255,255,.9);
+        &-active {width: 15px; height: 15px; background: #fff;}
+      }
+    }
+
+    .swiper-button-prev {right: 100%; left: auto; margin-right: 22px;}
+    .swiper-button-next {left: 100%; right: auto; margin-left: 22px;}
   }
 }

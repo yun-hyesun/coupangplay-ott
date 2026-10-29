@@ -35,9 +35,10 @@ const listRequests = {};
 
 // 한국 티빙 제공 콘텐츠 가져오기
 // 기존 호출 코드와 연결되도록 함수 이름 유지
-const fetchCoupangList = (type) => {
-  if (!listRequests[type]) {
-    listRequests[type] = (async () => {
+const fetchCoupangList = (type, query = {}) => {
+  const requestKey = JSON.stringify([type, Object.entries(query).sort(([a], [b]) => a.localeCompare(b))]);
+  if (!listRequests[requestKey]) {
+    listRequests[requestKey] = (async () => {
       // 영화 또는 TV 제공 업체 목록
       const providers = await requestTmdb(
         `/watch/providers/${type}`,
@@ -80,6 +81,7 @@ const fetchCoupangList = (type) => {
               sort_by: 'primary_release_date.desc',
               'primary_release_date.lte': today,
             }),
+        ...query,
       });
 
       return (data.results ?? []).map((item) => ({
@@ -87,17 +89,71 @@ const fetchCoupangList = (type) => {
         media_type: type,
       }));
     })().catch((error) => {
-      delete listRequests[type];
+      delete listRequests[requestKey];
       throw error;
     });
   }
 
-  return listRequests[type];
+  return listRequests[requestKey];
 };
 
 export const useMovieStore = create((set, get) => ({
+  // 레일 이름마다 데이터와 요청 상태를 따로 저장합니다.
+  rails: {},
+  railLoading: {},
+  railErrors: {},
+  railLoaded: {},
+
+  onFetchRail: async (railId, type, params = {}) => {
+    if (get().railLoading[railId] || get().railLoaded[railId]) return;
+    set((state) => ({
+      railLoading: { ...state.railLoading, [railId]: true },
+      railErrors: { ...state.railErrors, [railId]: null },
+    }));
+    try {
+      const items = await fetchCoupangList(type, params);
+      const contents = await Promise.all(
+      items.map(async (item) => {
+        try {
+          const images = await requestTmdb(
+            `/${type}/${item.id}/images`,
+            { include_image_language: 'ko,en,null' }
+          );
+
+          const logos = images.logos ?? [];
+
+          // 한국어 → 영어 → 나머지 로고 순서
+          const logo =
+            logos.find((image) => image.iso_639_1 === 'ko') ||
+            logos.find((image) => image.iso_639_1 === 'en') ||
+            logos[0];
+
+          return {
+            ...item,
+            logo_path: logo?.file_path,
+          };
+        } catch {
+          return item;
+        }
+      })
+    );
+      set((state) => ({
+        rails: { ...state.rails, [railId]: contents },
+        railLoaded: { ...state.railLoaded, [railId]: true },
+      }));
+    } catch (error) {
+      set((state) => ({
+        railErrors: { ...state.railErrors, [railId]: error.message },
+      }));
+    } finally {
+      set((state) => ({
+        railLoading: { ...state.railLoading, [railId]: false },
+      }));
+    }
+  },
+
   // =========================
-  // 메인 배너: 영화 + TV
+  // 메인 배너: 티빙 TV
   // =========================
   bannerContents: [],
   isBannerLoading: false,
@@ -135,7 +191,7 @@ export const useMovieStore = create((set, get) => ({
   },
 
   // =========================
-  // 쿠팡플레이 영화 목록
+  // 티빙 영화 목록
   // =========================
   popMovies: [],
 
@@ -161,7 +217,7 @@ export const useMovieStore = create((set, get) => ({
   },
 
   // =========================
-  // 쿠팡플레이 TV 목록
+  // 티빙 TV 목록
   // 드라마·예능 등 포함
   // =========================
   tvs: [],
