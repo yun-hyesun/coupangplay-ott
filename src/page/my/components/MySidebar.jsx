@@ -27,8 +27,8 @@ export const MySidebar = () => {
                 </div>
 
                 <button type='button' className='my-premium'>
-                    <img src="" alt="프리미엄 패스 아이콘" />
-                    <img src="" alt="화살표 아이콘" />
+                    <img src="../../../../public/images/mypage/premium-icon.png" alt="프리미엄 패스 아이콘" />
+                    <img src="../../../../public/images/mypage/icon-arrow_right.png" alt="화살표 아이콘" />
                 </button>
             </div>
 

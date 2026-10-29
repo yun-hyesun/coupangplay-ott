@@ -1,0 +1,18 @@
+/* size */
+/* size */
+/* size */
+.mypage {
+  min-height: 100vh;
+  background: #080B12;
+}
+.mypage .mypage-inner {
+  width: 100%;
+  padding: 50px clamp(20px, 4vw, 80px) 100px;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+.mypage .mypage-content {
+  flex: 1;
+  min-width: 0;
+}

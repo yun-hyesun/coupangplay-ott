@@ -1,37 +1,37 @@
 /* size */
 /* size */
 /* size */
-.my-slider {
+.my-sidebar {
   width: 220px;
   flex-shrink: 0;
 }
-.my-slider .my-profile {
+.my-sidebar .my-profile {
   width: 100%;
   padding: 16px;
   margin-bottom: 16px;
   background: #202123;
   border-radius: 8px;
 }
-.my-slider .my-profile .my-profile-info {
+.my-sidebar .my-profile .my-profile-info {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 16px;
 }
-.my-slider .my-profile .my-profile-info .my-avatar {
+.my-sidebar .my-profile .my-profile-info .my-avatar {
   width: 32px;
   height: 32px;
   flex-shrink: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #0084FF, #006bc6);
 }
-.my-slider .my-profile .my-profile-info .my-username {
+.my-sidebar .my-profile .my-profile-info .my-username {
   font-size: 14px;
   font-weight: 500;
   color: #FFFFFF;
   white-space: nowrap;
 }
-.my-slider .my-profile .my-profile-info .profile-change {
+.my-sidebar .my-profile .my-profile-info .profile-change {
   margin-left: auto;
   padding: 5px 8px;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -42,44 +42,44 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.my-slider .my-profile .my-profile-info .profile-change:hover {
+.my-sidebar .my-profile .my-profile-info .profile-change:hover {
   background: #404040;
   color: #FFFFFF;
 }
-.my-slider .my-profile .my-premium {
+.my-sidebar .my-profile .my-premium {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
   padding: 0;
 }
-.my-slider .my-profile .my-premium img {
+.my-sidebar .my-profile .my-premium img {
   display: block;
   max-width: 100%;
   height: auto;
 }
-.my-slider .my-menu {
+.my-sidebar .my-menu {
   width: 100%;
   background: #222222;
   border-radius: 8px;
   overflow: hidden;
 }
-.my-slider .my-menu ul li {
+.my-sidebar .my-menu ul li {
   border-bottom: 1px solid #262626;
 }
-.my-slider .my-menu ul li:last-child {
+.my-sidebar .my-menu ul li:last-child {
   border-bottom: none;
 }
-.my-slider .my-menu ul li a {
+.my-sidebar .my-menu ul li a {
   display: flex;
   align-items: center;
   min-height: 46px;
   padding: 12px 20px;
   color: #D4D4D4;
-  font-size: 13px;
+  font-size: 16px;
   transition: background 0.2s, color 0.2s;
 }
-.my-slider .my-menu ul li a:hover {
+.my-sidebar .my-menu ul li a:hover {
   background: #303135;
   color: #FFFFFF;
 }

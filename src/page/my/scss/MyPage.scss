@@ -1,0 +1,19 @@
+@use "../../../scss/variables" as *;
+@use "../../../scss/mixins" as *;
+
+.mypage {
+    min-height: 100vh;
+    background: $color-bg;
+
+    .mypage-inner {
+        width: 100%;
+        padding: 50px $padding-main 100px;
+
+        @include flex(null, flex-start, 32px);
+    }
+
+    .mypage-content {
+        flex: 1;
+        min-width: 0;
+    }
+}
