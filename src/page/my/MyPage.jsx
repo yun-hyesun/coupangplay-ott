@@ -1,9 +1,10 @@
 import React from 'react'
 import { MySidebar } from './components/MySidebar'
+import "./scss/MyPage.scss"
 
 export const MyPage = () => {
   return (
-    <main>
+    <main className='mypage'>
       <div className="mypage-inner">
         <MySidebar />
 

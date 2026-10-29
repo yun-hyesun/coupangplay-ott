@@ -1,7 +1,7 @@
 @use "../../../scss/variables" as *;
 @use "../../../scss/mixins" as *;
 
-.my-slider {
+.my-sidebar {
     width: 220px;
     flex-shrink: 0;
 
@@ -88,7 +88,7 @@
                     min-height: 46px;
                     padding: 12px 20px;
                     color: $color-text-sec1;
-                    font-size: 13px;
+                    font-size: 16px;
                     transition: background 0.2s, color 0.2s;
 
                     &:hover {
