@@ -1,0 +1,104 @@
+@use "../../../scss/variables" as *;
+@use "../../../scss/mixins" as *;
+
+.my-slider {
+    width: 220px;
+    flex-shrink: 0;
+
+    // 프로필 카드
+    .my-profile {
+        width: 100%;
+        padding: 16px;
+        margin-bottom: 16px;
+        background: #202123;
+        border-radius: 8px;
+
+        .my-profile-info {
+            @include flex(null, center, 10px);
+            margin-bottom: 16px;
+
+            .my-avatar {
+                width: 32px;
+                height: 32px;
+                flex-shrink: 0;
+                border-radius: 50%;
+                background: linear-gradient(135deg,
+                        $color-pri,
+                        $color-sec );
+            }
+
+            .my-username {
+                font-size: 14px;
+                font-weight: $font-w-M-500;
+                color: $color-text-pri;
+                white-space: nowrap;
+            }
+
+            .profile-change {
+                margin-left: auto;
+                padding: 5px 8px;
+                border: 1px solid $color-border-light;
+                border-radius: 4px;
+                background: #303030;
+                color: $color-text-sec1;
+                font-size: 10px;
+                white-space: nowrap;
+                cursor: pointer;
+
+                &:hover {
+                    background: #404040;
+                    color: $color-text-pri;
+                }
+            }
+        }
+
+        // 패스 영역
+        .my-premium {
+            @include flex-between(center);
+            width: 100%;
+            padding: 0;
+
+            img {
+                display: block;
+                max-width: 100%;
+                height: auto;
+
+            }
+        }
+    }
+
+    // 사이드 메뉴
+
+    .my-menu {
+        width: 100%;
+        background: #222222;
+        border-radius: 8px;
+        overflow: hidden;
+
+        ul {
+            li {
+                border-bottom: 1px solid $color-border;
+
+                &:last-child {
+                    border-bottom: none;
+                }
+
+                a {
+                    @include flex(null, center);
+                    min-height: 46px;
+                    padding: 12px 20px;
+                    color: $color-text-sec1;
+                    font-size: 13px;
+                    transition: background 0.2s, color 0.2s;
+
+                    &:hover {
+                        background: #303135;
+                        color: $color-text-pri;
+                    }
+                }
+            }
+        }
+    }
+
+
+}
