@@ -1,8 +1,9 @@
 @use "../../../scss/variables" as *;
 
+
 .profile-form {
     width: 100%;
-    max-width: 340px;
+    max-width: 430px;
 
     display: flex;
     flex-direction: column;
@@ -25,22 +26,37 @@
         }
     }
 
+
     // 이름 입력
     .profile-form-field {
         width: 100%;
 
+        // 프로필 이름 라벨 숨기기
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
+        }
+
         input {
+            display: block;
             width: 100%;
-            height: 46px;
-            padding: 0 16px;
+            height: 50px;
+            padding: 0 24px;
 
             background: #3c3c3c;
             border: 1px solid transparent;
-            border-radius: 5px;
+            border-radius: 8px;
 
             font-family: $font-main;
-            font-size: 14px;
-            color: #fff;
+            font-size: 16px;
+            color: $color-text-pri;
 
             outline: none;
 
@@ -55,73 +71,134 @@
 
         p {
             margin-top: 8px;
-            font-size: 12px;
+            font-size: 16px;
             line-height: 1.5;
             color: $color-text-sec2;
         }
     }
 
-    // 잠금 설정
-    .profile-form-lock {
+
+    // 프로필 설정 카드
+    .profile-form-settings {
         width: 100%;
-        height: 46px;
         margin-top: 22px;
-        padding: 0 16px;
 
         background: #3c3c3c;
-        border-radius: 5px;
+        border-radius: 8px;
+        overflow: hidden;
 
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        // 설정 항목 공통
+        .profile-setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
 
-        span {
-            font-size: 14px;
-            color: #fff;
+            width: 100%;
+            min-height: 50px;
+            padding: 0 24px;
+
+            font-size: 16px;
+            font-weight: 500;
+            color: $color-text-pri;
         }
 
+        // 성인 인증 상태
+        .profile-setting-value {
+            font-size: 16px;
+            font-weight: 400;
+            color: $color-text-sec2;
+        }
+
+        // 프로필 잠금 토글
         .profile-lock-toggle {
             width: 38px;
             height: 22px;
             padding: 3px;
 
-            background: #777;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-
             display: flex;
             align-items: center;
             justify-content: flex-start;
 
+            background: #777;
+            border: none;
+            border-radius: 20px;
+
+            cursor: pointer;
             transition: background 0.2s;
 
-            span {
+            >span {
+                display: block;
                 width: 16px;
                 height: 16px;
+                flex-shrink: 0;
+
                 border-radius: 50%;
                 background: #fff;
+
                 transition: transform 0.2s;
             }
 
             &.active {
                 background: $color-pri;
 
-                span {
+                >span {
                     transform: translateX(16px);
                 }
             }
+
+            &:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+            }
+        }
+
+        // 시청등급 선택 버튼
+        .profile-rating-btn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+
+            padding: 6px 0;
+
+            background: transparent;
+            border: none;
+
+            font-family: $font-main;
+            font-size: 16px;
+            font-weight: 400;
+            color: $color-text-sec2;
+
+            cursor: pointer;
+            transition: color 0.2s;
+
+            &:hover {
+                color: $color-text-pri;
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+
+        // 시청등급 화살표
+        .profile-rating-arrow {
+            font-size: 22px;
+            line-height: 1;
         }
     }
 
     // 오류 메시지
     .profile-form-error {
         margin-top: 12px;
-        font-size: 12px;
+        font-size: 16px;
         color: #ff7777;
     }
 
-    // 버튼
+
+    // 완료 / 취소 버튼
     .profile-form-buttons {
         display: flex;
         justify-content: center;
@@ -131,16 +208,17 @@
         margin-top: 64px;
 
         button {
-            width: 110px;
-            height: 42px;
+            width: 145px;
+            height: 50px;
+            flex-shrink: 0;
 
             background: #3c3c3c;
             border: none;
             border-radius: 5px;
 
             font-family: $font-main;
-            font-size: 14px;
-            color: #fff;
+            font-size: 16px;
+            color: $color-text-pri;
 
             cursor: pointer;
             transition: background 0.2s;
@@ -159,19 +237,53 @@
             }
         }
     }
+
 }
+
 
 @media (max-width: 767px) {
     .profile-form {
-        max-width: 300px;
+        max-width: 100%;
 
         .profile-form-avatar {
             width: 100px;
             height: 100px;
         }
 
+        .profile-form-field {
+            input {
+                height: 50px;
+                padding: 0 16px;
+                font-size: 16px;
+            }
+
+            p {
+                font-size: 16px;
+            }
+        }
+
+        .profile-form-settings {
+            .profile-setting-row {
+                padding: 0 16px;
+                font-size: 16px;
+            }
+
+            .profile-setting-value,
+            .profile-rating-btn {
+                font-size: 16px;
+            }
+        }
+
+        .profile-form-error {
+            font-size: 16px;
+        }
+
         .profile-form-buttons {
             margin-top: 48px;
+
+            button {
+                font-size: 16px;
+            }
         }
     }
 }
