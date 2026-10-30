@@ -76,7 +76,7 @@ export const ContentRail = ({
         nextSlideMessage: '다음 배너',
       }}
       slidesPerView={slideView} 
-      spaceBetween={40}
+      spaceBetween={10}
       >
         {items
           ?.filter((item) =>
@@ -93,7 +93,12 @@ export const ContentRail = ({
               onMouseEnter={() => setHoveredId(item.id)}
               onMouseLeave={() => setHoveredId(null)}
               >
-                <article className="contentRail-card">
+                <article
+                  className={`contentRail-card ${
+                    imageType === '세로'
+                      ? 'contentRail-card--ver' : 'contentRail-card--hor'
+                  }`}
+                >
                   {variant === 'ranking' && (
                     <span
                       className="contentRail-rank"

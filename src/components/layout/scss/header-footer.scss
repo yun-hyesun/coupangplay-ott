@@ -2,7 +2,7 @@
 @use "../../../scss/mixins" as *;
  // #################### header
 
-.header {height: 95px; padding-inline: $padding-main; font-size: 21px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
+.header {height: 70px; padding-inline: $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
   &.active {background: $color-bg;}
   &.active .header-search {background: $color-border;}
 
@@ -10,12 +10,12 @@
 
     .header-left {@include flex-center($gap: 50px);
     
-      .header-logo {width: 200px;
+      .header-logo {width: 170px;
         img {width: 100%;}
       }
 
-      .header-nav-menu {@include flex-center($gap: 10px);
-        a {padding: 10px 15px; border-radius: 10px;}
+      .header-nav-menu {@include flex-center();
+        a {padding: 8px 15px; border-radius: 10px;}
         .active {background: rgba(255,255,255,.2);}
       }
     }
@@ -24,16 +24,16 @@
 
       .header-login {background: $color-pri; font-size: 18px; padding: 9px 18px; border-radius: 30px;}
 
-      .header-search {@include flex-center(); height: 60px; padding: 5px 20px; border: 1px solid $color-border-light; border-radius: 30px; @include trans();
+      .header-search {@include flex-center(); height: 40px; padding: 5px 20px; border: 1px solid $color-border-light; border-radius: 30px; @include trans();
         
         .header-search-form {@include flex-between($gap: 20px);
   
-          .header-search-btn {width: 25px; height: 25px; background: url(images/search.svg) no-repeat center / contain;}
+          .header-search-btn {width: 20px; height: 20px; background: url(images/search.svg) no-repeat center / contain;}
         }
 
       }
 
-      .myPage-btn {width: 40px;
+      .myPage-btn {width: 35px;
         img {width: 100%;}
       }
     }
@@ -53,8 +53,6 @@
       // 프로필 이미지 버튼
       .myPage-btn {
         display: block;
-        width: 44px;
-        height: 44px;
         padding: 0;
         border: 0;
         border-radius: 50%;
@@ -203,23 +201,23 @@
 .footer {padding: 60px $padding-main; color: $color-text-sec2;
   .inner {@include flex-between($ai:flex-start);
 
-    .footer-left {font-size: 20px;
+    .footer-left {font-size: 19px;
 
       .footer-logo {width: 240px; margin-bottom: 40px;
         img {width: 100%;}
       }
 
       .footer-address {line-height: 1.8;}
-      .footer-nav-menu {@include flex-center($gap: 40px); font-size: 22px; margin-top: 50px;
+      .footer-nav-menu {@include flex-center($gap: 40px); font-size: 20px; margin-top: 50px;
 
         &:first-of-type {font-weight: $font-w-SB-600;}
       }
     } 
 
     .footer-right {
-      .footer-inquiry {@include flex-center($gap: 60px, $jc: flex-start); font-size: 26px; font-weight: $font-w-SB-600;}
+      .footer-inquiry {@include flex-center($gap: 60px, $jc: flex-start); font-size: 22px; font-weight: $font-w-SB-600;}
 
-      .footer-info {font-size: 22px; margin-block: 40px 40px;
+      .footer-info {font-size: 19px; margin-block: 40px 40px;
 
         &-list {@include flex-center($gap: 60px, $jc: flex-start);
 

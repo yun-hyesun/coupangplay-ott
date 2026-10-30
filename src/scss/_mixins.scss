@@ -76,3 +76,16 @@
   transition: $t $s $m;
 }
 
+@mixin pos-abs-center-scale-s($s:0) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale($s);
+}
+
+@mixin pos-abs-center-scale-n() {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+}

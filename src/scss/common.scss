@@ -11,13 +11,34 @@
 // #root {background: $color-bg url(/images/guide/main.png) no-repeat right 0 / 2560px;}
 .main {min-height: 100vh;}
 
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;}
 
 // ### 스와이퍼
 .swiper {overflow: initial;}
 // 슬라이드 버튼
-.swiper-button-next {width: 37px; border-radius: 5px;
-  height: 70px; background: rgba(0,0,0,0.3) url(/public/images/slide-next.svg) no-repeat center / 55%;}
-.swiper-button-prev {width: 37px; border-radius: 5px;
-  height: 70px; background: rgba(0,0,0,0.3) url(/public/images/slide-next.svg) no-repeat center / 55%; transform: scaleX(-1);}
+.swiper-button-next {width: 27px; border-radius: 5px;
+  height: 60px; background: rgba(0,0,0,0.3) url(/public/images/slide-next.svg) no-repeat center / 55%;}
+.swiper-button-prev {width: 27px; border-radius: 5px;
+  height: 60px; background: rgba(0,0,0,0.3) url(/public/images/slide-next.svg) no-repeat center / 55%; transform: scaleX(-1);}
 .swiper-navigation-icon {display: none;}
 .swiper-button-disabled {display: none;}
+
+
+// tag
+.meta-tag {color: #fff; font-size:14px; font-weight: $font-w-M-500; padding: .2em .4em; border-radius: 5px; background-color: #5B626F;
+  &.age {background-color: #D71E28;}
+}
+
+// button
+.button-box {@include flex-center($jc: flex-start, $gap: 10px);}
+.button {height: 45px; font-size: 18px; font-weight: $font-w-M-500; padding: .3em .9em; background-color: #292D33; border-radius: 10px; @include flex-center($gap: .3em); cursor: pointer;
+
+  &.main-btn {background-color: $color-pri;}
+  &.circle-btn {aspect-ratio: 1/1; border-radius: 50%; padding: 0;}
+  &[class*="icon"]::before {content: ''; width: 20px; height: 20px; display: inline-block; background: no-repeat center/ contain;}
+  &.icon-play::before {background-image: url(/public/images/card-hover/play.svg);}
+  &.icon-details::before {background-image: url(/public/images/card-hover/info.svg); width:25px; height:25px;}
+
+  &.icon-dibs::before {background-image: url(/public/images/card-hover/plus.svg); width:25px; height:25px;}
+
+}
