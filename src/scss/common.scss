@@ -1,12 +1,20 @@
 @use './reset';
 @use './fonts';
 
-#root {width: $width; background: $color-bg;}
+#root {width: $width; background: linear-gradient(
+    180deg,
+    #203f5e 0%,
+    #101215 33%,
+    #101113 100%
+  );}
 // width: 3420px 2560px 1920px;
 // #root {background: $color-bg url(/images/guide/main.png) no-repeat right 0 / 2560px;}
 .main {min-height: 100vh;}
 
-// ### 슬라이드 버튼
+
+// ### 스와이퍼
+.swiper {overflow: initial;}
+// 슬라이드 버튼
 .swiper-button-next {width: 37px; border-radius: 5px;
   height: 70px; background: rgba(0,0,0,0.3) url(/public/images/slide-next.svg) no-repeat center / 55%;}
 .swiper-button-prev {width: 37px; border-radius: 5px;

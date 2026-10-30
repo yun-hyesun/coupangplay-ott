@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { MainLayout } from './components/layout/MainLayout'
 import { Route, Routes } from 'react-router-dom'
 import { Home } from './page/home/Home'

@@ -1,0 +1,85 @@
+/* size */
+/* size */
+/* size */
+.contentRail {
+  padding: 36px clamp(20px, 4vw, 80px);
+  color: #FFFFFF;
+}
+.contentRail > h3 {
+  margin: 0 0 24px;
+  font-size: clamp(20px, 1.5vw, 28px);
+  font-weight: 700;
+}
+.contentRail-card {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  color: inherit;
+  text-align: left;
+}
+.contentRail button.contentRail-card {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.contentRail button.contentRail-card:focus-visible {
+  outline: 2px solid #0084FF;
+  outline-offset: -2px;
+}
+.contentRail-info {
+  flex: 1;
+  min-width: 0;
+}
+.contentRail-visual {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  background: #20242d;
+}
+.contentRail-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.contentRail-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #A3A3A3;
+}
+.contentRail .contentRail-tit {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.contentRail-rank {
+  flex-shrink: 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(48px, 5vw, 90px);
+  font-weight: 800;
+  line-height: 1;
+}
+.contentRail-meta {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #A3A3A3;
+}
+.contentRail--poster .contentRail-visual {
+  aspect-ratio: 2/3;
+}
+.contentRail--sports .contentRail-visual {
+  border-radius: 12px;
+}
+.contentRail .swiper-button-prev {
+  left: 0;
+}
+.contentRail .swiper-button-next {
+  right: 0;
+}

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, A11y } from 'swiper/modules';
 import { useMovieStore } from '../../store/useMovieStore';
 
 import 'swiper/css';
@@ -11,75 +12,112 @@ export const ContentRail = ({
   genre,
   country,
   sort = 'popularity.desc',
-  slideView = 6,
+  slideView = "auto",
   variant = 'default',
   imageType = '가로',
+  ended = false, // 완결된 시리즈만
+  untilYear,     // 이 연도까지 개봉·첫 방영
+  minVotes,      // 최소 평가 수
 }) => {
-  const railId = `${type}-${genre}-${country}-${sort}`;
+  const railId = `${type}-${genre}-${country}-${sort}` + `-${ended}-${untilYear}-${minVotes}`;
 
   const items = useMovieStore((state) => state.rails[railId]);
   const onFetchRail = useMovieStore((state) => state.onFetchRail);
 
   useEffect(() => {
-    const params = {
-      sort_by: sort,
-    };
+  const params = {
+    sort_by: sort,
+  };
 
-    if (genre) params.with_genres = genre;
-    if (country) params.with_origin_country = country;
+  if (genre) params.with_genres = genre;
+  if (country) params.with_origin_country = country;
 
-    onFetchRail(railId, type, params);
-  }, [railId, type, genre, country, sort, onFetchRail]);
+  // TV 완결작
+  if (type === 'tv' && ended) {
+    params.with_status = '3';
+  }
+
+  // 지정 연도까지 개봉·첫 방영한 작품
+  if (untilYear) {
+    const dateKey =
+      type === 'movie'
+        ? 'primary_release_date.lte'
+        : 'first_air_date.lte';
+
+    params[dateKey] = `${untilYear}-12-31`;
+  }
+
+  // 최소 평가 수
+  if (minVotes) {
+    params['vote_count.gte'] = String(minVotes);
+  }
+
+  onFetchRail(railId, type, params);
+}, [railId,type,genre,country,sort,ended,untilYear,minVotes,onFetchRail,]);
 
   return (
     <section
       className={`contentRail contentRail--${variant} ${
-        imageType === '세로'
-          ? 'contentRail--poster'
-          : 'contentRail--landscape'
+        imageType === '세로' ? 'contentRail--poster' : 'contentRail--landscape'
       }`}
     >
-      <h3>{title}</h3>
+      <h3 className='contentRail-title'>{title}</h3>
 
-      <Swiper slidesPerView={slideView} spaceBetween={40}>
+      <Swiper 
+      modules={[Navigation, A11y]}
+      navigation
+      a11y={{
+        prevSlideMessage: '이전 배너',
+        nextSlideMessage: '다음 배너',
+      }}
+      slidesPerView={slideView} 
+      spaceBetween={40}
+      >
         {items
           ?.filter((item) =>
-            imageType === '세로'
-              ? item.poster_path
-              : item.backdrop_path
+            imageType === '세로' ? item.poster_path : item.backdrop_path
           )
           .map((item, index) => {
             const name = item.title || item.name;
 
             const imagePath =
-              imageType === '세로'
-                ? item.poster_path
-                : item.backdrop_path;
+              imageType === '세로' ? item.poster_path : item.backdrop_path;
 
             return (
-              <SwiperSlide key={item.id}>
-                <article className="contentRail__card">
+              <SwiperSlide key={`${item.media_type}-${item.id}`}>
+                <article className="contentRail-card">
                   {variant === 'ranking' && (
                     <span
-                      className="contentRail__rank"
+                      className="contentRail-rank"
                       aria-label={`${index + 1}위`}
                     >
-                      {index + 1}
+                      <img src={`/images/ranking/ranking_${index + 1}.svg`} alt="" />
                     </span>
                   )}
 
-                  <div className="contentRail__info">
-                    <div className="contentRail__visual">
+                  <div className="contentRail-info">
+                    <div className="contentRail-visual">
                       <img
                         src={`https://image.tmdb.org/t/p/w780${imagePath}`}
-                        alt={name}
+                        alt={imageType === '가로' ? '' : name}
                         loading="lazy"
                       />
 
                       {imageType === '가로' && (
-                        <h4 className="contentRail__imageTitle">
-                          {name}
-                        </h4>
+                        <div className="contentRail-titleArea">
+                          {item.logo_path ? (
+                            <img
+                              className="contentRail-tit-logo"
+                              src={`https://image.tmdb.org/t/p/original${item.logo_path}`}
+                              alt={name}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <h4 className="contentRail-tit">
+                              {name}
+                            </h4>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

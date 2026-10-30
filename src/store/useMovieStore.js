@@ -30,6 +30,56 @@ const requestTmdb = async (path, query = {}) => {
   return res.json();
 };
 
+// 작품별 관람등급 확인 결과 재사용
+const ratingRequests = {};
+
+// 한국 관람등급이 전체·7·12·15인 작품만 허용
+const checkUnder19 = (type, id) => {
+  const key = `${type}-${id}`;
+
+  if (!ratingRequests[key]) {
+    ratingRequests[key] = (async () => {
+      try {
+        const path =
+          type === 'movie'
+            ? `/movie/${id}/release_dates`
+            : `/tv/${id}/content_ratings`;
+
+        const data = await requestTmdb(path);
+
+        let ratings = [];
+
+        if (type === 'movie') {
+          ratings = (data.results ?? [])
+            .filter((item) => item.iso_3166_1 === 'KR')
+            .flatMap((item) => item.release_dates ?? [])
+            .map((item) => item.certification);
+        } else {
+          ratings = (data.results ?? [])
+            .filter((item) => item.iso_3166_1 === 'KR')
+            .map((item) => item.rating);
+        }
+
+        const allowed = ['ALL', '전체', '전체관람가', '0', '7', '12', '15'];
+
+        ratings = ratings
+          .map((rating) => String(rating ?? '').trim().toUpperCase())
+          .filter(Boolean);
+
+        return (
+          ratings.length > 0 &&
+          ratings.every((rating) => allowed.includes(rating))
+        );
+      } catch {
+        delete ratingRequests[key];
+        return false;
+      }
+    })();
+  }
+
+  return ratingRequests[key];
+};
+
 // 영화·TV 목록 요청 결과 재사용
 const listRequests = {};
 
@@ -84,10 +134,19 @@ const fetchCoupangList = (type, query = {}) => {
         ...query,
       });
 
-      return (data.results ?? []).map((item) => ({
-        ...item,
-        media_type: type,
-      }));
+      const checkedItems = await Promise.all(
+        (data.results ?? []).map(async (item) => {
+          if (item.adult) return null;
+
+          const allowed = await checkUnder19(type, item.id);
+
+          return allowed
+            ? { ...item, media_type: type }
+            : null;
+        })
+      );
+
+    return checkedItems.filter(Boolean);
     })().catch((error) => {
       delete listRequests[requestKey];
       throw error;
@@ -111,12 +170,25 @@ export const useMovieStore = create((set, get) => ({
       railErrors: { ...state.railErrors, [railId]: null },
     }));
     try {
-      const items = await fetchCoupangList(type, params);
+      let items;
+
+      if (type === 'all') {
+        const [movies, tvs] = await Promise.all([
+          fetchCoupangList('movie', params),
+          fetchCoupangList('tv', params),
+        ]);
+
+        items = [...movies, ...tvs]
+          .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+          .slice(0, 20);
+      } else {
+        items = await fetchCoupangList(type, params);
+      }
       const contents = await Promise.all(
       items.map(async (item) => {
         try {
           const images = await requestTmdb(
-            `/${type}/${item.id}/images`,
+            `/${item.media_type}/${item.id}/images`,
             { include_image_language: 'ko,en,null' }
           );
 
@@ -155,40 +227,148 @@ export const useMovieStore = create((set, get) => ({
   // =========================
   // 메인 배너: 티빙 TV
   // =========================
-  bannerContents: [],
-  isBannerLoading: false,
-  bannerError: null,
-  isBannerLoaded: false,
+  // =========================
+// 메인 배너
+// =========================
+bannerContents: [],
+bannerType: null,
+bannerRequestId: 0,
+isBannerLoading: false,
+bannerError: null,
+isBannerLoaded: false,
 
-  onFetchBanner: async () => {
-    if (get().isBannerLoading || get().isBannerLoaded) return;
+onFetchBanner: async (type = 'all') => {
+  const current = get();
+
+  // 같은 종류를 이미 가져왔거나 가져오는 중이면 종료
+  if (
+    current.bannerType === type &&
+    (current.isBannerLoading || current.isBannerLoaded)
+  ) {
+    return;
+  }
+
+  const requestId = current.bannerRequestId + 1;
+
+  set({
+    bannerType: type,
+    bannerRequestId: requestId,
+    bannerContents: [],
+    isBannerLoading: true,
+    isBannerLoaded: false,
+    bannerError: null,
+  });
+
+  try {
+    const popular = {
+      sort_by: 'popularity.desc',
+    };
+
+    let items = [];
+
+    switch (type) {
+      // 티빙 드라마
+      case 'drama':
+        items = await fetchCoupangList('tv', {
+          ...popular,
+          with_genres: '18',
+        });
+        break;
+
+      // 티빙 영화
+      case 'movie':
+        items = await fetchCoupangList('movie', popular);
+        break;
+
+      // 티빙 키즈·가족 TV 프로그램
+      case 'kids':
+        items = await fetchCoupangList('tv', {
+          ...popular,
+          with_genres: '10762|10751',
+        });
+        break;
+
+      // 한국에서 구매 가능한 영화
+      case 'purchase': {
+        const today = new Intl.DateTimeFormat('sv-SE', {
+          timeZone: 'Asia/Seoul',
+        }).format(new Date());
+
+        const data = await requestTmdb('/discover/movie', {
+          ...popular,
+          watch_region: 'KR',
+          with_watch_monetization_types: 'buy',
+          include_adult: 'false',
+          'primary_release_date.lte': today,
+          page: '1',
+        });
+
+        const checked = await Promise.all(
+          (data.results ?? []).map(async (item) => {
+            if (item.adult) return null;
+
+            const allowed = await checkUnder19('movie', item.id);
+
+            return allowed
+              ? { ...item, media_type: 'movie' }
+              : null;
+          })
+        );
+
+        items = checked.filter(Boolean);
+        break;
+      }
+
+      // 티빙 영화 + TV
+      case 'all':
+      default: {
+        const [movies, dramas] = await Promise.all([
+          fetchCoupangList('movie', {
+            sort_by: 'primary_release_date.desc',
+          }),
+
+          fetchCoupangList('tv', {
+            with_genres: '18',
+            sort_by: 'first_air_date.desc',
+          }),
+        ]);
+
+        items = [...movies, ...dramas];
+        break;
+      }
+    }
+
+    const banners = items
+    .filter((item) => item.backdrop_path)
+    .sort((a, b) => {
+      if (type === 'all') {
+        const dateA = a.release_date || a.first_air_date || '';
+        const dateB = b.release_date || b.first_air_date || '';
+
+        return dateB.localeCompare(dateA);
+      }
+
+      return (b.popularity ?? 0) - (a.popularity ?? 0);
+    })
+    .slice(0, 5);
+
+    // 종류를 바꿨다면 이전 요청 결과는 저장하지 않음
+    if (get().bannerRequestId !== requestId) return;
 
     set({
-      isBannerLoading: true,
-      bannerError: null,
+      bannerContents: banners,
+      isBannerLoaded: true,
     });
-
-    try {
-      // 티빙 TV 프로그램만 가져오기
-      // 앞서 티빙으로 수정한 함수를 사용
-      const tvs = await fetchCoupangList('tv');
-
-      const banners = tvs
-        .filter((item) => item.backdrop_path)
-        .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
-        .slice(0, 5);
-
-      set({
-        tvs,
-        bannerContents: banners,
-        isBannerLoaded: true,
-      });
-    } catch (error) {
+  } catch (error) {
+    if (get().bannerRequestId === requestId) {
       set({ bannerError: error.message });
-    } finally {
+    }
+  } finally {
+    if (get().bannerRequestId === requestId) {
       set({ isBannerLoading: false });
     }
-  },
+  }
+},
 
   // =========================
   // 티빙 영화 목록

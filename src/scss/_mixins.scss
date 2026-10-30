@@ -56,14 +56,23 @@
   transform: translate(-50%, -50%);
 }
 
-@mixin pos-abs-centerX() {
+@mixin pos-abs-centerX($t:null, $b:null) {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  top: $t;
+  bottom: $b;
 }
 
-@mixin pos-abs-centerY() {
+@mixin pos-abs-centerY($l: null, $r:null) {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  left: $l;
+  right: $r;
 }
+
+@mixin trans($t: null, $s: .3s, $m:ease-in-out) {
+  transition: $t $s $m;
+}
+
