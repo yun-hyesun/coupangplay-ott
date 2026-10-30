@@ -2,7 +2,7 @@
 /* size */
 /* size */
 .my-sidebar {
-  width: 220px;
+  width: 260px;
   flex-shrink: 0;
 }
 .my-sidebar .my-profile {
@@ -23,22 +23,36 @@
   height: 32px;
   flex-shrink: 0;
   border-radius: 50%;
+  overflow: hidden;
   background: linear-gradient(135deg, #0084FF, #006bc6);
 }
+.my-sidebar .my-profile .my-profile-info .my-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .my-sidebar .my-profile .my-profile-info .my-username {
-  font-size: 14px;
+  min-width: 0;
+  flex: 1;
+  font-family: "Pretendard", sans-serif;
+  font-size: 18px;
   font-weight: 500;
   color: #FFFFFF;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .my-sidebar .my-profile .my-profile-info .profile-change {
+  flex-shrink: 0;
   margin-left: auto;
-  padding: 5px 8px;
+  padding: 6px 8px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   background: #303030;
   color: #D4D4D4;
-  font-size: 10px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -73,13 +87,51 @@
 .my-sidebar .my-menu ul li a {
   display: flex;
   align-items: center;
-  min-height: 46px;
+  min-height: 50px;
   padding: 12px 20px;
   color: #D4D4D4;
+  font-family: "Pretendard", sans-serif;
   font-size: 16px;
   transition: background 0.2s, color 0.2s;
 }
 .my-sidebar .my-menu ul li a:hover {
   background: #303135;
   color: #FFFFFF;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .my-sidebar {
+    width: 200px;
+  }
+  .my-sidebar .my-profile {
+    padding: 12px;
+  }
+  .my-sidebar .my-profile .my-profile-info {
+    gap: 8px;
+  }
+  .my-sidebar .my-profile .my-profile-info .my-username,
+  .my-sidebar .my-profile .my-profile-info .profile-change {
+    font-size: 16px;
+  }
+  .my-sidebar .my-menu ul li a {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .my-sidebar {
+    width: 100%;
+  }
+  .my-sidebar .my-profile {
+    padding: 16px;
+  }
+  .my-sidebar .my-profile .my-profile-info .my-username,
+  .my-sidebar .my-profile .my-profile-info .profile-change {
+    font-size: 16px;
+  }
+  .my-sidebar .my-menu ul li a {
+    min-height: 46px;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
 }

@@ -1,5 +1,7 @@
+
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useProfileStore } from '../../../store/useProfileStore'
 import "../scss/MySidebar.scss"
 
 const MyMenus = [
@@ -15,24 +17,56 @@ const MyMenus = [
 ]
 
 export const MySidebar = () => {
+    const navigate = useNavigate();
+
+    // 현재 선택된 프로필 정보
+    const currentProfile = useProfileStore(
+        (state) => state.currentProfile
+    );
+
+    // 프로필 전환
+    const handleProfileChange = () => {
+        navigate("/profile");
+    };
+
     return (
         <div className='my-sidebar'>
             <div className="my-profile">
                 <div className="my-profile-info">
-                    <div className="my-avatar"></div>
-                    <span className="my-username">ㅇㅇㅇ</span>
-                    <button type='button' className='profile-change'>
+
+                    <div className="my-avatar">
+                        <img
+                            src={currentProfile?.avatar || "/images/profile.svg"}
+                            alt=""
+                        />
+                    </div>
+
+                    <span className="my-username">
+                        {currentProfile?.name || "프로필 선택"}
+                    </span>
+
+                    <button
+                        type="button"
+                        className="profile-change"
+                        onClick={handleProfileChange}
+                    >
                         프로필 전환
                     </button>
                 </div>
 
-                <button type='button' className='my-premium'>
-                    <img src="../../../../public/images/mypage/premium-icon.png" alt="프리미엄 패스 아이콘" />
-                    <img src="../../../../public/images/mypage/icon-arrow_right.png" alt="화살표 아이콘" />
+                <button type="button" className="my-premium">
+                    <img
+                        src="/images/mypage/premium-icon.png"
+                        alt="프리미엄 패스 아이콘"
+                    />
+                    <img
+                        src="/images/mypage/icon-arrow_right.png"
+                        alt=""
+                    />
                 </button>
             </div>
 
-            <nav className="my-menu" aria-label='마이페이지 메뉴'>
+            <nav className="my-menu" aria-label="마이페이지 메뉴">
                 <ul>
                     {MyMenus.map((menu) => (
                         <li key={menu.id}>

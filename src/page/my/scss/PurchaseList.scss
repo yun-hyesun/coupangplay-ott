@@ -1,0 +1,165 @@
+@use "../../../scss/variables" as *;
+
+.purchase-list {
+    width: 100%;
+
+    // 개별 구매 제목 영역
+    .purchase-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 24px;
+    }
+
+    // 제목 + 화살표
+    .purchase-list-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: $color-text-pri;
+        text-decoration: none;
+
+        h2 {
+            margin: 0;
+            font-family: $font-main;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
+    // 화살표 아이콘
+    .purchase-list-arrow {
+        display: block;
+        width: 28px;
+        height: 28px;
+        object-fit: contain;
+    }
+
+    // 오른쪽 더보기
+    .purchase-list-more {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        color: $color-text-sec1;
+        font-size: 22px;
+        letter-spacing: 3px;
+        line-height: 1;
+        text-decoration: none;
+
+        &:hover {
+            color: $color-text-pri;
+        }
+    }
+
+    // 구매 내역이 없을 때
+    .purchase-list-message {
+        padding: 80px 20px;
+        color: $color-text-sec1;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    // 구매 콘텐츠 목록
+    .purchase-list-grid {
+        display: grid;
+        width: 100%;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .purchase-list-item {
+        display: block;
+        min-width: 0;
+        color: $color-text-pri;
+        text-decoration: none;
+
+        &:hover .purchase-list-thumbnail img {
+            transform: scale(1.05);
+        }
+    }
+
+    // 가로형 썸네일
+    .purchase-list-thumbnail {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        background: #262626;
+        overflow: hidden;
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        span {
+            color: $color-text-sec1;
+            font-size: 16px;
+        }
+    }
+
+    .purchase-list-title {
+        margin-top: 12px;
+        font-size: 16px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+// ========================================
+// 반응형
+// ========================================
+
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .purchase-list {
+        .purchase-list-heading h2 {
+            font-size: 24px;
+        }
+
+        .purchase-list-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .purchase-list {
+        .purchase-list-heading h2 {
+            font-size: 20px;
+        }
+
+        .purchase-list-more {
+            font-size: 16px;
+        }
+
+        .purchase-list-message {
+            padding: 60px 16px;
+            font-size: 16px;
+        }
+
+        .purchase-list-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .purchase-list-title {
+            font-size: 16px;
+        }
+    }
+}

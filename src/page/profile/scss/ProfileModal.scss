@@ -1,0 +1,227 @@
+@use "../../../scss/variables" as *;
+
+// 시청등급 모달 배경
+.profile-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+// 모달 본체
+.profile-modal {
+    position: relative;
+
+    width: 100%;
+    max-width: 495px;
+    padding: 36px 40px 30px;
+
+    background: #252525;
+    border-radius: 10px;
+    color: $color-text-pri;
+    text-align: center;
+
+    // 닫기 버튼
+    .profile-modal-close {
+        position: absolute;
+        top: 16px;
+        right: 18px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 24px;
+        height: 24px;
+        padding: 0;
+
+        border: none;
+        background: transparent;
+        cursor: pointer;
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    }
+
+    // 제목
+    h3 {
+        margin-bottom: 14px;
+
+        font-family: $font-main;
+        font-size: 32px;
+        font-weight: 600;
+    }
+
+    // 설명
+    p {
+        margin-bottom: 26px;
+
+        color: $color-text-sec1;
+        font-family: $font-main;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    // 등급 선택 목록
+    .profile-modal-options {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+
+        width: 100%;
+    }
+
+    // 등급 선택 버튼
+    .profile-modal-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        width: 315px;
+        max-width: 100%;
+        height: 50px;
+        padding: 0 16px 0 20px;
+
+        border: none;
+        border-radius: 8px;
+        background: #3d3d3d;
+        color: $color-text-pri;
+
+        font-family: $font-main;
+        font-size: 16px;
+        font-weight: 400;
+        text-align: left;
+
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+            background: #484848;
+        }
+
+        &.active {
+            background: #3d3d3d;
+
+            .profile-modal-check {
+                color: $color-pri;
+            }
+        }
+    }
+
+    // 체크 아이콘
+    .profile-modal-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    }
+
+    // 하단 완료 / 취소 버튼
+    .profile-modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+
+        margin-top: 24px;
+
+        button {
+            width: 145px;
+            height: 50px;
+            flex-shrink: 0;
+
+            border: none;
+            border-radius: 5px;
+
+            color: $color-text-pri;
+            font-family: $font-main;
+            font-size: 16px;
+            font-weight: 500;
+
+            cursor: pointer;
+            transition: filter 0.2s;
+
+            &:first-child {
+                background: $color-pri;
+            }
+
+            &:last-child {
+                background: #424242;
+            }
+
+            &:hover:not(:disabled) {
+                filter: brightness(1.1);
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+    }
+}
+
+// ========================================
+// 반응형
+// ========================================
+
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .profile-modal {
+        h3 {
+            font-size: 30px;
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .profile-modal {
+        max-width: 380px;
+        padding: 32px 20px 24px;
+
+        h3 {
+            font-size: 26px;
+        }
+
+        p {
+            font-size: 16px;
+        }
+
+        .profile-modal-option {
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .profile-modal-buttons {
+            gap: 12px;
+
+            button {
+                flex: 1;
+                width: auto;
+                min-width: 0;
+                font-size: 16px;
+            }
+        }
+    }
+}

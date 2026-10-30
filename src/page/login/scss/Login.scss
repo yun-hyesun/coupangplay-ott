@@ -22,6 +22,7 @@
     padding: 48px 40px 44px;
     background: #202124;
     border-radius: 8px;
+    font-family: $font-main;
 
     // 제목
     >h2 {
@@ -57,9 +58,15 @@
         gap: 8px;
 
         label {
-            font-size: 14px;
-            font-weight: 400;
-            color: $color-text-sec1;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+            border: 0;
         }
 
         input {
@@ -72,7 +79,7 @@
             border-radius: 6px;
 
             font-family: $font-main;
-            font-size: 15px;
+            font-size: 16px;
             color: $color-text-pri;
 
             outline: none;
@@ -158,7 +165,7 @@
         border-radius: 6px;
 
         font-family: $font-main;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 500;
         color: $color-text-pri;
 
@@ -185,7 +192,7 @@
         gap: 10px;
         margin-top: 30px;
 
-        font-size: 14px;
+        font-size: 15px;
         color: $color-text-sec2;
 
         p {
