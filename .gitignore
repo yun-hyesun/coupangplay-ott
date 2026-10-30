@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +23,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local secrets and test output
+.env.*
+!.env.example
+test-results/
+playwright-report/
+.vercel/
+firebase-debug.log
+firestore-debug.log

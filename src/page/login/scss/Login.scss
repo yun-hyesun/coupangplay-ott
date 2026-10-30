@@ -1,0 +1,255 @@
+@use "../../../scss/variables" as *;
+
+// 로그인 / 회원가입 페이지
+.login-page,
+.signup-page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 120px 20px;
+    background: $color-bg;
+    color: $color-text-pri;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+// 로그인 / 회원가입 카드
+.login-inner,
+.signup-inner {
+    width: 100%;
+    max-width: 480px;
+    padding: 48px 40px 44px;
+    background: #202124;
+    border-radius: 8px;
+
+    // 제목
+    >h2 {
+        margin-bottom: 14px;
+        font-size: 30px;
+        font-weight: 600;
+        text-align: center;
+        color: $color-text-pri;
+    }
+
+    // 설명 문구
+    .login-desc {
+        font-size: 15px;
+        font-weight: 400;
+        line-height: 1.5;
+        text-align: center;
+        color: $color-text-sec2;
+    }
+
+    // 입력 폼
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 36px;
+    }
+
+    // 이메일 / 비밀번호 입력 영역
+    .login-input,
+    .signup-input {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        label {
+            font-size: 14px;
+            font-weight: 400;
+            color: $color-text-sec1;
+        }
+
+        input {
+            width: 100%;
+            height: 52px;
+            padding: 0 16px;
+
+            background: #303238;
+            border: 1px solid transparent;
+            border-radius: 6px;
+
+            font-family: $font-main;
+            font-size: 15px;
+            color: $color-text-pri;
+
+            outline: none;
+            transition: border-color 0.2s;
+
+            &::placeholder {
+                color: $color-text-sec2;
+            }
+
+            &:hover {
+                border-color: $color-border-light;
+            }
+
+            &:focus {
+                border-color: $color-pri;
+            }
+        }
+    }
+
+    // 이메일 로그인 / 회원가입 버튼
+    form>button {
+        width: 100%;
+        height: 52px;
+        margin-top: 18px;
+
+        background: $color-pri;
+        border: none;
+        border-radius: 6px;
+
+        font-family: $font-main;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+            background: $color-sec;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    // 오류 메시지
+    .login-error,
+    .signup-error {
+        margin-top: 4px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #ff7777;
+    }
+
+    // 또는 구분선
+    .login-divider {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 32px 0 24px;
+
+        font-size: 14px;
+        color: $color-text-sec2;
+
+        &::before,
+        &::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: $color-border;
+        }
+    }
+
+    // 구글 로그인 버튼
+    .google-login {
+        width: 100%;
+        height: 52px;
+
+        background: #303238;
+        border: 1px solid $color-border-light;
+        border-radius: 6px;
+
+        font-family: $font-main;
+        font-size: 15px;
+        font-weight: 500;
+        color: $color-text-pri;
+
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+            background: #3c3e45;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    // 회원가입 / 로그인 이동 링크
+    .login-bottom,
+    .signup-bottom {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 30px;
+
+        font-size: 14px;
+        color: $color-text-sec2;
+
+        p {
+            margin: 0;
+        }
+
+        a {
+            color: $color-pri;
+            font-weight: 600;
+            text-decoration: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+// 태블릿
+@media (max-width: 1279px) {
+
+    .login-page,
+    .signup-page {
+        padding: 100px 24px;
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+
+    .login-page,
+    .signup-page {
+        min-height: 100vh;
+        padding: 80px 20px;
+    }
+
+    .login-inner,
+    .signup-inner {
+        padding: 36px 24px;
+
+        >h2 {
+            font-size: 26px;
+        }
+
+        .login-desc {
+            font-size: 14px;
+        }
+
+        form {
+            margin-top: 28px;
+        }
+
+        .login-input,
+        .signup-input {
+            input {
+                height: 48px;
+                font-size: 14px;
+            }
+        }
+
+        form>button,
+        .google-login {
+            height: 48px;
+            font-size: 15px;
+        }
+    }
+}
