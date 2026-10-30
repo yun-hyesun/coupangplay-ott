@@ -1,11 +1,11 @@
-.channel {padding-inline: $padding-main;
+.channel {padding-inline: $padding-main; margin: 50px 0;
 
   .channel-flex {@include flex-center($gap: 20px);}
-  .swiper {overflow: initial;
+  .swiper {
   
     .swiper-slide {width: auto;}
   }
-  .channel-item {@include flex-center(); width: 200px; height: 100px; background: linear-gradient(90deg,#414040 0%, #595959 25%, #636363 50%, #595959 75%, #414040 100%); border: 1px solid rgba(255, 255, 255, .2); border-radius: 20px;
+  .channel-item {@include flex-center(); width: 200px; height: 100px; background: linear-gradient(90deg,#2D2D2D 0%, #3B3B3B 25%, #636363 50%, #3B3B3B 75%, #2D2D2D 100%); border: 1px solid rgba(255, 255, 255, .2); border-radius: 20px;
   
     img {width: 100%; max-width: 60%; max-height: 70%;}
   }
