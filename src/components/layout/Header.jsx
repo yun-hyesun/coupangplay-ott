@@ -6,6 +6,7 @@ import { useProfileStore } from '../../store/useProfileStore'
 import './scss/header-footer.scss'
 
 export const Header = () => {
+  
     // 메인 메뉴
   const mainMenu = [
     { id: 1, menu: "스포츠", path: "/sports" },
