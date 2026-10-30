@@ -3,7 +3,7 @@
  // #################### header
 
 .header {height: 95px; padding-inline: $padding-main; font-size: 21px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
-  &.active {background: rgba(0,0,0,.9);}
+  &.active {background: $color-bg;}
   &.active .header-search {background: $color-border;}
 
   .inner {@include flex-between(); height: 100%;

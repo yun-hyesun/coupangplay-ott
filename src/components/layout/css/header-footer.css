@@ -3,7 +3,6 @@
 /* size */
 .header {
   height: 95px;
-  background: rgba(0, 0, 0, 0.9);
   padding-inline: clamp(20px, 4vw, 80px);
   font-size: 21px;
   font-weight: 500;
@@ -11,6 +10,13 @@
   top: 0;
   left: 0;
   z-index: 1000;
+  transition: 0.3s ease-in-out;
+}
+.header.active {
+  background: #080B12;
+}
+.header.active .header-search {
+  background: #262626;
 }
 .header .inner {
   display: flex;
@@ -34,7 +40,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 40px;
+  gap: 10px;
+}
+.header .inner .header-left .header-nav-menu a {
+  padding: 10px 15px;
+  border-radius: 10px;
+}
+.header .inner .header-left .header-nav-menu .active {
+  background: rgba(255, 255, 255, 0.2);
 }
 .header .inner .header-right {
   display: flex;
@@ -54,9 +67,9 @@
   align-items: center;
   height: 60px;
   padding: 5px 20px;
-  background: #262626;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 30px;
+  transition: 0.3s ease-in-out;
 }
 .header .inner .header-right .header-search .header-search-form {
   display: flex;
