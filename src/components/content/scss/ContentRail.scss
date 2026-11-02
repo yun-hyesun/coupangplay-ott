@@ -1,19 +1,15 @@
 
 .contentRail {padding: 40px $padding-main; color: $color-text-pri;
 
-  &-title { margin-bottom: 30px; font-size: 32px; font-weight: $font-w-B-700; }
+  &-title { margin-bottom: 30px; font-size: 30px; font-weight: $font-w-B-700; }
 
   &-card {@include flex-center($ai:flex-end); width: 100%; text-align: left; cursor: pointer;
   
     .contentRail-rank {display: block; position: relative; margin-right: -20px;
-      img {height: 240px;}
+      img {height: 180px;}
     }
 
-    .contentRail-rank+.contentRail-info {width: 380px;
-      .contentRail-visual {aspect-ratio: 2 / 3;}
-    }
-
-    .contentRail-info {position: relative; width: 510px;
+    .contentRail-info {position: relative; width: 400px;
     
       .contentRail-visual { position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: $card-radius; background: #20242d; 
 
@@ -23,11 +19,12 @@
           .contentRail-tit-logo {max-width: 70%; max-height: 36%; @include pos-abs-centerX($b:10%); filter: drop-shadow(0 0 10px rgba(0,0,0,.3));}
           .contentRail-tit {@include pos-abs-centerX($b:5%); filter: drop-shadow(0 0 10px rgba(0,0,0,.5)); font-size: 40px; font-family: $font-number; font-weight: $font-w-B-700; word-break: keep-all; width: 80%;}
         }
+      }
     }
-  }
 
-
-  
+    &--ver .contentRail-info {width: 280px;
+      .contentRail-visual {aspect-ratio: 2 / 3;}
+    }
   }
 
   // &--poster &-visual { aspect-ratio: 2 / 3; }

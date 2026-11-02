@@ -2,7 +2,7 @@
 @use "../../../scss/mixins" as *;
 
 .my-sidebar {
-    width: 220px;
+    width: 260px;
     flex-shrink: 0;
 
     // 프로필 카드
@@ -22,27 +22,48 @@
                 height: 32px;
                 flex-shrink: 0;
                 border-radius: 50%;
+                overflow: hidden;
+
                 background: linear-gradient(135deg,
                         $color-pri,
                         $color-sec );
+
+                img {
+                    display: block;
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
             }
 
             .my-username {
-                font-size: 14px;
+                min-width: 0;
+                flex: 1;
+
+                font-family: $font-main;
+                font-size: 18px;
                 font-weight: $font-w-M-500;
                 color: $color-text-pri;
+
+                overflow: hidden;
+                text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
             .profile-change {
+                flex-shrink: 0;
                 margin-left: auto;
-                padding: 5px 8px;
+                padding: 6px 8px;
+
                 border: 1px solid $color-border-light;
                 border-radius: 4px;
                 background: #303030;
                 color: $color-text-sec1;
-                font-size: 10px;
+
+                font-family: $font-main;
+                font-size: 16px;
                 white-space: nowrap;
+
                 cursor: pointer;
 
                 &:hover {
@@ -62,13 +83,11 @@
                 display: block;
                 max-width: 100%;
                 height: auto;
-
             }
         }
     }
 
     // 사이드 메뉴
-
     .my-menu {
         width: 100%;
         background: #222222;
@@ -85,10 +104,13 @@
 
                 a {
                     @include flex(null, center);
-                    min-height: 46px;
+                    min-height: 50px;
                     padding: 12px 20px;
+
                     color: $color-text-sec1;
+                    font-family: $font-main;
                     font-size: 16px;
+
                     transition: background 0.2s, color 0.2s;
 
                     &:hover {
@@ -99,6 +121,62 @@
             }
         }
     }
+}
 
+// ========================================
+// 반응형
+// ========================================
 
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .my-sidebar {
+        width: 200px;
+
+        .my-profile {
+            padding: 12px;
+
+            .my-profile-info {
+                gap: 8px;
+
+                .my-username,
+                .profile-change {
+                    font-size: 16px;
+                }
+            }
+        }
+
+        .my-menu {
+            ul li a {
+                padding: 12px 16px;
+                font-size: 16px;
+            }
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .my-sidebar {
+        width: 100%;
+
+        .my-profile {
+            padding: 16px;
+
+            .my-profile-info {
+
+                .my-username,
+                .profile-change {
+                    font-size: 16px;
+                }
+            }
+        }
+
+        .my-menu {
+            ul li a {
+                min-height: 46px;
+                padding: 12px 16px;
+                font-size: 16px;
+            }
+        }
+    }
 }

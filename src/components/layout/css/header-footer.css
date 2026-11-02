@@ -2,9 +2,9 @@
 /* size */
 /* size */
 .header {
-  height: 95px;
+  height: 70px;
   padding-inline: clamp(20px, 4vw, 80px);
-  font-size: 21px;
+  font-size: 16px;
   font-weight: 500;
   position: sticky;
   top: 0;
@@ -31,7 +31,7 @@
   gap: 50px;
 }
 .header .inner .header-left .header-logo {
-  width: 200px;
+  width: 170px;
 }
 .header .inner .header-left .header-logo img {
   width: 100%;
@@ -40,10 +40,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
 }
 .header .inner .header-left .header-nav-menu a {
-  padding: 10px 15px;
+  padding: 8px 15px;
   border-radius: 10px;
 }
 .header .inner .header-left .header-nav-menu .active {
@@ -65,7 +64,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 60px;
+  height: 40px;
   padding: 5px 20px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 30px;
@@ -78,12 +77,12 @@
   gap: 20px;
 }
 .header .inner .header-right .header-search .header-search-form .header-search-btn {
-  width: 25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
   background: url(images/search.svg) no-repeat center/contain;
 }
 .header .inner .header-right .myPage-btn {
-  width: 40px;
+  width: 35px;
 }
 .header .inner .header-right .myPage-btn img {
   width: 100%;
@@ -96,8 +95,6 @@
 }
 .header .header-right .header-myPage .myPage-btn {
   display: block;
-  width: 44px;
-  height: 44px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -221,7 +218,7 @@
   align-items: flex-start;
 }
 .footer .inner .footer-left {
-  font-size: 20px;
+  font-size: 19px;
 }
 .footer .inner .footer-left .footer-logo {
   width: 240px;
@@ -238,7 +235,7 @@
   justify-content: center;
   align-items: center;
   gap: 40px;
-  font-size: 22px;
+  font-size: 20px;
   margin-top: 50px;
 }
 .footer .inner .footer-left .footer-nav-menu:first-of-type {
@@ -249,11 +246,11 @@
   justify-content: flex-start;
   align-items: center;
   gap: 60px;
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 600;
 }
 .footer .inner .footer-right .footer-info {
-  font-size: 22px;
+  font-size: 19px;
   margin-block: 40px 40px;
 }
 .footer .inner .footer-right .footer-info-list {

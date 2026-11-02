@@ -78,38 +78,56 @@ export const ProfileForm = ({
                 </p>
             </div>
 
-            {/* 프로필 잠금 설정 */}
-            <div className="profile-form-lock">
-                <span>프로필 잠금 설정</span>
 
-                <button
-                    type="button"
-                    className={`profile-lock-toggle ${isLocked ? 'active' : ''}`}
-                    onClick={() => setIsLocked(!isLocked)}
-                    role="switch"
-                    aria-checked={isLocked}
-                    aria-label="프로필 잠금 설정 (준비 중)"
-                    disabled
-                >
-                    <span />
-                </button>
+
+            {/* 프로필 설정 카드 */}
+            <div className="profile-form-settings">
+
+                {/* 프로필 잠금 설정 */}
+                <div className="profile-setting-row">
+                    <span>프로필 잠금 설정</span>
+
+                    <button
+                        type="button"
+                        className={`profile-lock-toggle ${isLocked ? 'active' : ''}`}
+                        role="switch"
+                        aria-checked={isLocked}
+                        aria-label="프로필 잠금 설정 (준비 중)"
+                        disabled
+                    >
+                        <span />
+                    </button>
+                </div>
+
+                {/* 성인 인증 */}
+                <div className="profile-setting-row">
+                    <span>성인 인증</span>
+
+                    <span className="profile-setting-value">
+                        인증 전
+                    </span>
+                </div>
+
+                {/* 시청등급 설정 */}
+                <div className="profile-setting-row">
+                    <span>프로필 시청등급 설정</span>
+
+                    <button
+                        type="button"
+                        className="profile-rating-btn"
+                        onClick={() => setIsRatingModalOpen(true)}
+                        disabled={loading}
+                        aria-haspopup="dialog"
+                    >
+                        <span>{ratingLabels[rating] || '전체 관람가'}</span>
+                        <span className="profile-rating-arrow" aria-hidden="true">
+                            ›
+                        </span>
+                    </button>
+                </div>
+
             </div>
 
-            {/* 프로필 시청 등급 설정 */}
-            <div className="profile-form-rating">
-                <span>프로필 시청등급 설정</span>
-
-                <button
-                    type="button"
-                    className="profile-rating-btn"
-                    onClick={() => setIsRatingModalOpen(true)}
-                    disabled={loading}
-                    aria-haspopup="dialog"
-                >
-                    <span>{ratingLabels[rating] || '전체 관람가'}</span>
-                    <span aria-hidden="true">›</span>
-                </button>
-            </div>
 
             {/* 오류 메시지 */}
             {message && (

@@ -1,0 +1,112 @@
+/* size */
+/* size */
+/* size */
+.watch-history {
+  width: 100%;
+}
+.watch-history .watch-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.watch-history .watch-history-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #FFFFFF;
+  text-decoration: none;
+}
+.watch-history .watch-history-heading h2 {
+  margin: 0;
+  font-family: "Pretendard", sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+.watch-history .watch-history-heading .watch-history-arrow {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.watch-history .watch-history-heading:hover {
+  opacity: 0.8;
+}
+.watch-history .watch-history-more {
+  color: #D4D4D4;
+  font-size: 22px;
+  letter-spacing: 3px;
+  text-decoration: none;
+  line-height: 1;
+}
+.watch-history .watch-history-more:hover {
+  color: #FFFFFF;
+}
+.watch-history .watch-history-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+.watch-history .watch-history-item {
+  min-width: 0;
+}
+.watch-history .watch-history-item h3 {
+  margin-top: 12px;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.watch-history .watch-history-item p {
+  margin-top: 6px;
+  color: #D4D4D4;
+  font-size: 16px;
+}
+.watch-history .watch-history-thumbnail {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #404040;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.watch-history .watch-history-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: #008cff;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .watch-history .watch-history-heading h2 {
+    font-size: 24px;
+  }
+  .watch-history .watch-history-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .watch-history .watch-history-heading h2 {
+    font-size: 20px;
+  }
+  .watch-history .watch-history-heading span {
+    font-size: 24px;
+  }
+  .watch-history .watch-history-more {
+    font-size: 16px;
+  }
+  .watch-history .watch-history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .watch-history .watch-history-item h3 {
+    font-size: 16px;
+  }
+  .watch-history .watch-history-item p {
+    font-size: 14px;
+  }
+}

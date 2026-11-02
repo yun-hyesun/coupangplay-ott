@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, A11y } from 'swiper/modules';
 import { useMovieStore } from '../../store/useMovieStore';
 
 import 'swiper/css';
 import './scss/ContentRail.scss';
+import { CardHover } from './CardHover';
 
 export const ContentRail = ({
   title,
@@ -55,6 +56,10 @@ export const ContentRail = ({
   onFetchRail(railId, type, params);
 }, [railId,type,genre,country,sort,ended,untilYear,minVotes,onFetchRail,]);
 
+// 카드호버
+  const [hoveredId, setHoveredId] = useState(null);
+
+
   return (
     <section
       className={`contentRail contentRail--${variant} ${
@@ -71,7 +76,7 @@ export const ContentRail = ({
         nextSlideMessage: '다음 배너',
       }}
       slidesPerView={slideView} 
-      spaceBetween={40}
+      spaceBetween={10}
       >
         {items
           ?.filter((item) =>
@@ -84,8 +89,16 @@ export const ContentRail = ({
               imageType === '세로' ? item.poster_path : item.backdrop_path;
 
             return (
-              <SwiperSlide key={`${item.media_type}-${item.id}`}>
-                <article className="contentRail-card">
+              <SwiperSlide key={`${item.media_type}-${item.id}`}
+              onMouseEnter={() => setHoveredId(item.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              >
+                <article
+                  className={`contentRail-card ${
+                    imageType === '세로'
+                      ? 'contentRail-card--ver' : 'contentRail-card--hor'
+                  }`}
+                >
                   {variant === 'ranking' && (
                     <span
                       className="contentRail-rank"
@@ -121,6 +134,12 @@ export const ContentRail = ({
                       )}
                     </div>
                   </div>
+
+                  <CardHover
+                    item={item}
+                    type={type === 'all' ? (item.media_type || 'tv') : type}
+                    isHover={hoveredId === item.id}
+                  />
                 </article>
               </SwiperSlide>
             );
