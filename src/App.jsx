@@ -15,6 +15,7 @@ import { Login } from './page/login/Login'
 import { ProfileSelect } from './page/profile/ProfileSelect'
 import { ProfileCreate } from './page/profile/ProfileCreate'
 import { ProfileEdit } from './page/profile/ProfileEdit'
+import { More } from './page/more/More';
 
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
@@ -45,7 +46,11 @@ function App() {
 
           {/* 마이페이지 */}
           <Route path='/my' element={<MyPage />} />
+          
+          {/* 더보기 */}
+          <Route path="/more" element={<More />} />
         </Route>
+
 
         {/* 프로필 관련 페이지 */}
         <Route path="/profiles" element={<ProfileSelect />} />
