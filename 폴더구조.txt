@@ -26,6 +26,12 @@ src/
 │       ├── ContentInfo.jsx     # 제목·장르·설명
 │       └── HeartButton.jsx     # 찜 버튼
 │
+├─ data/                         # 직접 작성한 고정 데이터
+│  ├─ kleagueLeagues.js          # K리그1·2 리그 ID와 이름 (kleague.com API 호출용)
+│  ├─ kleagueTeamNameKo.js       # K리그 팀 한글명 (teamId → 한글, 영문명 대체 처리 포함)
+│  ├─ leagueNameKo.js            # 리그 한글명
+│  └─ teamNameKo.js              # 팀 한글명
+│
 ├── pages/                      # 주소별 페이지
 │   ├── home/
 │   │   ├── Home.jsx
@@ -93,7 +99,8 @@ src/
 │
 ├── data/                       # 직접 작성한 고정 데이터
 │   ├── menuData.js
-│   └── leagueData.js
+│   ├── leagueNameKo.js         # 리그 한글명 데이터
+│   └── teamNameKo.js           # 리그 연관 한글팀명 데이터
 │
 ├── utils/                      # 공통 계산·변환 함수
 │   └── formatDate.js
@@ -109,6 +116,14 @@ src/
 
 public/
 └── favicon.svg
+
+scripts/
+├── check-api.mjs               # api 주소 데이터 불러오기
+├── check-football-data.mjs     # 
+├── match-api-football.mjs
+├── check-nba.mjs               # API Ninjas로 NBA 팀·순위·경기 응답 확인
+├── check-kbl.mjs               # KBL 경기 결과·순위 응답 구조 확인 (kbl-results 패키지 사용)
+└── check-kleague.mjs           # K리그(kleague.com) 순위 응답·팀 ID 확인용
 
 .env.local                      # 환경변수 — Git에 올리지 않기
 .env.example                    # 팀 공유용 환경변수 이름만 작성
