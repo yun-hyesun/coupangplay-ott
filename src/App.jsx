@@ -15,6 +15,10 @@ import { Login } from './page/login/Login'
 import { ProfileSelect } from './page/profile/ProfileSelect'
 import { ProfileCreate } from './page/profile/ProfileCreate'
 import { ProfileEdit } from './page/profile/ProfileEdit'
+import { MyHistory } from './page/my/MyHistory'
+import { MyWatchlist } from './page/my/MyWatchlist'
+import { MyPurchases } from './page/my/MyPurchases'
+import { MyLive } from './page/my/MyLive'
 
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
@@ -45,6 +49,10 @@ function App() {
 
           {/* 마이페이지 */}
           <Route path='/my' element={<MyPage />} />
+          <Route path='/my/history' element={<MyHistory />} />
+          <Route path='/my/watchlist' element={<MyWatchlist />} />
+          <Route path="/my/purchases" element={<MyPurchases />} />
+          <Route path="/my/live" element={<MyLive />} />
         </Route>
 
         {/* 프로필 관련 페이지 */}
