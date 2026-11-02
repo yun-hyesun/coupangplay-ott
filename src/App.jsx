@@ -15,6 +15,7 @@ import { Login } from './page/login/Login'
 import { ProfileSelect } from './page/profile/ProfileSelect'
 import { ProfileCreate } from './page/profile/ProfileCreate'
 import { ProfileEdit } from './page/profile/ProfileEdit'
+import { Detail } from './page/detail/Detail'
 
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
@@ -38,6 +39,9 @@ function App() {
           <Route path='/movie' element={<Movie />} />
           <Route path='/store' element={<Store />} />
           <Route path='/kids' element={<Kids />} />
+
+          {/* 상세페이지 */}
+          <Route path='/detail/:id' element={<Detail />} />
 
           {/* 로그인, 회원가입 */}
           <Route path='/login' element={<Login />} />
