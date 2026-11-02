@@ -14,6 +14,9 @@ import { Store } from './page/store/Store';
 import { Drama } from './page/drama/Drama';
 import { Kids } from './page/kids/Kids';
 
+// 상세페이지
+import { Detail } from './page/detail/Detail';
+
 // 로그인, 회원가입
 import { Signup } from './page/login/SignUp';
 import { Login } from './page/login/Login';
@@ -58,6 +61,9 @@ function App() {
         <Route path="/movie" element={<Movie />} />
         <Route path="/store" element={<Store />} />
         <Route path="/kids" element={<Kids />} />
+
+        {/* 상세페이지 */}
+        <Route path="/detail/:id" element={<Detail />} />
 
         {/* 로그인, 회원가입 */}
         <Route path="/login" element={<Login />} />
