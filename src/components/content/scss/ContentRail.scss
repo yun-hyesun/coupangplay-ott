@@ -1,7 +1,9 @@
 
 .contentRail {padding: 40px $padding-main; color: $color-text-pri;
 
-  &-title { margin-bottom: 30px; font-size: 30px; font-weight: $font-w-B-700; }
+  &-heading {display: flex; align-items: center; justify-content: space-between; gap: 20px;}
+  &-more {color: inherit; white-space: nowrap; text-decoration: none; &:hover {text-decoration: underline;}}
+  &-title { margin-bottom: 20px; font-size: 28px; font-weight: $font-w-B-700; }
 
   &-card {@include flex-center($ai:flex-end); width: 100%; text-align: left; cursor: pointer;
   
@@ -9,9 +11,9 @@
       img {height: 180px;}
     }
 
-    .contentRail-info {position: relative; width: 400px;
+    .contentRail-info {position: relative; width: 386px;
     
-      .contentRail-visual { position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: $card-radius; background: #20242d; 
+      .contentRail-visual { display: block; position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: $card-radius; background: #20242d; 
 
         > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
@@ -41,3 +43,6 @@
   .swiper-button-prev {left: 0;}
   .swiper-button-next {right: 0;}
 }
+
+// 카드 hover 및 순위 레이어는 기존 클래스 그대로 재사용
+.contentRail-card {position: relative;}
