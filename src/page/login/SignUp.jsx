@@ -44,6 +44,16 @@ export const Signup = () => {
     }
   };
 
+  // 오류 종류에 따른 오류 메세지
+  const signupErrorMessages = {
+    "auth/email-already-in-use": "이미 가입된 이메일입니다.",
+    "auth/invalid-email": "올바른 이메일을 입력해 주세요.",
+    "auth/weak-password": "비밀번호가 너무 짧거나 안전하지 않습니다.",
+    "auth/network-request-failed": "네트워크 연결을 확인해 주세요.",
+    "auth/operation-not-allowed": "이메일 회원가입이 활성화되지 않았습니다."
+  };
+
+
   return (
     <main className="signup-page">
       <div className="signup-inner">
@@ -95,7 +105,9 @@ export const Signup = () => {
 
           {(message || error) && (
             <p className="signup-error" role="alert">
-              {message || "회원가입에 실패했습니다. 입력 정보를 확인해 주세요."}
+              {message ||
+                signupErrorMessages[error] ||
+                "회원가입에 실패했습니다. 다시 시도해 주세요."}
             </p>
           )}
 

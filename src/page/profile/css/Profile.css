@@ -307,7 +307,7 @@
 .profile-page .content-item {
   position: relative;
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 2/3;
   padding: 0;
   border: 2px solid transparent;
   border-radius: 8px;
