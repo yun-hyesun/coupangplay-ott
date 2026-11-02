@@ -1,0 +1,4 @@
+.morePage {padding: 70px $padding-main; min-height: 70vh; color: $color-text-pri;
+  h1 {font-size: 32px; margin-bottom: 30px;}
+  &-load {display: block; cursor: pointer; margin: 42px auto 0; padding: 14px 44px; border: 1px solid currentColor; border-radius: 8px; color: inherit; background: transparent;}
+}
