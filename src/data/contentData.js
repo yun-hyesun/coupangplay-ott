@@ -1,3 +1,4 @@
+// 화면 구성 확인용 임시 데이터
 export const contentData = {
     id: "sample-series",
     title: "작품 제목",
