@@ -156,7 +156,251 @@ const fetchCoupangList = (type, query = {}) => {
   return listRequests[requestKey];
 };
 
+// 더보기 페이지별 요청 캐시
+const morePageRequests = {};
+const providerIds = {};
+
+// 더보기 콘텐츠 요청
+const fetchMorePage = async (type, query = {}, page = 1) => {
+  const key = JSON.stringify([type, query, page]);
+
+  if (!morePageRequests[key]) {
+    morePageRequests[key] = (async () => {
+      // 영화 + TV 통합
+      if (type === 'all') {
+        const [movies, tvs] = await Promise.all([
+          fetchMorePage('movie', query, page),
+          fetchMorePage('tv', query, page),
+        ]);
+
+        const results = [...movies.results, ...tvs.results];
+
+        results.sort((a, b) => {
+          if ((query.sort_by || '').includes('date.desc')) {
+            const dateA = a.release_date || a.first_air_date || '';
+            const dateB = b.release_date || b.first_air_date || '';
+            return dateB.localeCompare(dateA);
+          }
+
+          return (b.popularity || 0) - (a.popularity || 0);
+        });
+
+        return {
+          results,
+          hasNext: movies.hasNext || tvs.hasNext,
+        };
+      }
+
+      // 티빙 제공 업체 ID 찾기
+      if (!providerIds[type]) {
+        providerIds[type] = requestTmdb(
+          `/watch/providers/${type}`,
+          { watch_region: 'KR' }
+        )
+          .then((data) => {
+            const provider = (data.results || []).find((p) => {
+              const name = p.provider_name
+                .toLowerCase()
+                .replace(/\s/g, '');
+
+              return name === 'tving' || name === '티빙';
+            });
+
+            if (!provider) {
+              throw new Error('티빙 제공 업체를 찾지 못했습니다.');
+            }
+
+            return provider.provider_id;
+          })
+          .catch((error) => {
+            delete providerIds[type];
+            throw error;
+          });
+      }
+
+      const providerId = await providerIds[type];
+
+      const today = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Asia/Seoul',
+      }).format(new Date());
+
+      const dateKey =
+        type === 'movie'
+          ? 'primary_release_date.lte'
+          : 'first_air_date.lte';
+
+      const sort = query.sort_by || 'popularity.desc';
+
+      const normalizedSort = sort.includes(',')
+        ? type === 'movie'
+          ? 'primary_release_date.desc'
+          : 'first_air_date.desc'
+        : sort;
+
+      // TMDB 콘텐츠 가져오기
+      const data = await requestTmdb(`/discover/${type}`, {
+        watch_region: 'KR',
+        with_watch_providers: String(providerId),
+        include_adult: 'false',
+        [dateKey]: today,
+        ...query,
+        sort_by: normalizedSort,
+        page: String(page),
+      });
+
+      // 기존 관람등급 필터 적용
+      const checked = await Promise.all(
+        (data.results || []).map(async (item) => {
+          if (item.adult) return null;
+
+          const allowed = await checkUnder19(type, item.id);
+
+          if (!allowed) return null;
+
+          return {
+            ...item,
+            media_type: type,
+          };
+        })
+      );
+
+      return {
+        results: checked.filter(Boolean),
+        hasNext: page < Math.min(data.total_pages || 0, 500),
+      };
+    })().catch((error) => {
+      delete morePageRequests[key];
+      throw error;
+    });
+  }
+
+  return morePageRequests[key];
+};
+
+
 export const useMovieStore = create((set, get) => ({
+  
+  // =========================
+  // 더보기 공통 페이지
+  // =========================
+
+  moreLists: {},
+  moreLoading: {},
+  moreErrors: {},
+  morePage: {},
+  moreHasNext: {},
+
+  onFetchMore: async (
+    railKey,
+    type,
+    params = {},
+    reset = false
+  ) => {
+    if (!railKey || get().moreLoading[railKey]) return;
+
+    if (!reset && get().moreHasNext[railKey] === false) {
+      return;
+    }
+
+    const page = reset
+      ? 1
+      : (get().morePage[railKey] || 0) + 1;
+
+    set((state) => ({
+      moreLoading: {
+        ...state.moreLoading,
+        [railKey]: true,
+      },
+      moreErrors: {
+        ...state.moreErrors,
+        [railKey]: null,
+      },
+    }));
+
+    try {
+      const { results, hasNext } = await fetchMorePage(
+        type,
+        params,
+        page
+      );
+
+      // 작품별 타이틀 로고 가져오기
+      const contents = await Promise.all(
+        results.map(async (item) => {
+          try {
+            const mediaType = item.media_type;
+
+            const images = await requestTmdb(
+              `/${mediaType}/${item.id}/images`,
+              { include_image_language: 'ko,en,null' }
+            );
+
+            const logos = images.logos ?? [];
+
+            // 한국어 → 영어 → 기타 순서
+            const logo =
+              logos.find((img) => img.iso_639_1 === 'ko') ||
+              logos.find((img) => img.iso_639_1 === 'en') ||
+              logos[0];
+
+            return {
+              ...item,
+              logo_path: logo?.file_path ?? null,
+            };
+          } catch {
+            return item;
+          }
+        })
+      );
+
+
+      set((state) => {
+        const old = reset
+          ? []
+          : state.moreLists[railKey] || [];
+
+        const seen = new Set(
+          old.map((item) => `${item.media_type}-${item.id}`)
+        );
+
+        const fresh = contents.filter(
+          (item) =>
+            !seen.has(`${item.media_type}-${item.id}`)
+        );
+
+        return {
+          moreLists: {
+            ...state.moreLists,
+            [railKey]: [...old, ...fresh],
+          },
+          morePage: {
+            ...state.morePage,
+            [railKey]: page,
+          },
+          moreHasNext: {
+            ...state.moreHasNext,
+            [railKey]: hasNext,
+          },
+        };
+      });
+    } catch (error) {
+      set((state) => ({
+        moreErrors: {
+          ...state.moreErrors,
+          [railKey]: error.message,
+        },
+      }));
+    } finally {
+      set((state) => ({
+        moreLoading: {
+          ...state.moreLoading,
+          [railKey]: false,
+        },
+      }));
+    }
+  },
+
+
   // 레일 이름마다 데이터와 요청 상태를 따로 저장합니다.
   rails: {},
   railLoading: {},

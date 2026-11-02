@@ -1,0 +1,29 @@
+.detail {
+  min-height: 100vh;
+  padding: 120px clamp(20px, 4vw, 80px) 80px;
+  font-family: "Pretendard", sans-serif;
+  background: #080B12;
+  color: #fff;
+}
+.detail .comments-list {
+  margin-top: 40px;
+}
+.detail .comments-list > button {
+  padding: 12px 20px;
+  border: 1px solid #525252;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.detail .comments-list > button:focus-visible {
+  outline: 2px solid #0084FF;
+  outline-offset: 4px;
+}
+.detail #detail-comment-list {
+  margin-top: 20px;
+}
+.detail #detail-comment-list[hidden] {
+  display: none;
+}
