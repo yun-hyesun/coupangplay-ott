@@ -1,7 +1,7 @@
 .contentGrid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 14px;
+  gap: 30px 10px;
   align-items: start;
   .contentRail-card {width: 100%; min-width: 0;}
   .contentRail-card .contentRail-info {width: 100%; min-width: 0;}
