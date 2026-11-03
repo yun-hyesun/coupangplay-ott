@@ -16,6 +16,7 @@ import { Kids } from './page/kids/Kids';
 
 // 상세페이지
 import { Detail } from './page/detail/Detail';
+import { Watch } from './page/watch/Watch';
 
 // 로그인, 회원가입
 import { Signup } from './page/login/SignUp';
@@ -63,7 +64,8 @@ function App() {
         <Route path="/kids" element={<Kids />} />
 
         {/* 상세페이지 */}
-        <Route path="/detail/:id" element={<Detail />} />
+        <Route path="/detail/:type/:id" element={<Detail />} />
+        <Route path="/watch/:type/:id" element={<Watch />} />
 
         {/* 로그인, 회원가입 */}
         <Route path="/login" element={<Login />} />
@@ -78,6 +80,8 @@ function App() {
 
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
+
+        
       </Route>
 
       {/* 프로필 관련 페이지 */}
