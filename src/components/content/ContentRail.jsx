@@ -43,7 +43,13 @@ export const ContentRail = ({ railKey, items: givenItems, showMore = true, ...op
       <Swiper modules={[Navigation, A11y]} navigation a11y={{ prevSlideMessage: '이전 작품', nextSlideMessage: '다음 작품' }} slidesPerView={config.slideView || 'auto'} spaceBetween={10}>
         {visible.map((item, index) => (
           <SwiperSlide key={`${item.media_type || type}-${item.id}`}>
-            <ContentCard item={item} type={type} imageType={imageType} variant={config.variant} index={index} />
+            <ContentCard
+              item={item}
+              type={item.media_type || type}
+              imageType={imageType}
+              variant={config.variant}
+              index={index}
+            />
           </SwiperSlide>
         ))}
       </Swiper>
