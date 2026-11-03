@@ -803,4 +803,33 @@ onFetchBanner: async (type = 'all') => {
       },
     }));
   },
+
+  // 상세페이지 공통: 영화/TV 상세 및 추천 콘텐츠
+  contentDetails: {},
+  detailRecommendations: {},
+  detailLoading: {},
+  detailErrors: {},
+  onFetchContentDetail: async (type, id) => {
+    const key = `${type}-${id}`;
+    if (get().contentDetails[key] || get().detailLoading[key]) return;
+    set(state => ({
+      detailLoading: { ...state.detailLoading, [key]: true },
+      detailErrors: { ...state.detailErrors, [key]: null },
+    }));
+    try {
+      const [detail, recommendations] = await Promise.all([
+        requestTmdb(`/${type}/${id}`),
+        requestTmdb(`/${type}/${id}/recommendations`, { page: '1' }),
+      ]);
+      set(state => ({
+        contentDetails: { ...state.contentDetails, [key]: { ...detail, media_type: type } },
+        detailRecommendations: { ...state.detailRecommendations, [key]: (recommendations.results ?? []).filter(item => item.backdrop_path).map(item => ({ ...item, media_type: type })) },
+      }));
+    } catch (error) {
+      set(state => ({ detailErrors: { ...state.detailErrors, [key]: error.message } }));
+    } finally {
+      set(state => ({ detailLoading: { ...state.detailLoading, [key]: false } }));
+    }
+  },
+
 }));

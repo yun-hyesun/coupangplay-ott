@@ -1,0 +1,266 @@
+.detail-hero {
+  position: relative;
+  min-height: 676px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: #1c2530;
+  border-radius: 8px;
+}
+.detail-hero__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.detail-hero__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.93) 0%, rgba(0, 0, 0, 0.55) 48%, transparent 100%), linear-gradient(0deg, #0f1114, transparent 35%);
+}
+.detail-hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 64px;
+  max-width: 780px;
+}
+.detail-hero__category {
+  display: inline-block;
+  background: #0084ff;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+.detail-hero h1 {
+  font-size: clamp(40px, 4vw, 72px);
+  line-height: 1.15;
+  margin-bottom: 24px;
+}
+.detail-hero__description {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #ddd;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.detail-hero__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.detail-button {
+  padding: 14px 28px;
+  border-radius: 6px;
+  font-weight: 700;
+  border: 1px solid #777;
+  background: rgba(20, 20, 20, 0.65);
+  color: white;
+}
+.detail-button--primary {
+  background: #0084ff;
+  border-color: #0084ff;
+}
+
+.detail-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 40px 0;
+  border-bottom: 1px solid #333;
+}
+.detail-info__main {
+  max-width: 950px;
+}
+.detail-info h2 {
+  margin-bottom: 16px;
+}
+.detail-info p {
+  color: #c9c9c9;
+  line-height: 1.7;
+}
+.detail-info__metadata {
+  min-width: 280px;
+  margin: 0;
+}
+.detail-info dl, .detail-info dd {
+  margin: 0;
+}
+.detail-info__metadata > div {
+  display: flex;
+  gap: 16px;
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+.detail-info dt {
+  color: #a3a3a3;
+  width: 45px;
+  flex-shrink: 0;
+}
+
+.detail-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.detail-episodes {
+  margin-top: 72px;
+}
+.detail-episodes__list {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-season-select select {
+  background: #24272d;
+  color: #fff;
+  border: 1px solid #555;
+  padding: 10px 18px;
+  border-radius: 6px;
+}
+
+.episode-item {
+  background: #1a1d22;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.episode-item__main {
+  display: flex;
+  gap: 24px;
+  padding: 20px;
+  min-height: 212px;
+}
+.episode-item__thumbnail {
+  position: relative;
+  width: 304px;
+  aspect-ratio: 16/9;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: #30353d;
+  overflow: hidden;
+  border-radius: 5px;
+}
+.episode-item__thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.episode-item__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+}
+.episode-item__placeholder {
+  color: #aaa;
+}
+.episode-item__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.episode-item__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.episode-item__top h3 {
+  font-size: 20px;
+}
+.episode-item__top span {
+  color: #aaa;
+}
+.episode-item__body p {
+  color: #bdbdbd;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+.episode-item__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  color: #ddd;
+}
+.episode-item__bottom button, .episode-item__reviews button {
+  border: 0;
+  background: none;
+  color: #fff;
+}
+.episode-item__reviews {
+  padding: 24px 32px;
+  background: #242830;
+  border-top: 1px solid #373c46;
+}
+.episode-item__reviews-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.episode-item__reviews p {
+  color: #aaa;
+}
+
+.detail-recommend {
+  width: 100%;
+  margin-top: 72px;
+}
+.detail-recommend .contentRail {
+  width: 100%;
+}
+
+.detail-empty {
+  color: #999;
+  padding: 28px 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .detail-page__inner {
+    width: calc(100% - 32px);
+  }
+  .detail-hero {
+    min-height: 500px;
+  }
+  .detail-hero__content {
+    padding: 32px;
+  }
+  .detail-info {
+    flex-direction: column;
+  }
+  .episode-item__main {
+    flex-direction: column;
+  }
+  .episode-item__thumbnail {
+    width: 100%;
+  }
+  .episode-item__bottom {
+    margin-top: 24px;
+  }
+}

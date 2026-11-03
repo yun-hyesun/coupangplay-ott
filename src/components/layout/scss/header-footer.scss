@@ -22,7 +22,7 @@
 
     .header-right {@include flex-center($gap: 20px);
 
-      .header-login {background: $color-pri; font-size: 18px; padding: 9px 18px; border-radius: 30px;}
+      .header-login {background: $color-pri; font-size: 14px; padding: 5px 15px; border-radius: 30px;}
 
       .header-search {@include flex-center(); height: 40px; padding: 5px 20px; border: 1px solid $color-border-light; border-radius: 30px; @include trans();
         
