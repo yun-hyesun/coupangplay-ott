@@ -143,20 +143,25 @@ export const CardHover = ({ item, type, isHover }) => {
         </div>
 
         <div className="button-box">
+          {/* 영상 재생 페이지 이동 */}
           <Link
-            to={`/${type}/${item.id}`}
+            to={`/watch/${type}/${item.id}`}
             className="button main-btn icon-play"
+            state={{ content: item }}
           >
             재생하기
           </Link>
 
+          {/* 상세페이지 이동 */}
           <Link
-            to={`/${type}/${item.id}`}
+            to={`/detail/${type}/${item.id}`}
             className="button icon-details"
+            state={{ content: item }}
           >
             상세정보
           </Link>
 
+          {/* 찜하기 */}
           <button
             type="button"
             className="button circle-btn icon-dibs"
