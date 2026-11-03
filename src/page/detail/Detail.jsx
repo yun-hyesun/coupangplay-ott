@@ -79,7 +79,7 @@ export const Detail = () => {
             <div className="detail-section-heading">
               <h2 id="episodes-title">회차</h2>
               <label className="detail-season-select"><span className="sr-only">시즌 선택</span>
-                <select value={season} onChange={e => {setSeason(e.target.value);setOpenedEpisode(null);}}>
+                <select value={season} onChange={e => { setSeason(e.target.value); setOpenedEpisode(null); }}>
                   {seasons.filter(s => s.season_number >= 0).map(s => <option key={s.id} value={s.season_number}>{s.name || `시즌 ${s.season_number}`}</option>)}
                   {!seasons.length && <option value="1">시즌 1</option>}
                 </select>
@@ -90,7 +90,7 @@ export const Detail = () => {
               {episodes.map(ep => (
                 <article className="episode-item" key={ep.id}>
                   <div className="episode-item__main">
-                    <Link className="episode-item__thumbnail" to={`/watch/tv/${id}`} state={{...watchState,episodeNumber:ep.episode_number}} aria-label={`${ep.episode_number}화 재생`}>
+                    <Link className="episode-item__thumbnail" to={`/watch/tv/${id}`} state={{ ...watchState, episodeNumber: ep.episode_number }} aria-label={`${ep.episode_number}화 재생`}>
                       {ep.still_path ? <img src={imageUrl(ep.still_path)} alt="" /> : <span className="episode-item__placeholder">{ep.episode_number}화</span>}
                       <span className="episode-item__play">▶</span>
                     </Link>
