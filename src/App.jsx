@@ -14,6 +14,9 @@ import { Store } from './page/store/Store';
 import { Drama } from './page/drama/Drama';
 import { Kids } from './page/kids/Kids';
 
+// 약관 및 정책
+import { Policy } from './page/policy/Policy';
+
 // 상세페이지
 import { Detail } from './page/detail/Detail';
 import { Watch } from './page/watch/Watch';
@@ -63,6 +66,13 @@ function App() {
         <Route path="/store" element={<Store />} />
         <Route path="/kids" element={<Kids />} />
 
+        {/* 약관 및 정책 */}
+        <Route path="/privacy" element={<Policy />} />
+        <Route path="/terms" element={<Policy />} />
+        <Route path="/wow-terms" element={<Policy />} />
+        <Route path="/play-standard" element={<Policy />} />
+        <Route path="/paid-terms" element={<Policy />} />
+
         {/* 상세페이지 */}
         <Route path="/detail/:type/:id" element={<Detail />} />
         <Route path="/watch/:type/:id" element={<Watch />} />
@@ -81,7 +91,7 @@ function App() {
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
 
-        
+
       </Route>
 
       {/* 프로필 관련 페이지 */}
