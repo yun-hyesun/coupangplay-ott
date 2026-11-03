@@ -120,8 +120,20 @@ export const Watch = () => {
               <button type="button" onClick={() => seek(-10)} disabled={!videoSrc} aria-label="10초 뒤로">↶<small>10</small></button>
               <button type="button" onClick={() => seek(10)} disabled={!videoSrc} aria-label="10초 앞으로">↷<small>10</small></button>
               <div className="watch-volume">
-                <button type="button" onClick={() => setVolumeOpen(open => !open)} aria-expanded={volumeOpen} aria-label="볼륨 열기">{muted || volume === 0 ? '🔇' : '◖))'}</button>
-                {volumeOpen && <div className="watch-volume__levels" aria-label="볼륨 선택">{[0, 35, 70, 100].map(v => <button key={v} className={volume === v ? 'is-active' : ''} type="button" onClick={() => updateVolume(v)} aria-label={`볼륨 ${v}%`}>{v}</button>)}</div>}
+                <input
+                  type="range"
+                  className="watch-volume__slider"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={muted ? 0 : volume}
+                  onChange={(e) => updateVolume(Number(e.target.value))}
+                  aria-label="볼륨 조절"
+                  aria-valuetext={`${muted ? 0 : volume}%`}
+                  style={{
+                    "--volume-progress": `${muted ? 0 : volume}%`,
+                  }}
+                />
               </div>
               <span className="watch-controls__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
