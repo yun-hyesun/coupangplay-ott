@@ -5,6 +5,8 @@ import { ContentRail } from '../../components/content/ContentRail';
 import './Detail.scss';
 
 const EMPTY = [];
+const StarIcon = ({ size = 14 }) => <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" /></svg>;
+const ActionIcon = ({ name }) => name === 'share' ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4" /></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" /></svg>;
 const IMG = 'https://image.tmdb.org/t/p/original';
 const imageUrl = (path) => path ? `${IMG}${path}` : '';
 
@@ -18,54 +20,61 @@ const Chevron = ({ up = false }) => (
   </svg>
 );
 
-const EpisodeReviews = ({ episode, reviews, onOpenPopup }) => (
-  <div className="episode-item__reviews" id={`episode-reviews-${episode.id}`}>
-    <div className="episode-item__reviews-head">
-      <h4>{episode.episode_number}화 리뷰</h4>
-      <button className="detail-review-action" type="button" onClick={onOpenPopup}>리뷰 전체보기 <Chevron /></button>
-    </div>
-    {reviews.length ? (
-      <div className="episode-item__review-list">
-        {reviews.slice(0, 3).map(review => <ReviewItem key={review.id} review={review} />)}
-      </div>
-    ) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}
+const ReviewSort = ({ sort, onSort, spoilerHidden, onToggleSpoiler }) => (
+  <div className="detail-review-sort" aria-label="리뷰 정렬">
+    <button type="button" className={sort === 'popular' ? 'is-active' : ''} onClick={() => onSort('popular')}>인기순</button>
+    <span aria-hidden="true">·</span>
+    <button type="button" className={sort === 'recent' ? 'is-active' : ''} onClick={() => onSort('recent')}>최신순</button>
+    <span aria-hidden="true">|</span>
+    <button type="button" aria-pressed={spoilerHidden} className={spoilerHidden ? 'is-active' : ''} onClick={onToggleSpoiler}>스포일러 숨김</button>
   </div>
 );
 
+const sortReviews = (reviews, sort) => [...reviews].sort((a, b) => sort === 'popular'
+  ? (Number(b.likes) || 0) - (Number(a.likes) || 0) || (Number(b.rating) || 0) - (Number(a.rating) || 0)
+  : new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+const EpisodeReviews = ({ episode, reviews, onOpenPopup }) => {
+  const [sort, setSort] = useState('popular');
+  const [spoilerHidden, setSpoilerHidden] = useState(true);
+  const visible = sortReviews(reviews.filter(review => !spoilerHidden || !review.spoiler), sort);
+  return <div className="episode-item__reviews" id={`episode-reviews-${episode.id}`}>
+    <div className="episode-item__reviews-head">
+      <h4>{episode.episode_number}화 리뷰 {reviews.length}</h4>
+      <ReviewSort sort={sort} onSort={setSort} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} />
+    </div>
+    {visible.length ? <div className="episode-item__review-list">{visible.slice(0, 3).map(review => <ReviewItem key={review.id} review={review} />)}</div> : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}
+    <button className="detail-review-action" type="button" onClick={onOpenPopup}>리뷰 전체보기 <Chevron /></button>
+  </div>;
+};
+
 const ReviewItem = ({ review }) => {
   const rating = Math.max(1, Math.min(5, Math.round(Number(review.rating) || 1)));
-  return (
-    <article className="detail-review-item">
-      <div className="detail-review-item__heading"><strong>{review.author}</strong><span className="detail-review-item__rating" aria-label={`5점 만점에 ${rating}점`}>{'★'.repeat(rating)} <span>{rating}.0 / 5</span></span></div>
-      <p>{review.content}</p>
-      <div className="detail-review-item__meta"><span>{review.createdAt ? new Date(review.createdAt).toLocaleDateString('ko-KR') : ''}</span><span>좋아요 {review.likes ?? 0}</span></div>
-    </article>
-  );
+  return <article className="detail-review-item">
+    <div className="detail-review-item__author"><strong>{review.author}</strong><span>{review.createdAt ? new Date(review.createdAt).toLocaleDateString('ko-KR') : ''}</span></div>
+    <p>{review.content}</p>
+    <div className="detail-review-item__meta"><span>좋아요 {review.likes ?? 0}</span><span aria-hidden="true">·</span><span>평점</span><span className="detail-review-item__stars" aria-label={`5점 만점에 ${rating}점`}>{Array.from({ length: rating }, (_, i) => <StarIcon key={i} />)}</span><span>{rating}.0 / 5</span></div>
+  </article>;
 };
 
 const ReviewPopup = ({ episode, reviews, onClose }) => {
   const [sort, setSort] = useState('popular');
+  const [spoilerHidden, setSpoilerHidden] = useState(true);
   const [draft, setDraft] = useState('');
-  const sorted = useMemo(() => [...reviews].sort((a, b) => sort === 'popular'
-    ? (Number(b.likes) || 0) - (Number(a.likes) || 0) || (Number(b.rating) || 0) - (Number(a.rating) || 0)
-    : new Date(b.createdAt || 0) - new Date(a.createdAt || 0)), [reviews, sort]);
-
+  const sorted = useMemo(() => sortReviews(reviews.filter(review => !spoilerHidden || !review.spoiler), sort), [reviews, sort, spoilerHidden]);
   useEffect(() => {
     const onKeyDown = (event) => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
-
-  return (
-    <div className="detail-review-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="detail-review-popup" role="dialog" aria-modal="true" aria-labelledby="detail-review-popup-title">
-        <div className="detail-review-popup__head"><h2 id="detail-review-popup-title">{episode.episode_number}화 리뷰</h2><button type="button" className="detail-review-popup__close" onClick={onClose} aria-label="리뷰 창 닫기">×</button></div>
-        <div className="detail-review-popup__tools"><span>리뷰 {reviews.length}</span><label>정렬 <select value={sort} onChange={event => setSort(event.target.value)}><option value="popular">인기순</option><option value="recent">최신순</option></select></label></div>
-        <div className="detail-review-popup__list" tabIndex="0">{sorted.length ? sorted.slice(0, 5).map(review => <ReviewItem key={review.id} review={review} />) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}</div>
-        <div className="detail-review-popup__compose"><label htmlFor="detail-review-draft">리뷰 작성</label><textarea id="detail-review-draft" value={draft} onChange={event => setDraft(event.target.value)} placeholder="작품에 대한 감상을 남겨주세요." rows="3" /><button type="button" disabled title="리뷰 저장 API 연결 전까지 비활성화">리뷰 남기기</button></div>
-      </section>
-    </div>
-  );
+  return <div className="detail-review-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+    <section className="detail-review-popup" role="dialog" aria-modal="true" aria-labelledby="detail-review-popup-title">
+      <div className="detail-review-popup__head"><h2 id="detail-review-popup-title">{episode.episode_number}화 리뷰</h2><ReviewSort sort={sort} onSort={setSort} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} /></div>
+      <div className="detail-review-popup__compose"><label className="sr-only" htmlFor="detail-review-draft">리뷰 작성</label><textarea id="detail-review-draft" value={draft} onChange={event => setDraft(event.target.value)} placeholder="이 회차에 대한 감상을 남겨주세요." rows="1" /><button type="button" disabled title="리뷰 저장 API 연결 전까지 비활성화">리뷰 남기기</button></div>
+      <div className="detail-review-popup__list" tabIndex="0">{sorted.length ? sorted.slice(0, 5).map(review => <ReviewItem key={review.id} review={review} />) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}</div>
+      <button className="detail-review-popup__close" type="button" onClick={onClose}>닫기</button>
+    </section>
+  </div>;
 };
 
 export const Detail = () => {
@@ -74,6 +83,7 @@ export const Detail = () => {
   const [season, setSeason] = useState('1');
   const [openedEpisode, setOpenedEpisode] = useState(null);
   const [popupEpisode, setPopupEpisode] = useState(null);
+  const [liked, setLiked] = useState(false);
 
   const key = `${type}-${id}`;
   const fetched = useMovieStore(s => s.contentDetails[key]);
@@ -125,7 +135,8 @@ export const Detail = () => {
             <p className="detail-hero__description">{overview}</p>
             <div className="detail-hero__actions">
               <Link className="detail-button detail-button--primary" to={`/watch/${type}/${id}`} state={watchState}>▶ 재생하기</Link>
-              <button className="detail-button detail-button--outline" type="button" disabled title="찜 기능 연결 예정">＋ 찜하기</button>
+              <button className={`detail-button detail-button--outline${liked ? ' is-active' : ''}`} type="button" aria-pressed={liked} onClick={() => setLiked(v => !v)}><ActionIcon name="like" /> 좋아요</button>
+              <button className="detail-button detail-button--outline" type="button" onClick={async () => { try { if (navigator.share) await navigator.share({ title, url: window.location.href }); else await navigator.clipboard.writeText(window.location.href); } catch { /* 사용자가 공유를 취소한 경우 */ } }}><ActionIcon name="share" /> 공유</button>
             </div>
           </div>
         </section>
@@ -133,11 +144,15 @@ export const Detail = () => {
         <section className="detail-info" aria-label="작품 정보">
           <div className="detail-info__main">
             <div className="detail-info__badges">
-              {rating && <span className="detail-info__score"><span aria-hidden="true">☆</span> {rating}</span>}
+              {rating && <span className="detail-info__score"><StarIcon size={24} /> {rating}</span>}
               {year && <span>{year}</span>}
+              {content.adult === true && <span className="detail-info__age">19+</span>}
               {type === 'tv' && content.number_of_episodes != null && <span>총 {content.number_of_episodes}회</span>}
+              {content.videoQuality && <span className="detail-info__quality">{content.videoQuality}</span>}
+              {content.wowExclusive && <span className="detail-info__wow">WOW 전용</span>}
             </div>
             <p className="detail-info__overview">{overview}</p>
+            {content.wowExclusive && <p className="detail-info__membership">와우 멤버십으로 시청 가능 · 추가 결제 없음</p>}
           </div>
           <dl className="detail-info__metadata">
             <div><dt>출연</dt><dd>{(content.credits?.cast ?? []).slice(0, 4).map(person => person.name).join(', ') || '정보 없음'}</dd></div>
