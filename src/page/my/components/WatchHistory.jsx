@@ -43,7 +43,7 @@ export const WatchHistory = () => {
       <div className="watch-history-header">
         <Link to="/my/history" className="watch-history-heading">
           <h2>시청내역</h2>
-          <img className="watch-history-arrow" src="/images/mypage/icon-arrow_right.png" alt="화살표 아이콘" />
+          <img className="watch-history-arrow" src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg" alt="화살표 아이콘" />
         </Link>
 
         <Link
@@ -51,7 +51,10 @@ export const WatchHistory = () => {
           className="watch-history-more"
           aria-label="전체 시청내역 보기"
         >
-          •••
+          <img
+            src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
+            alt=""
+          />
         </Link>
       </div>
 

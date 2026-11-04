@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react'
 import { ProfileModal } from './ProfileModal'
+import { ProfileAvatarModal } from './ProfileAvatarModal';
 import '../scss/ProfileForm.scss'
 
 export const ProfileForm = ({
     initialName = '',
-    initialAvatar = '/images/profile.svg',
+    initialAvatar = '/images/profile/profile-img/profile.svg',
     initialLocked = false,
     initialRating = 'ALL',
     onSubmit,
@@ -14,7 +15,8 @@ export const ProfileForm = ({
     loading = false
 }) => {
     const [name, setName] = useState(initialName);
-    const [avatar] = useState(initialAvatar);
+    const [avatar, setAvatar] = useState(initialAvatar);
+    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [isLocked, setIsLocked] = useState(initialLocked);
     const [rating, setRating] = useState(initialRating);
     const [message, setMessage] = useState('');
@@ -53,9 +55,19 @@ export const ProfileForm = ({
     return (
         <form className="profile-form" onSubmit={handleSubmit}>
             {/* 프로필 이미지 */}
-            <div className="profile-form-avatar">
-                <img src={avatar} alt="프로필 이미지" />
-            </div>
+            <button
+                type="button"
+                className="profile-form-avatar"
+                onClick={() => setIsAvatarModalOpen(true)}
+                disabled={loading}
+                aria-label="프로필 이미지 변경"
+                aria-haspopup="dialog"
+            >
+                <img src={avatar} alt="현재 프로필 이미지" />
+                <span className="profile-avatar-edit" aria-hidden="true">
+                    <span>✎</span>
+                </span>
+            </button>
 
             {/* 프로필 이름 */}
             <div className="profile-form-field">
@@ -163,6 +175,13 @@ export const ProfileForm = ({
                     onClose={() => setIsRatingModalOpen(false)}
                 />
             )}
+
+            <ProfileAvatarModal
+                isOpen={isAvatarModalOpen}
+                selectedAvatar={avatar}
+                onSelect={setAvatar}
+                onClose={() => setIsAvatarModalOpen(false)}
+            />
         </form>
     );
 };
