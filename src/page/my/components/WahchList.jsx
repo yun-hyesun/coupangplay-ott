@@ -81,7 +81,7 @@ export const Watchlist = () => {
                     className="watchlist-heading"
                 >
                     <h2>찜한 콘텐츠</h2>
-                    <img className="watchlist-arrow" src="/images/mypage/icon-arrow_right.png" alt="화살표 아이콘" />
+                    <img className="watchlist-arrow" src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg" alt="화살표 아이콘" />
                 </Link>
 
                 <Link
@@ -89,7 +89,10 @@ export const Watchlist = () => {
                     className="watchlist-more"
                     aria-label="전체 찜 목록 보기"
                 >
-                    •••
+                    <img
+                        src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
+                        alt=""
+                    />
                 </Link>
             </div>
 
@@ -128,10 +131,9 @@ export const Watchlist = () => {
                             <div className="watchlist-thumbnail">
                                 {item.backdrop_path || item.poster_path ? (
                                     <img
-                                        src={`https://image.tmdb.org/t/p/w780${
-                                            item.backdrop_path ||
+                                        src={`https://image.tmdb.org/t/p/w780${item.backdrop_path ||
                                             item.poster_path
-                                        }`}
+                                            }`}
                                         alt={item.title}
                                     />
                                 ) : (
