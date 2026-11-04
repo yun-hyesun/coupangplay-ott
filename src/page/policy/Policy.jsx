@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { policyData } from './policyData';
+import { policyFullText } from './policyFullText';
 import './Policy.scss';
 
 export const Policy = () => {
@@ -74,14 +75,18 @@ export const Policy = () => {
               <h2 id="policy-modal-title">{policy.title}</h2>
               <button ref={closeRef} className="policy-page__button" type="button" onClick={() => setIsModalOpen(false)}>닫기</button>
             </header>
-            <p className="policy-page__modal-description">Figma 원문 기반 요약 시안입니다. 법적 효력을 가진 전문은 공식 사이트에서 확인해 주세요.</p>
-            <div className="policy-page__modal-scroll" tabIndex={0} aria-label="약관 요약 스크롤 영역">
-              {policy.summary.map(([heading, content]) => (
-                <article className="policy-page__summary" key={heading}>
-                  <h3>{heading}</h3>
-                  <p>{content}</p>
-                </article>
-              ))}
+            <p className="policy-page__modal-description">{policy.path === '/privacy' ? '개인정보 처리방침 전문은 아직 제공되지 않아 요약만 표시합니다.' : '제공된 원문 전체 수록 · 조항 및 부칙 포함 (공식 원문과 차이가 있을 수 있습니다.)'}</p>
+            <div className="policy-page__modal-scroll" tabIndex={0} aria-label="약관 내용 스크롤 영역">
+              {policyFullText[policy.path] ? (
+                <div className="policy-page__full-text">{policyFullText[policy.path]}</div>
+              ) : (
+                policy.summary.map(([heading, content], index) => (
+                  <article className="policy-page__summary" key={`${heading}-${index}`}>
+                    <h3>{heading}</h3>
+                    {content && <p>{content}</p>}
+                  </article>
+                ))
+              )}
             </div>
             <footer className="policy-page__modal-footer">
               <a className="policy-page__button" href={policy.url} target="_blank" rel="noopener noreferrer">공식 사이트에서 전문 읽기</a>
