@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
+import WatchIcon from './WatchIcon';
 import './Watch.scss';
 
 const EMPTY = [];
@@ -12,31 +13,20 @@ const formatTime = (seconds) => {
   return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
 };
 
-// 플레이어 전용 아이콘: 다른 페이지의 아이콘/스타일에는 영향을 주지 않습니다.
-const WatchIcon = ({ name }) => {
-  const paths = {
-    back: <path d="m15 18-6-6 6-6M9 12h12" />,
-    play: <path d="m8 5 12 7-12 7z" fill="currentColor" stroke="none" />,
-    pause: <><path d="M8 5v14M16 5v14" strokeWidth="4" /></>,
-    replay: <><path d="M4 11a8 8 0 1 1 2 6M4 5v6h6" /><text x="12" y="15" fontSize="7" textAnchor="middle" stroke="none" fill="currentColor">10</text></>,
-    forward: <><path d="M20 11a8 8 0 1 0-2 6M20 5v6h-6" /><text x="12" y="15" fontSize="7" textAnchor="middle" stroke="none" fill="currentColor">10</text></>,
-    volume: <><path d="M11 5 6 9H3v6h3l5 4V5ZM15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12" /></>,
-    mute: <><path d="M11 5 6 9H3v6h3l5 4V5ZM16 9l5 6m0-6-5 6" /></>,
-    subtitles: <><rect x="2" y="5" width="20" height="14" rx="2" /><path d="M6 11h5m-5 4h3m5-4h4m-4 4h4" /></>,
-    episodes: <><path d="M4 6h16M4 12h16M4 18h16" /><path d="m7 4 3 2-3 2" /></>,
-    clips: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="m10 8 6 4-6 4V8Z" /><path d="M3 9h18" /></>,
-    settings: <><circle cx="12" cy="12" r="3" /><path d="M10 2h4l1 3 3 1 3-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-2v-3L1 9l2-4 3 1 3-1z" /></>,
-    reviews: <><path d="M4 4h16v13H8l-4 4V4Z" /><path d="M8 9h8m-8 4h6" /></>,
-    fullscreen: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
-    close: <path d="M5 5 19 19M19 5 5 19" />,
-    together: <><circle cx="9" cy="8" r="3" /><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 8h4m-2-2v4" /></>,
-    chat: <><path d="M4 4h16v13H8l-4 4V4Z" /><path d="M8 9h8m-8 4h6" /></>
-  };
-  return <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
-};
-
 // 실제 클립 API 연결 전에는 공개 클립을 허위로 생성하지 않습니다.
 const PUBLIC_CLIPS = [];
+const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const SETTINGS_OPTIONS = [
+  { tab: 'quality', label: '해상도' },
+  { tab: 'speed', label: '재생 속도' },
+  { tab: 'subtitles', label: '자막' },
+  { tab: 'audio', label: '음성' },
+];
+const SETTINGS_MESSAGES = {
+  quality: '해상도 선택은 영상 소스가 지원할 때 연결합니다.',
+  subtitles: '자막 트랙 연결 후 선택할 수 있습니다.',
+  audio: '음성 트랙 연결 후 선택할 수 있습니다.',
+};
 
 export const Watch = () => {
   const { type, id } = useParams();
@@ -57,6 +47,17 @@ export const Watch = () => {
   const onFetchEpisode = useMovieStore(s => s.onFetchEpisode);
   const onFetchEpisodeVideo = useMovieStore(s => s.onFetchEpisodeVideo);
 
+  const openEpisode = (nextNumber, autoPlayNext = false) => {
+    const episode = episodes.find(ep => Number(ep.episode_number) === Number(nextNumber));
+    const nextVideoSrc = episode?.videoSrc || state?.videoSrcByEpisode?.[nextNumber] || '';
+    navigate(`/watch/tv/${id}`, {
+      state: {
+        ...state, episodes, seasonNumber, episodeNumber: nextNumber,
+        videoSrc: nextVideoSrc, autoPlayNext, showNextEpisodeNotice: autoPlayNext,
+      },
+    });
+  };
+
   const goToNextEpisode = () => {
     if (type !== 'tv') return;
 
@@ -73,22 +74,7 @@ export const Watch = () => {
 
     const nextNumber = Number(next.episode_number);
 
-    const nextVideoSrc =
-      next.videoSrc ||
-      state?.videoSrcByEpisode?.[nextNumber] ||
-      '';
-
-    navigate(`/watch/tv/${id}`, {
-      state: {
-        ...state,
-        episodes,
-        seasonNumber,
-        episodeNumber: nextNumber,
-        videoSrc: nextVideoSrc,
-        autoPlayNext: true,
-        showNextEpisodeNotice: true,
-      },
-    });
+    openEpisode(nextNumber, true);
   };
 
   useEffect(() => {
@@ -242,7 +228,7 @@ export const Watch = () => {
           </button>
         </header>
 
-        {<div className="watch-player__bottom">
+        <div className="watch-player__bottom">
           <label className="watch-player__progress-label">
             <span className="sr-only">영상 재생 위치</span>
             <input className="watch-player__progress" type="range" min="0" max={duration || 1} step="0.1" value={currentTime}
@@ -265,14 +251,14 @@ export const Watch = () => {
               <button type="button" aria-label="전체 화면" onClick={toggleFullscreen}><WatchIcon name="fullscreen" /></button>
             </div>
           </div>
-        </div>}
+        </div>
 
         {panel && (
           <aside className="watch-panel" aria-label="플레이어 부가 패널">
             <div className="watch-panel__header"><div><h2>{({ episodes: '회차', settings: '설정', clips: togetherMode && communityTab === 'chat' ? '실시간 채팅' : '와우 클립' })[panel]}</h2>{panel === 'clips' && communityTab !== 'chat' && <p className="watch-panel__subtitle">시청자가 AI로 만든 공개 클립</p>}</div><button type="button" onClick={() => setPanel(null)} aria-label="패널 닫기"><WatchIcon name="close" /></button></div>
             {panel === 'episodes' && <div className="watch-panel__body">
               {episodes.length === 0 ? <p>회차 정보는 시즌 API 연결 후 표시됩니다.</p> : episodes.map((ep, index) => (
-                <button className="watch-episode" key={ep.id || index} type="button" onClick={() => navigate(`/watch/tv/${id}`, { state: { ...state, episodes, seasonNumber, episodeNumber: ep.episode_number || index + 1, videoSrc: ep.videoSrc || state?.videoSrcByEpisode?.[ep.episode_number || index + 1] || '', autoPlayNext: false, showNextEpisodeNotice: false } })}>
+                <button className="watch-episode" key={ep.id || index} type="button" onClick={() => openEpisode(ep.episode_number || index + 1)}>
                   <span className="watch-episode__thumb">{ep.still_path ? <img src={`https://image.tmdb.org/t/p/w300${ep.still_path}`} alt="" /> : <WatchIcon name="play" />}</span><span className="watch-episode__info"><strong>{ep.episode_number || index + 1}회</strong><em className={Number(ep.episode_number || index + 1) === Number(episodeNumber) ? 'is-playing' : ''}>{Number(ep.episode_number || index + 1) === Number(episodeNumber) ? '현재 재생 중' : '재생하기'}</em><small>{ep.overview || ep.name || '에피소드'}</small></span>
                 </button>
               ))}
@@ -280,15 +266,14 @@ export const Watch = () => {
             {panel === 'settings' && <div className="watch-panel__body watch-settings">
               {settingsTab !== 'main' && <button type="button" onClick={() => setSettingsTab('main')}>← 설정</button>}
               {settingsTab === 'main' && <>
-                <button type="button" onClick={() => setSettingsTab('quality')}>해상도 <span>›</span></button>
-                <button type="button" onClick={() => setSettingsTab('speed')}>재생 속도 <span>{speed}× ›</span></button>
-                <button type="button" onClick={() => setSettingsTab('subtitles')}>자막 <span>›</span></button>
-                <button type="button" onClick={() => setSettingsTab('audio')}>음성 <span>›</span></button>
+                {SETTINGS_OPTIONS.map(({ tab, label }) => (
+                  <button type="button" key={tab} onClick={() => setSettingsTab(tab)}>{label} <span>{tab === 'speed' ? `${speed}× ›` : '›'}</span></button>
+                ))}
               </>}
-              {settingsTab === 'speed' && [0.5, 0.75, 1, 1.25, 1.5, 2].map(v => <button type="button" key={v} onClick={() => { setSpeed(v); if (videoRef.current) videoRef.current.playbackRate = v; }}>{v}× {speed === v ? '✓' : ''}</button>)}
-              {settingsTab === 'quality' && <p>해상도 선택은 영상 소스가 지원할 때 연결합니다.</p>}
-              {settingsTab === 'subtitles' && <p>자막 트랙 연결 후 선택할 수 있습니다.</p>}
-              {settingsTab === 'audio' && <p>음성 트랙 연결 후 선택할 수 있습니다.</p>}
+              {settingsTab === 'speed' && PLAYBACK_SPEEDS.map(v => <button type="button" key={v} onClick={() => { setSpeed(v); if (videoRef.current) videoRef.current.playbackRate = v; }}>{v}× {speed === v ? '✓' : ''}</button>)}
+              {settingsTab === 'quality' && <p>{SETTINGS_MESSAGES.quality}</p>}
+              {settingsTab === 'subtitles' && <p>{SETTINGS_MESSAGES.subtitles}</p>}
+              {settingsTab === 'audio' && <p>{SETTINGS_MESSAGES.audio}</p>}
             </div>}
             {panel === 'clips' && <div className="watch-clips">
               {togetherMode && <div className="watch-community-tabs" role="tablist" aria-label="같이 보기 메뉴">
