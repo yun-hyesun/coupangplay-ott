@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import YouTube from 'react-youtube';
 import './Watch.scss';
 
 const EMPTY = [];
@@ -40,7 +41,8 @@ const PUBLIC_CLIPS = [];
 export const Watch = () => {
   const { type, id } = useParams();
   const navigate = useNavigate();
-  const { state } = useLocation();
+  const location = useLocation();
+  const { state } = location;
   const content = state?.content ?? {};
   const seasonNumber = state?.seasonNumber ?? 1;
   const episodeNumber = state?.episodeNumber || 1;
@@ -54,6 +56,41 @@ export const Watch = () => {
   const onFetchSeason = useMovieStore(s => s.onFetchSeason);
   const onFetchEpisode = useMovieStore(s => s.onFetchEpisode);
   const onFetchEpisodeVideo = useMovieStore(s => s.onFetchEpisodeVideo);
+
+  const goToNextEpisode = () => {
+    if (type !== 'tv') return;
+
+    const currentNumber = Number(episodeNumber);
+
+    const next = episodes.find(
+      ep => Number(ep.episode_number) === currentNumber + 1
+    );
+
+    if (!next) {
+      console.log('마지막 회차입니다.');
+      return;
+    }
+
+    const nextNumber = Number(next.episode_number);
+
+    const nextVideoSrc =
+      next.videoSrc ||
+      state?.videoSrcByEpisode?.[nextNumber] ||
+      '';
+
+    navigate(`/watch/tv/${id}`, {
+      state: {
+        ...state,
+        episodes,
+        seasonNumber,
+        episodeNumber: nextNumber,
+        videoSrc: nextVideoSrc,
+        autoPlayNext: true,
+        showNextEpisodeNotice: true,
+      },
+    });
+  };
+
   useEffect(() => {
     if (!id) return;
     if (type === 'movie') onFetchVideo(id);
@@ -71,6 +108,8 @@ export const Watch = () => {
   // TMDB 유튜브 예고편 키는 HTML video src로 직접 사용할 수 없습니다.
   const videoSrc = state?.videoSrc ?? '';
   const videoRef = useRef(null);
+  const autoPlayAttemptedRef = useRef(false);
+  const [nextEpisodeNotice, setNextEpisodeNotice] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -85,6 +124,37 @@ export const Watch = () => {
   const [panel, setPanel] = useState(null);
   const [settingsTab, setSettingsTab] = useState('main');
   const [speed, setSpeed] = useState(1);
+
+  // 같은 URL의 다음 회차로 이동해도 location.key 변경으로 알림을 갱신합니다.
+  // 타이머는 페이지 전환/언마운트 시 정리해 이전 알림이 남지 않도록 합니다.
+  useEffect(() => {
+    if (!state?.showNextEpisodeNotice) {
+      setNextEpisodeNotice(false);
+      return;
+    }
+    setNextEpisodeNotice(true);
+    const timer = window.setTimeout(() => setNextEpisodeNotice(false), 2500);
+    return () => window.clearTimeout(timer);
+  }, [location.key, state?.showNextEpisodeNotice]);
+
+  // videoSrc가 변경되면 재생 시간/버튼 상태를 초기화합니다.
+  // 자동 재생은 브라우저 정책에 따라 차단될 수 있으므로 실패를 처리합니다.
+  useEffect(() => {
+    autoPlayAttemptedRef.current = false;
+    setCurrentTime(0);
+    setDuration(0);
+    setPlaying(false);
+  }, [videoSrc, episodeNumber]);
+
+  const handleVideoReady = async (event) => {
+    if (!state?.autoPlayNext || autoPlayAttemptedRef.current) return;
+    autoPlayAttemptedRef.current = true;
+    try {
+      await event.currentTarget.play();
+    } catch {
+      setPlaying(false);
+    }
+  };
   const setVideoVolume = (next) => { setVolume(next); setMuted(next === 0); if (videoRef.current) videoRef.current.volume = next / 100; };
   const title = content.title || content.name || '콘텐츠 제목';
   // 같이 보기 해제 시 실시간 채팅 화면을 닫고 와우 클립으로 돌아갑니다.
@@ -131,15 +201,38 @@ export const Watch = () => {
       <div className="watch-player">
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
         {videoSrc ? (
-          <video ref={videoRef} className="watch-player__video" src={videoSrc}
+          <video ref={videoRef} className="watch-player__video" src={videoSrc} key={`${id}-${seasonNumber}-${episodeNumber}-${videoSrc}`}
             playsInline muted={muted}
             onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+            onCanPlay={handleVideoReady}
+            onEnded={goToNextEpisode}
           />
         ) : youtubeKey ? (
-          <iframe className="watch-player__youtube" title={`${title} 관련 영상`} src={`https://www.youtube.com/embed/${youtubeKey}?autoplay=1&playsinline=1`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+          <YouTube
+            key={`${youtubeKey}-${episodeNumber}`}
+            videoId={youtubeKey}
+            className="watch-player__youtube"
+            iframeClassName="watch-player__youtube-frame"
+            opts={{
+              width: '100%',
+              height: '100%',
+              playerVars: {
+                autoplay: 1,
+                playsinline: 1,
+              },
+            }}
+            onEnd={goToNextEpisode}
+          />
         ) : <div className="watch-player__placeholder">재생 가능한 예고편·클립이 없습니다.</div>}
+
+        {nextEpisodeNotice && (
+          <div className="watch-next-episode-notice" role="status" aria-live="polite">
+            <WatchIcon name="play" />
+            <span>다음 회차로 넘어갑니다.</span>
+          </div>
+        )}
 
         <header className="watch-player__header">
           <button className="watch-icon-button" type="button" onClick={() => navigate(-1)} aria-label="뒤로 가기"><WatchIcon name="back" /></button>
@@ -179,7 +272,7 @@ export const Watch = () => {
             <div className="watch-panel__header"><div><h2>{({ episodes: '회차', settings: '설정', clips: togetherMode && communityTab === 'chat' ? '실시간 채팅' : '와우 클립' })[panel]}</h2>{panel === 'clips' && communityTab !== 'chat' && <p className="watch-panel__subtitle">시청자가 AI로 만든 공개 클립</p>}</div><button type="button" onClick={() => setPanel(null)} aria-label="패널 닫기"><WatchIcon name="close" /></button></div>
             {panel === 'episodes' && <div className="watch-panel__body">
               {episodes.length === 0 ? <p>회차 정보는 시즌 API 연결 후 표시됩니다.</p> : episodes.map((ep, index) => (
-                <button className="watch-episode" key={ep.id || index} type="button" onClick={() => navigate(`/watch/tv/${id}`, { state: { ...state, episodes, seasonNumber, episodeNumber: ep.episode_number || index + 1 } })}>
+                <button className="watch-episode" key={ep.id || index} type="button" onClick={() => navigate(`/watch/tv/${id}`, { state: { ...state, episodes, seasonNumber, episodeNumber: ep.episode_number || index + 1, videoSrc: ep.videoSrc || state?.videoSrcByEpisode?.[ep.episode_number || index + 1] || '', autoPlayNext: false, showNextEpisodeNotice: false } })}>
                   <span className="watch-episode__thumb">{ep.still_path ? <img src={`https://image.tmdb.org/t/p/w300${ep.still_path}`} alt="" /> : <WatchIcon name="play" />}</span><span className="watch-episode__info"><strong>{ep.episode_number || index + 1}회</strong><em className={Number(ep.episode_number || index + 1) === Number(episodeNumber) ? 'is-playing' : ''}>{Number(ep.episode_number || index + 1) === Number(episodeNumber) ? '현재 재생 중' : '재생하기'}</em><small>{ep.overview || ep.name || '에피소드'}</small></span>
                 </button>
               ))}
