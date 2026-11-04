@@ -36,6 +36,8 @@ import { MyHistory } from './page/my/MyHistory';
 import { MyWatchlist } from './page/my/MyWatchlist';
 import { MyPurchases } from './page/my/MyPurchases';
 import { MyLive } from './page/my/MyLive';
+import { MySubscription } from './page/my/MySubscription';
+import { MyPaymentHistory } from './page/my/MyPaymentHistory';
 
 // 더보기
 import { More } from './page/more/More';
@@ -87,6 +89,10 @@ function App() {
         <Route path="/my/watchlist" element={<MyWatchlist />} />
         <Route path="/my/purchases" element={<MyPurchases />} />
         <Route path="/my/live" element={<MyLive />} />
+
+        {/* 구독내역 */}
+        <Route path="/my/subscription" element={<MySubscription />} />
+        <Route path="/my/subscription/payment" element={<MyPaymentHistory />} />
 
         {/* 더보기 */}
         <Route path="/more" element={<More />} />

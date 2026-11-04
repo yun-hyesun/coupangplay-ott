@@ -15,7 +15,7 @@ export const LiveReminder = () => {
                 >
                     <h2>라이브 예약 알림</h2>
                     <img
-                        src="/images/mypage/icon-arrow_right.png"
+                        src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
                         alt=""
                         className="live-reminder-arrow"
                     />
@@ -26,7 +26,10 @@ export const LiveReminder = () => {
                     className="live-reminder-more"
                     aria-label="전체 라이브 예약 알림 보기"
                 >
-                    •••
+                    <img
+                        src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
+                        alt=""
+                    />
                 </Link>
             </div>
 
