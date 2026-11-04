@@ -16,7 +16,7 @@ export const ProfileCreate = () => {
 
     const [profileData, setProfileData] = useState({
         name: '',
-        avatar: '/images/profile.svg',
+        avatar: '/images/profile/profile-img/profile.svg',
         isLocked: false,
         rating: 'ALL'
     });
