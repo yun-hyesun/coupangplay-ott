@@ -49,9 +49,22 @@ export const Watch = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(70);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const [quality, setQuality] = useState(1080);
+  const [clipSort, setClipSort] = useState('recommended');
+  const [togetherTab, setTogetherTab] = useState('clips');
+  const [chatText, setChatText] = useState('');
+  const [chatMessages, setChatMessages] = useState([]);
   const [panel, setPanel] = useState(null);
   const [settingsTab, setSettingsTab] = useState('main');
   const [speed, setSpeed] = useState(1);
+  const updateVolume = (next) => {
+    setVolume(next);
+    setMuted(next === 0);
+    if (videoRef.current) { videoRef.current.volume = next / 100; videoRef.current.muted = next === 0; }
+  };
+  const togglePanel = (next) => { setPanel(current => current === next ? null : next); };
   const title = content.title || content.name || '콘텐츠 제목';
 
   const togglePlay = async () => {
@@ -80,7 +93,7 @@ export const Watch = () => {
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
         {videoSrc ? (
           <video ref={videoRef} className="watch-player__video" src={videoSrc}
-            playsInline muted={muted}
+            playsInline muted={muted} onLoadedData={(e) => { e.currentTarget.volume = volume / 100; e.currentTarget.playbackRate = speed; }}
             onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
@@ -94,62 +107,89 @@ export const Watch = () => {
           <h1>{title}{type === 'tv' ? ` · ${episodeNumber}화` : ''}</h1>
         </header>
 
-        {videoSrc ? <div className="watch-player__bottom">
-          <label className="watch-player__progress-label">
+        <div className="watch-player__bottom">
+          {videoSrc && <label className="watch-player__progress-label">
             <span className="sr-only">영상 재생 위치</span>
             <input className="watch-player__progress" type="range" min="0" max={duration || 1} step="0.1" value={currentTime}
-              onChange={changeProgress} disabled={!videoSrc || !duration}
+              onChange={changeProgress} disabled={!duration}
               style={{ '--progress': `${duration ? currentTime / duration * 100 : 0}%` }} />
-          </label>
+          </label>}
           <div className="watch-controls">
             <div className="watch-controls__left">
-              <button type="button" onClick={togglePlay} aria-label={playing ? '일시 정지' : '재생'}>{playing ? 'Ⅱ' : '▶'}</button>
-              <button type="button" onClick={() => seek(-10)} aria-label="10초 뒤로">↶<small>10</small></button>
-              <button type="button" onClick={() => seek(10)} aria-label="10초 앞으로">↷<small>10</small></button>
-              <button type="button" onClick={() => setMuted(v => !v)} aria-label={muted ? '음소거 해제' : '음소거'}>{muted ? '🔇' : '◖))'}</button>
+              <button type="button" onClick={togglePlay} disabled={!videoSrc} aria-label={playing ? '일시 정지' : '재생'}>{playing ? 'Ⅱ' : '▶'}</button>
+              <button type="button" onClick={() => seek(-10)} disabled={!videoSrc} aria-label="10초 뒤로">↶<small>10</small></button>
+              <button type="button" onClick={() => seek(10)} disabled={!videoSrc} aria-label="10초 앞으로">↷<small>10</small></button>
+              <div className="watch-volume">
+                <input
+                  type="range"
+                  className="watch-volume__slider"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={muted ? 0 : volume}
+                  onChange={(e) => updateVolume(Number(e.target.value))}
+                  aria-label="볼륨 조절"
+                  aria-valuetext={`${muted ? 0 : volume}%`}
+                  style={{
+                    "--volume-progress": `${muted ? 0 : volume}%`,
+                  }}
+                />
+              </div>
               <span className="watch-controls__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
             <div className="watch-controls__right">
-              <button type="button" aria-label="자막 설정" onClick={() => { setPanel('settings'); setSettingsTab('subtitles'); }}>CC</button>
-              <button type="button" aria-label="회차 목록" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}>☷</button>
-              <button type="button" aria-label="와우 클립" onClick={() => setPanel(panel === 'clips' ? null : 'clips')}>▣</button>
-              <button type="button" aria-label="설정" onClick={() => { setPanel(panel === 'settings' ? null : 'settings'); setSettingsTab('main'); }}>⚙</button>
-              <button type="button" aria-label="리뷰 및 채팅" onClick={() => setPanel(panel === 'reviews' ? null : 'reviews')}>▤</button>
+              <button type="button" aria-label="회차 목록" aria-expanded={panel === 'episodes'} onClick={() => togglePanel('episodes')}>☷</button>
+              <button type="button" aria-label="와우 클립" aria-expanded={panel === 'clips'} onClick={() => togglePanel('clips')}>▣</button>
+              <button type="button" aria-label="설정" aria-expanded={panel === 'settings'} onClick={() => { togglePanel('settings'); setSettingsTab('main'); }}>⚙</button>
+              <button type="button" aria-label="같이 보기" aria-expanded={panel === 'together'} onClick={() => { togglePanel('together'); }}>▤</button>
               <button type="button" aria-label="전체 화면" onClick={toggleFullscreen}>⛶</button>
             </div>
           </div>
-        </div> : <div className="watch-player__quick-actions">
-          <button type="button" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}>회차 목록</button>
-          <button type="button" onClick={() => setPanel(panel === 'reviews' ? null : 'reviews')}>리뷰 · 채팅</button>
-        </div>}
+        </div>
 
-        {panel && (
-          <aside className="watch-panel" aria-label="플레이어 부가 패널">
-            <div className="watch-panel__header"><h2>{({ episodes: '회차', settings: '설정', reviews: '리뷰 · 채팅', clips: '와우 클립' })[panel]}</h2><button type="button" onClick={() => setPanel(null)} aria-label="패널 닫기">✕</button></div>
-            {panel === 'episodes' && <div className="watch-panel__body">
-              {episodes.length === 0 ? <p>회차 정보는 시즌 API 연결 후 표시됩니다.</p> : episodes.map((ep, index) => (
-                <button className="watch-episode" key={ep.id || index} type="button" onClick={() => navigate(`/watch/tv/${id}`, { state: { ...state, episodes, seasonNumber, episodeNumber: ep.episode_number || index + 1 } })}>
-                  <span className="watch-episode__thumb">▶</span><span>{ep.episode_number || index + 1}화 · {ep.name || '에피소드'}</span>
-                </button>
-              ))}
-            </div>}
-            {panel === 'settings' && <div className="watch-panel__body watch-settings">
-              {settingsTab !== 'main' && <button type="button" onClick={() => setSettingsTab('main')}>← 설정</button>}
-              {settingsTab === 'main' && <>
-                <button type="button" onClick={() => setSettingsTab('quality')}>해상도 <span>›</span></button>
-                <button type="button" onClick={() => setSettingsTab('speed')}>재생 속도 <span>{speed}× ›</span></button>
-                <button type="button" onClick={() => setSettingsTab('subtitles')}>자막 <span>›</span></button>
-                <button type="button" onClick={() => setSettingsTab('audio')}>음성 <span>›</span></button>
-              </>}
-              {settingsTab === 'speed' && [0.5, 0.75, 1, 1.25, 1.5, 2].map(v => <button type="button" key={v} onClick={() => { setSpeed(v); if (videoRef.current) videoRef.current.playbackRate = v; }}>{v}× {speed === v ? '✓' : ''}</button>)}
-              {settingsTab === 'quality' && <p>해상도 선택은 영상 소스가 지원할 때 연결합니다.</p>}
-              {settingsTab === 'subtitles' && <p>자막 트랙 연결 후 선택할 수 있습니다.</p>}
-              {settingsTab === 'audio' && <p>음성 트랙 연결 후 선택할 수 있습니다.</p>}
-            </div>}
-            {panel === 'reviews' && <div className="watch-panel__body"><p>실시간 채팅과 리뷰 목록 영역</p><div className="watch-review-compose"><input aria-label="리뷰 입력" placeholder="감상평을 입력하세요" /><button type="button">등록</button></div></div>}
-            {panel === 'clips' && <div className="watch-panel__body"><p>와우 클립 목록 영역</p></div>}
-          </aside>
-        )}
+        {panel === 'settings' && <section className="watch-settings-popup" aria-label="영상 설정">
+          <div className="watch-settings-popup__heading">
+            {settingsTab !== 'main' && <button type="button" onClick={() => setSettingsTab('main')} aria-label="설정으로 돌아가기">←</button>}
+            <span>{({ main: '설정', quality: '해상도', speed: '재생속도', subtitles: '자막', audio: '음성' })[settingsTab]}</span>
+          </div>
+          <div className="watch-settings-popup__items">
+            {settingsTab === 'main' && <>
+              <button type="button" onClick={() => setSettingsTab('quality')}>해상도 <span>{quality} ›</span></button>
+              <button type="button" onClick={() => setSettingsTab('speed')}>재생속도 <span>{speed.toFixed(1)}배속 ›</span></button>
+              <button type="button" onClick={() => setSettingsTab('subtitles')}>자막 <span>›</span></button>
+              <button type="button" onClick={() => setSettingsTab('audio')}>음성 <span>›</span></button>
+            </>}
+            {settingsTab === 'quality' && [360, 480, 720, 1080].map(v => <button type="button" key={v} onClick={() => setQuality(v)}>{v}p <span>{quality === v ? '✓' : ''}</span></button>)}
+            {settingsTab === 'speed' && [0.5, 1, 1.5, 2].map(v => <button type="button" key={v} onClick={() => { setSpeed(v); if (videoRef.current) videoRef.current.playbackRate = v; }}>{v.toFixed(1)}배속 <span>{speed === v ? '✓' : ''}</span></button>)}
+            {settingsTab === 'subtitles' && <p>자막 트랙이 연결되면 선택할 수 있습니다.</p>}
+            {settingsTab === 'audio' && <p>추가 음성 트랙이 연결되면 선택할 수 있습니다.</p>}
+          </div>
+        </section>}
+
+        {panel && panel !== 'settings' && <aside className="watch-panel" aria-label="플레이어 우측 패널">
+          <div className="watch-panel__header"><h2>{({ episodes: '회차', clips: '와우 클립', together: '같이 보기' })[panel]}</h2><button type="button" onClick={() => setPanel(null)} aria-label="패널 닫기">✕</button></div>
+          {panel === 'episodes' && <div className="watch-panel__body">
+            <p>시즌 {seasonNumber} · 회차 선택</p>
+            {episodes.length === 0 ? <p>회차 정보가 없습니다.</p> : episodes.map((ep, index) => {
+              const number = ep.episode_number || index + 1;
+              return <button className={`watch-episode ${number === episodeNumber ? 'is-active' : ''}`} key={ep.id || index} type="button" onClick={() => navigate(`/watch/tv/${id}`, { state: { ...state, episodes, seasonNumber, episodeNumber: number } })}>
+                <span className="watch-episode__thumb">{ep.still_path ? <img src={`https://image.tmdb.org/t/p/w300${ep.still_path}`} alt="" /> : '▶'}</span>
+                <span className="watch-episode__info"><strong>{number}회</strong><small>{number === episodeNumber ? '현재 재생 중' : '재생하기'}</small><span>{ep.overview || ep.name || '회차 정보'}</span></span>
+              </button>;
+            })}
+          </div>}
+          {panel === 'clips' && <div className="watch-panel__body">
+            <p>시청자가 AI로 만든 공개 클립</p>
+            <div className="watch-panel__tabs"><button type="button" className={clipSort === 'recommended' ? 'is-active' : ''} onClick={() => setClipSort('recommended')}>추천순</button><button type="button" className={clipSort === 'recent' ? 'is-active' : ''} onClick={() => setClipSort('recent')}>최신순</button></div>
+            <p>연결된 공개 클립 데이터가 없습니다.</p>
+            <button type="button" className="watch-panel__primary" disabled title="클립 제작 화면이 아직 연결되지 않았습니다">AI로 클립 만들기</button>
+          </div>}
+          {panel === 'together' && <div className="watch-panel__body">
+            <div className="watch-panel__tabs"><button type="button" className={togetherTab === 'clips' ? 'is-active' : ''} onClick={() => setTogetherTab('clips')}>와우 클립</button><button type="button" className={togetherTab === 'chat' ? 'is-active' : ''} onClick={() => setTogetherTab('chat')}>실시간 채팅</button></div>
+            {togetherTab === 'clips' ? <p>같이 보기 클립 데이터가 없습니다.</p> : <><p>함께 보고 있는 사람들과 이야기해요.</p><div className="watch-chat-messages" aria-live="polite">{chatMessages.map((msg, index) => <p key={index}><strong>나</strong> {msg}</p>)}</div><form className="watch-review-compose" onSubmit={e => { e.preventDefault(); if (chatText.trim()) { setChatMessages(items => [...items, chatText.trim()]); setChatText(''); } }}><input aria-label="채팅 입력" placeholder="메시지를 입력하세요" value={chatText} onChange={e => setChatText(e.target.value)} /><button type="submit">전송</button></form><small>프로토타입: 메시지는 이 화면에서만 표시됩니다.</small></>}
+          </div>}
+        </aside>}
+
       </div>
     </main>
   );
