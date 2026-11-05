@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .watch-page {
   position: fixed;
   inset: 0;
@@ -644,5 +645,58 @@
   }
   .watch-community-tabs {
     gap: 12px;
+  }
+}
+/* 다음 회차 자동 전환 안내: watch 페이지 내부에서만 적용 */
+.watch-page .watch-next-episode-notice {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  bottom: 130px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 20px;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  background: #262626;
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: watch-next-episode-appear 180ms ease-out both;
+}
+
+.watch-page .watch-next-episode-notice svg {
+  flex-shrink: 0;
+  color: #0084ff;
+}
+
+@keyframes watch-next-episode-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+@media (max-width: 600px) {
+  .watch-page .watch-next-episode-notice {
+    bottom: 112px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .watch-page .watch-next-episode-notice {
+    animation: none;
   }
 }

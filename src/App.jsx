@@ -48,6 +48,7 @@ import { More } from './page/more/More';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
+import { SportsWatch } from './page/home/components/SportsWatch';
 
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
@@ -104,6 +105,7 @@ function App() {
 
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
+        <Route path="/watch/sports/:id" element={<SportsWatch />} />
 
 
       </Route>
