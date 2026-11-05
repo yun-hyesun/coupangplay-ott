@@ -20,6 +20,7 @@ import { SportsBanner } from "./components/SportsBanner";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
 import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
+import { getF1RacesForDate } from "../../service/f1Service";
 import {
   getFootballScheduleForDate,
   getFootballLiveMatches,
@@ -282,6 +283,8 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
         <div className="sports-fixture__extra">
           <span>{game.competitionName || "리그 경기"}</span>
           <span>{game.stage || game.matchday ? game.stage || game.matchday + " 라운드" : "경기 정보"}</span>
+          {game.venue && <span>{game.venue}</span>}
+          {game.winnerName && <span>우승자 {game.winnerName}</span>}
           <span>한국 시간 {formatGameTime(game.utcDate || game.startTime)}</span>
         </div>
       )}
@@ -426,6 +429,7 @@ export const Sports = () => {
         getFootballScheduleForDate(selectedDate),
         getNbaGamesForSeoulDate(selectedDate),
         getKleagueMatchesForDate(selectedDate),
+        getF1RacesForDate(selectedDate),
       ]);
       isLoading = false;
 
@@ -433,14 +437,14 @@ export const Sports = () => {
 
       const games = [];
       const errors = [];
-      const providers = ["해외 축구", "NBA", "K리그"];
+      const providers = ["해외 축구·NFL", "NBA", "K리그", "F1"];
 
       results.forEach((result, index) => {
         if (result.status === "fulfilled") {
           if (index === 0) {
             games.push(...result.value.games);
             if (result.value.errors.length) {
-              errors.push("해외 축구 일부 일정을 불러오지 못했습니다: " + result.value.errors.join(" · "));
+              errors.push("해외 축구·NFL 일부 일정을 불러오지 못했습니다: " + result.value.errors.join(" · "));
             }
           } else {
             games.push(...result.value);
@@ -738,7 +742,7 @@ export const Sports = () => {
           </div>
         </div>
         <p className="sports-schedule-note">
-          {formatDateForNote(selectedDate)} 기준 · 한국 시간 (KST) · 축구, NBA, K리그 일정
+          {formatDateForNote(selectedDate)} 기준 · 한국 시간 (KST) · 축구, NFL, NBA, K리그, F1 일정
         </p>
 
         <div className="sports-calendar-month">

@@ -428,7 +428,9 @@ async function getFootballDataSchedule(competitionCode, seoulDate) {
 }
 
 function findEspnTeam(leagueId, team = {}) {
-  const names = leagueId === "nba" ? espnTeamNames.nba : espnTeamNames.soccer;
+  const names = leagueId === "nba"
+    ? espnTeamNames.nba
+    : leagueId === "nfl" ? espnTeamNames.nfl : espnTeamNames.soccer;
   const name = names[String(team.id)];
   // ESPN ID는 football-data/API Ninjas ID와 겹칠 수 있어 기존 ID 조회에 넘기지 않습니다.
   // 번역이 확인된 팀만 사용하며 리그별 사용자 제공 명단을 다시 확인합니다.
@@ -526,6 +528,9 @@ export function normalizeEspnEvent(leagueId, event) {
   const afcMatchday = ["acle", "acl2"].includes(leagueId)
     ? getAfcMatchday(event, competition, status)
     : "";
+  const nflWeek = leagueId === "nfl"
+    ? event.week?.number ?? competition.week?.number ?? ""
+    : "";
   const cupRound = ["dfb", "carabao", "copa-del-rey", "coupe-de-france"].includes(leagueId)
     ? getCupRoundLabel(event.season?.slug)
     : "";
@@ -548,8 +553,10 @@ export function normalizeEspnEvent(leagueId, event) {
     // ESPN 응답에 포함된 경기 주차를 그대로 전달합니다. 주차가 없으면
     // 화면에서 임의의 회차를 만들지 않고 표시하지 않습니다.
     matchday: event.week?.number ?? competition.week?.number ?? event.week?.text ?? competition.week?.text ?? afcMatchday,
-    stage: competition.type?.text || cupRound,
-    scheduleSegment: afcMatchday ? `${afcMatchday}라운드` : cupRound,
+    stage: nflWeek ? `${nflWeek}주차` : competition.type?.text || cupRound,
+    scheduleSegment: nflWeek
+      ? `${nflWeek}주차`
+      : afcMatchday ? `${afcMatchday}라운드` : cupRound,
     seasonYear: leagueId === "nba" ? event.season?.year ?? null : null,
     seasonType: leagueId === "nba" ? event.season?.type?.id ?? event.season?.type ?? "" : "",
     seasonPhase: leagueId === "nba"
@@ -699,7 +706,7 @@ export async function getEspnFootballLiveMatches() {
 
 export async function getEspnFootballTeams(leagueId, season) {
   const path = ESPN_LEAGUE_PATHS[leagueId];
-  if (!path?.startsWith("soccer/")) return [];
+  if (!path?.startsWith("soccer/") && leagueId !== "nfl") return [];
   const params = { limit: "1000", ...(season ? { season: String(season) } : {}) };
   const data = await espnFetch(`${path}/teams`, params, "teams");
   return data.sports[0].leagues[0].teams.flatMap(({ team }) => {
