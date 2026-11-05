@@ -15,7 +15,7 @@ export const PurchaseList = () => {
                 >
                     <h2>개별 구매</h2>
                     <img
-                        src="/images/mypage/icon-arrow_right.png"
+                        src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
                         alt=""
                         className="purchase-list-arrow"
                     />
@@ -26,7 +26,10 @@ export const PurchaseList = () => {
                     className="purchase-list-more"
                     aria-label="전체 구매 내역 보기"
                 >
-                    •••
+                    <img
+                        src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
+                        alt=""
+                    />
                 </Link>
             </div>
 

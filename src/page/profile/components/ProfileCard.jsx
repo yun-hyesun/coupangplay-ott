@@ -10,7 +10,7 @@ export const ProfileCard = ({ profile, isEditMode, onClick }) => {
     >
       <div className="profile-card-img">
         <img
-          src={profile.avatar || '/images/profile.svg'}
+          src={profile.avatar || '/images/profile/profile-img/profile.svg'}
           alt=""
         />
 

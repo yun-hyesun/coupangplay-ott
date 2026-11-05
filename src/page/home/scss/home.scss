@@ -1,3 +1,4 @@
+
 .channel {
   padding-inline: $padding-main;
   margin: 50px 0;
@@ -24,17 +25,27 @@
     }
   }
 
-  .channel-flex.is-dragging .channel-item { cursor: grabbing; }
+  .swiper {
+    .swiper-slide {
+      width: auto;
+    }
+  }
+
+  .channel-flex.is-dragging .channel-item {
+    cursor: grabbing;
+  }
+
   .channel-item {
-    cursor: grab;
     display: flex;
     flex: 0 0 180px;
     width: 180px;
     height: 90px;
     align-items: center;
     justify-content: center;
+    cursor: grab;
     border: 1px solid hsl(207, 18%, 46%);
     border-radius: 20px;
+
     background: linear-gradient(
       90deg,
       #222f3c 0%,
@@ -43,6 +54,12 @@
       #2b4054 75%,
       #222f3c 100%
     );
+
+    @include trans();
+
+    &:hover {
+      transform: translateY(-10px);
+    }
 
     img {
       width: 100%;

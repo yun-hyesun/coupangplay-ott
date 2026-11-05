@@ -10,48 +10,107 @@ import { ContentTitle } from './ContentTitle';
 import 'swiper/css';
 import './scss/ContentRail.scss';
 
-// railKey: 홈과 더보기가 같은 조건 사용 / items: 상세페이지 추천처럼 외부 데이터 전달
-export const ContentRail = ({ railKey, items: givenItems, showMore = true, ...options }) => {
-  const config = railKey ? railConfig[railKey] : options;
-  const configId = makeRailId(config || {});
+// railKey를 전달하면 홈과 더보기 페이지에서 같은 설정을 사용한다.
+// items를 전달하면 상세 페이지 추천처럼 외부에서 받은 작품을 표시한다.
+export const ContentRail = ({
+  railKey,
+  items: givenItems,
+  showMore = true,
+  kidsOnly = false,
+  intro,
+  ...options
+}) => {
+  const baseConfig = railKey ? railConfig[railKey] : options;
+
+  const config = baseConfig
+    ? {
+        ...baseConfig,
+        kidsOnly: kidsOnly || baseConfig.kidsOnly || false,
+      }
+    : null;
+
+  const configId = makeRailId(config ?? {});
   const type = config?.type || 'movie';
   const imageType = config?.imageType || '가로';
+
   const savedItems = useMovieStore((state) => state.rails[configId]);
-  const loading = useMovieStore((state) => state.railLoading[configId]);
-  const error = useMovieStore((state) => state.railErrors[configId]);
+  const loading = useMovieStore((state) => givenItems === undefined && state.railLoading[configId]);
+  const error = useMovieStore((state) => givenItems === undefined && state.railErrors[configId]);
   const onFetchRail = useMovieStore((state) => state.onFetchRail);
 
   useEffect(() => {
-    if (config && givenItems === undefined) onFetchRail(configId, type, makeParams(config));
+    if (config && givenItems === undefined) {
+      onFetchRail(configId, type, makeParams(config));
+    }
   }, [configId, type, onFetchRail, givenItems]);
 
   if (!config) return null;
+
   const items = givenItems ?? savedItems ?? [];
-  const visible = items.filter((item) => imageType === '세로' ? item.poster_path : item.backdrop_path).slice(0, config.limit || 20);
-  
+  const isPoster = imageType === '세로';
+  const visibleItems = items
+    .filter((item) => item.source === 'youtube'
+      ? item.thumbnail
+      : (isPoster ? item.poster_path : item.backdrop_path))
+    .slice(0, config.limit || 20);
+
+  const variantClass = `contentRail--${config.variant || 'default'}`;
+  const imageClass = isPoster ? 'contentRail--poster' : 'contentRail--landscape';
+
   return (
-    <section className={`contentRail contentRail--${config.variant || 'default'} ${imageType === '세로' ? 'contentRail--poster' : 'contentRail--landscape'}`}>
-      <div className="contentRail-heading">
+    <section className={`contentRail ${variantClass} ${imageClass}${intro ? ' contentRail--withIntro' : ''}`}>
+      <div className={intro ? 'contentRail-intro' : 'contentRail-heading'}>
 
-        {/* 타이틀 */}
+      {intro?.titleImage ? (
+        <h2 className="contentRail-intro-title">
+          <img src={intro.titleImage} alt={config.title} />
+        </h2>
+      ) : (
         <ContentTitle title={config.title} />
+      )}
 
-        {railKey && showMore && <Link className="contentRail-more" to={`/more?rail=${encodeURIComponent(railKey)}`}>더보기</Link>}
-      </div>
-      {loading && !items.length && <p role="status">콘텐츠를 불러오는 중입니다.</p>}
+      {intro && <p>{intro.description}</p>}
+
+      {railKey && showMore && (
+        <Link
+          className={intro ? 'contentRail-intro-link button' : 'contentRail-more'}
+          to={`/more?rail=${encodeURIComponent(railKey)}`}
+        >
+          {intro?.linkText ?? '더보기'}
+        </Link>
+      )}
+    </div>
+
+      {loading && !items.length && (
+        <p role="status">콘텐츠를 불러오는 중입니다.</p>
+      )}
       {error && <p role="alert">{error}</p>}
-      <Swiper modules={[Navigation, A11y]} navigation a11y={{ prevSlideMessage: '이전 작품', nextSlideMessage: '다음 작품' }} slidesPerView={config.slideView || 'auto'} spaceBetween={10}>
-        {visible.map((item, index) => (
-          <SwiperSlide key={`${item.media_type || type}-${item.id}`}>
-            <ContentCard
-              item={item}
-              type={item.media_type || type}
-              imageType={imageType}
-              variant={config.variant}
-              index={index}
-            />
-          </SwiperSlide>
-        ))}
+
+      <Swiper
+        modules={[Navigation, A11y]}
+        navigation
+        a11y={{
+          prevSlideMessage: '이전 작품',
+          nextSlideMessage: '다음 작품',
+        }}
+        slidesPerView={config.slideView || 'auto'}
+        spaceBetween={10}
+      >
+        {visibleItems.map((item, index) => {
+          const itemType = item.media_type || type;
+
+          return (
+            <SwiperSlide key={`${itemType}-${item.id}`}>
+              <ContentCard
+                item={item}
+                type={itemType}
+                imageType={imageType}
+                variant={config.variant}
+                index={index}
+              />
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     </section>
   );

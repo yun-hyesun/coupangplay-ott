@@ -1,8 +1,8 @@
 
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useProfileStore } from '../../../store/useProfileStore'
-import "../scss/MySidebar.scss"
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useProfileStore } from '../../../store/useProfileStore';
+import '../scss/MySidebar.scss';
 
 const MyMenus = [
     { id: 1, title: "내 티켓", path: "/my/ticket" },
@@ -11,12 +11,10 @@ const MyMenus = [
     { id: 4, title: "피드백 남기기", path: "/my/feedback" },
     { id: 5, title: "언어 설정", path: "/my/language" },
     { id: 6, title: "고객센터", path: "/my/support" },
-    { id: 7, title: "문의 내역", path: "/my/inquiry" },
-    { id: 8, title: "공지사항", path: "/my/notice" },
-    { id: 9, title: "이벤트", path: "/my/event" },
-]
+    { id: 7, title: "소식 및 혜택", path: "/my/news" },
+];
 
-export const MySidebar = () => {
+export const MySidebar = ({ onOpenLanguage }) => {
     const navigate = useNavigate();
 
     // 현재 선택된 프로필 정보
@@ -26,17 +24,20 @@ export const MySidebar = () => {
 
     // 프로필 전환
     const handleProfileChange = () => {
-        navigate("/profile");
+        navigate("/profiles");
     };
 
     return (
-        <div className='my-sidebar'>
+        <div className="my-sidebar">
             <div className="my-profile">
                 <div className="my-profile-info">
 
                     <div className="my-avatar">
                         <img
-                            src={currentProfile?.avatar || "/images/profile.svg"}
+                            src={
+                                currentProfile?.avatar ||
+                                "/images/profile/profile-img/profile.svg"
+                            }
                             alt=""
                         />
                     </div>
@@ -54,13 +55,17 @@ export const MySidebar = () => {
                     </button>
                 </div>
 
-                <button type="button" className="my-premium">
+                <button
+                    type="button"
+                    className="my-premium"
+                    onClick={() => navigate('/my/subscription')}
+                >
                     <img
                         src="/images/mypage/premium-icon.png"
                         alt="프리미엄 패스 아이콘"
                     />
                     <img
-                        src="/images/mypage/icon-arrow_right.png"
+                        src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
                         alt=""
                     />
                 </button>
@@ -70,13 +75,23 @@ export const MySidebar = () => {
                 <ul>
                     {MyMenus.map((menu) => (
                         <li key={menu.id}>
-                            <Link to={menu.path}>
-                                {menu.title}
-                            </Link>
+                            {menu.title === "언어 설정" ? (
+                                <button
+                                    type="button"
+                                    className="my-menu-button"
+                                    onClick={onOpenLanguage}
+                                >
+                                    {menu.title}
+                                </button>
+                            ) : (
+                                <Link to={menu.path}>
+                                    {menu.title}
+                                </Link>
+                            )}
                         </li>
                     ))}
                 </ul>
             </nav>
         </div>
-    )
-}
+    );
+};

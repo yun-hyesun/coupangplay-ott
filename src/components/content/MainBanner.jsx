@@ -90,7 +90,7 @@ export const MainBanner = ({ type = 'all' }) => {
             >
               <Link
                 className="main-banner-link"
-                to={`/${item.media_type}/${item.id}`}
+                to={`/detail/${item.media_type}/${item.id}`}
                 aria-label={`${title} 상세보기`}
               >
                 <div className="banner-slide-list">

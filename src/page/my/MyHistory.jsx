@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
+import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import './scss/MyHistory.scss'
 
 // 상단 콘텐츠 탭
@@ -14,62 +16,19 @@ const contentTabs = [
 // 장르 필터
 const genres = [
   '전체',
-  '스포츠',
-  '드라마',
-  '예능',
-  '영화',
-  '스토어',
-  '키즈'
-];
-
-// 임시 시청내역 데이터
-// 추후 Firebase 시청 기록 데이터로 교체
-const initialHistory = [
-  {
-    id: 1,
-    title: '너 말고 다른 연애',
-    info: '시즌 1 3화 · 24분 남음',
-    genre: '드라마',
-    image: '',
-    progress: 60
-  },
-  {
-    id: 2,
-    title: '사랑, 그날',
-    info: '시즌 1 3화 · 18분 남음',
-    genre: '드라마',
-    image: '',
-    progress: 40
-  },
-  {
-    id: 3,
-    title: '지금부터 문제는 아닙니다',
-    info: '시즌 1 3화 · 42분 남음',
-    genre: '예능',
-    image: '',
-    progress: 75
-  },
-  {
-    id: 4,
-    title: '유니버스 킬러',
-    info: '시즌 1 3화 · 35분 남음',
-    genre: '드라마',
-    image: '',
-    progress: 30
-  },
-  {
-    id: 5,
-    title: '랜덤스',
-    info: '시즌 1 3화 · 21분 남음',
-    genre: '영화',
-    image: '',
-    progress: 85
-  }
+  '시리즈',
+  '영화'
 ];
 
 export const MyHistory = () => {
-  // 시청내역 데이터
-  const [history, setHistory] = useState(initialHistory);
+  const { history, ownerKey } = useProfileWatchHistory();
+  return <HistoryList key={ownerKey ?? 'guest'} history={history} />;
+};
+
+const HistoryList = ({ history }) => {
+  const onDeleteHistory = useWatchHistoryStore((state) => state.onDeleteHistory);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
 
   // 선택된 장르
   const [activeGenre, setActiveGenre] = useState('전체');
@@ -81,10 +40,16 @@ export const MyHistory = () => {
   const [selectedIds, setSelectedIds] = useState([]);
 
   // 장르별 필터링
-  const filteredHistory = history.filter((item) => {
-    return activeGenre === '전체' ||
-      item.genre === activeGenre;
-  });
+  const filteredHistory = history
+    .filter((item) => activeGenre === '전체' ||
+      (item.media_type === 'movie' ? '영화' : '시리즈') === activeGenre)
+    .map((item) => ({
+      ...item,
+      id: item.docId,
+      image: item.backdrop_path
+        ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
+        : '',
+    }));
 
   // 콘텐츠 선택 / 해제
   const handleSelect = (id) => {
@@ -125,22 +90,19 @@ export const MyHistory = () => {
     }
   };
 
-  // 선택 삭제 (현재는 임시 데이터에서만 삭제)
-  const handleDelete = () => {
-    if (selectedIds.length === 0) return;
+  const handleDelete = async () => {
+    if (!selectedIds.length || deleting) return;
+    if (!window.confirm('선택한 시청내역을 삭제하시겠습니까?')) return;
 
-    const confirmed = window.confirm(
-      '선택한 시청내역을 삭제하시겠습니까?'
-    );
-
-    if (!confirmed) return;
-
-    setHistory((prev) =>
-      prev.filter((item) => !selectedIds.includes(item.id))
-    );
-
-    setSelectedIds([]);
-    setIsEditing(false);
+    setDeleting(true);
+    setDeleteError(false);
+    try {
+      if (await onDeleteHistory(selectedIds)) handleComplete();
+    } catch {
+      setDeleteError(true);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -198,7 +160,7 @@ export const MyHistory = () => {
                   type="button"
                   className="delete"
                   onClick={handleDelete}
-                  disabled={selectedIds.length === 0}
+                  disabled={deleting || selectedIds.length === 0}
                 >
                   선택 삭제 ({selectedIds.length})
                 </button>
@@ -228,6 +190,7 @@ export const MyHistory = () => {
           </div>
         </div>
 
+        {deleteError && <p role="alert">시청내역을 삭제하지 못했습니다.</p>}
         {/* 시청내역 콘텐츠 목록 */}
         {filteredHistory.length === 0 ? (
           <p className="my-history-empty">
@@ -319,3 +282,4 @@ export const MyHistory = () => {
     </main>
   );
 };
+

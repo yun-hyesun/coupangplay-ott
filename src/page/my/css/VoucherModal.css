@@ -1,0 +1,102 @@
+/* size */
+/* size */
+/* size */
+.voucher-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.voucher-modal {
+  width: 100%;
+  max-width: 430px;
+  min-height: 340px;
+  padding: 30px;
+  background: #24272c;
+  border-radius: 12px;
+  color: #FFFFFF;
+}
+.voucher-modal .voucher-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.voucher-modal .voucher-modal-header h3 {
+  font-family: "Pretendard", sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+.voucher-modal .voucher-modal-header button {
+  padding: 0 4px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 26px;
+  cursor: pointer;
+}
+.voucher-modal form {
+  display: flex;
+  flex-direction: column;
+  min-height: 240px;
+}
+.voucher-modal form input {
+  width: 100%;
+  height: 48px;
+  padding: 0 20px;
+  background: #3c3c3c;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #fff;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  outline: none;
+}
+.voucher-modal form input::placeholder {
+  color: #A3A3A3;
+}
+.voucher-modal form input:focus {
+  border-color: #0084FF;
+}
+.voucher-modal form .voucher-message {
+  margin-top: 12px;
+  color: #D4D4D4;
+  font-size: 14px;
+}
+.voucher-modal form .voucher-submit {
+  width: 100%;
+  height: 48px;
+  margin-top: auto;
+  background: #0084FF;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.voucher-modal form .voucher-submit:disabled {
+  background: #303339;
+  color: #999;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  .voucher-modal {
+    max-width: 100%;
+    min-height: 300px;
+    padding: 24px 20px;
+  }
+  .voucher-modal .voucher-modal-header h3 {
+    font-size: 18px;
+  }
+  .voucher-modal form {
+    min-height: 210px;
+  }
+}

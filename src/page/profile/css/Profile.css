@@ -42,7 +42,7 @@
 }
 .profile-page .profile-select-inner h2 {
   margin-bottom: 36px;
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 600;
   text-align: center;
 }
@@ -70,7 +70,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 300;
   color: #fff;
   transition: background 0.2s;
@@ -125,7 +125,7 @@
 }
 .profile-page .profile-create-inner > h2 {
   margin-bottom: 36px;
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 600;
   text-align: center;
 }
@@ -143,7 +143,7 @@
 }
 .profile-page .profile-edit > h2 {
   margin-bottom: 12px;
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 600;
   text-align: center;
 }
@@ -188,7 +188,7 @@
 }
 .profile-page .genre-select h2 {
   margin-bottom: 40px;
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 600;
   text-align: center;
 }
@@ -268,7 +268,7 @@
 }
 .profile-page .content-select > h2 {
   margin-bottom: 16px;
-  font-size: 48px;
+  font-size: 36px;
   font-weight: 600;
   text-align: center;
 }
@@ -393,7 +393,7 @@
   .profile-page .profile-edit > h2,
   .profile-page .genre-select h2,
   .profile-page .content-select > h2 {
-    font-size: 40px;
+    font-size: 34px;
   }
   .profile-page .genre-item {
     font-size: 16px;
@@ -427,7 +427,7 @@
     padding: 110px 20px 60px;
   }
   .profile-page .profile-select-inner h2 {
-    font-size: 32px;
+    font-size: 28px;
     margin-bottom: 28px;
   }
   .profile-page .profile-list {
