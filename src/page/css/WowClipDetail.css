@@ -1,0 +1,363 @@
+/* size */
+/* size */
+/* size */
+.wowclip-detail {
+  min-height: calc(100vh - 76px);
+  background: #0f1114;
+  color: #fff;
+  font-family: "Pretendard", sans-serif;
+}
+.wowclip-detail__inner {
+  max-width: 1488px;
+  margin: auto;
+  padding: 32px 64px 64px;
+}
+.wowclip-detail__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.wowclip-detail__top a,
+.wowclip-detail__top button {
+  color: #a3a3a3;
+  background: none;
+  border: 0;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+.wowclip-detail__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 912px) minmax(320px, 424px);
+  gap: 24px;
+  align-items: start;
+}
+.wowclip-detail__main {
+  min-width: 0;
+}
+.wowclip-detail__player {
+  background: #1b1e23;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  position: relative;
+}
+.wowclip-detail__scene {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(130deg, #253b58, #11151c 75%);
+}
+.wowclip-detail__scene span {
+  color: #5d9eff;
+  font-size: 14px;
+  letter-spacing: 0.24em;
+}
+.wowclip-detail__scene strong {
+  font-size: clamp(24px, 3vw, 42px);
+}
+.wowclip-detail__spoiler {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(8, 9, 10, 0.9333333333);
+}
+.wowclip-detail__spoiler button {
+  padding: 12px 20px;
+  background: #292d33;
+  border: 1px solid #737373;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.wowclip-detail__player-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 26px 24px 18px;
+  background: linear-gradient(transparent, rgba(8, 9, 10, 0.8784313725));
+  font-size: 14px;
+}
+.wowclip-detail__player-spacer {
+  flex: 1;
+}
+.wowclip-detail__main h1 {
+  font-size: 24px;
+  line-height: 32px;
+  margin: 24px 0 16px;
+}
+.wowclip-detail__creator {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.wowclip-detail__creator > div:nth-child(2) {
+  flex: 1;
+}
+.wowclip-detail__creator strong {
+  font-size: 16px;
+}
+.wowclip-detail__creator p {
+  font-size: 14px;
+  color: #a3a3a3;
+  margin-top: 4px;
+}
+.wowclip-detail__creator button {
+  background: #292d33;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+.wowclip-detail__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #292d33;
+  color: #d4d4d4;
+  font-size: 11px;
+}
+.wowclip-detail__description {
+  color: #d4d4d4;
+  margin: 18px 0;
+}
+.wowclip-detail__source {
+  margin-top: 24px;
+  border-top: 1px solid #34383d;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.wowclip-detail__source strong {
+  font-size: 16px;
+}
+.wowclip-detail__source p {
+  color: #a3a3a3;
+  margin-top: 6px;
+  font-size: 14px;
+}
+.wowclip-detail__source a {
+  background: #292d33;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+}
+.wowclip-detail__disclaimer {
+  color: #a3a3a3;
+  font-size: 13px;
+  margin-top: 24px;
+}
+.wowclip-detail__comments {
+  min-height: 620px;
+  max-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  background: #1b1e23;
+  border-radius: 12px;
+  padding: 20px;
+  overflow: hidden;
+}
+.wowclip-detail__comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #34383d;
+}
+.wowclip-detail__comments-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.wowclip-detail__comments-header span {
+  color: #a3a3a3;
+}
+.wowclip-detail__comments-header select {
+  background: #292d33;
+  color: #d4d4d4;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 14px;
+}
+.wowclip-detail__comment-list {
+  flex: 1;
+  overflow: auto;
+  padding: 18px 0;
+  min-height: 180px;
+}
+.wowclip-detail__comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.wowclip-detail__comment-content {
+  flex: 1;
+  min-width: 0;
+}
+.wowclip-detail__comment-content > p:first-child {
+  font-size: 14px;
+}
+.wowclip-detail__comment-content span,
+.wowclip-detail__comment-content small {
+  color: #a3a3a3;
+  font-size: 12px;
+}
+.wowclip-detail__comment-content__unused {
+  display: none;
+}
+.wowclip-detail__comment-body {
+  margin: 8px 0 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.wowclip-detail__comment-actions {
+  display: flex;
+  gap: 14px;
+}
+.wowclip-detail__comment-actions button {
+  background: none;
+  border: 0;
+  color: #a3a3a3;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.wowclip-detail__empty {
+  color: #a3a3a3;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.wowclip-detail__composer {
+  border-top: 1px solid #34383d;
+  padding-top: 20px;
+}
+.wowclip-detail__composer label {
+  font-size: 16px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12px;
+}
+.wowclip-detail__composer textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  background: #292d33;
+  border: 1px solid #525252;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  min-height: 90px;
+  box-sizing: border-box;
+}
+.wowclip-detail__composer textarea:focus {
+  outline: 2px solid #0084ff;
+  outline-offset: 1px;
+}
+.wowclip-detail__compose-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+.wowclip-detail__compose-bottom span {
+  color: #a3a3a3;
+  font-size: 12px;
+}
+.wowclip-detail__compose-bottom button,
+.wowclip-detail__compose-bottom a {
+  background: #0084ff;
+  border: 0;
+  color: white;
+  border-radius: 6px;
+  padding: 10px 20px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.wowclip-detail__compose-bottom button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.wowclip-detail__reply {
+  color: #a3a3a3;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.wowclip-detail__reply button {
+  background: none;
+  border: 0;
+  color: #5d9eff;
+  cursor: pointer;
+}
+.wowclip-detail__error {
+  color: #ff8b8b;
+  margin-top: 8px;
+  font-size: 13px;
+}
+.wowclip-detail--missing {
+  padding: 80px 64px;
+}
+.wowclip-detail--missing a {
+  display: inline-block;
+  margin-top: 20px;
+  color: #5d9eff;
+}
+
+@media (max-width: 1050px) {
+  .wowclip-detail__inner {
+    padding: 24px 28px 48px;
+  }
+  .wowclip-detail__layout {
+    grid-template-columns: 1fr;
+  }
+  .wowclip-detail__comments {
+    max-height: none;
+    min-height: 450px;
+  }
+  .wowclip-detail__comment-list {
+    max-height: 500px;
+  }
+}
+@media (max-width: 600px) {
+  .wowclip-detail__inner {
+    padding: 20px 16px 40px;
+  }
+  .wowclip-detail__player-controls {
+    padding: 14px 12px;
+    font-size: 12px;
+  }
+  .wowclip-detail__source {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .wowclip-detail__comments {
+    padding: 16px;
+  }
+  .wowclip-detail__main h1 {
+    font-size: 21px;
+  }
+}

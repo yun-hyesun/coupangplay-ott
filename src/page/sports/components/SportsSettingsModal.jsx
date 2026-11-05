@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SPORTS_LEAGUES } from "../../../data/sportsLeagues";
-import {
-  SPORTS_SETTINGS_CATEGORIES,
-  mergeSportsTeamDetails,
-} from "../../../data/sportsTeams";
+import { mergeSportsTeamDetails } from "../../../data/sportsTeams";
 import { getFootballTeams } from "../../../service/sportsService";
 
 const MAX_SUBSCRIPTIONS = 10;
+const SPORTS_SETTINGS_CATEGORIES = [
+  "추천",
+  "축구",
+  ...new Set(SPORTS_LEAGUES.map((league) => league.sport).filter((sport) => sport !== "축구")),
+];
 
 function getLeaguesForCategory(category) {
   if (category === "추천") {

@@ -47,6 +47,7 @@ import { MyNews } from './page/my/MyNews';
 
 // 더보기
 import { More } from './page/more/More';
+import { WowClip } from './page/wowclip/WowClip';
 // 검색
 import { Search } from './page/search/Search';
 
@@ -111,6 +112,7 @@ function App() {
 
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
+        <Route path="/wowclip" element={<WowClip />} />
         {/* 메인스포츠 하이라이트 */}
         <Route path="/watch/sports/:id" element={<SportsWatch />} />
         {/* 검색 */}
