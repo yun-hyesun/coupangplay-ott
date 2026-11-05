@@ -34,8 +34,8 @@ export const ContentRail = ({
   const imageType = config?.imageType || '가로';
 
   const savedItems = useMovieStore((state) => state.rails[configId]);
-  const loading = useMovieStore((state) => state.railLoading[configId]);
-  const error = useMovieStore((state) => state.railErrors[configId]);
+  const loading = useMovieStore((state) => givenItems === undefined && state.railLoading[configId]);
+  const error = useMovieStore((state) => givenItems === undefined && state.railErrors[configId]);
   const onFetchRail = useMovieStore((state) => state.onFetchRail);
 
   useEffect(() => {
@@ -49,7 +49,9 @@ export const ContentRail = ({
   const items = givenItems ?? savedItems ?? [];
   const isPoster = imageType === '세로';
   const visibleItems = items
-    .filter((item) => (isPoster ? item.poster_path : item.backdrop_path))
+    .filter((item) => item.source === 'youtube'
+      ? item.thumbnail
+      : (isPoster ? item.poster_path : item.backdrop_path))
     .slice(0, config.limit || 20);
 
   const variantClass = `contentRail--${config.variant || 'default'}`;

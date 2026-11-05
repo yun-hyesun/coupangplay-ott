@@ -38,12 +38,17 @@ import { MyPurchases } from './page/my/MyPurchases';
 import { MyLive } from './page/my/MyLive';
 import { MySubscription } from './page/my/MySubscription';
 import { MyPaymentHistory } from './page/my/MyPaymentHistory';
+import { MyTicket } from './page/my/MyTicket';
+import { MyCoupon } from './page/my/MyCoupon';
+import { MyReview } from './page/my/MyReview';
+import { MyFeedback } from './page/my/MyFeedback';
 
 // 더보기
 import { More } from './page/more/More';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
+import { SportsWatch } from './page/home/components/SportsWatch';
 
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
@@ -89,6 +94,10 @@ function App() {
         <Route path="/my/watchlist" element={<MyWatchlist />} />
         <Route path="/my/purchases" element={<MyPurchases />} />
         <Route path="/my/live" element={<MyLive />} />
+        <Route path="/my/ticket" element={<MyTicket />} />
+        <Route path="/my/coupon" element={<MyCoupon />} />
+        <Route path="/my/review" element={<MyReview />} />
+        <Route path="/my/feedback" element={<MyFeedback />} />
 
         {/* 구독내역 */}
         <Route path="/my/subscription" element={<MySubscription />} />
@@ -96,6 +105,7 @@ function App() {
 
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
+        <Route path="/watch/sports/:id" element={<SportsWatch />} />
 
 
       </Route>

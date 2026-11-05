@@ -6,6 +6,32 @@ import "./scss/ContentCard.scss"
 
 // Swiper와 Grid가 공통으로 쓰는 카드 (기존 hover 및 class 유지)
 export const ContentCard = ({ item, type = 'movie', imageType = '가로', variant = 'default', index = 0 }) => {
+  if (item?.source === 'youtube') {
+    const isLive = item.kind === 'live';
+    return (
+      <article className="contentRail-card contentRail-card--hor">
+        <div className="contentRail-info youtube-card">
+          <Link
+            className="contentRail-visual "
+            to={`/watch/sports/${encodeURIComponent(item.id)}`}
+            state={{ title: item.title }}
+            aria-label={`${isLive ? 'LIVE · ' : ''}${item.title} 재생`}
+          >
+            <img src={item.thumbnail} alt="" loading="lazy" />
+            {isLive && <span className="contentCard-badge live"><i aria-hidden="true"><span></span></i>LIVE</span>}
+          </Link>
+          {!item.hideTitle && (
+            <p className="contentCard-sportsTitle">{item.title}</p>
+          )}
+        </div>
+      </article>
+    );
+  }
+
+  return <TmdbContentCard {...{ item, type, imageType, variant, index }} />;
+};
+
+const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
   const [isHover, setIsHover] = useState(false);
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);
@@ -70,3 +96,4 @@ export const ContentCard = ({ item, type = 'movie', imageType = '가로', varian
     </article>
   );
 };
+
