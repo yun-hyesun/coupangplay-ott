@@ -17,6 +17,7 @@ export const ContentRail = ({
   items: givenItems,
   showMore = true,
   kidsOnly = false,
+  intro,
   ...options
 }) => {
   const baseConfig = railKey ? railConfig[railKey] : options;
@@ -55,19 +56,28 @@ export const ContentRail = ({
   const imageClass = isPoster ? 'contentRail--poster' : 'contentRail--landscape';
 
   return (
-    <section className={`contentRail ${variantClass} ${imageClass}`}>
-      <div className="contentRail-heading">
-        <ContentTitle title={config.title} />
+    <section className={`contentRail ${variantClass} ${imageClass}${intro ? ' contentRail--withIntro' : ''}`}>
+      <div className={intro ? 'contentRail-intro' : 'contentRail-heading'}>
 
-        {railKey && showMore && (
-          <Link
-            className="contentRail-more"
-            to={`/more?rail=${encodeURIComponent(railKey)}`}
-          >
-            더보기
-          </Link>
-        )}
-      </div>
+      {intro?.titleImage ? (
+        <h2 className="contentRail-intro-title">
+          <img src={intro.titleImage} alt={config.title} />
+        </h2>
+      ) : (
+        <ContentTitle title={config.title} />
+      )}
+
+      {intro && <p>{intro.description}</p>}
+
+      {railKey && showMore && (
+        <Link
+          className={intro ? 'contentRail-intro-link button' : 'contentRail-more'}
+          to={`/more?rail=${encodeURIComponent(railKey)}`}
+        >
+          {intro?.linkText ?? '더보기'}
+        </Link>
+      )}
+    </div>
 
       {loading && !items.length && (
         <p role="status">콘텐츠를 불러오는 중입니다.</p>

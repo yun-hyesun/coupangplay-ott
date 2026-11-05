@@ -3,6 +3,8 @@ import { Channel } from './components/Channel';
 import { ContentRail } from '../../components/content/ContentRail';
 
 import './scss/home.scss';
+import { BannerList } from '../../components/content/BannerList';
+import { BannerHome } from './components/BannerHome';
 
 export const Home = () => {
   return (
@@ -24,6 +26,7 @@ export const Home = () => {
 
       <ContentRail railKey="home-binge" />
 
+
       <ContentRail railKey="home-movie" />
 
       {/* 스포츠 패스 광고 */}
@@ -34,13 +37,25 @@ export const Home = () => {
 
       <ContentRail railKey="home-drama" />
 
+
       <ContentRail railKey="home-fun" />
 
       {/* 오직 쿠팡플레이에서 */}
-
+      <ContentRail railKey="home-coupang-series" />
+      
       {/* 광고 배너 */}
+      <BannerHome />
 
       {/* JPLUS */}
+      <ContentRail
+        railKey="home-jplus"
+        intro={{
+          titleImage: '/images/channal11.svg',
+          description: '다채로운 일본 드라마를 한곳에서 만나보세요',
+          linkText: '채널 둘러보기',
+        }}
+      />
+
 
       <ContentRail railKey="home-classics" />
 
