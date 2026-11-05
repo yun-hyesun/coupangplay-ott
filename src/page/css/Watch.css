@@ -399,127 +399,39 @@
   padding: 0;
 }
 
-.watch-clips {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  padding: 18px 23px 23px;
-  gap: 20px;
-}
 
-.watch-clips__sort {
-  display: flex;
-  gap: 16px;
-  flex: 0 0 auto;
-}
 
-.watch-clips__sort button {
-  padding: 0;
-  color: #A3A3A3;
-  font-size: 14px;
-  line-height: 20px;
-}
 
-.watch-clips__sort button.is-active {
-  color: #0084FF;
-}
 
-.watch-clips__list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  scrollbar-color: #A3A3A3 transparent;
-}
 
-.watch-clips__empty {
-  margin: 0;
-  padding: 24px 0;
-  color: #A3A3A3;
-  font-size: 14px;
-}
 
-.watch-clips__create {
-  width: 100%;
-  flex: 0 0 44px;
-  border-radius: 8px;
-  background: #0084FF !important;
-  font-size: 16px;
-  font-weight: 600;
-}
 
-.watch-clips__create:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
-.watch-clip-card {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 auto;
-  padding: 0 !important;
-  border-radius: 8px;
-  background: #0f1114 !important;
-  overflow: hidden;
-  text-align: left;
-}
 
-.watch-clip-card__thumbnail {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
-  display: grid;
-  place-items: center;
-  background: #08090a;
-}
 
-.watch-clip-card__thumbnail img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
-.watch-clip-card__thumbnail svg {
-  position: relative;
-}
 
-.watch-clip-card__thumbnail small {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  font-size: 12px;
-}
 
-.watch-clip-card__info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px;
-}
 
-.watch-clip-card__info strong {
-  font-size: 16px;
-  line-height: 24px;
-}
 
-.watch-clip-card__info span {
-  font-size: 12px;
-  line-height: 16px;
-  color: #A3A3A3;
-}
 
-.watch-clip-card__info em {
-  font-size: 12px;
-  line-height: 16px;
-  color: #0084FF;
-  font-style: normal;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @media (max-width: 800px) {
   .watch-panel {
@@ -556,24 +468,11 @@
   height: 20px;
 }
 
-.watch-community-tabs {
-  display: flex;
-  gap: 16px;
-  flex: 0 0 auto;
-  border-bottom: 1px solid #404040;
-  padding-bottom: 12px;
-}
 
-.watch-community-tabs button {
-  font-size: 14px;
-  color: #A3A3A3;
-  padding: 0 0 6px;
-}
 
-.watch-community-tabs button.is-active {
-  color: #0084FF;
-  border-bottom: 2px solid #0084FF;
-}
+
+
+
 
 .watch-chat {
   display: flex;
@@ -710,9 +609,7 @@
   .watch-player__header h1 {
     font-size: 14px;
   }
-  .watch-community-tabs {
-    gap: 12px;
-  }
+
 }
 /* 다음 회차 자동 전환 안내: watch 페이지 내부에서만 적용 */
 .watch-page .watch-next-episode-notice {

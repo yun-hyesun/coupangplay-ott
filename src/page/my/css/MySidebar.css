@@ -62,15 +62,41 @@
 }
 .my-sidebar .my-profile .my-premium {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
   padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
-.my-sidebar .my-profile .my-premium img {
-  display: block;
-  max-width: 100%;
+.my-sidebar .my-profile .my-premium > img:first-child:not(:last-child) {
+  max-width: 160px;
   height: auto;
+  object-fit: contain;
+}
+.my-sidebar .my-profile .my-premium .my-pass-icons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+}
+.my-sidebar .my-profile .my-premium .my-pass-icon {
+  display: block;
+  width: auto;
+  max-width: 95px;
+  height: 28px;
+  object-fit: contain;
+}
+.my-sidebar .my-profile .my-premium > img:last-child {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-left: auto;
+  object-fit: contain;
 }
 .my-sidebar .my-menu {
   width: 100%;

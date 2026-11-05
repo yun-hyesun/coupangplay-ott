@@ -1,5 +1,5 @@
-
 import { useState } from 'react';
+
 import './scss/MyReview.scss';
 
 export const MyReview = () => {
@@ -18,7 +18,7 @@ export const MyReview = () => {
     },
   };
 
-  const currentContent = emptyContent[activeTab];
+  const currentContent = emptyContent[activeTab] || emptyContent.available;
 
   return (
     <main className="my-review">
@@ -55,7 +55,6 @@ export const MyReview = () => {
           </button>
         </div>
 
-        {/* 리뷰 목록 / 빈 화면 */}
         <div className="my-review__empty" role="tabpanel">
           <h3>{currentContent.title}</h3>
           <p>{currentContent.description}</p>

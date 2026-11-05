@@ -35,6 +35,16 @@
         &:hover {
             opacity: 0.8;
         }
+
+        
+    }
+
+    // 컨텐츠 레일
+    .contentRail {padding: 0;
+
+        .contentRail-heading {
+            display: none;
+        }
     }
 
     // 오른쪽 점 세 개

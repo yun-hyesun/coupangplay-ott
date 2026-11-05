@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useProfileStore } from '../../../store/useProfileStore';
 import { useWatchHistoryStore } from '../../../store/useWatchHistoryStore';
+import { ContentRail } from '../../../components/content/ContentRail';
 
 import '../scss/WatchHistory.scss';
 
@@ -64,7 +65,15 @@ export const WatchHistory = () => {
         expectedOwnerKey !== null &&
         ownerKey === expectedOwnerKey;
 
-    const items = isCurrentList ? history.slice(0, 5) : [];
+    const items = isCurrentList
+    ? history
+        .filter((item) => !item.completed && item.backdrop_path)
+        .map((item) => ({
+            ...item,
+            resume: true,
+            ownerKey: expectedOwnerKey,
+        }))
+    : [];
 
     const isLoading =
         authLoading ||
@@ -108,40 +117,11 @@ export const WatchHistory = () => {
             ) : items.length === 0 ? (
                 <p>아직 시청한 콘텐츠가 없습니다.</p>
             ) : (
-                <div className="watch-history-grid">
-                    {items.map((item) => (
-                        <Link
-                            to={
-                                item.media_type === 'movie'
-                                    ? `/detail/movie/${item.id}`
-                                    : `/detail/tv/${item.id}`
-                            }
-                            className="watch-history-item"
-                            key={item.docId}
-                        >
-                            <div className="watch-history-thumbnail">
-                                {item.backdrop_path || item.poster_path ? (
-                                    <img
-                                        src={`https://image.tmdb.org/t/p/w780${item.backdrop_path || item.poster_path}`}
-                                        alt={item.title}
-                                    />
-                                ) : (
-                                    <span>이미지 없음</span>
-                                )}
-
-                                <div
-                                    className="watch-history-progress"
-                                    style={{
-                                        width: `${item.progress || 0}%`
-                                    }}
-                                />
-                            </div>
-
-                            <h3>{item.title}</h3>
-                            <p>{item.info}</p>
-                        </Link>
-                    ))}
-                </div>
+                <ContentRail
+                    title=""
+                    items={items}
+                    showMore={false}
+                />
             )}
         </section>
     );

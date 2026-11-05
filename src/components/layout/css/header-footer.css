@@ -15,7 +15,7 @@
 .header.active {
   background: #080B12;
 }
-.header.active .header-search {
+.header.active .header-search:has(.is-open) {
   background: #262626;
 }
 .header .inner {
@@ -64,22 +64,65 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 40px;
-  padding: 5px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  height: 44px;
+  padding: 5px 10px 5px 15px;
   border-radius: 30px;
-  transition: 0.3s ease-in-out;
+}
+.header .inner .header-right .header-search:has(.is-open) {
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 .header .inner .header-right .header-search .header-search-form {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 20px;
+}
+.header .inner .header-right .header-search .header-search-form.is-open {
+  gap: 10px;
 }
 .header .inner .header-right .header-search .header-search-form .header-search-btn {
   width: 20px;
   height: 20px;
-  background: url(images/search.svg) no-repeat center/contain;
+  background: url(/images/search.svg) no-repeat center/contain;
+}
+.header .inner .header-right .header-search .header-search-form .header-search-fields {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.header .inner .header-right .header-search .header-search-form input {
+  font-weight: 400;
+  width: 0;
+  opacity: 0;
+  transition: 0.3s ease-in-out;
+}
+.header .inner .header-right .header-search .header-search-form input::placeholder {
+  color: #D4D4D4;
+  font-size: 14px;
+}
+.header .inner .header-right .header-search .header-search-form .search-close {
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.5;
+  display: none;
+}
+.header .inner .header-right .header-search .header-search-form .search-close:hover {
+  opacity: 1;
+}
+.header .inner .header-right .header-search .header-search-form .search-close img {
+  width: 20px;
+}
+.header .inner .header-right .header-search .header-search-form.is-open input {
+  width: 210px;
+  opacity: 1;
+}
+.header .inner .header-right .header-search .header-search-form.is-open .search-close {
+  display: inline-flex;
 }
 .header .inner .header-right .myPage-btn {
   width: 35px;

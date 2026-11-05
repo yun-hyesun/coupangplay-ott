@@ -1,0 +1,428 @@
+@use '../../scss/variables' as *;
+
+.wowclip-detail {
+    min-height: calc(100vh - 76px);
+    background: #0f1114;
+    color: #fff;
+    font-family: $font-main;
+
+    &__inner {
+        max-width: 1488px;
+        margin: auto;
+        padding: 32px 64px 64px
+    }
+
+    &__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+
+        a,
+        button {
+            color: #a3a3a3;
+            background: none;
+            border: 0;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer
+        }
+    }
+
+    &__layout {
+        display: grid;
+        grid-template-columns: minmax(0, 912px) minmax(320px, 424px);
+        gap: 24px;
+        align-items: start
+    }
+
+    &__main {
+        min-width: 0
+    }
+
+    &__player {
+        background: #1b1e23;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+        position: relative
+    }
+
+    &__scene {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        background: linear-gradient(130deg, #253b58, #11151c 75%);
+
+        span {
+            color: #5d9eff;
+            font-size: 14px;
+            letter-spacing: .24em
+        }
+
+        strong {
+            font-size: clamp(24px, 3vw, 42px)
+        }
+    }
+
+    &__spoiler {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: #08090aee;
+
+        button {
+            padding: 12px 20px;
+            background: #292d33;
+            border: 1px solid #737373;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer
+        }
+    }
+
+    &__player-controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 26px 24px 18px;
+        background: linear-gradient(transparent, #08090ae0);
+        font-size: 14px
+    }
+
+    &__player-spacer {
+        flex: 1
+    }
+
+    &__main h1 {
+        font-size: 24px;
+        line-height: 32px;
+        margin: 24px 0 16px
+    }
+
+    &__creator {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+
+        >div:nth-child(2) {
+            flex: 1
+        }
+
+        strong {
+            font-size: 16px
+        }
+
+        p {
+            font-size: 14px;
+            color: #a3a3a3;
+            margin-top: 4px
+        }
+
+        button {
+            background: #292d33;
+            color: #fff;
+            border: 0;
+            border-radius: 6px;
+            padding: 10px 16px;
+            cursor: pointer
+        }
+    }
+
+    &__avatar {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #292d33;
+        color: #d4d4d4;
+        font-size: 11px
+    }
+
+    &__description {
+        color: #d4d4d4;
+        margin: 18px 0
+    }
+
+    &__source {
+        margin-top: 24px;
+        border-top: 1px solid #34383d;
+        padding-top: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+
+        strong {
+            font-size: 16px
+        }
+
+        p {
+            color: #a3a3a3;
+            margin-top: 6px;
+            font-size: 14px
+        }
+
+        a {
+            background: #292d33;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px
+        }
+    }
+
+    &__disclaimer {
+        color: #a3a3a3;
+        font-size: 13px;
+        margin-top: 24px
+    }
+
+    &__comments {
+        min-height: 620px;
+        max-height: calc(100vh - 140px);
+        display: flex;
+        flex-direction: column;
+        background: #1b1e23;
+        border-radius: 12px;
+        padding: 20px;
+        overflow: hidden
+    }
+
+    &__comments-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #34383d;
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600
+        }
+
+        span {
+            color: #a3a3a3
+        }
+
+        select {
+            background: #292d33;
+            color: #d4d4d4;
+            border: 0;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 14px
+        }
+    }
+
+    &__comment-list {
+        flex: 1;
+        overflow: auto;
+        padding: 18px 0;
+        min-height: 180px
+    }
+
+    &__comment {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 24px
+    }
+
+    &__comment-content {
+        flex: 1;
+        min-width: 0;
+
+        >p:first-child {
+            font-size: 14px
+        }
+
+        span,
+        small {
+            color: #a3a3a3;
+            font-size: 12px
+        }
+
+        &__unused {
+            display: none
+        }
+    }
+
+    &__comment-body {
+        margin: 8px 0 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 14px
+    }
+
+    &__comment-actions {
+        display: flex;
+        gap: 14px;
+
+        button {
+            background: none;
+            border: 0;
+            color: #a3a3a3;
+            cursor: pointer;
+            padding: 4px 0
+        }
+    }
+
+    &__empty {
+        color: #a3a3a3;
+        font-size: 14px;
+        line-height: 1.5
+    }
+
+    &__composer {
+        border-top: 1px solid #34383d;
+        padding-top: 20px;
+
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 12px
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            resize: vertical;
+            background: #292d33;
+            border: 1px solid #525252;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font: inherit;
+            font-size: 14px;
+            min-height: 90px;
+            box-sizing: border-box
+        }
+
+        textarea:focus {
+            outline: 2px solid #0084ff;
+            outline-offset: 1px
+        }
+    }
+
+    &__compose-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 12px;
+
+        span {
+            color: #a3a3a3;
+            font-size: 12px
+        }
+
+        button,
+        a {
+            background: #0084ff;
+            border: 0;
+            color: white;
+            border-radius: 6px;
+            padding: 10px 20px;
+            text-decoration: none;
+            cursor: pointer
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed
+        }
+    }
+
+    &__reply {
+        color: #a3a3a3;
+        font-size: 13px;
+        margin-bottom: 10px;
+
+        button {
+            background: none;
+            border: 0;
+            color: #5d9eff;
+            cursor: pointer
+        }
+    }
+
+    &__error {
+        color: #ff8b8b;
+        margin-top: 8px;
+        font-size: 13px
+    }
+
+    &--missing {
+        padding: 80px 64px;
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #5d9eff
+        }
+    }
+}
+
+@media(max-width:1050px) {
+    .wowclip-detail {
+        &__inner {
+            padding: 24px 28px 48px
+        }
+
+        &__layout {
+            grid-template-columns: 1fr
+        }
+
+        &__comments {
+            max-height: none;
+            min-height: 450px
+        }
+
+        &__comment-list {
+            max-height: 500px
+        }
+    }
+}
+
+@media(max-width:600px) {
+    .wowclip-detail {
+        &__inner {
+            padding: 20px 16px 40px
+        }
+
+        &__player-controls {
+            padding: 14px 12px;
+            font-size: 12px
+        }
+
+        &__source {
+            flex-direction: column;
+            align-items: flex-start
+        }
+
+        &__comments {
+            padding: 16px
+        }
+
+        &__main h1 {
+            font-size: 21px
+        }
+    }
+}
