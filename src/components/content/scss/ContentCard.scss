@@ -20,6 +20,18 @@
     &--ver .contentRail-info {width: 280px;
       .contentRail-visual {aspect-ratio: 2 / 3;}
     }
+
+    .youtube-card {@include trans();
+
+        &:hover {transform: translateY(-15px);}
+      }
+
+    &-sportsTitle {
+      margin-top: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
 .contentCard-badge {$badge-color: #000000; @include pos-abs($t: 5px, $r: 5px); background-color: $badge-color; font-size: 14px; padding: .2em .6em; border-radius: 5px; font-weight: $font-w-M-500;
@@ -29,4 +41,29 @@
   
     &::before {content: ''; display: block; width: 15px; height: 15px; background: url(/public/images/badge-icon.svg) no-repeat center / contain;}
   }
+  &.live {
+    @include pos-abs($t: 0px, $r: unset, $l: 0); background:#CD2626; border-radius: 0 0 10px 0; font-size: 16px; font-weight: $font-w-SB-600; @include flex-center($gap: .5em); padding: .3em .6em;
+
+    i {position: relative; display: block; width: 6px; height: 6px;
+      
+      span {width: 100%; height: 100%; position: relative;
+        display: block;  border-radius: 50%; background-color: #fff; 
+      }
+      
+      &::before {content: ''; @include pos-abs-center(); width: 100%; height: 100%; border-radius: 50%; background: rgba(255,255,255,.2); animation: live 1s ease-out alternate infinite;  backdrop-filter: blur(1px);}
+
+    }
+
+    @keyframes live {
+      0% {@include pos-abs-center-scale-s($s:1.5);}
+      100% {@include pos-abs-center-scale-n($s:3);}
+    }
+  }
+
 }
+
+
+
+
+
+

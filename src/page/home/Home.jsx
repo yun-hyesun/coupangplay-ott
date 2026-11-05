@@ -1,12 +1,15 @@
+import { useSportsRails } from './useSportsRails';
 import { MainBanner } from '../../components/content/MainBanner';
 import { Channel } from './components/Channel';
 import { ContentRail } from '../../components/content/ContentRail';
-
-import './scss/home.scss';
-import { BannerList } from '../../components/content/BannerList';
 import { BannerHome } from './components/BannerHome';
 
+
+import './scss/home.scss';
+
 export const Home = () => {
+const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSportsRails();
+
   return (
     <main>
       <MainBanner type="all"/>
@@ -31,9 +34,20 @@ export const Home = () => {
 
       {/* 스포츠 패스 광고 */}
 
-      {/* 스포츠 하이라이트 */}
+      {error && <p role="alert">스포츠 영상을 불러오지 못했습니다.</p>}
+      {highlights.length > 0 && (
+        <ContentRail title="경기 하이라이트" items={highlights} showMore={false} />
+      )}
+      {/* {replays.length > 0 && (
+        <ContentRail title="다시 보는 경기" items={replays} showMore={false} />
+      )}
+      {live.length > 0 && (
+        <ContentRail title="지금 LIVE" items={live} showMore={false} />
+      )} */}
 
-      {/* 지금 LIVE */}
+      {newsLive.length > 0 && (
+        <ContentRail title="지금 LIVE" items={newsLive} showMore={false} />
+      )}
 
       <ContentRail railKey="home-drama" />
 
