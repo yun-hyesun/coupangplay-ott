@@ -29,37 +29,91 @@ export const ContentCard = ({ item, type = 'movie', imageType = '가로', varian
   }
 
   if (item?.resume) {
-    const { id, title, media_type, position, seasonNumber, episodeNumber } = item;
-    return (
-      <article className="contentRail-card contentRail-card--hor">
-        <div className="contentRail-info">
-          <Link
-            className="contentRail-visual"
-            to={`/watch/${media_type}/${id}`}
-            state={{
-              content: item, ownerKey: item.ownerKey, resumeAt: position, seasonNumber, episodeNumber,
-              videoSrc: item.videoSrc, youtubeKey: item.youtubeKey, autoPlayNext: true,
-            }}
-            aria-label={`${title} 이어서 시청하기`}
-          >
-            <img src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`} alt="" loading="lazy" />
-            <progress
-              max="100"
-              value={Math.max(0, Math.min(100, item.progress || 0))}
-              aria-label="시청 진행률"
-              style={{ position: 'absolute', inset: 'auto 0 0', width: '100%' }}
-            />
-          </Link>
-          <p className="contentCard-sportsTitle">{title}</p>
-        </div>
-      </article>
-    );
+    return <ResumeContentCard item={item} />;
   }
 
   return <TmdbContentCard {...{ item, type, imageType, variant, index }} />;
 };
 
-const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
+const ResumeContentCard = ({ item }) => {
+  const [isHover, setIsHover] = useState(false);
+
+  const {
+    id,
+    title,
+    media_type,
+    position,
+    seasonNumber,
+    episodeNumber,
+  } = item;
+
+  return (
+    <article
+      className="contentRail-card contentRail-card--hor watchRail"
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={() => setIsHover(false)}
+      onFocus={() => setIsHover(false)}
+    >
+      <div className="contentRail-info">
+        <Link
+          className="contentRail-visual"
+          to={`/watch/${media_type}/${id}`}
+          state={{
+            content: item,
+            ownerKey: item.ownerKey,
+            resumeAt: position ?? 0,
+            seasonNumber: seasonNumber ?? 1,
+            episodeNumber: episodeNumber ?? 1,
+            videoSrc: item.videoSrc || '',
+            youtubeKey: item.youtubeKey || '',
+            autoPlayNext: true,
+          }}
+          aria-label={`${title} 이어서 시청하기`}
+        >
+          <img
+            src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`}
+            alt=""
+            loading="lazy"
+          />
+
+          <progress
+            max="100"
+            value={Math.max(0, Math.min(100, item.progress || 0))}
+            aria-label="시청 진행률"
+            className="contentCard-progress"
+          />
+        </Link>
+
+        <p className="contentCard-sportsTitle">{title}</p>
+
+        <p className="contentCard-resumeInfo">
+          {media_type === 'tv' && (
+            <span>
+              시즌 {seasonNumber ?? 1} {episodeNumber ?? 1}화
+            </span>
+          )}
+
+          {item.duration > 0 && (
+            <span>
+              {media_type === 'tv' && ' · '}
+              {Math.ceil(
+                Math.max(0, item.duration - (position ?? 0)) / 60
+              )}분 남음
+            </span>
+          )}
+        </p>
+      </div>
+
+      <CardHover
+        item={item}
+        type={media_type}
+        isHover={isHover}
+      />
+    </article>
+  );
+};
+
+  const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
   const [isHover, setIsHover] = useState(false);
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);

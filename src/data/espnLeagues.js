@@ -20,4 +20,5 @@ export const ESPN_LEAGUE_PATHS = {
   acle: "soccer/afc.champions",
   acl2: "soccer/afc.cup",
   nba: "basketball/nba",
+  nfl: "football/nfl",
 };

@@ -250,3 +250,416 @@
 @media (prefers-reduced-motion: reduce) {
   .wowclip-page button, .wowclip-overlay button, .wowclip-card-play { transition: none; }
 }
+.wow-clip-page {
+    min-height: calc(100dvh - 76px);
+    padding: 56px 24px 72px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #080b12;
+    color: #fff;
+    font-family: $font-main;
+}
+
+.wow-clip-page__backdrop {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(130deg, rgba(20, 34, 54, .55), rgba(0, 0, 0, .82)), #080b12;
+}
+
+.wow-clip-editor {
+    position: relative;
+    width: min(1088px, 100%);
+    background: #0f1114;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+}
+
+.wow-clip-editor__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    h1 {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 28px;
+    }
+
+    p {
+        font-size: 13px;
+        color: #a3a3a3;
+        margin-top: 4px;
+    }
+}
+
+.wow-clip-editor__close {
+    border: 0;
+    color: #fff;
+    background: transparent;
+    width: 44px;
+    height: 44px;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+.wow-clip-editor__body {
+    display: grid;
+    grid-template-columns: minmax(0, 640px) minmax(260px, 1fr);
+    gap: 32px;
+}
+
+.wow-clip-editor__workspace {
+    min-width: 0;
+}
+
+.wow-clip-editor__preview {
+    overflow: hidden;
+    border-radius: 8px;
+    background: #262626;
+}
+
+.wow-clip-editor__screen {
+    aspect-ratio: 16/9;
+    background: #151a23;
+    position: relative;
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+}
+
+.wow-clip-editor__placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    padding: 20px;
+    background: radial-gradient(ellipse at 40% 35%, #263750, #10151d 65%);
+
+    span {
+        font-weight: 800;
+        font-size: 13px;
+        letter-spacing: .2em;
+        color: #5d9eff;
+    }
+
+    strong {
+        font-size: 24px;
+    }
+
+    p {
+        color: #d4d4d4;
+    }
+
+    small {
+        color: #a3a3a3;
+    }
+}
+
+.wow-clip-editor__player-actions {
+    height: 44px;
+    background: #0f1114;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+
+    button {
+        background: transparent;
+        border: 0;
+        color: #fff;
+        font: inherit;
+        font-size: 14px;
+        min-height: 40px;
+        padding: 0 8px;
+        cursor: pointer;
+        border-radius: 6px;
+
+        &:hover {
+            background: #292d33;
+        }
+    }
+
+    .wow-clip-editor__captions {
+        margin-left: auto;
+        color: #d4d4d4;
+    }
+}
+
+.wow-clip-range {
+    margin-top: 16px;
+}
+
+.wow-clip-range__labels,
+.wow-clip-range__summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #a3a3a3;
+    font-size: 14px;
+    height: 28px;
+}
+
+.wow-clip-range__summary {
+    height: 44px;
+    color: #d4d4d4;
+
+    strong {
+        padding: 4px 10px;
+        background: #292d33;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+}
+
+.wow-clip-range__track {
+    position: relative;
+    height: 48px;
+    margin: 4px 9px;
+}
+
+.wow-clip-range__ticks {
+    position: absolute;
+    inset: 8px 0;
+    border-radius: 4px;
+    background: repeating-linear-gradient(90deg, transparent 0, transparent calc(5% - 1px), #737373 calc(5% - 1px), #737373 5%), #1b1e23;
+}
+
+.wow-clip-range__selection {
+    position: absolute;
+    height: 40px;
+    top: 4px;
+    background: rgba(0, 132, 255, .48);
+    border: 2px solid #0084ff;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.wow-clip-range__input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 48px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    pointer-events: none;
+
+    &::-webkit-slider-runnable-track {
+        background: transparent;
+        height: 48px;
+    }
+
+    &::-moz-range-track {
+        background: transparent;
+    }
+
+    &::-webkit-slider-thumb {
+        appearance: none;
+        pointer-events: auto;
+        cursor: ew-resize;
+        height: 40px;
+        width: 12px;
+        margin-top: 4px;
+        background: linear-gradient(90deg, #0084ff 0 33%, #fff 33% 42%, #0084ff 42% 58%, #fff 58% 67%, #0084ff 67%);
+        border-radius: 4px;
+    }
+
+    &::-moz-range-thumb {
+        pointer-events: auto;
+        cursor: ew-resize;
+        height: 40px;
+        width: 12px;
+        border: 0;
+        border-radius: 4px;
+        background: #0084ff;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #5d9eff;
+        outline-offset: 2px;
+    }
+}
+
+.wow-clip-range__input--start {
+    z-index: 2;
+}
+
+.wow-clip-range__input--end {
+    z-index: 3;
+}
+
+.wow-clip-editor__help {
+    color: #a3a3a3;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.wow-clip-editor__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 14px;
+        color: #d4d4d4;
+    }
+
+    input:not([type='radio']):not([type='checkbox']),
+    textarea {
+        box-sizing: border-box;
+        width: 100%;
+        border: 1px solid #404040;
+        border-radius: 8px;
+        padding: 12px;
+        color: #fff;
+        background: #1b1e23;
+        font: inherit;
+        font-size: 14px;
+        resize: vertical;
+
+        &:focus {
+            outline: 2px solid #0084ff;
+        }
+    }
+
+    fieldset {
+        padding: 0;
+        border: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        legend {
+            font-size: 14px;
+            color: #d4d4d4;
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            cursor: pointer;
+        }
+    }
+
+    .wow-clip-editor__checkbox {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+.wow-clip-editor__note {
+    font-size: 13px;
+    color: #a3a3a3;
+}
+
+.wow-clip-editor__submit {
+    background: #0084ff;
+    border: 0;
+    color: #fff;
+    border-radius: 8px;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        background: #006bc6;
+    }
+}
+
+.wow-clip-editor__disclaimer {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #a3a3a3;
+}
+
+.wow-clip-editor__notice {
+    margin-top: 18px;
+    padding: 12px 16px;
+    background: #1b1e23;
+    border-radius: 8px;
+    color: #d4d4d4;
+    font-size: 14px;
+}
+
+@media(max-width:900px) {
+    .wow-clip-editor__body {
+        grid-template-columns: 1fr;
+    }
+
+    .wow-clip-editor {
+        max-width: 680px;
+    }
+
+    .wow-clip-page {
+        padding: 24px 12px 48px;
+    }
+}
+
+@media(max-width:480px) {
+    .wow-clip-editor {
+        padding: 18px;
+    }
+
+    .wow-clip-editor__header {
+        margin-bottom: 16px;
+    }
+
+    .wow-clip-editor__placeholder strong {
+        font-size: 18px;
+    }
+
+    .wow-clip-editor__player-actions button {
+        font-size: 12px;
+    }
+}
+
+.wow-clip-editor__submit-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.wow-clip-editor__submit-actions>button {
+    flex: 1;
+    min-height: 44px;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+}
+
+.wow-clip-editor__submit-actions .wow-clip-editor__draft {
+    background: #292d33;
+    color: #fff;
+    border: 1px solid #525252;
+}
+
+.wow-clip-editor__submit-actions .wow-clip-editor__submit {
+    background: #0084ff;
+    color: #fff;
+    border: 0;
+}
+
+.wow-clip-editor__submit-actions button:hover {
+    filter: brightness(1.12);
+}
