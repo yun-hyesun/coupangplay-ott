@@ -1,0 +1,59 @@
+body:has(.wowclip-shortfeed) { overflow: hidden; }
+.wowclip-shortfeed { position: fixed; z-index: 900; inset: 70px 0 0; display: flex; flex-direction: column; background: #101215; }
+.wowclip-feed-toolbar { display: flex; flex: 0 0 56px; align-items: center; justify-content: space-between; padding: 0 32px; }
+.wowclip-feed-toolbar > span { color: #a3a3a3; font-size: 13px; }
+.wowclip-feed-body { display: flex; flex: 1; min-height: 0; gap: 16px; padding: 0 32px 24px; }
+.wowclip-feed-column { position: relative; flex: 1; min-width: 0; min-height: 0; }
+.wowclip-feed-scroll { position: relative; width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; scroll-snap-type: y mandatory; overscroll-behavior-y: contain; scrollbar-width: none; }
+.wowclip-feed-scroll::-webkit-scrollbar { display: none; }
+.wowclip-feed-scroll:focus-visible { outline-offset: 0; }
+.wowclip-feed-item { display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 16px; width: 100%; height: 100%; min-height: 0; margin-bottom: 20px; scroll-snap-align: start; scroll-snap-stop: always; }
+.wowclip-feed-stage { position: relative; min-width: 0; height: 100%; overflow: hidden; border-radius: 16px; background: #000; }
+.wowclip-feed-poster { position: absolute; inset: 0; display: grid; place-items: center; background: #000; }
+.wowclip-feed-poster > img { width: 100%; height: 100%; object-fit: contain; }
+.wowclip-feed-poster > span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(0,0,0,.8); }
+.wowclip-feed-info { position: absolute; z-index: 3; bottom: 28px; left: 24px; max-width: min(640px, calc(100% - 48px)); padding: 16px 24px 8px 0; text-shadow: 0 1px 4px rgba(0,0,0,.8); pointer-events: none; }
+.wowclip-feed-info::before { position: absolute; z-index: -1; inset: -48px -36px -28px -24px; background: linear-gradient(transparent,rgba(0,0,0,.65)); content: ''; }
+.wowclip-feed-info a { pointer-events: auto; }
+.wowclip-feed-info h2 { margin-top: 12px; font-size: 18px; font-weight: 600; line-height: 26px; overflow-wrap: anywhere; }
+.wowclip-feed-info > p { margin: 4px 0 12px; color: #d4d4d4; font-size: 12px; line-height: 18px; }
+.wowclip-feed-author { display: flex; align-items: center; gap: 8px; }
+.wowclip-feed-author img { border-radius: 50%; object-fit: cover; }
+.wowclip-feed-author strong { font-size: 15px; }
+.wowclip-feed-author > span { padding: 2px 8px; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; font-size: 12px; }
+.wowclip-feed-source, .wowclip-feed-category { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; margin: 0 6px 0 0; padding: 5px 10px; border-radius: 6px; background: rgba(65,65,65,.85); font-size: 13px; line-height: 20px; text-shadow: none; }
+.wowclip-feed-actions { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 20px; padding-bottom: 24px; }
+.wowclip-feed-actions button { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 48px; color: #fff; }
+.wowclip-feed-actions button > span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #24262a; }
+.wowclip-feed-actions button:hover > span { background: #3c3e43; }
+.wowclip-feed-actions button[aria-pressed='true'] { color: #ff5674; }
+.wowclip-feed-actions small { font-size: 13px; line-height: 18px; }
+.wowclip-feed-more { position: relative; }
+.wowclip-feed-menu { position: absolute; z-index: 10; right: 56px; bottom: 0; width: 160px; padding: 8px; border-radius: 10px; background: #292d33; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+.wowclip-feed-menu button { display: block; width: 100%; padding: 10px; text-align: left; font-size: 14px; }
+.wowclip-feed-menu button:hover { background: #414954; }
+.wowclip-feed-navigation { position: absolute; z-index: 4; top: 38%; right: 8px; display: flex; flex-direction: column; gap: 12px; }
+.wowclip-feed-navigation button { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #24262a; }
+.wowclip-feed-navigation button:disabled { opacity: .25; }
+.wowclip-feed-body > .wowclip-comments { flex: 0 0 400px; align-self: stretch; width: 400px; height: auto; margin: 0; border-radius: 12px; background: #222326; }
+.wowclip-comments.is-panel .wowclip-comments-heading { gap: 12px; }
+.wowclip-comment-panel-tools { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.wowclip-comment-panel-tools button { display: grid; place-items: center; width: 32px; height: 32px; }
+.wowclip-comments.is-panel .wowclip-comments-heading h2 { font-size: 16px; line-height: 24px; }
+.wowclip-comments.is-panel .wowclip-comment-form { margin-top: 0; padding-top: 0; border-top: 0; }
+.wowclip-comments.is-panel .wowclip-comments-list { margin-top: 0; }
+.wowclip-panel-sort { display: flex; flex-shrink: 0; gap: 16px; }
+.wowclip-panel-sort button { min-height: 28px; color: #a3a3a3; font-size: 13px; }
+.wowclip-panel-sort button[aria-selected='true'] { color: #fff; font-weight: 700; }
+@media (max-width: 1100px) { .wowclip-feed-body { padding-inline: 16px; } .wowclip-feed-body > .wowclip-comments { flex-basis: 340px; width: 340px; padding: 20px; } }
+@media (max-width: 760px) {
+  .wowclip-feed-toolbar { padding-inline: 16px; flex-basis: 48px; }
+  .wowclip-feed-body { padding: 0 8px 8px; }
+  .wowclip-feed-item { grid-template-columns: minmax(0,1fr); gap: 0; position: relative; }
+  .wowclip-feed-actions { position: absolute; z-index: 5; right: 8px; bottom: 120px; gap: 16px; padding: 0; }
+  .wowclip-feed-actions button > span { background: rgba(40,40,40,.75); }
+  .wowclip-feed-navigation { display: none; }
+  .wowclip-feed-info { left: 16px; bottom: 20px; max-width: calc(100% - 80px); padding-right: 0; }
+  .wowclip-feed-info h2 { font-size: 16px; line-height: 24px; }
+  .wowclip-feed-body > .wowclip-comments { position: absolute; z-index: 20; top: 48px; right: 0; bottom: 0; width: min(400px,100%); border-radius: 12px 0 0 0; box-shadow: -8px 0 32px rgba(0,0,0,.4); }
+}

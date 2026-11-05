@@ -4,6 +4,7 @@ import { MainBanner } from '../../components/content/MainBanner';
 import { Channel } from './components/Channel';
 import { ContentRail } from '../../components/content/ContentRail';
 import { BannerHome } from './components/BannerHome';
+import { WowClipSection } from './components/WowClipSection';
 
 
 import './scss/home.scss';
@@ -33,12 +34,12 @@ const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSp
 
       {/* 최근 본 콘텐츠와 비슷한 작품 */}
 
-      {/* 와우 클립 */}
-
       <ContentRail railKey="home-binge" />
 
 
       <ContentRail railKey="home-movie" />
+
+      <WowClipSection />
 
       {/* 스포츠 패스 광고 */}
 

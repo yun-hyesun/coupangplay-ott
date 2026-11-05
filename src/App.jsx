@@ -45,6 +45,7 @@ import { MyFeedback } from './page/my/MyFeedback';
 
 // 더보기
 import { More } from './page/more/More';
+import { WowClip } from './page/wowclip/WowClip';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
@@ -105,6 +106,7 @@ function App() {
 
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
+        <Route path="/wowclip" element={<WowClip />} />
         <Route path="/watch/sports/:id" element={<SportsWatch />} />
 
 
