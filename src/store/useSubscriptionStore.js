@@ -30,6 +30,30 @@ const voucherCodes = {
         name: 'JPLUS 패스',
         label: 'JPLUS',
         price: 9900
+    },
+    '4444444444444': {
+        id: 'ebs-pass',
+        name: 'EBS ON 패스',
+        label: 'EBS ON',
+        price: 9900
+    },
+    '5555555555555': {
+        id: 'kids-pass',
+        name: '키즈+ 패스',
+        label: 'KIDS+',
+        price: 9900
+    },
+    '6666666666666': {
+        id: 'paramount-pass',
+        name: 'Paramount+ 패스',
+        label: 'Paramount+',
+        price: 9900
+    },
+    '7777777777777': {
+        id: 'sony-pass',
+        name: 'SONY PICTURES 패스',
+        label: 'SONY PICTURES',
+        price: 9900
     }
 };
 

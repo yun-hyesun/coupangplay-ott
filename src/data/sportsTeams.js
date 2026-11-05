@@ -215,4 +215,3 @@ export function mergeSportsTeamDetails(leagueId, remoteTeams = []) {
   return localTeams.map((team) => ({ ...details.get(team.id), ...team, crest: details.get(team.id)?.crest }));
 }
 
-export const SPORTS_SETTINGS_CATEGORIES = ["추천", "축구", "농구", "레이싱", "골프", "기타"];

@@ -1,15 +1,26 @@
 import catalog from "./coupangSportsCatalog.json";
 import { ESPN_LEAGUE_PATHS } from "./espnLeagues";
 
-// 표시 순서와 명칭은 사용자가 제공한 쿠팡플레이 목록을 기준으로 합니다.
-export const SPORTS_LEAGUES = catalog.map((league) => ({
+// ESPN 경로와 별도 일정 서비스가 연결된 리그만 목록에 노출합니다.
+const SCHEDULE_API_LEAGUE_IDS = new Set([
+  ...Object.keys(ESPN_LEAGUE_PATHS),
+  "kleague-1",
+  "kleague-2",
+  "f1", // Jolpica F1 일정 API
+]);
+
+// 표시 순서는 기존 카탈로그를 따르고 API 일정이 연결된 리그만 포함합니다.
+export const SPORTS_LEAGUES = catalog.filter((league) => SCHEDULE_API_LEAGUE_IDS.has(league.id)).map((league) => ({
   ...league,
   ...(ESPN_LEAGUE_PATHS[league.id] ? { espnPath: ESPN_LEAGUE_PATHS[league.id] } : {}),
 }));
 export const SPORTS_LEAGUE_BY_ID = Object.fromEntries(SPORTS_LEAGUES.map((league) => [league.id, league]));
 
-export const SPORTS_CATEGORIES = ["전체", "축구", "해외축구", "농구", "레이싱", "골프", "일반"];
-export const DEFAULT_SELECTED_LEAGUE_IDS = ["PL", "nba", "f1", "PD", "kleague-1"];
+const AVAILABLE_NON_FOOTBALL_CATEGORIES = [...new Set(
+  SPORTS_LEAGUES.map((league) => league.sport).filter((sport) => sport !== "축구"),
+)];
+export const SPORTS_CATEGORIES = ["전체", "축구", "해외축구", ...AVAILABLE_NON_FOOTBALL_CATEGORIES];
+export const DEFAULT_SELECTED_LEAGUE_IDS = ["PL", "nba", "f1", "PD", "kleague-1", "nfl"];
 
 export const SPORTS_BANNERS = [
   {

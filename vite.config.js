@@ -66,11 +66,25 @@ export default defineConfig({
 
   server: {
     proxy: {
+      "/espn-core": {
+        target: "https://sports.core.api.espn.com",
+        changeOrigin: true,
+        rewrite: (path) =>
+          path.replace(/^\/espn-core/, "/v2"),
+      },
+
       "/espn": {
         target: "https://site.api.espn.com",
         changeOrigin: true,
         rewrite: (path) =>
           path.replace(/^\/espn/, "/apis/site/v2/sports"),
+      },
+
+      "/jolpica": {
+        target: "https://api.jolpi.ca",
+        changeOrigin: true,
+        rewrite: (path) =>
+          path.replace(/^\/jolpica/, "/ergast"),
       },
 
       "/kleague": {
@@ -98,6 +112,20 @@ export default defineConfig({
         headers: {
           "X-Auth-Token": env.FOOTBALL_DATA_KEY,
         },
+      },
+
+      "/mls-api": {
+        target: "https://stats-api.mlssoccer.com",
+        changeOrigin: true,
+        rewrite: (path) =>
+          path.replace(/^\/mls-api/, ""),
+      },
+
+      "/openliga": {
+        target: "https://api.openligadb.de",
+        changeOrigin: true,
+        rewrite: (path) =>
+          path.replace(/^\/openliga/, ""),
       },
     },
   },

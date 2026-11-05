@@ -122,6 +122,11 @@ export const useWatchHistoryStore = create((set, get) => ({
 
     // 시청내역 저장
     onSaveHistory: async (content, expectedOwner) => {
+        console.log('[시청내역 저장값]', {
+            title: content.title,
+            position: content.position,
+            duration: content.duration,
+        });
         const user = auth.currentUser;
         const profile = useProfileStore.getState().currentProfile;
 
@@ -150,6 +155,7 @@ export const useWatchHistoryStore = create((set, get) => ({
                 progress: content.progress ?? 0,
                 info: content.info || '',
                 position: content.position ?? 0,
+                duration: content.duration ?? 0,
                 seasonNumber: content.seasonNumber ?? 1,
                 episodeNumber: content.episodeNumber ?? 1,
                 videoSrc: content.videoSrc || '',

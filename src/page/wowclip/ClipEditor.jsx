@@ -1,0 +1,119 @@
+import { useRef, useState } from 'react';
+import { ClipModal } from './WowClipUi';
+import { ClipPlayer } from './ClipPlayer';
+import { contentTitle, formatTime, makeClip } from './wowClipData';
+import { initialClipWindow, moveClipRange } from './clipTimeline';
+import { ClipCropSelector } from './ClipCropSelector';
+import './ClipEditor.scss';
+
+const Timeline = ({ range, onChange, minimum, maximum, position }) => {
+  const trackRef = useRef(null);
+  const dragRef = useRef(null);
+  const length = maximum - minimum;
+  const percentage = (time) => (time - minimum) / length * 100;
+  const change = (edge, value, original = range, play = false) => {
+    const next = moveClipRange(original, edge, value, minimum, maximum);
+    if (dragRef.current) dragRef.current.latest = next;
+    onChange(next, play ? next.start : edge === 'end' ? next.end : next.start, play);
+  };
+  const pointerDown = (event, edge) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = { edge, x: event.clientX, range: { ...range }, latest: { ...range } };
+    onChange(range, edge === 'end' ? range.end : range.start);
+  };
+  const pointerMove = (event) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const difference = (event.clientX - drag.x) / trackRef.current.clientWidth * length;
+    change(drag.edge, (drag.edge === 'move' ? drag.range.start : drag.range[drag.edge]) + difference, drag.range);
+  };
+  const keyDown = (event, edge) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 1 : 0.1;
+    change(edge, event.key === 'Home' ? minimum : event.key === 'End' ? maximum : range[edge] + (event.key === 'ArrowLeft' ? -step : step), range, true);
+  };
+  const stopDrag = () => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    if (drag) onChange(drag.latest, drag.latest.start, true);
+  };
+  return <div className="wowclip-timeline">
+    <div className="wowclip-timeline-labels"><span>{formatTime(minimum)}</span><span>{formatTime(maximum)}</span></div>
+    <div className="wowclip-timeline-track" ref={trackRef}>
+      <div className="wowclip-timeline-ticks" aria-hidden="true">{Array.from({ length: 21 }, (_, index) => <i key={index} style={{ left: `${index * 5}%` }} />)}</div>
+      <div className="wowclip-timeline-selection" style={{ left: `${percentage(range.start)}%`, width: `${(range.end - range.start) / length * 100}%` }}>
+        <div className="wowclip-timeline-move" aria-hidden="true" onPointerDown={(event) => pointerDown(event, 'move')} onPointerMove={pointerMove} onPointerUp={stopDrag} onLostPointerCapture={stopDrag} />
+        {['start', 'end'].map((edge) => <button type="button" key={edge} className={`wowclip-timeline-handle is-${edge}`} role="slider" aria-label={edge === 'start' ? '클립 시작 시각' : '클립 종료 시각'} aria-valuemin={edge === 'start' ? minimum : range.start + Math.min(1, length)} aria-valuemax={edge === 'start' ? range.end - Math.min(1, length) : maximum} aria-valuenow={range[edge]} aria-valuetext={formatTime(range[edge])} onKeyDown={(event) => keyDown(event, edge)} onPointerDown={(event) => pointerDown(event, edge)} onPointerMove={pointerMove} onPointerUp={stopDrag} onLostPointerCapture={stopDrag}><span /></button>)}
+      </div>
+      <span className="wowclip-timeline-playhead" aria-hidden="true" style={{ left: `${Math.max(0, Math.min(100, percentage(position)))}%` }} />
+    </div>
+    <div className="wowclip-timeline-summary"><span>시작 {formatTime(range.start)} · 종료 {formatTime(range.end)}</span><strong>{Math.round((range.end - range.start) * 10) / 10}초</strong></div>
+    <output className="wowclip-preview-position" aria-label="미리보기 원본 시각">미리보기 {formatTime(position)}</output>
+  </div>;
+};
+
+export const ClipEditor = ({ owner, source, onClose, onSave }) => {
+  const [initial] = useState(() => initialClipWindow(source?.duration, source?.currentTime));
+  const [range, setRange] = useState({ start: initial.start, end: initial.end });
+  const [bounds, setBounds] = useState({ start: initial.contextStart, end: initial.contextEnd });
+  const [previewRequest, setPreviewRequest] = useState({ time: initial.start, revision: 0 });
+  const [mirrorRequest, setMirrorRequest] = useState({ time: initial.start, revision: 0 });
+  const [layout, setLayout] = useState('landscape');
+  const [cropX, setCropX] = useState(50);
+  const [previewPosition, setPreviewPosition] = useState(initial.start);
+  const [title, setTitle] = useState('');
+  const [visibility, setVisibility] = useState('public');
+  const [spoiler, setSpoiler] = useState(false);
+  const [error, setError] = useState('');
+  const [ready, setReady] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  if (!source?.fullVideo || !source.videoKey || !source.content) return null;
+  const updateRange = (next, time, play = false) => {
+    setRange(next);
+    setPreviewRequest((previous) => ({ time, play, revision: previous.revision + 1 }));
+    setMirrorRequest((previous) => ({ time, play, revision: previous.revision + 1 }));
+  };
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!ready) { setError('영상을 불러온 뒤 구간을 확인해 주세요.'); return; }
+    if (saving) return;
+    setSaving(true);
+    try { await onSave(makeClip({ content: source.content, video: { key: source.videoKey, name: source.videoTitle }, title, ...range, visibility, spoiler, owner, layout, cropX })); }
+    catch (failure) { setError(failure.message); setSaving(false); }
+  };
+
+  return <ClipModal title="클립 만들기" onClose={onClose} className="wowclip-editor">
+    <div className="wowclip-layout-options" role="tablist" aria-label="클립 화면 형식">{[['landscape', '가로형', '16:9'], ['portrait', '세로형', '9:16']].map(([value, label, ratio]) => <button key={value} type="button" role="tab" aria-selected={layout === value} onClick={() => setLayout(value)}><span className={'wowclip-layout-icon is-' + value} aria-hidden="true" /><strong>{label}</strong><span>{ratio}</span></button>)}</div>
+    <form className="wowclip-editor-body" onSubmit={submit}>
+      <div className="wowclip-editor-preview">
+        <h3 className="wowclip-editor-preview-label">구간과 화면 선택</h3>
+        <div className="wowclip-editor-source-player"><ClipPlayer clip={{ videoKey: source.videoKey, videoTitle: source.videoTitle, ...range }} preview previewRequest={previewRequest} onPosition={setPreviewPosition} onPlaybackChange={(play, time) => setMirrorRequest((previous) => ({ time, play, revision: previous.revision + 1 }))} onDuration={(length) => {
+          if (!(length > 0)) return;
+          setReady(true);
+          const corrected = initialClipWindow(length, source.currentTime);
+          if (range.end > length || bounds.end > length) {
+            const next = { start: corrected.start, end: corrected.end };
+            setBounds({ start: corrected.contextStart, end: corrected.contextEnd });
+            updateRange(next, next.start);
+          }
+        }} />{layout === 'portrait' && <ClipCropSelector value={cropX} onChange={setCropX} />}</div>
+        {layout === 'portrait' && <label className="wowclip-crop-position">화면 위치<input type="range" min="0" max="100" step="1" value={cropX} onChange={(event) => setCropX(Number(event.target.value))} /><span>영역을 좌우로 움직여 담을 부분을 선택하세요.</span></label>}
+        <Timeline range={range} onChange={updateRange} minimum={bounds.start} maximum={bounds.end} position={previewPosition} />
+      </div>
+      <div className="wowclip-editor-details">
+        <h3 className="wowclip-editor-preview-label">클립 미리보기</h3>
+        <ClipPlayer clip={{ videoKey: source.videoKey, videoTitle: source.videoTitle, ...range, layout, cropX }} preview previewRequest={mirrorRequest} controls={false} muted />
+        <div className="wowclip-editor-source"><h3>{contentTitle(source.content)}</h3><p>{source.videoTitle}</p></div>
+        <label className="wowclip-title-input">클립 제목<input value={title} maxLength={80} placeholder="이 장면에 제목을 붙여보세요." onChange={(event) => setTitle(event.target.value)} /></label>
+        <fieldset className="wowclip-sharing"><legend>공유 설정</legend><p>공유 범위</p><div className="wowclip-share-options">
+          {[['link', '링크로만 공유'], ['public', '와우 클립에 공개']].map(([value, label]) => <label key={value}><input type="radio" name="clip-visibility" value={value} checked={visibility === value} onChange={() => setVisibility(value)} /><span>{label}</span></label>)}
+        </div><label className="wowclip-checkbox"><input type="checkbox" checked={spoiler} onChange={(event) => setSpoiler(event.target.checked)} />스포일러 보호</label><p className="wowclip-sharing-help">{visibility === 'public' ? '이 브라우저의 와우 클립 목록에 표시해요.' : '전체 목록에 표시하지 않고 내 클립에 보관해요.'}</p></fieldset>
+        {error && <p className="wowclip-error" role="alert">{error}</p>}
+        <div className="wowclip-editor-submit"><p>선택한 영상의 구간을 클립으로 저장해요.</p><button type="submit" className="wowclip-button wowclip-button--primary" disabled={!ready || saving}>{saving ? '저장 중…' : visibility === 'public' ? '와우 클립에 공개' : '저장하고 링크 복사'}</button></div>
+      </div>
+    </form>
+  </ClipModal>;
+};
