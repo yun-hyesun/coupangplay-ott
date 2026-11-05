@@ -190,6 +190,10 @@
   &__list {
     display: grid;
     gap: 8px;
+    max-height: calc(5 * 212px + 4 * 8px);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    align-content: start;
   }
 }
 
@@ -607,6 +611,10 @@
   .detail-episodes,
   .detail-recommend {
     margin-top: 48px;
+  }
+
+  .detail-episodes__list {
+    max-height: calc(5 * 260px + 4 * 8px);
   }
 
   .episode-item {

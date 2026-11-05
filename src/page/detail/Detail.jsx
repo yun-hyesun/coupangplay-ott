@@ -67,7 +67,7 @@ export const Detail = () => {
             <p className="detail-hero__description">{overview}</p>
             <div className="detail-hero__actions">
               <Link className="detail-button detail-button--primary" to={`/watch/${type}/${id}`} state={watchState}>▶ 재생하기</Link>
-              <button className={`detail-button detail-button--outline${liked ? ' is-active' : ''}`} type="button" aria-pressed={liked} onClick={() => setLiked(v => !v)}><ActionIcon name="like" /> 좋아요</button>
+              <button className={`detail-button detail-button--outline${liked ? ' is-active' : ''}`} type="button" aria-pressed={liked} onClick={() => setLiked(v => !v)}><ActionIcon name="like" /> 찜하기</button>
               <button className="detail-button detail-button--outline" type="button" onClick={async () => { try { if (navigator.share) await navigator.share({ title, url: window.location.href }); else await navigator.clipboard.writeText(window.location.href); } catch { /* 사용자가 공유를 취소한 경우 */ } }}><ActionIcon name="share" /> 공유</button>
             </div>
           </div>
