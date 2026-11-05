@@ -2,11 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ClipRange, formatClipTime } from '../../components/wowclip/ClipRange';
 import './WowClip.scss';
+import { useAuthStore } from '../../store/useAuthStore';
+import { saveClip } from '../../components/wowclip/clipStorage';
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
 export function WowClip() {
   const { type, id } = useParams();
+  const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
   const source = location.state || {};
@@ -49,11 +52,27 @@ export function WowClip() {
     player.currentTime = start;
     player.play().then(() => { setPlaying(true); setNotice(''); }).catch(() => setNotice('영상 재생이 제한되어 있습니다.'));
   };
-  const saveDraft = () => {
-    const draft = { contentType: type, contentId: id, episodeNumber: source.episodeNumber || 1, seasonNumber: source.seasonNumber || 1, contentTitle: titleOfContent, title: title.trim(), description: description.trim(), startTime: start, endTime: end, visibility, spoiler, captions, updatedAt: new Date().toISOString() };
-    if (!draft.title) { setNotice('클립 제목을 입력해 주세요.'); return; }
-    try { sessionStorage.setItem('wowclip-draft', JSON.stringify(draft)); setSaved(true); setNotice('편집 정보가 이 브라우저의 임시 보관함에 저장되었습니다. 실제 AI 편집·영상 생성·공개 업로드는 아직 연결되지 않았습니다.'); }
-    catch { setNotice('임시 저장에 실패했습니다.'); }
+  const saveAndGo = (status) => {
+    if (!title.trim()) { setNotice('클립 제목을 입력해 주세요.'); return; }
+    const clip = {
+      contentType: type, contentId: id,
+      episodeNumber: source.episodeNumber || 1,
+      seasonNumber: source.seasonNumber || 1,
+      contentTitle: titleOfContent,
+      title: title.trim(), description: description.trim(),
+      startTime: start, endTime: end,
+      visibility, spoiler, captions, status,
+      // 영상 원본 URL은 영구 저장하지 않습니다. 서버 업로드가 연결되기 전까지 메타데이터만 저장됩니다.
+    };
+    try {
+      saveClip(user?.uid, clip);
+      setSaved(true);
+      navigate(status === 'published' ? '/wowclip' : '/my/review?tab=wowclip', {
+        state: { clipNotice: status === 'published'
+          ? '게시 기록을 이 브라우저에 저장했습니다. 실제 다른 사용자에게 공개되지는 않습니다.'
+          : '와우 클립이 임시 저장되었습니다.' }
+      });
+    } catch { setNotice('클립 정보를 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.'); }
   };
   return (
     <main className="wow-clip-page">
@@ -77,8 +96,11 @@ export function WowClip() {
             <fieldset><legend>공개 범위</legend><label><input type="radio" checked={visibility === 'public'} onChange={() => setVisibility('public')} /> 와우클립 공개</label><label><input type="radio" checked={visibility === 'link'} onChange={() => setVisibility('link')} /> 링크 전용</label></fieldset>
             <label className="wow-clip-editor__checkbox"><input type="checkbox" checked={spoiler} onChange={(e) => setSpoiler(e.target.checked)} /> 스포일러 포함</label>
             <div className="wow-clip-editor__note">선택 구간: {formatClipTime(start)} – {formatClipTime(end)} ({end - start}초)</div>
-            <button type="button" className="wow-clip-editor__submit" onClick={saveDraft}>{saved ? '임시 저장 완료' : '클립 정보 임시 저장'}</button>
-            <p className="wow-clip-editor__disclaimer">AI 영상 편집·파일 생성·게시 API는 아직 연결되지 않았습니다.</p>
+            <div className="wow-clip-editor__submit-actions">
+              <button type="button" className="wow-clip-editor__draft" onClick={() => saveAndGo('draft')}>임시 저장</button>
+              <button type="button" className="wow-clip-editor__submit" onClick={() => saveAndGo('published')}>게시하기</button>
+            </div>
+            <p className="wow-clip-editor__disclaimer">영상 파일 생성·실제 서버 게시 기능은 아직 연결되지 않았습니다. 게시 기록은 이 브라우저에만 표시됩니다.</p>
           </div>
         </div>
         {notice && <p className="wow-clip-editor__notice" role="status">{notice}</p>}
