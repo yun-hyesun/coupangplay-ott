@@ -5,7 +5,9 @@
   
     .swiper-slide {width: auto;}
   }
-  .channel-item {@include flex-center(); width: 180px; height: 90px; background: linear-gradient(90deg,#222f3c 0%, #2b4054 25%, #40566B 50%, #2b4054 75%, #222f3c 100%); border: 1px solid hsl(207, 18%, 46%); border-radius: 20px;
+  .channel-item {@include flex-center(); width: 180px; height: 90px; background: linear-gradient(90deg,#222f3c 0%, #2b4054 25%, #40566B 50%, #2b4054 75%, #222f3c 100%); border: 1px solid hsl(207, 18%, 46%); border-radius: 20px; @include trans();
+
+    &:hover {transform: translateY(-10px);}
   
     img {width: 100%; max-width: 60%; max-height: 70%;}
   }
