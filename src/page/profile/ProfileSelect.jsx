@@ -4,9 +4,13 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
 import { ProfileCard } from './components/ProfileCard'
 import './scss/Profile.scss'
+import './scss/ProfilePinModal.scss';
 
 export const ProfileSelect = () => {
     const navigate = useNavigate();
+    const [lockedProfile, setLockedProfile] = useState(null);
+    const [unlockPin, setUnlockPin] = useState('');
+    const [pinError, setPinError] = useState('');
 
     // 로그인 상태
     const user = useAuthStore((state) => state.user);
@@ -34,6 +38,15 @@ export const ProfileSelect = () => {
     const handleProfileClick = async (profileId) => {
         if (isEditMode) {
             navigate(`/profiles/edit/${profileId}`);
+            return;
+        }
+
+        const profile = profiles.find((item) => item.id === profileId);
+
+        if (profile?.isLocked) {
+            setLockedProfile(profile);
+            setUnlockPin('');
+            setPinError('');
             return;
         }
 
@@ -129,6 +142,79 @@ export const ProfileSelect = () => {
                     </>
                 )}
             </div>
+
+
+            {lockedProfile && (
+                <div className="profile-pin-overlay">
+                    <div
+                        className="profile-pin-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="profile-unlock-title"
+                    >
+                        <h3 id="profile-unlock-title">프로필 잠금 해제</h3>
+
+                        <p>{lockedProfile.name} 프로필의 PIN 번호를 입력해 주세요.</p>
+
+                        <input
+                            type="password"
+                            inputMode="numeric"
+                            maxLength={4}
+                            value={unlockPin}
+                            onChange={(e) => {
+                                setUnlockPin(e.target.value.replace(/\D/g, ''));
+                                setPinError('');
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    e.currentTarget
+                                        .closest('.profile-pin-modal')
+                                        .querySelector('.profile-pin-buttons button:last-child')
+                                        ?.click();
+                                }
+                            }}
+                            placeholder="PIN 4자리"
+                            autoFocus
+                        />
+
+                        {pinError && (
+                            <p className="profile-form-error" role="alert">
+                                {pinError}
+                            </p>
+                        )}
+
+                        <div className="profile-pin-buttons">
+                            <button
+                                type="button"
+                                onClick={() => setLockedProfile(null)}
+                            >
+                                취소
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    const selected = await onSelectProfile(
+                                        lockedProfile.id,
+                                        unlockPin
+                                    );
+
+                                    if (selected) {
+                                        setLockedProfile(null);
+                                        navigate('/');
+                                    } else {
+                                        setPinError('PIN 번호가 일치하지 않습니다.');
+                                    }
+                                }}
+                            >
+                                확인
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </main>
     )
 }
