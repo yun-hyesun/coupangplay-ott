@@ -1082,17 +1082,18 @@ export const useMovieStore = create((set, get) => ({
             `${tvName} 시즌 ${season} ${episode}화 ` +
             `${episodeInfo?.name || ''} 하이라이트`;
 
-          const params = {
-            language: 'ko-KR',
-            watch_region: 'KR',
-            with_origin_country: 'KR',
-            with_genres: '18',
-            sort_by: 'popularity.desc',
-            include_adult: false,
-          };
+          const params = new URLSearchParams({
+            part: 'snippet',
+            q: searchText,
+            type: 'video',
+            maxResults: '5',
+            relevanceLanguage: 'ko',
+            regionCode: 'KR',
+            key: YOUTUBE_KEY,
+          });
 
           const res = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?${params}`
+            `https://www.googleapis.com/youtube/v3/search?${params.toString()}`
           );
 
           if (!res.ok) {

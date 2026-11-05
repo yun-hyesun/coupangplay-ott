@@ -31,6 +31,12 @@
 .watch-history .watch-history-heading:hover {
   opacity: 0.8;
 }
+.watch-history .contentRail {
+  padding: 0;
+}
+.watch-history .contentRail .contentRail-heading {
+  display: none;
+}
 .watch-history .watch-history-more {
   color: #D4D4D4;
   font-size: 22px;

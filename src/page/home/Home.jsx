@@ -46,6 +46,7 @@ const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSp
       {highlights.length > 0 && (
         <ContentRail title="경기 하이라이트" items={highlights} showMore={false} />
       )}
+      
       {/* {replays.length > 0 && (
         <ContentRail title="다시 보는 경기" items={replays} showMore={false} />
       )}
