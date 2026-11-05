@@ -1,20 +1,22 @@
+@use '../../scss/variables' as v;
+@use '../../scss/mixins' as m;
+
 // Figma 상세페이지: 2813:12874 / 컴포넌트: 4413:52999
 // 공용 Header, Footer, ContentRail은 MainLayout과 기존 컴포넌트를 그대로 사용합니다.
 .detail-page {
-  --detail-bg: #0f1114;
   --detail-card: #262626;
-  --detail-muted: #a3a3a3;
+  --detail-muted: #{v.$color-text-sec2};
   --detail-border: rgba(255, 255, 255, .05);
-  --detail-blue: #5d9eff;
+  --detail-blue: #{v.$color-text-blue};
   color: #fff;
   background: linear-gradient(180deg, rgba(63, 162, 255, .15), transparent 600px), var(--detail-bg);
   min-height: 100vh;
-  font-family: 'Pretendard', sans-serif;
+  font-family: v.$font-main;
 
   &__inner {
-    max-width: 1920px;
+    // max-width: 1920px;
     margin: 0 auto;
-    padding: 0 64px 72px;
+    padding-inline: v.$padding-main;
   }
 
   button,
@@ -41,8 +43,7 @@
 .detail-hero {
   position: relative;
   height: 676px;
-  display: flex;
-  align-items: center;
+  @include m.flex($ai: center);
   overflow: hidden;
   border-radius: 8px;
   background: #1c2530;
@@ -71,14 +72,14 @@
   &__category {
     display: inline-flex;
     padding: 6px 12px;
-    margin-bottom: 24px;
-    background: #0084ff;
+    // margin-bottom: 24px;
+    // background: #0084ff;
     border-radius: 4px;
     font-size: 13px;
   }
 
   h1 {
-    margin: 0 0 24px;
+    margin: 20px 0;
     font-size: clamp(40px, 4vw, 72px);
     line-height: 1.15;
   }
@@ -122,7 +123,7 @@
 .detail-info {
   display: grid;
   grid-template-columns: minmax(0, 1136fr) minmax(280px, 592fr);
-  gap: 64px;
+  gap: 120px;
   padding: 64px 0 0;
 
   &__main {
@@ -189,6 +190,10 @@
   &__list {
     display: grid;
     gap: 8px;
+    max-height: calc(5 * 212px + 4 * 8px);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    align-content: start;
   }
 }
 
@@ -340,6 +345,10 @@
     font-size: 16px;
     line-height: 24px;
     color: var(--detail-muted);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   &__reviews {
@@ -432,7 +441,7 @@
   color: #fff;
   border: 1px solid var(--detail-border);
   border-radius: 8px;
-  font-family: 'Pretendard', sans-serif;
+  font-family: v.$font-main;
 
   &__head,
   &__tools {
@@ -604,6 +613,10 @@
     margin-top: 48px;
   }
 
+  .detail-episodes__list {
+    max-height: calc(5 * 260px + 4 * 8px);
+  }
+
   .episode-item {
     &__main {
       display: grid;
@@ -648,5 +661,261 @@
 
   .detail-review-popup {
     padding: 16px;
+  }
+}
+
+// Figma 2958:45483 / 상세 컴포넌트 정밀 보정 (다른 페이지에 영향 없음)
+.detail-page {
+  --detail-blue: #0084ff;
+}
+
+.detail-hero__actions .detail-button {
+  gap: 8px;
+  min-height: 48px;
+}
+
+.detail-hero__actions .detail-button.is-active {
+  color: #5d9eff;
+  border-color: #5d9eff;
+}
+
+.detail-info__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.detail-info__score svg {
+  color: #ffd13c;
+}
+
+.detail-info__age,
+.detail-info__quality {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 4px;
+  color: #d4d4d4;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.detail-info__age {
+  background: #404040;
+}
+
+.detail-info__quality {
+  border: 1px solid #737373;
+}
+
+.detail-info__wow,
+.detail-info__membership {
+  color: #5d9eff;
+}
+
+.detail-info__wow {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.detail-info__membership {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.episode-item--open .episode-item__review-toggle {
+  background: #006bc6;
+}
+
+.episode-item__reviews {
+  background: #08090a;
+  padding: 24px 48px;
+  border-top: 0;
+}
+
+.episode-item__reviews-head {
+  justify-content: flex-start;
+  gap: 24px;
+}
+
+.episode-item__reviews-head h4 {
+  font-size: 16px;
+  line-height: 24px;
+  white-space: nowrap;
+}
+
+.detail-review-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  color: #a3a3a3;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.detail-review-sort button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #a3a3a3;
+  font: inherit;
+  cursor: pointer;
+}
+
+.detail-review-sort button.is-active {
+  color: #0084ff;
+}
+
+.detail-review-item {
+  padding: 0;
+  border-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-review-item__author {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #a3a3a3;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.detail-review-item__author strong {
+  font-weight: 600;
+}
+
+.detail-review-item p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: #fff;
+}
+
+.detail-review-item__meta {
+  gap: 8px;
+  align-items: center;
+  color: #a3a3a3;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.detail-review-item__stars {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  color: #ffd13c;
+}
+
+.episode-item__review-list {
+  gap: 20px;
+}
+
+.episode-item__reviews .detail-review-action {
+  margin-top: 20px;
+}
+
+.detail-review-popup {
+  background: #0f1114;
+  padding: 32px;
+  border: 0;
+  border-radius: 16px;
+  width: min(960px, 100%);
+}
+
+.detail-review-popup__head {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.detail-review-popup__head h2 {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+}
+
+.detail-review-popup__compose {
+  margin-top: 24px;
+  gap: 16px;
+}
+
+.detail-review-popup__compose textarea {
+  min-height: 48px;
+  height: 48px;
+  resize: none;
+  background: #262626;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.detail-review-popup__compose button {
+  background: #262626;
+  min-width: 176px;
+  height: 48px;
+  padding: 12px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+.detail-review-popup__compose button:hover:not(:disabled) {
+  background: #0084ff;
+}
+
+.detail-review-popup__list {
+  height: 320px;
+  margin-top: 24px;
+  padding: 16px;
+  background: #262626;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-review-popup__close {
+  display: block;
+  margin: 24px 0 0 auto;
+  width: 128px;
+  height: 48px;
+  background: #262626;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .episode-item__reviews {
+    padding: 16px;
+  }
+
+  .episode-item__reviews-head,
+  .detail-review-popup__head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .detail-review-sort {
+    flex-wrap: wrap;
+    white-space: normal;
+    gap: 8px;
+  }
+
+  .detail-review-popup {
+    padding: 16px;
+  }
+
+  .detail-review-popup__head h2 {
+    font-size: 22px;
   }
 }

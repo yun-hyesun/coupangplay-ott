@@ -47,6 +47,8 @@ export const useProfileStore = create((set, get) => ({
     // 프로필 목록 불러오기
     onLoadProfiles: async () => {
         const user = auth.currentUser;
+        console.log('현재 로그인 UID:', user?.uid);
+        console.log('현재 로그인 이메일:', user?.email);
 
         if (!user) {
             set({

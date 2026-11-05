@@ -1,9 +1,10 @@
-@use '../../scss/variables' as *;
+@use '../../scss/variables' as v;
+@use '../../scss/mixins' as m;
 
 .policy-page {
   background: #0f1114;
-  color: $color-text-pri;
-  font-family: $font-main;
+  color: v.$color-text-pri;
+  font-family: v.$font-main;
   min-height: 100vh;
   padding: 80px 64px 140px;
   box-sizing: border-box;
@@ -11,7 +12,7 @@
   *, *::before, *::after { box-sizing: border-box; }
   button, a { font-family: inherit; }
   button { cursor: pointer; }
-  button:focus-visible, a:focus-visible { outline: 2px solid $color-pri; outline-offset: 3px; }
+  button:focus-visible, a:focus-visible { outline: 2px solid v.$color-pri; outline-offset: 3px; }
 
   &__inner { max-width: 1792px; margin: 0 auto; }
   &__heading {
@@ -19,26 +20,26 @@
     & > h1 { font-size: 48px; line-height: 1.25; font-weight: 700; margin: 12px 0 20px; }
     & > p:last-child { color: #a3a3a3; font-size: 18px; line-height: 28px; }
   }
-  &__eyebrow { color: $color-pri; font-size: 14px; font-weight: 600; letter-spacing: .08em; }
+  &__eyebrow { color: v.$color-pri; font-size: 14px; font-weight: 600; letter-spacing: .08em; }
   &__tabs {
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
     border-bottom: 1px solid #404040; margin-bottom: 72px;
   }
   &__tab {
-    min-height: 88px; display: flex; align-items: center; justify-content: center;
+    min-height: 88px; @include m.flex-center();
     padding: 16px 12px; text-align: center; color: #a3a3a3;
     font-size: 16px; font-weight: 600; line-height: 24px; text-decoration: none;
     border-bottom: 3px solid transparent; transition: color .2s, border-color .2s;
     &:hover { color: #fff; }
-    &.is-selected { color: #fff; border-bottom-color: $color-pri; }
+    &.is-selected { color: #fff; border-bottom-color: v.$color-pri; }
   }
   &__content { width: min(100%, 1280px); margin: 0 auto; }
   &__content > h2 { font-size: 32px; line-height: 44px; font-weight: 700; margin-bottom: 16px; }
   &__notice { color: #a3a3a3; font-size: 14px; line-height: 20px; }
   &__disclaimer { color: #d4d4d4; font-size: 16px; line-height: 26px; margin: 20px 0 52px; }
-  &__summaries { display: flex; flex-direction: column; gap: 36px; margin-bottom: 48px; }
+  &__summaries { @include m.flexCol(); gap: 36px; margin-bottom: 48px; }
   &__summary {
-    display: flex; flex-direction: column; gap: 12px;
+    @include m.flexCol(); gap: 12px;
     h3 { color: #fff; font-size: 20px; font-weight: 600; line-height: 28px; }
     p { color: #d4d4d4; font-size: 18px; font-weight: 400; line-height: 28px; word-break: keep-all; }
   }
@@ -47,27 +48,27 @@
     min-height: 48px; padding: 12px 24px; background: #262626; border: 0;
     border-radius: 8px; color: #fff; font-size: 16px; line-height: 24px;
     font-weight: 600; text-decoration: none; transition: background .2s;
-    &:hover { background: $color-pri; }
+    &:hover { background: v.$color-pri; }
   }
   &__source { margin-top: 28px; color: #a3a3a3; font-size: 14px; line-height: 24px; overflow-wrap: anywhere;
     a { color: #d4d4d4; margin-left: 8px; }
   }
   &__overlay {
     position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.78);
-    display: flex; justify-content: center; align-items: center; padding: 24px;
+    @include m.flex-center(); padding: 24px;
   }
   &__modal {
     width: min(1440px, 100%); max-height: min(1000px, calc(100vh - 48px));
     padding: 30px 78px 70px; background: #0f1114; border: 2px solid rgba(255,255,255,.35);
-    border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 16px; @include m.flexCol(); overflow: hidden;
     box-shadow: 0 24px 64px rgba(0,0,0,.5);
   }
-  &__modal-header { display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  &__modal-header { @include m.flex-between(); gap: 24px;
     h2 { font-size: 28px; line-height: 36px; font-weight: 700; }
     .policy-page__button { width: 128px; flex-shrink: 0; }
   }
   &__modal-description { color: #a3a3a3; font-size: 14px; line-height: 20px; margin: 30px 0 44px; }
-  &__modal-scroll { height: 600px; min-height: 0; overflow-y: auto; padding: 0 8px 32px 0; display: flex; flex-direction: column; gap: 36px; }
+  &__modal-scroll { height: 600px; min-height: 0; overflow-y: auto; padding: 0 8px 32px 0; @include m.flexCol(); gap: 36px; }
   &__modal-footer { display: flex; align-items: center; gap: 24px; padding-top: 44px;
     .policy-page__button { width: 320px; }
     span { color: #a3a3a3; font-size: 13px; line-height: 20px; }
@@ -92,4 +93,22 @@
       .policy-page__button { width: 100%; }
     }
   }
+}
+
+/* Figma 전문 팝업: 조항별 본문은 개행과 단락 구분을 보존 */
+.policy-page__modal-scroll .policy-page__summary { gap: 12px; }
+.policy-page__modal-scroll .policy-page__summary p { white-space: pre-line; }
+
+/* 원문에 포함된 모든 줄바꿈, 번호, 부칙 및 추가 정책을 보존 */
+.policy-page__full-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #d4d4d4;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+@media (max-width: 680px) {
+  .policy-page__full-text { font-size: 16px; line-height: 1.7; }
 }

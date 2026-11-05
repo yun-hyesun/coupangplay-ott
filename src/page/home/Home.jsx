@@ -1,16 +1,29 @@
+import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
+import { useSportsRails } from './useSportsRails';
 import { MainBanner } from '../../components/content/MainBanner';
 import { Channel } from './components/Channel';
 import { ContentRail } from '../../components/content/ContentRail';
+import { BannerHome } from './components/BannerHome';
+
 
 import './scss/home.scss';
 
 export const Home = () => {
+const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSportsRails();
+
+  const { history, ownerKey } = useProfileWatchHistory();
+  const continueWatching = history
+    .filter((item) => item.backdrop_path && !item.completed)
+    .map((item) => ({ ...item, resume: true, ownerKey }));
+
   return (
     <main>
       <MainBanner type="all"/>
       <Channel />
 
-      {/* 이어서 시청하기: 시청 기록 연결 후 추가 */}
+      {continueWatching.length > 0 && (
+        <ContentRail title="이어서 시청하기" items={continueWatching} showMore={false} />
+      )}
 
       <ContentRail railKey="home-ranking" showMore={false}/>
 
@@ -24,23 +37,47 @@ export const Home = () => {
 
       <ContentRail railKey="home-binge" />
 
+
       <ContentRail railKey="home-movie" />
 
       {/* 스포츠 패스 광고 */}
 
-      {/* 스포츠 하이라이트 */}
+      {error && <p role="alert">스포츠 영상을 불러오지 못했습니다.</p>}
+      {highlights.length > 0 && (
+        <ContentRail title="경기 하이라이트" items={highlights} showMore={false} />
+      )}
+      {/* {replays.length > 0 && (
+        <ContentRail title="다시 보는 경기" items={replays} showMore={false} />
+      )}
+      {live.length > 0 && (
+        <ContentRail title="지금 LIVE" items={live} showMore={false} />
+      )} */}
 
-      {/* 지금 LIVE */}
+      {newsLive.length > 0 && (
+        <ContentRail title="지금 LIVE" items={newsLive} showMore={false} />
+      )}
 
       <ContentRail railKey="home-drama" />
+
 
       <ContentRail railKey="home-fun" />
 
       {/* 오직 쿠팡플레이에서 */}
-
+      <ContentRail railKey="home-coupang-series" />
+      
       {/* 광고 배너 */}
+      <BannerHome />
 
       {/* JPLUS */}
+      <ContentRail
+        railKey="home-jplus"
+        intro={{
+          titleImage: '/images/channal11.svg',
+          description: '다채로운 일본 드라마를 한곳에서 만나보세요',
+          linkText: '채널 둘러보기',
+        }}
+      />
+
 
       <ContentRail railKey="home-classics" />
 
@@ -50,3 +87,4 @@ export const Home = () => {
     </main>
   );
 };
+

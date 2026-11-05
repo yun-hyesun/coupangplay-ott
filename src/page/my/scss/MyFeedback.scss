@@ -1,0 +1,286 @@
+@use "../../../scss/mixins" as *;
+@use "../../../scss/variables" as *;
+
+.my-feedback {
+    width: 100%;
+    min-height: 100vh;
+    color: $color-text-pri;
+
+    &__inner {
+        width: 100%;
+        max-width: 430px;
+        margin: 0 auto;
+        padding: 130px 0 100px;
+
+        @include flexCol;
+        align-items: center;
+    }
+
+    h2 {
+        font-family: $font-main;
+        font-size: 32px;
+        font-weight: $font-w-B-700;
+        line-height: 1.4;
+        text-align: center;
+    }
+
+    &__description {
+        margin-top: 24px;
+        margin-bottom: 32px;
+
+        font-size: 16px;
+        font-weight: $font-w-M-500;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    &__form {
+        width: 100%;
+        @include flexCol(30px);
+    }
+
+    &__field {
+        width: 100%;
+        @include flexCol(12px);
+
+        label {
+            font-size: 16px;
+            font-weight: $font-w-SB-600;
+        }
+    }
+
+    // 주제 선택 드롭다운
+    &__select {
+        position: relative;
+        width: 100%;
+    }
+
+    &__select-button {
+        width: 100%;
+        height: 48px;
+        padding: 0 20px;
+
+        border: 1px solid $color-text-sec1;
+        border-radius: 6px;
+        background: transparent;
+        color: $color-text-pri;
+
+        font-size: 14px;
+        text-align: left;
+
+        @include flex-between;
+        cursor: pointer;
+    }
+
+    &__arrow {
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid $color-text-pri;
+        border-bottom: 2px solid $color-text-pri;
+        transform: rotate(45deg);
+        @include trans(transform);
+
+        &.open {
+            transform: rotate(225deg);
+        }
+    }
+
+    &__options {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        z-index: 10;
+
+        width: 100%;
+        max-height: 280px;
+        overflow-y: auto;
+
+        border: 1px solid $color-border;
+        background: #101113;
+
+        li {
+            width: 100%;
+        }
+
+        button {
+            width: 100%;
+            padding: 9px 20px;
+            color: $color-text-pri;
+            font-size: 14px;
+            text-align: left;
+
+            &.selected,
+            &:hover {
+                background: $color-pri;
+            }
+        }
+    }
+
+    // 내용 입력
+    textarea {
+        width: 100%;
+        height: 220px;
+        padding: 16px;
+        resize: none;
+
+        border: 1px solid $color-text-sec1;
+        border-radius: 6px;
+        outline: none;
+        background: transparent;
+        color: $color-text-pri;
+
+        font-family: $font-main;
+        font-size: 14px;
+        line-height: 1.6;
+
+        &:focus {
+            border-color: $color-pri;
+        }
+    }
+
+    // 제출 버튼
+    &__submit {
+        width: 375px;
+        max-width: 100%;
+        height: 48px;
+        margin: 0 auto;
+
+        border-radius: 6px;
+        background: $color-pri;
+        color: $color-text-pri;
+
+        font-size: 16px;
+        font-weight: $font-w-M-500;
+        cursor: pointer;
+        @include trans(filter);
+
+        &:hover:not(:disabled) {
+            filter: brightness(1.1);
+        }
+
+        &:disabled {
+            background: #292D33;
+            cursor: not-allowed;
+        }
+    }
+}
+
+// 피드백 제출 완료 모달
+.feedback-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+
+    @include flex-center;
+}
+
+.feedback-modal {
+    width: 100%;
+    max-width: 430px;
+    padding: 36px 30px;
+    border-radius: 10px;
+
+    background: $color-bg2;
+    color: $color-text-pri;
+    text-align: center;
+
+    @include flexCol-center(20px);
+
+    h3 {
+        font-size: 22px;
+        font-weight: $font-w-B-700;
+    }
+
+    p {
+        font-size: 16px;
+        font-weight: $font-w-R-400;
+        line-height: 1.5;
+        color: $color-text-sec1;
+    }
+
+    button {
+        width: 145px;
+        height: 50px;
+        margin-top: 8px;
+
+        border-radius: 5px;
+        background: $color-pri;
+        color: $color-text-pri;
+
+        font-size: 16px;
+        font-weight: $font-w-M-500;
+
+        cursor: pointer;
+        @include trans(filter, 0.2s);
+
+        &:hover {
+            filter: brightness(1.1);
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .feedback-modal {
+        padding: 30px 20px;
+
+        h3 {
+            font-size: 20px;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            max-width: 145px;
+        }
+    }
+}
+
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .my-feedback {
+        &__inner {
+            padding-top: 100px;
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .my-feedback {
+        &__inner {
+            width: calc(100% - 32px);
+            padding: 80px 0;
+        }
+
+        h2 {
+            font-size: 26px;
+        }
+
+        &__description {
+            font-size: 14px;
+        }
+
+        &__form {
+            gap: 24px;
+        }
+
+        &__field label {
+            font-size: 14px;
+        }
+
+        textarea {
+            height: 200px;
+        }
+
+        &__submit {
+            width: 100%;
+            height: 50px;
+        }
+    }
+}

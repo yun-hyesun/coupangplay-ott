@@ -17,6 +17,7 @@ export const ContentRail = ({
   items: givenItems,
   showMore = true,
   kidsOnly = false,
+  intro,
   ...options
 }) => {
   const baseConfig = railKey ? railConfig[railKey] : options;
@@ -33,8 +34,8 @@ export const ContentRail = ({
   const imageType = config?.imageType || '가로';
 
   const savedItems = useMovieStore((state) => state.rails[configId]);
-  const loading = useMovieStore((state) => state.railLoading[configId]);
-  const error = useMovieStore((state) => state.railErrors[configId]);
+  const loading = useMovieStore((state) => givenItems === undefined && state.railLoading[configId]);
+  const error = useMovieStore((state) => givenItems === undefined && state.railErrors[configId]);
   const onFetchRail = useMovieStore((state) => state.onFetchRail);
 
   useEffect(() => {
@@ -48,26 +49,37 @@ export const ContentRail = ({
   const items = givenItems ?? savedItems ?? [];
   const isPoster = imageType === '세로';
   const visibleItems = items
-    .filter((item) => (isPoster ? item.poster_path : item.backdrop_path))
+    .filter((item) => item.source === 'youtube'
+      ? item.thumbnail
+      : (isPoster ? item.poster_path : item.backdrop_path))
     .slice(0, config.limit || 20);
 
   const variantClass = `contentRail--${config.variant || 'default'}`;
   const imageClass = isPoster ? 'contentRail--poster' : 'contentRail--landscape';
 
   return (
-    <section className={`contentRail ${variantClass} ${imageClass}`}>
-      <div className="contentRail-heading">
-        <ContentTitle title={config.title} />
+    <section className={`contentRail ${variantClass} ${imageClass}${intro ? ' contentRail--withIntro' : ''}`}>
+      <div className={intro ? 'contentRail-intro' : 'contentRail-heading'}>
 
-        {railKey && showMore && (
-          <Link
-            className="contentRail-more"
-            to={`/more?rail=${encodeURIComponent(railKey)}`}
-          >
-            더보기
-          </Link>
-        )}
-      </div>
+      {intro?.titleImage ? (
+        <h2 className="contentRail-intro-title">
+          <img src={intro.titleImage} alt={config.title} />
+        </h2>
+      ) : (
+        <ContentTitle title={config.title} />
+      )}
+
+      {intro && <p>{intro.description}</p>}
+
+      {railKey && showMore && (
+        <Link
+          className={intro ? 'contentRail-intro-link button' : 'contentRail-more'}
+          to={`/more?rail=${encodeURIComponent(railKey)}`}
+        >
+          {intro?.linkText ?? '더보기'}
+        </Link>
+      )}
+    </div>
 
       {loading && !items.length && (
         <p role="status">콘텐츠를 불러오는 중입니다.</p>
