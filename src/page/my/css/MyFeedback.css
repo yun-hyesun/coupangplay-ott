@@ -1,0 +1,236 @@
+/* size */
+/* size */
+/* size */
+.my-feedback {
+  width: 100%;
+  min-height: 100vh;
+  color: #FFFFFF;
+}
+.my-feedback__inner {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 130px 0 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.my-feedback h2 {
+  font-family: "Pretendard", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+.my-feedback__description {
+  margin-top: 24px;
+  margin-bottom: 32px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+}
+.my-feedback__form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.my-feedback__field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.my-feedback__field label {
+  font-size: 16px;
+  font-weight: 600;
+}
+.my-feedback__select {
+  position: relative;
+  width: 100%;
+}
+.my-feedback__select-button {
+  width: 100%;
+  height: 48px;
+  padding: 0 20px;
+  border: 1px solid #D4D4D4;
+  border-radius: 6px;
+  background: transparent;
+  color: #FFFFFF;
+  font-size: 14px;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.my-feedback__arrow {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #FFFFFF;
+  border-bottom: 2px solid #FFFFFF;
+  transform: rotate(45deg);
+  transition: transform 0.3s ease-in-out;
+}
+.my-feedback__arrow.open {
+  transform: rotate(225deg);
+}
+.my-feedback__options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid #262626;
+  background: #101113;
+}
+.my-feedback__options li {
+  width: 100%;
+}
+.my-feedback__options button {
+  width: 100%;
+  padding: 9px 20px;
+  color: #FFFFFF;
+  font-size: 14px;
+  text-align: left;
+}
+.my-feedback__options button.selected, .my-feedback__options button:hover {
+  background: #0084FF;
+}
+.my-feedback textarea {
+  width: 100%;
+  height: 220px;
+  padding: 16px;
+  resize: none;
+  border: 1px solid #D4D4D4;
+  border-radius: 6px;
+  outline: none;
+  background: transparent;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.my-feedback textarea:focus {
+  border-color: #0084FF;
+}
+.my-feedback__submit {
+  width: 375px;
+  max-width: 100%;
+  height: 48px;
+  margin: 0 auto;
+  border-radius: 6px;
+  background: #0084FF;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.3s ease-in-out;
+}
+.my-feedback__submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.my-feedback__submit:disabled {
+  background: #292D33;
+  cursor: not-allowed;
+}
+
+.feedback-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.feedback-modal {
+  width: 100%;
+  max-width: 430px;
+  padding: 36px 30px;
+  border-radius: 10px;
+  background: #21252B;
+  color: #FFFFFF;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.feedback-modal h3 {
+  font-size: 22px;
+  font-weight: 700;
+}
+.feedback-modal p {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #D4D4D4;
+}
+.feedback-modal button {
+  width: 145px;
+  height: 50px;
+  margin-top: 8px;
+  border-radius: 5px;
+  background: #0084FF;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s ease-in-out;
+}
+.feedback-modal button:hover {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 767px) {
+  .feedback-modal {
+    padding: 30px 20px;
+  }
+  .feedback-modal h3 {
+    font-size: 20px;
+  }
+  .feedback-modal p {
+    font-size: 14px;
+  }
+  .feedback-modal button {
+    width: 100%;
+    max-width: 145px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1279px) {
+  .my-feedback__inner {
+    padding-top: 100px;
+  }
+}
+@media (max-width: 767px) {
+  .my-feedback__inner {
+    width: calc(100% - 32px);
+    padding: 80px 0;
+  }
+  .my-feedback h2 {
+    font-size: 26px;
+  }
+  .my-feedback__description {
+    font-size: 14px;
+  }
+  .my-feedback__form {
+    gap: 24px;
+  }
+  .my-feedback__field label {
+    font-size: 14px;
+  }
+  .my-feedback textarea {
+    height: 200px;
+  }
+  .my-feedback__submit {
+    width: 100%;
+    height: 50px;
+  }
+}

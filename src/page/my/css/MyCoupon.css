@@ -1,0 +1,228 @@
+/* size */
+/* size */
+/* size */
+.my-coupon {
+  width: 100%;
+  min-height: 100vh;
+  background: #101113;
+  color: #FFFFFF;
+}
+.my-coupon__inner {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+.my-coupon__header {
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.my-coupon__header h2 {
+  font-size: 28px;
+  font-weight: 700;
+}
+.my-coupon__tabs {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 24px;
+  margin: 10px 0 28px;
+}
+.my-coupon__tabs button {
+  width: 145px;
+  height: 50px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 5px;
+  background: #424242;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s ease-in-out;
+}
+.my-coupon__tabs button.active {
+  background: #0084FF;
+}
+.my-coupon__tabs button:hover {
+  filter: brightness(1.1);
+}
+.my-coupon__count {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.my-coupon__count span {
+  margin-left: 6px;
+  color: #5d9eff;
+}
+.my-coupon__list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  column-gap: 40px;
+  row-gap: 32px;
+}
+
+.coupon-card {
+  position: relative;
+  min-width: 0;
+  height: 175px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eaf2ff;
+  color: #111;
+  display: flex;
+  flex-direction: column;
+}
+.coupon-card::before, .coupon-card::after {
+  content: "";
+  position: absolute;
+  top: calc(75% - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #101113;
+  z-index: 1;
+}
+.coupon-card::before {
+  left: -5px;
+}
+.coupon-card::after {
+  right: -5px;
+}
+.coupon-card__content {
+  height: 75%;
+  padding: 22px 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+.coupon-card__discount {
+  font-size: 16px;
+}
+.coupon-card__discount strong {
+  font-size: 26px;
+  font-weight: 700;
+}
+.coupon-card__name {
+  font-size: 16px;
+  font-weight: 500;
+}
+.coupon-card__date {
+  font-size: 14px;
+  color: #777;
+}
+.coupon-card__detail {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  border-top: 1px dashed #aaa;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  transition: background 0.3s ease-in-out;
+}
+.coupon-card__detail:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.coupon-card.expired {
+  background: #e5e5e5;
+}
+.coupon-card.expired .coupon-card__discount,
+.coupon-card.expired .coupon-card__name {
+  color: #a5a5a5;
+}
+.coupon-card.expired .coupon-card__date {
+  color: #444;
+}
+
+.coupon-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.coupon-modal__content {
+  width: min(400px, 100% - 32px);
+  padding: 32px;
+  border-radius: 12px;
+  background: #21252B;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+.coupon-modal__content h3 {
+  font-size: 22px;
+  font-weight: 700;
+}
+.coupon-modal__content strong {
+  font-size: 26px;
+}
+.coupon-modal__content button {
+  height: 45px;
+  border-radius: 8px;
+  background: #0084FF;
+  font-weight: 600;
+}
+
+@media (max-width: 1279px) {
+  .my-coupon__inner {
+    padding: 32px 24px 60px;
+  }
+  .my-coupon__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+@media (max-width: 767px) {
+  .my-coupon__inner {
+    padding: 24px 16px 60px;
+  }
+  .my-coupon__header h2 {
+    font-size: 24px;
+  }
+  .my-coupon__tabs {
+    gap: 12px;
+  }
+  .my-coupon__tabs button {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    height: 50px;
+    font-size: 16px;
+  }
+  .my-coupon__count {
+    font-size: 18px;
+  }
+  .my-coupon__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .coupon-card {
+    height: 160px;
+  }
+  .coupon-card__content {
+    padding: 12px 4px;
+  }
+  .coupon-card__discount {
+    font-size: 12px;
+  }
+  .coupon-card__discount strong {
+    font-size: 20px;
+  }
+  .coupon-card__name, .coupon-card__date {
+    font-size: 11px;
+  }
+  .coupon-card__detail {
+    font-size: 12px;
+  }
+}

@@ -3,6 +3,7 @@ import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
 import WatchIcon from './WatchIcon';
+import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import './Watch.scss';
 
 const EMPTY = [];
@@ -46,6 +47,9 @@ export const Watch = () => {
   const onFetchSeason = useMovieStore(s => s.onFetchSeason);
   const onFetchEpisode = useMovieStore(s => s.onFetchEpisode);
   const onFetchEpisodeVideo = useMovieStore(s => s.onFetchEpisodeVideo);
+  const onSaveHistory = useWatchHistoryStore(
+    (state) => state.onSaveHistory
+  );
 
   const openEpisode = (nextNumber, autoPlayNext = false) => {
     const episode = episodes.find(ep => Number(ep.episode_number) === Number(nextNumber));
@@ -182,6 +186,23 @@ export const Watch = () => {
     else document.exitFullscreen?.();
   };
 
+  // 영상 재생 시 시청내역 저장
+  const handleSaveHistory = () => {
+    if (!id || !['movie', 'tv'].includes(type)) return;
+
+    onSaveHistory({
+      id,
+      title,
+      media_type: type,
+      backdrop_path: content.backdrop_path || '',
+      poster_path: content.poster_path || '',
+      progress: 0,
+      info: type === 'tv'
+        ? `시즌 ${seasonNumber} ${episodeNumber}화 · 시청 시작`
+        : '영화 · 시청 시작'
+    });
+  };
+
   return (
     <main className="watch-page">
       <div className="watch-player">
@@ -189,7 +210,10 @@ export const Watch = () => {
         {videoSrc ? (
           <video ref={videoRef} className="watch-player__video" src={videoSrc} key={`${id}-${seasonNumber}-${episodeNumber}-${videoSrc}`}
             playsInline muted={muted}
-            onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
+            onPlay={() => {
+              setPlaying(true);
+              handleSaveHistory();
+            }} onPause={() => setPlaying(false)}
             onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
             onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
             onCanPlay={handleVideoReady}
@@ -201,6 +225,7 @@ export const Watch = () => {
             videoId={youtubeKey}
             className="watch-player__youtube"
             iframeClassName="watch-player__youtube-frame"
+            onPlay={handleSaveHistory}
             opts={{
               width: '100%',
               height: '100%',
