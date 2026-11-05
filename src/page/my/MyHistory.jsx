@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
+import { ContentCard } from '../../components/content/ContentCard';
 import './scss/MyHistory.scss'
 
 // 상단 콘텐츠 탭
@@ -22,10 +23,16 @@ const genres = [
 
 export const MyHistory = () => {
   const { history, ownerKey } = useProfileWatchHistory();
-  return <HistoryList key={ownerKey ?? 'guest'} history={history} />;
+  return (
+    <HistoryList
+      key={ownerKey ?? 'guest'}
+      history={history}
+      ownerKey={ownerKey}
+    />
+  );
 };
 
-const HistoryList = ({ history }) => {
+const HistoryList = ({ history, ownerKey }) => {
   const onDeleteHistory = useWatchHistoryStore((state) => state.onDeleteHistory);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
@@ -199,6 +206,21 @@ const HistoryList = ({ history }) => {
         ) : (
           <div className="my-history-grid">
             {filteredHistory.map((item) => {
+              if (!isEditing) {
+                return (
+                  <ContentCard
+                    key={item.docId}
+                    item={{
+                      ...item,
+                      id: item.contentId,
+                      resume: true,
+                      ownerKey,
+                      position: item.completed ? 0 : item.position,
+                    }}
+                  />
+                );
+              }
+
               const isSelected =
                 selectedIds.includes(item.id);
 

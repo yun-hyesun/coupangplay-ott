@@ -218,8 +218,21 @@ export const Watch = () => {
   };
 
   const savePlayback = (position, total, completed = false, periodic = false) => {
-    if (!ownerKey || !id || !['movie', 'tv'].includes(type)) return;
-    if (!Number.isFinite(position) || !Number.isFinite(total) || total <= 0) return;
+    if (!ownerKey || !id || !['movie', 'tv'].includes(type)) {
+      console.warn('[시청내역] 저장 건너뜀', {
+        hasOwner: Boolean(ownerKey),
+        type,
+        id,
+      });
+      return;
+    }
+
+    if (!Number.isFinite(position) || !Number.isFinite(total) || total <= 0) {
+      console.warn('[시청내역] 재생 시간 확인 불가', { position, total });
+      return;
+    }
+
+    console.log('[시청내역] 저장 시도', { type, id, position, total });
 
     const now = Date.now();
     if (periodic && lastSaved.current.route === location.key && now - lastSaved.current.at < 10000) return;
@@ -230,12 +243,16 @@ export const Watch = () => {
       backdrop_path: content.backdrop_path || '',
       poster_path: content.poster_path || '',
       position: Math.floor(position),
+      duration: Math.floor(total),
       progress: completed ? 100 : Math.min(100, Math.round(position / total * 100)),
       completed,
       videoSrc,
       youtubeKey: videoSrc ? '' : youtubeKey,
       info: type === 'tv' ? `시즌 ${seasonNumber} ${episodeNumber}화` : '영화',
-    }, ownerKey);
+    }, ownerKey).then((saved) => {
+      console.log('[시청내역] 저장 결과', saved);
+      return saved;
+    });
   };
 
   useEffect(() => {
