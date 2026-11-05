@@ -8,7 +8,7 @@ const YOUTUBE_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 const storeBannerMovieIds = [
   693134, // 듄: 파트 2
   361743, // 탑건: 매버릭
-  157336, // 인터스텔라
+  157336, // 인터스텔라 
   569094, // 스파이더맨: 어크로스 더 유니버스
   575264, // 미션 임파서블: 데드 레코닝 PART ONE
 ];
