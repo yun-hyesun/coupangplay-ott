@@ -1,8 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
+import { useSubscriptionStore } from '../../../store/useSubscriptionStore';
 import '../scss/VoucherModal.scss';
 
-export const VoucherModal = ({ onClose, onRegister }) => {
+export const VoucherModal = ({
+    onClose,
+    onRegister,
+    registering = false
+}) => {
     const [code, setCode] = useState('');
     const [message, setMessage] = useState('');
 
@@ -21,15 +26,24 @@ export const VoucherModal = ({ onClose, onRegister }) => {
         };
     }, [onClose]);
 
-    const handleSubmit = (e) => {
+    // 이용권 등록
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!isValid) return;
+        if (!isValid || registering) return;
 
-        const result = onRegister(code);
+        setMessage('');
 
-        if (!result) {
-            setMessage('유효하지 않은 이용권 코드입니다.');
+        const success = await onRegister(code);
+
+        if (!success) {
+            const latestError =
+                useSubscriptionStore.getState().error;
+
+            setMessage(
+                latestError ||
+                '이용권 등록에 실패했습니다. 코드를 확인해 주세요.'
+            );
         }
     };
 
@@ -37,7 +51,9 @@ export const VoucherModal = ({ onClose, onRegister }) => {
         <div
             className="voucher-modal-overlay"
             onMouseDown={(e) => {
-                if (e.target === e.currentTarget) onClose();
+                if (e.target === e.currentTarget && !registering) {
+                    onClose();
+                }
             }}
         >
             <div
@@ -55,8 +71,12 @@ export const VoucherModal = ({ onClose, onRegister }) => {
                         type="button"
                         onClick={onClose}
                         aria-label="닫기"
+                        disabled={registering}
                     >
-                        <img src="/images/icon/DesignSystem_Icon01/icon-close.svg" alt="" />
+                        <img
+                            src="/images/icon/DesignSystem_Icon01/icon-close.svg"
+                            alt=""
+                        />
                     </button>
                 </div>
 
@@ -76,10 +96,14 @@ export const VoucherModal = ({ onClose, onRegister }) => {
                         maxLength={13}
                         autoFocus
                         aria-label="이용권 코드"
+                        disabled={registering}
                     />
 
                     {message && (
-                        <p className="voucher-message" role="status">
+                        <p
+                            className="voucher-message"
+                            role="alert"
+                        >
                             {message}
                         </p>
                     )}
@@ -87,9 +111,9 @@ export const VoucherModal = ({ onClose, onRegister }) => {
                     <button
                         type="submit"
                         className="voucher-submit"
-                        disabled={!isValid}
+                        disabled={!isValid || registering}
                     >
-                        다음
+                        {registering ? '등록 중...' : '다음'}
                     </button>
                 </form>
             </div>
