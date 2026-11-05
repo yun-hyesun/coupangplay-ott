@@ -62,7 +62,7 @@ const SearchResults = ({ query }) => {
     <main className="searchPage">
       <ContentTitle title={query ? `‘${query}’ 검색 결과` : '검색'} />
       {!query && <p>제목, 장르, 배우 또는 감독 이름을 입력해 주세요.</p>}
-      {query && <ContentGrid items={result.items} type="all" imageType="세로" />}
+      {query && <ContentGrid items={result.items} type="all" imageType="가로" />}
 
       <div aria-live="polite">
         {loading && <p role="status">검색 중입니다.</p>}

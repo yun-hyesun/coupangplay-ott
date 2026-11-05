@@ -25,18 +25,15 @@ export const SearchInput = () => {
 
   // 뒤로 가기나 다른 메뉴로 이동했을 때 화면 동기화
   useEffect(() => {
-    if (composingSearch.current) return;
+  if (composingSearch.current) return;
 
-    if (location.pathname === '/search') {
-      setIsOpen(true);
-      setSearchText(
-        new URLSearchParams(location.search).get('q') || ''
-      );
-    } else {
-      setSearchText('');
-      setIsOpen(false);
-    }
-  }, [location.pathname, location.search]);
+  if (location.pathname === '/search') {
+    setIsOpen(true);
+    setSearchText(
+      new URLSearchParams(location.search).get('q') || ''
+    );
+  }
+}, [location.pathname, location.search]);
 
   const handleOpen = () => {
     if (location.pathname !== '/search') {
@@ -59,7 +56,12 @@ export const SearchInput = () => {
 
   const search = (value) => {
     if (!value.trim()) {
-      handleClose();
+      setSearchText('');
+
+      if (location.pathname === '/search') {
+        navigate(previousPage.current, { replace: true });
+      }
+
       return;
     }
 
@@ -100,53 +102,43 @@ export const SearchInput = () => {
         }}
       />
 
-      {isOpen && (
-        <>
-          <label htmlFor="header-search-input" className="sr-only">
-            검색
-          </label>
+      <div className="header-search-fields" inert={!isOpen}>
+        <label htmlFor="header-search-input" className="sr-only">
+          검색
+        </label>
 
-          <input
-            ref={inputRef}
-            type="search"
-            id="header-search-input"
-            value={searchText}
-            placeholder="제목, 사람, 장르"
-            onCompositionStart={() => {
-              composingSearch.current = true;
-            }}
-            onCompositionEnd={(event) => {
-              composingSearch.current = false;
-              const value = event.currentTarget.value;
-              setSearchText(value);
-              search(value);
-            }}
-            onChange={(event) => {
-              const value = event.currentTarget.value;
-              setSearchText(value);
+        <input
+          ref={inputRef}
+          type="search"
+          id="header-search-input"
+          value={searchText}
+          placeholder="제목, 사람, 장르"
+          onCompositionStart={() => {
+            composingSearch.current = true;
+          }}
+          onCompositionEnd={(event) => {
+            composingSearch.current = false;
+            const value = event.currentTarget.value;
+            setSearchText(value);
+            search(value);
+          }}
+          onChange={(event) => {
+            const value = event.currentTarget.value;
+            setSearchText(value);
+            search(value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && !composingSearch.current) {
+              event.preventDefault();
+              handleClose();
+            }
+          }}
+        />
 
-              if (!composingSearch.current) search(value);
-            }}
-            onKeyDown={(event) => {
-              if (
-                event.key === 'Escape' &&
-                !composingSearch.current
-              ) {
-                event.preventDefault();
-                handleClose();
-              }
-            }}
-          />
-
-          <button
-            type="button"
-            className="close"
-            onClick={handleClose}
-          >
-            닫기
-          </button>
-        </>
-      )}
+        <button type="button" className="search-close" onClick={handleClose} aria-label='검색 닫기'>
+          <img src="/images/icon-close.svg" alt="" />
+        </button>
+      </div>
     </form>
   );
 };

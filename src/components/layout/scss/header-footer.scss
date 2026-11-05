@@ -5,7 +5,7 @@
 
 .header {height: 70px; padding-inline: $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
   &.active {background: $color-bg;}
-  &.active .header-search {background: $color-border;}
+  &.active .header-search:has(.is-open) {background: $color-border;}
 
   .inner {@include flex-between(); height: 100%;
 
@@ -25,14 +25,32 @@
 
       .header-login {background: $color-pri; font-size: 14px; padding: 5px 15px; border-radius: 30px;}
 
-      .header-search {@include flex-center(); height: 40px; padding: 5px 20px; border: 1px solid $color-border-light; border-radius: 30px; @include trans();
-        
-        .header-search-form {@include flex-between($gap: 20px);
-  
-          .header-search-btn {width: 20px; height: 20px; background: url(images/search.svg) no-repeat center / contain;}
+      .header-search {@include flex-center(); height: 44px; padding: 5px 10px 5px 15px;  border-radius: 30px;
 
-          input {font-weight: $font-w-R-400;}
-          input::placeholder {color: $color-text-sec1; font-size: 14px;}
+        &:has(.is-open) {border: 1px solid $color-border-light;}
+        
+        .header-search-form {@include flex-center();
+          &.is-open {gap: 10px;}
+  
+          .header-search-btn {width: 20px; height: 20px; background: url(/images/search.svg) no-repeat center / contain;}
+          
+          .header-search-fields {@include flex-between($gap: 10px)}
+
+          input {font-weight: $font-w-R-400; width: 0; opacity: 0; @include trans(); 
+            &::placeholder {color: $color-text-sec1; font-size: 14px;}
+          }
+
+          .search-close {border: 1.5px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: inline-flex; justify-content: center; align-items: center; opacity: .5; display: none;
+
+            &:hover {opacity: 1;}
+            img {width: 20px;}
+          }
+
+          &.is-open {
+            input {width: 210px; opacity: 1;}
+            .search-close {display: inline-flex;}
+          }
+          
         }
 
       }

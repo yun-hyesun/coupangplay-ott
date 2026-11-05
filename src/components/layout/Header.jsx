@@ -133,11 +133,13 @@ export const Header = () => {
             </li>
           )}
 
-          {/* 검색 */}
-          <li className="header-search">
-            <SearchInput />
-          </li>
 
+          {/* 로그인한 경우 검색 */}
+          {!authLoading && user && (
+            <li className="header-search">
+              <SearchInput />
+            </li>
+          )}
           {/* 로그인한 경우 프로필 메뉴 */}
           {!authLoading && user && (
             <li
