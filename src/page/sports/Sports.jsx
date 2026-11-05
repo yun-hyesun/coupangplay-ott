@@ -84,6 +84,24 @@ function formatGameTime(startTime) {
   }).format(date);
 }
 
+function formatMatchday(matchday) {
+  const value = String(matchday ?? "").trim();
+  const round = /^\d+$/.test(value)
+    ? value
+    : value.match(/(?:regular season|matchday|round|week)\s*[-:#]?\s*(\d+)/i)?.[1];
+  return round ? `${round}라운드` : "";
+}
+
+function getBasketballScheduleLabel(game) {
+  return game.scheduleSegment || "";
+}
+
+function getScheduleSubLabel(game) {
+  return game.competitionCode === "nba"
+    ? getBasketballScheduleLabel(game)
+    : game.scheduleSegment || formatMatchday(game.matchday);
+}
+
 function getGameStatus(status = "") {
   if (/postponed|delayed/i.test(status)) return { label: "연기", modifier: "scheduled" };
   if (/canceled/i.test(status)) return { label: "취소", modifier: "scheduled" };
@@ -192,6 +210,7 @@ function VideoSection({ id, title, cards, layout = "grid", badge }) {
 
 function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
   const status = getGameStatus(game.status);
+  const scheduleSubLabel = getScheduleSubLabel(game);
   const hasScore =
     scoresOn &&
     status.modifier !== "scheduled" &&
@@ -221,7 +240,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
               <strong>{game.home.score}</strong>
               <span>
                 {formatGameTime(game.utcDate || game.startTime)}
-                <small>{game.matchday ? game.matchday + " 라운드" : status.modifier === "live" ? "경기 중" : "경기 종료"}</small>
+                {scheduleSubLabel && <small>{scheduleSubLabel}</small>}
               </span>
               <strong>{game.away.score}</strong>
             </div>
@@ -230,7 +249,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
               {/* <strong>VS</strong> */}
               <span>
                 {formatGameTime(game.utcDate || game.startTime)}
-                <small>{game.matchday ? game.matchday + " 라운드" : "경기 일정"}</small>
+                {scheduleSubLabel && <small>{scheduleSubLabel}</small>}
               </span>
             </div>
           )}
