@@ -6,6 +6,60 @@ import "./scss/ContentCard.scss"
 
 // Swiper와 Grid가 공통으로 쓰는 카드 (기존 hover 및 class 유지)
 export const ContentCard = ({ item, type = 'movie', imageType = '가로', variant = 'default', index = 0 }) => {
+  if (item?.source === 'youtube') {
+    const isLive = item.kind === 'live';
+    return (
+      <article className="contentRail-card contentRail-card--hor">
+        <div className="contentRail-info youtube-card">
+          <Link
+            className="contentRail-visual "
+            to={`/watch/sports/${encodeURIComponent(item.id)}`}
+            state={{ title: item.title }}
+            aria-label={`${isLive ? 'LIVE · ' : ''}${item.title} 재생`}
+          >
+            <img src={item.thumbnail} alt="" loading="lazy" />
+            {isLive && <span className="contentCard-badge live"><i aria-hidden="true"><span></span></i>LIVE</span>}
+          </Link>
+          {!item.hideTitle && (
+            <p className="contentCard-sportsTitle">{item.title}</p>
+          )}
+        </div>
+      </article>
+    );
+  }
+
+  if (item?.resume) {
+    const { id, title, media_type, position, seasonNumber, episodeNumber } = item;
+    return (
+      <article className="contentRail-card contentRail-card--hor">
+        <div className="contentRail-info">
+          <Link
+            className="contentRail-visual"
+            to={`/watch/${media_type}/${id}`}
+            state={{
+              content: item, ownerKey: item.ownerKey, resumeAt: position, seasonNumber, episodeNumber,
+              videoSrc: item.videoSrc, youtubeKey: item.youtubeKey, autoPlayNext: true,
+            }}
+            aria-label={`${title} 이어서 시청하기`}
+          >
+            <img src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`} alt="" loading="lazy" />
+            <progress
+              max="100"
+              value={Math.max(0, Math.min(100, item.progress || 0))}
+              aria-label="시청 진행률"
+              style={{ position: 'absolute', inset: 'auto 0 0', width: '100%' }}
+            />
+          </Link>
+          <p className="contentCard-sportsTitle">{title}</p>
+        </div>
+      </article>
+    );
+  }
+
+  return <TmdbContentCard {...{ item, type, imageType, variant, index }} />;
+};
+
+const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
   const [isHover, setIsHover] = useState(false);
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);
@@ -70,3 +124,5 @@ export const ContentCard = ({ item, type = 'movie', imageType = '가로', varian
     </article>
   );
 };
+
+

@@ -1,80 +1,148 @@
-import React from 'react'
-import '../scss/WatchHistory.scss'
-import { Link } from 'react-router-dom'
 
-// 화면 구성 확인용 임시 데이터
-const historyData = [
-  {
-    id: 1,
-    title: '너 말고 다른 연애',
-    info: '시즌 1 3화 · 24분 남음',
-    progress: 60
-  },
-  {
-    id: 2,
-    title: '직장인들',
-    info: '9화 · 18분 남음',
-    progress: 40
-  },
-  {
-    id: 3,
-    title: '히든페이스',
-    info: '영화 · 42분 남음',
-    progress: 48
-  },
-  {
-    id: 4,
-    title: '만약에 우리',
-    info: '영화 · 35분 남음',
-    progress: 68
-  },
-  {
-    id: 5,
-    title: '봉주르빵집',
-    info: '시즌 1 5화 · 21분 남음',
-    progress: 0
-  }
-];
+import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+import { useAuthStore } from '../../../store/useAuthStore';
+import { useProfileStore } from '../../../store/useProfileStore';
+import { useWatchHistoryStore } from '../../../store/useWatchHistoryStore';
+
+import '../scss/WatchHistory.scss';
 
 export const WatchHistory = () => {
+    const user = useAuthStore((state) => state.user);
+    const authLoading = useAuthStore((state) => state.loading);
 
-  return (
-    <section className="watch-history">
-      <div className="watch-history-header">
-        <Link to="/my/history" className="watch-history-heading">
-          <h2>시청내역</h2>
-          <img className="watch-history-arrow" src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg" alt="화살표 아이콘" />
-        </Link>
+    const currentProfile = useProfileStore(
+        (state) => state.currentProfile
+    );
 
-        <Link
-          to="/my/history"
-          className="watch-history-more"
-          aria-label="전체 시청내역 보기"
-        >
-          <img
-            src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
-            alt=""
-          />
-        </Link>
-      </div>
+    const history = useWatchHistoryStore(
+        (state) => state.history
+    );
 
-      <div className="watch-history-grid">
-        {historyData.slice(0, 5).map((item) => (
-          <div className="watch-history-item" key={item.id}>
-            <div className="watch-history-thumbnail">
-              <div
-                className="watch-history-progress"
-                style={{ width: `${item.progress}%` }}
-              />
+    const loading = useWatchHistoryStore(
+        (state) => state.loading
+    );
+
+    const error = useWatchHistoryStore(
+        (state) => state.error
+    );
+
+    const ownerKey = useWatchHistoryStore(
+        (state) => state.ownerKey
+    );
+
+    const onLoadHistory = useWatchHistoryStore(
+        (state) => state.onLoadHistory
+    );
+
+    const onResetHistory = useWatchHistoryStore(
+        (state) => state.onResetHistory
+    );
+
+    // 계정 또는 프로필 변경 시 시청내역 불러오기
+    useEffect(() => {
+        onResetHistory();
+
+        if (!authLoading && user?.uid && currentProfile?.id) {
+            onLoadHistory();
+        }
+    }, [
+        authLoading,
+        user?.uid,
+        currentProfile?.id,
+        onLoadHistory,
+        onResetHistory
+    ]);
+
+    const expectedOwnerKey =
+        user?.uid && currentProfile?.id
+            ? `${user.uid}_${currentProfile.id}`
+            : null;
+
+    const isCurrentList =
+        expectedOwnerKey !== null &&
+        ownerKey === expectedOwnerKey;
+
+    const items = isCurrentList ? history.slice(0, 5) : [];
+
+    const isLoading =
+        authLoading ||
+        (user && currentProfile && loading);
+
+    return (
+        <section className="watch-history">
+            <div className="watch-history-header">
+                <Link
+                    to="/my/history"
+                    className="watch-history-heading"
+                >
+                    <h2>시청내역</h2>
+                    <img
+                        className="watch-history-arrow"
+                        src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
+                        alt=""
+                    />
+                </Link>
+
+                <Link
+                    to="/my/history"
+                    className="watch-history-more"
+                    aria-label="전체 시청내역 보기"
+                >
+                    <img
+                        src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
+                        alt=""
+                    />
+                </Link>
             </div>
 
-            <h3>{item.title}</h3>
-            <p>{item.info}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
+            {isLoading ? (
+                <p>시청내역을 불러오는 중입니다.</p>
+            ) : !user || !currentProfile ? (
+                <p>프로필을 먼저 선택해 주세요.</p>
+            ) : error ? (
+                <p>{error}</p>
+            ) : !isCurrentList ? (
+                <p>시청내역을 불러오지 못했습니다.</p>
+            ) : items.length === 0 ? (
+                <p>아직 시청한 콘텐츠가 없습니다.</p>
+            ) : (
+                <div className="watch-history-grid">
+                    {items.map((item) => (
+                        <Link
+                            to={
+                                item.media_type === 'movie'
+                                    ? `/detail/movie/${item.id}`
+                                    : `/detail/tv/${item.id}`
+                            }
+                            className="watch-history-item"
+                            key={item.docId}
+                        >
+                            <div className="watch-history-thumbnail">
+                                {item.backdrop_path || item.poster_path ? (
+                                    <img
+                                        src={`https://image.tmdb.org/t/p/w780${item.backdrop_path || item.poster_path}`}
+                                        alt={item.title}
+                                    />
+                                ) : (
+                                    <span>이미지 없음</span>
+                                )}
 
-}
+                                <div
+                                    className="watch-history-progress"
+                                    style={{
+                                        width: `${item.progress || 0}%`
+                                    }}
+                                />
+                            </div>
 
+                            <h3>{item.title}</h3>
+                            <p>{item.info}</p>
+                        </Link>
+                    ))}
+                </div>
+            )}
+        </section>
+    );
+};
