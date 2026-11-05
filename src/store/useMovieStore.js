@@ -1,7 +1,17 @@
 import { create } from 'zustand';
+import { railConfig } from '../data/railConfig';
+import { makeParams } from '../data/contentQuery';
 
 const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const YOUTUBE_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
+
+const storeBannerMovieIds = [
+  693134, // 듄: 파트 2
+  361743, // 탑건: 매버릭
+  157336, // 인터스텔라
+  569094, // 스파이더맨: 어크로스 더 유니버스
+  575264, // 미션 임파서블: 데드 레코닝 PART ONE
+];
 
 // fetch(`https://api.themoviedb.org/3/watch/providers/movie?api_key=${TMDB_KEY}&language=ko-KR&watch_region=KR`)
 //   .then(res => res.json())
@@ -35,6 +45,7 @@ const ratingRequests = {};
 
 // 한국 관람등급이 전체·7·12·15인 작품만 허용
 const checkUnder19 = (type, id) => {
+
   const key = `${type}-${id}`;
 
   if (!ratingRequests[key]) {
@@ -78,6 +89,62 @@ const checkUnder19 = (type, id) => {
   }
 
   return ratingRequests[key];
+  
+};
+// 키즈 전용 관람등급 확인
+const kidsRatingRequests = {};
+
+const checkKidsRating = (type, id) => {
+  const key = `${type}-${id}`;
+
+  if (!kidsRatingRequests[key]) {
+    kidsRatingRequests[key] = (async () => {
+      try {
+        const path =
+          type === 'movie'
+            ? `/movie/${id}/release_dates`
+            : `/tv/${id}/content_ratings`;
+
+        const data = await requestTmdb(path);
+
+        let ratings = [];
+
+        if (type === 'movie') {
+          ratings = (data.results ?? [])
+            .filter((item) => item.iso_3166_1 === 'KR')
+            .flatMap((item) => item.release_dates ?? [])
+            .map((item) => item.certification);
+        } else {
+          ratings = (data.results ?? [])
+            .filter((item) => item.iso_3166_1 === 'KR')
+            .map((item) => item.rating);
+        }
+
+        const allowed = [
+          'ALL', '전체', '전체관람가', '0',
+          '7', '12',
+        ];
+
+        ratings = ratings
+          .map((rating) =>
+            String(rating ?? '').trim().toUpperCase()
+          )
+          .filter(Boolean);
+
+        return (
+          ratings.length > 0 &&
+          ratings.every((rating) => allowed.includes(rating))
+        );
+      } catch {
+        return false;
+      }
+    })().catch(() => {
+      delete kidsRatingRequests[key];
+      return false;
+    });
+  }
+
+  return kidsRatingRequests[key];
 };
 
 // 영화·TV 목록 요청 결과 재사용
@@ -115,6 +182,7 @@ const fetchCoupangList = (type, query = {}) => {
         timeZone: 'Asia/Seoul',
       }).format(new Date());
 
+      const { kidsOnly, ...tmdbQuery } = query;
       const data = await requestTmdb(`/discover/${type}`, {
         watch_region: 'KR',
         with_watch_providers: String(tving.provider_id),
@@ -131,20 +199,39 @@ const fetchCoupangList = (type, query = {}) => {
               sort_by: 'primary_release_date.desc',
               'primary_release_date.lte': today,
             }),
-        ...query,
+        ...tmdbQuery,
       });
 
       const checkedItems = await Promise.all(
         (data.results ?? []).map(async (item) => {
           if (item.adult) return null;
 
-          const allowed = await checkUnder19(type, item.id);
+          const allowed = query.kidsOnly
+          ? await checkKidsRating(type, item.id)
+          : await checkUnder19(type, item.id);
 
           return allowed
             ? { ...item, media_type: type }
             : null;
         })
       );
+
+    if (kidsOnly) {
+      console.log('키즈 검색 작품 수:', data.results?.length);
+      console.log(
+        '키즈 관람등급 통과 수:',
+        checkedItems.filter(Boolean).length
+      );
+    }
+    
+    if (kidsOnly) {
+      console.log('키즈 장르:', query.with_genres);
+      console.log('TMDB 검색 결과:', data.results?.length);
+      console.log(
+        '관람등급 통과:',
+        checkedItems.filter(Boolean).length
+      );
+    }
 
     return checkedItems.filter(Boolean);
     })().catch((error) => {
@@ -192,7 +279,15 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
       }
 
       // 티빙 제공 업체 ID 찾기
-      if (!providerIds[type]) {
+      const { kidsOnly, requiredImage, useTving: useTvingOption, ...tmdbQuery } = query;
+
+      const useTving =
+        !query.with_networks &&
+        query.with_watch_monetization_types !== 'buy' &&
+        useTvingOption !== false &&
+        !(kidsOnly && query.with_companies);
+
+      if (useTving && !providerIds[type]) {
         providerIds[type] = requestTmdb(
           `/watch/providers/${type}`,
           { watch_region: 'KR' }
@@ -218,7 +313,7 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
           });
       }
 
-      const providerId = await providerIds[type];
+      const providerId = useTving ? await providerIds[type] : null;
 
       const today = new Intl.DateTimeFormat('sv-SE', {
         timeZone: 'Asia/Seoul',
@@ -240,10 +335,10 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
       // TMDB 콘텐츠 가져오기
       const data = await requestTmdb(`/discover/${type}`, {
         watch_region: 'KR',
-        with_watch_providers: String(providerId),
+        ...(providerId ? { with_watch_providers: String(providerId) } : {}),
         include_adult: 'false',
         [dateKey]: today,
-        ...query,
+        ...tmdbQuery,
         sort_by: normalizedSort,
         page: String(page),
       });
@@ -251,15 +346,21 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
       // 기존 관람등급 필터 적용
       const checked = await Promise.all(
         (data.results || []).map(async (item) => {
-          if (item.adult) return null;
+          if (item.adult || (requiredImage && !item[requiredImage])) {
+            return null;
+          }
 
-          const allowed = await checkUnder19(type, item.id);
+          const allowed = kidsOnly
+          ? await checkKidsRating(type, item.id)
+          : await checkUnder19(type, item.id);
 
           if (!allowed) return null;
 
           return {
             ...item,
             media_type: type,
+            isPurchase: query.with_watch_monetization_types === 'buy',
+            isCoupangSeries: type === 'tv' && String(query.with_networks) === '5169',
           };
         })
       );
@@ -277,7 +378,119 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
   return morePageRequests[key];
 };
 
+const shouldMixCoupangSeries = (type, query) =>
+  (type === 'tv' || type === 'all') &&
+  !query.with_networks &&
+  !query.with_watch_monetization_types &&
+  !query.with_companies &&
+  query.useTving !== false;
 
+const fetchRailPage = async (type, query = {}, page = 1) => {
+  if (!shouldMixCoupangSeries(type, query)) {
+    return fetchMorePage(type, query, page);
+  }
+
+  const sort = query.sort_by || 'popularity.desc';
+  const dateSort = sort.includes('date.');
+  const ascending = sort.endsWith('.asc');
+
+  const compare = (a, b) => {
+    const order = dateSort
+      ? (b.release_date || b.first_air_date || '').localeCompare(
+          a.release_date || a.first_air_date || ''
+        )
+      : sort.startsWith('vote_average.')
+        ? (b.vote_average ?? 0) - (a.vote_average ?? 0)
+        : (b.popularity ?? 0) - (a.popularity ?? 0);
+
+    return ascending ? -order : order;
+  };
+
+  const makeSource = (mediaType, params, isCoupang = false) => ({
+    mediaType,
+    params,
+    isCoupang,
+    page: 1,
+    hasNext: true,
+    items: [],
+  });
+
+  const sources = [
+    // 동점이면 쿠팡플레이 쪽을 먼저 읽어 배지 값을 살린다.
+    makeSource('tv', { ...query, with_networks: '5169' }, true),
+    makeSource('tv', query),
+  ];
+
+  if (type === 'all') {
+    sources.push(makeSource('movie', query));
+
+    // 혼합 레일에서 최신순을 쓰면 영화와 TV에 맞는 날짜 필드를 사용한다.
+    if (dateSort) {
+      const direction = ascending ? 'asc' : 'desc';
+
+      for (const source of sources) {
+        const field = source.mediaType === 'movie'
+          ? 'primary_release_date'
+          : 'first_air_date';
+
+        source.params = { ...source.params, sort_by: `${field}.${direction}` };
+      }
+    }
+  }
+
+  const fillSource = async (source) => {
+    while (source.items.length === 0 && source.hasNext) {
+      const result = await fetchMorePage(
+        source.mediaType,
+        source.params,
+        source.page
+      );
+
+      source.items = [...result.results];
+      source.hasNext = result.hasNext;
+      source.page += 1;
+    }
+  };
+
+  const pageSize = 20;
+  const end = page * pageSize;
+  const merged = new Map();
+
+  // 다음 작품 1편까지 확인해 더보기 여부를 계산한다.
+  while (merged.size <= end) {
+    await Promise.all(sources.map(fillSource));
+
+    const available = sources.filter((source) => source.items.length > 0);
+    if (available.length === 0) break;
+
+    available.sort((a, b) => compare(a.items[0], b.items[0]));
+
+    const item = available[0].items.shift();
+    const key = `${item.media_type}-${item.id}`;
+
+    if (!merged.has(key)) {
+      merged.set(key, item);
+    }
+
+    // 같은 작품이 다른 목록의 대기열에 있어도 쿠팡플레이 배지를 유지한다.
+    const coupangSource = sources.find((source) => source.isCoupang);
+    const isCoupangSeries =
+      item.isCoupangSeries ||
+      (item.media_type === 'tv' &&
+        coupangSource.items.some((work) => work.id === item.id));
+
+    if (isCoupangSeries) {
+      merged.set(key, { ...merged.get(key), isCoupangSeries: true });
+    }
+  }
+
+  return {
+    results: [...merged.values()].slice(end - pageSize, end),
+    hasNext: merged.size > end,
+  };
+};
+
+const purchaseRequests = new Set();
 export const useMovieStore = create((set, get) => ({
   
   // =========================
@@ -318,7 +531,7 @@ export const useMovieStore = create((set, get) => ({
     }));
 
     try {
-      const { results, hasNext } = await fetchMorePage(
+      const { results, hasNext } = await fetchRailPage(
         type,
         params,
         page
@@ -415,8 +628,34 @@ export const useMovieStore = create((set, get) => ({
     }));
     try {
       let items;
+      if (shouldMixCoupangSeries(type, params)) {
+        const { results } = await fetchRailPage(type, params, 1);
+        items = results;
+      } else
 
-      if (type === 'all') {
+      if (
+          params.with_networks ||
+          params.with_watch_monetization_types === 'buy' ||
+          (params.kidsOnly && (params.with_companies || params.useTving === false))
+        ) {
+        params.useTving === false
+        const works = new Map();
+        let page = 1;
+        let hasNext = true;
+
+        while (works.size < 20 && hasNext) {
+          const result = await fetchMorePage(type, params, page);
+
+          for (const item of result.results) {
+            works.set(`${item.media_type}-${item.id}`, item);
+          }
+
+          hasNext = result.hasNext;
+          page += 1;
+        }
+
+        items = [...works.values()].slice(0, 20);
+      } else if (type === 'all') {
         const [movies, tvs] = await Promise.all([
           fetchCoupangList('movie', params),
           fetchCoupangList('tv', params),
@@ -472,147 +711,228 @@ export const useMovieStore = create((set, get) => ({
   // 메인 배너: 티빙 TV
   // =========================
   // =========================
-// 메인 배너
-// =========================
-bannerContents: [],
-bannerType: null,
-bannerRequestId: 0,
-isBannerLoading: false,
-bannerError: null,
-isBannerLoaded: false,
+  // 메인 배너
+  // =========================
+  bannerContents: [],
+  bannerType: null,
+  bannerRequestId: 0,
+  isBannerLoading: false,
+  bannerError: null,
+  isBannerLoaded: false,
 
-onFetchBanner: async (type = 'all') => {
-  const current = get();
+  onFetchBanner: async (type = 'all') => {
+    const current = get();
 
-  // 같은 종류를 이미 가져왔거나 가져오는 중이면 종료
-  if (
-    current.bannerType === type &&
-    (current.isBannerLoading || current.isBannerLoaded)
-  ) {
-    return;
-  }
-
-  const requestId = current.bannerRequestId + 1;
-
-  set({
-    bannerType: type,
-    bannerRequestId: requestId,
-    bannerContents: [],
-    isBannerLoading: true,
-    isBannerLoaded: false,
-    bannerError: null,
-  });
-
-  try {
-    const popular = {
-      sort_by: 'popularity.desc',
-    };
-
-    let items = [];
-
-    switch (type) {
-      // 티빙 드라마
-      case 'drama':
-        items = await fetchCoupangList('tv', {
-          ...popular,
-          with_genres: '18',
-        });
-        break;
-
-      // 티빙 영화
-      case 'movie':
-        items = await fetchCoupangList('movie', popular);
-        break;
-
-      // 티빙 키즈·가족 TV 프로그램
-      case 'kids':
-        items = await fetchCoupangList('tv', {
-          ...popular,
-          with_genres: '10762|10751',
-        });
-        break;
-
-      // 한국에서 구매 가능한 영화
-      case 'purchase': {
-        const today = new Intl.DateTimeFormat('sv-SE', {
-          timeZone: 'Asia/Seoul',
-        }).format(new Date());
-
-        const data = await requestTmdb('/discover/movie', {
-          ...popular,
-          watch_region: 'KR',
-          with_watch_monetization_types: 'buy',
-          include_adult: 'false',
-          'primary_release_date.lte': today,
-          page: '1',
-        });
-
-        const checked = await Promise.all(
-          (data.results ?? []).map(async (item) => {
-            if (item.adult) return null;
-
-            const allowed = await checkUnder19('movie', item.id);
-
-            return allowed
-              ? { ...item, media_type: 'movie' }
-              : null;
-          })
-        );
-
-        items = checked.filter(Boolean);
-        break;
-      }
-
-      // 티빙 영화 + TV
-      case 'all':
-      default: {
-        const [movies, dramas] = await Promise.all([
-          fetchCoupangList('movie', {
-            sort_by: 'primary_release_date.desc',
-          }),
-
-          fetchCoupangList('tv', {
-            with_genres: '18',
-            sort_by: 'first_air_date.desc',
-          }),
-        ]);
-
-        items = [...movies, ...dramas];
-        break;
-      }
+    // 같은 종류를 이미 가져왔거나 가져오는 중이면 종료
+    if (
+      current.bannerType === type &&
+      (current.isBannerLoading || current.isBannerLoaded)
+    ) {
+      return;
     }
 
-    const banners = items
-    .filter((item) => item.backdrop_path)
-    .sort((a, b) => {
-      if (type === 'all') {
-        const dateA = a.release_date || a.first_air_date || '';
-        const dateB = b.release_date || b.first_air_date || '';
+    const requestId = current.bannerRequestId + 1;
 
-        return dateB.localeCompare(dateA);
+    set({
+      bannerType: type,
+      bannerRequestId: requestId,
+      bannerContents: [],
+      isBannerLoading: true,
+      isBannerLoaded: false,
+      bannerError: null,
+    });
+
+    try {
+      const popular = {
+        sort_by: 'popularity.desc',
+      };
+
+      let items = [];
+
+      
+      switch (type) {
+        // 한국 드라마 최신순
+        case 'drama':
+          items = await fetchCoupangList('tv', {
+            with_genres: '18',
+            with_origin_country: 'KR',
+            sort_by: 'first_air_date.desc',
+          });
+          break;
+
+        // 티빙 예능 최신순
+        case 'entertainment':
+          items = await fetchCoupangList('tv', {
+            with_genres: '10764|10767',
+            sort_by: 'first_air_date.desc',
+          });
+          break;
+
+        // 영화 최신순
+        case 'movie':
+          items = await fetchCoupangList('movie', {
+            sort_by: 'primary_release_date.desc',
+          });
+          break;
+
+        // 키즈 최신순
+        
+        
+        case 'kids': {
+          const seen = new Set();
+
+          const pickBanners = async (railKey, count) => {
+            const config = railConfig[railKey];
+            const params = {
+              ...makeParams(config),
+              requiredImage: 'backdrop_path',
+            };
+
+            const selected = [];
+            let page = 1;
+            let hasNext = true;
+
+            while (selected.length < count && hasNext) {
+              const result = await fetchMorePage(config.type, params, page);
+
+              for (const item of result.results) {
+                const key = `${item.media_type}-${item.id}`;
+
+                if (seen.has(key)) continue;
+
+                seen.add(key);
+                selected.push(item);
+
+                if (selected.length === count) break;
+              }
+
+              hasNext = result.hasNext;
+              page += 1;
+            }
+
+            return selected;
+          };
+
+          const adventure = await pickBanners('kids-fantasy-adventure', 2);
+          const disneyPixar = await pickBanners('kids-animation', 2);
+          const koreanAnimation = await pickBanners('kids-korean-animation', 1);
+
+          items = [...adventure, ...disneyPixar, ...koreanAnimation];
+          break;
+        }
+
+
+
+        // 구매 가능한 영화 최신순
+        case 'purchase': {
+          const results = await Promise.allSettled(
+            storeBannerMovieIds.map((id) => requestTmdb(`/movie/${id}`))
+          );
+
+          items = results
+            .filter(({ status }) => status === 'fulfilled')
+            .map(({ value }) => ({ ...value, media_type: 'movie' }))
+            .filter((item) => !item.adult && item.backdrop_path);
+
+          if (items.length === 0) {
+            throw new Error('스토어 추천 영화를 불러오지 못했습니다.');
+          }
+
+          break;
+        }
+
+        // 홈: 영화 + 드라마 최신순
+        
+        
+        case 'all':
+        default: {
+          const [movies, koreanDramas, overseasDramas] =
+            await Promise.all([
+              // 영화
+              fetchCoupangList('movie', {
+                sort_by: 'primary_release_date.desc',
+              }),
+
+              // 한국 드라마
+              fetchCoupangList('tv', {
+                with_genres: '18',
+                with_origin_country: 'KR',
+                sort_by: 'first_air_date.desc',
+              }),
+
+              // 해외 드라마
+              fetchCoupangList('tv', {
+                with_genres: '18',
+                without_origin_country: 'KR',
+                sort_by: 'first_air_date.desc',
+              }),
+            ]);
+
+          // 종류별 최신 작품 선택
+          const latest = (list, count) =>
+            [...list]
+              .filter((item) => item.backdrop_path)
+              .sort((a, b) => {
+                const dateA = a.release_date || a.first_air_date || '';
+                const dateB = b.release_date || b.first_air_date || '';
+                return dateB.localeCompare(dateA);
+              })
+              .slice(0, count);
+
+          items = [
+            ...latest(movies, 2),
+            ...latest(koreanDramas, 1),
+            ...latest(overseasDramas, 2),
+          ];
+
+          break;
+        }
+
+
+
       }
 
-      return (b.popularity ?? 0) - (a.popularity ?? 0);
+    
+    
+  const seen = new Set();
+
+  const banners = items
+    .filter((item) => item.backdrop_path)
+    .filter((item) => {
+      const key = `${item.media_type}-${item.id}`;
+
+      if (seen.has(key)) return false;
+
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => {
+      if (type === 'kids' || type === 'purchase') return 0;
+
+      const dateA = a.release_date || a.first_air_date || '';
+      const dateB = b.release_date || b.first_air_date || '';
+
+      return dateB.localeCompare(dateA);
     })
     .slice(0, 5);
 
-    // 종류를 바꿨다면 이전 요청 결과는 저장하지 않음
-    if (get().bannerRequestId !== requestId) return;
+      // 종류를 바꿨다면 이전 요청 결과는 저장하지 않음
+      if (get().bannerRequestId !== requestId) return;
 
-    set({
-      bannerContents: banners,
-      isBannerLoaded: true,
-    });
-  } catch (error) {
-    if (get().bannerRequestId === requestId) {
-      set({ bannerError: error.message });
+      set({
+        bannerContents: banners,
+        isBannerLoaded: true,
+      });
+    } catch (error) {
+      if (get().bannerRequestId === requestId) {
+        set({ bannerError: error.message });
+      }
+    } finally {
+      if (get().bannerRequestId === requestId) {
+        set({ isBannerLoading: false });
+      }
     }
-  } finally {
-    if (get().bannerRequestId === requestId) {
-      set({ isBannerLoading: false });
-    }
-  }
-},
+  },
 
   // =========================
   // 티빙 영화 목록
@@ -762,14 +1082,14 @@ onFetchBanner: async (type = 'all') => {
             `${tvName} 시즌 ${season} ${episode}화 ` +
             `${episodeInfo?.name || ''} 하이라이트`;
 
-          const params = new URLSearchParams({
-            part: 'snippet',
-            q: searchText,
-            type: 'video',
-            maxResults: '5',
-            videoEmbeddable: 'true',
-            key: YOUTUBE_KEY,
-          });
+          const params = {
+            language: 'ko-KR',
+            watch_region: 'KR',
+            with_origin_country: 'KR',
+            with_genres: '18',
+            sort_by: 'popularity.desc',
+            include_adult: false,
+          };
 
           const res = await fetch(
             `https://www.googleapis.com/youtube/v3/search?${params}`
@@ -829,6 +1149,39 @@ onFetchBanner: async (type = 'all') => {
       set(state => ({ detailErrors: { ...state.detailErrors, [key]: error.message } }));
     } finally {
       set(state => ({ detailLoading: { ...state.detailLoading, [key]: false } }));
+    }
+  },
+
+    purchaseAvailability: {},
+
+  onCheckPurchase: async (type, id) => {
+    if (!id || (type !== 'movie' && type !== 'tv')) return;
+
+    const key = `${type}-${id}`;
+
+    if (
+      get().purchaseAvailability[key] !== undefined ||
+      purchaseRequests.has(key)
+    ) {
+      return;
+    }
+
+    purchaseRequests.add(key);
+
+    try {
+      const data = await requestTmdb(`/${type}/${id}/watch/providers`);
+      const canBuy = (data.results?.KR?.buy?.length ?? 0) > 0;
+
+      set((state) => ({
+        purchaseAvailability: {
+          ...state.purchaseAvailability,
+          [key]: canBuy,
+        },
+      }));
+    } catch {
+      // 조회 실패 시 배지 없이 카드를 표시하고, 다음 진입 때 다시 확인한다.
+    } finally {
+      purchaseRequests.delete(key);
     }
   },
 

@@ -1,7 +1,19 @@
-import React from 'react'
+import { MainBanner } from '../../components/content/MainBanner';
+import { ContentRail } from '../../components/content/ContentRail';
 
 export const Store = () => {
   return (
-    <div>Store</div>
-  )
-}
+    <main className="store-page">
+      
+      <MainBanner type="purchase" />
+
+      <ContentRail railKey="store-ranking" showMore={false}/>
+
+      <ContentRail railKey="store-latest" />
+
+      <ContentRail railKey="store-action-adventure" />
+
+      <ContentRail railKey="store-family-animation" />
+    </main>
+  );
+};
