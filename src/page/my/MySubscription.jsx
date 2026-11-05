@@ -15,6 +15,7 @@ export const MySubscription = () => {
 
     const user = useAuthStore((state) => state.user);
     const authLoading = useAuthStore((state) => state.loading);
+    const [cancelTarget, setCancelTarget] = useState(null);
 
     const {
         subscriptions,
@@ -27,6 +28,17 @@ export const MySubscription = () => {
 
     const [isVoucherOpen, setIsVoucherOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState(null);
+
+    // 이용권별 로고 이미지
+    const subscriptionLogos = {
+        'sports-pass': '/images/mypage/pass/sports-logo.svg',
+        'moa-pass': '/images/mypage/pass/moa-logo.svg',
+        'jplus-pass': '/images/mypage/pass/jplus-logo.svg',
+        'ebs-pass': '/images/mypage/pass/ebs-logo.svg',
+        'kids-pass': '/images/mypage/pass/kids-logo.svg',
+        'paramount-pass': '/images/mypage/pass/paramount-logo.svg',
+        'sony-pass': '/images/mypage/pass/sony-logo.svg',
+    };
 
     // 로그인 계정이 변경되면 구독내역 다시 불러오기
     useEffect(() => {
@@ -51,18 +63,20 @@ export const MySubscription = () => {
         return success;
     };
 
-    // 구독 해지
-    const handleCancelSubscription = async (subscription) => {
-        const confirmed = window.confirm(
-            `${subscription.name} 구독을 해지하시겠습니까?\n현재는 시연용 기능입니다.`
-        );
+    // 구독 해지 팝업 열기
+    const handleCancelSubscription = (subscription) => {
+        setOpenMenuId(null);
+        setCancelTarget(subscription);
+    };
 
-        if (!confirmed) return;
+    // 구독 해지 확정
+    const handleConfirmCancel = async () => {
+        if (!cancelTarget || loading) return;
 
-        const success = await onCancelSubscription(subscription.id);
+        const success = await onCancelSubscription(cancelTarget.id);
 
         if (success) {
-            setOpenMenuId(null);
+            setCancelTarget(null);
         }
     };
 
@@ -120,12 +134,29 @@ export const MySubscription = () => {
                                 className="subscription-card"
                                 key={subscription.id}
                             >
+
                                 <div className="subscription-thumbnail">
-                                    <span className="sports-play">▶</span>
-                                    <strong>
-                                        {subscription.label || subscription.name}
-                                    </strong>
+                                    <div className="subscription-play-badge">
+                                        <img
+                                            src="/images/badge-icon.svg"
+                                            alt=""
+                                        />
+                                    </div>
+
+                                    <div className="subscription-logo">
+                                        {subscriptionLogos[subscription.id] ? (
+                                            <img
+                                                src={subscriptionLogos[subscription.id]}
+                                                alt={subscription.name}
+                                            />
+                                        ) : (
+                                            <strong>
+                                                {subscription.label || subscription.name}
+                                            </strong>
+                                        )}
+                                    </div>
                                 </div>
+
 
                                 <div className="subscription-info">
                                     <h3>{subscription.name}</h3>
@@ -189,6 +220,59 @@ export const MySubscription = () => {
                     registering={loading}
                 />
             )}
+
+
+            {cancelTarget && (
+                <div
+                    className="subscription-modal-overlay"
+                    onClick={() => {
+                        if (!loading) setCancelTarget(null);
+                    }}
+                >
+                    <div
+                        className="subscription-cancel-modal"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="cancel-modal-title"
+                        aria-describedby="cancel-modal-description"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 id="cancel-modal-title">구독 해지</h3>
+
+                        <p id="cancel-modal-description">
+                            <strong>{cancelTarget.name}</strong> 이용권을
+                            <br />
+                            정말 해지하시겠습니까?
+                        </p>
+
+                        <span className="cancel-modal-notice">
+                            해지 후에는 구독 목록에서 해당 이용권이 삭제됩니다.
+                        </span>
+
+                        <div className="subscription-modal-buttons">
+                            <button
+                                type="button"
+                                className="cancel-close-btn"
+                                onClick={() => setCancelTarget(null)}
+                                disabled={loading}
+                            >
+                                취소
+                            </button>
+
+                            <button
+                                type="button"
+                                className="cancel-confirm-btn"
+                                onClick={handleConfirmCancel}
+                                disabled={loading}
+                            >
+                                {loading ? '처리 중...' : '해지하기'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
         </main>
     );
 };

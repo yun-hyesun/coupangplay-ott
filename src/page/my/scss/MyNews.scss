@@ -1,0 +1,226 @@
+
+@use "../../../scss/variables" as *;
+@use "../../../scss/mixins" as *;
+
+.my-news {
+    width: 100%;
+    min-height: 70vh;
+    background: #101114;
+    color: $color-text-pri;
+
+    .my-news-inner {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+    }
+
+    // 페이지 제목
+    .news-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+
+        padding-bottom: 24px;
+        border-bottom: 1px solid $color-border-light;
+
+        h2 {
+            font-family: $font-main;
+            font-size: 28px;
+            font-weight: 700;
+        }
+    }
+
+    &-description {
+        margin-top: 32px;
+        margin-bottom: 24px;
+        font-size: 16px;
+        color: $color-text-sec1;
+    }
+
+    .news-categories {
+        @include flex(null, center, 12px);
+        margin-bottom: 36px;
+
+        button {
+            min-height: 42px;
+            padding: 0 24px;
+            border: 1px solid $color-border-light;
+            border-radius: 5px;
+            background: $color-bg2;
+            color: $color-text-sec1;
+            font-family: $font-main;
+            font-size: 15px;
+            cursor: pointer;
+
+            &.active {
+                background: $color-pri;
+                border-color: $color-pri;
+                color: $color-text-pri;
+            }
+
+            &:hover:not(.active) {
+                background: #30343B;
+            }
+        }
+    }
+
+    .news-list {
+        border-top: 1px solid $color-border-light;
+
+        .news-item {
+            @include flex-between(center);
+            width: 100%;
+            min-height: 100px;
+            padding: 22px 12px;
+            border: none;
+            border-bottom: 1px solid $color-border-light;
+            background: transparent;
+            color: $color-text-pri;
+            text-align: left;
+            cursor: pointer;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.03);
+            }
+
+            &-info {
+                @include flexCol(8px);
+            }
+
+            &-category {
+                font-size: 13px;
+                color: $color-pri;
+            }
+
+            strong {
+                font-size: 17px;
+                font-weight: $font-w-M-500;
+            }
+
+            &-date {
+                font-size: 13px;
+                color: $color-text-sec2;
+            }
+
+            &-arrow {
+                font-size: 26px;
+                color: $color-text-sec2;
+            }
+        }
+    }
+
+    .news-detail {
+        margin-top: 36px;
+        padding: 32px;
+        border-radius: 8px;
+        background: $color-bg2;
+
+        &-header {
+            padding-bottom: 24px;
+            border-bottom: 1px solid $color-border-light;
+
+            span {
+                font-size: 14px;
+                color: $color-pri;
+            }
+
+            h3 {
+                margin: 12px 0;
+                font-size: 22px;
+                font-weight: $font-w-SB-600;
+            }
+
+            p {
+                font-size: 14px;
+                color: $color-text-sec2;
+            }
+        }
+
+        &-content {
+            padding: 28px 0;
+            font-size: 16px;
+            line-height: 1.8;
+            color: $color-text-sec1;
+        }
+
+        &-close {
+            display: block;
+            width: 145px;
+            height: 50px;
+            margin: 0 auto;
+            border: none;
+            border-radius: 5px;
+            background: #424242;
+            color: $color-text-pri;
+            font-family: $font-main;
+            font-size: 16px;
+            font-weight: $font-w-M-500;
+            cursor: pointer;
+
+            &:hover {
+                background: #505050;
+            }
+        }
+    }
+}
+
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .my-news {
+        .my-news-inner {
+            padding: 40px 24px 80px;
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .my-news {
+        .my-news-inner {
+            padding: 24px 16px 60px;
+        }
+
+        .news-header {
+            h2 {
+                font-size: 22px;
+            }
+        }
+
+        &-description {
+            font-size: 14px;
+        }
+
+        .news-categories {
+            flex-wrap: wrap;
+            gap: 8px;
+
+            button {
+                padding: 0 16px;
+                font-size: 14px;
+            }
+        }
+
+        .news-list .news-item {
+            min-height: 90px;
+            padding: 18px 8px;
+
+            strong {
+                font-size: 15px;
+            }
+        }
+
+        .news-detail {
+            padding: 24px 20px;
+
+            &-header h3 {
+                font-size: 19px;
+            }
+
+            &-content {
+                font-size: 14px;
+            }
+        }
+    }
+}

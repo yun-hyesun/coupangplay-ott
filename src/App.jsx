@@ -42,6 +42,8 @@ import { MyTicket } from './page/my/MyTicket';
 import { MyCoupon } from './page/my/MyCoupon';
 import { MyReview } from './page/my/MyReview';
 import { MyFeedback } from './page/my/MyFeedback';
+import { MySupport } from './page/my/MySupport';
+import { MyNews } from './page/my/MyNews';
 
 // 더보기
 import { More } from './page/more/More';
@@ -100,6 +102,8 @@ function App() {
         <Route path="/my/coupon" element={<MyCoupon />} />
         <Route path="/my/review" element={<MyReview />} />
         <Route path="/my/feedback" element={<MyFeedback />} />
+        <Route path="/my/support" element={<MySupport />} />
+        <Route path="/my/news" element={<MyNews />} />
 
         {/* 구독내역 */}
         <Route path="/my/subscription" element={<MySubscription />} />
