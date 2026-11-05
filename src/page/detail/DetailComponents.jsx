@@ -13,7 +13,7 @@ const RatingStars = ({ value, onChange, size = 28 }) => (
           {fill > 0 && <svg x="0" y="0" width={fill === 0.5 ? 12 : 24} height="24" viewBox={fill === 0.5 ? '0 0 12 24' : '0 0 24 24'} overflow="hidden"><path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" fill="#ffd13c" stroke="#ffd13c" strokeWidth="2" /></svg>}
         </svg>
         {onChange && <>
-          <button className="detail-rating-stars__hit detail-rating-stars__hit--left" type="button" aria-label={`${index + 0.5}점 선택`} aria-pressed={value === index + 0.5} onClick={() => onChange(index + 0.5)} />
+          <button className="detail-rating-stars__hit detail-rating-stars__hit--left" type="button" aria-label={`${index + 0.5}점 선택`} aria-pressed={value === index + 0.5} onClick={() => onChange(Math.max(1, index + 0.5))} />
           <button className="detail-rating-stars__hit detail-rating-stars__hit--right" type="button" aria-label={`${index + 1}점 선택`} aria-pressed={value === index + 1} onClick={() => onChange(index + 1)} />
         </>}
       </span>;
