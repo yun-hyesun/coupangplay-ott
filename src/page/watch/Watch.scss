@@ -1,10 +1,13 @@
+@use '../../scss/variables' as v;
+@use '../../scss/mixins' as m;
+
 .watch-page {
   position: fixed;
   inset: 0;
   z-index: 1000;
   background: #08090a;
   color: #fff;
-  font-family: Pretendard, sans-serif;
+  font-family: v.$font-main;
 
   .sr-only {
     position: absolute;
@@ -89,7 +92,7 @@
     margin: 0;
     border: 0;
     border-radius: 0;
-    background: linear-gradient(to right, #0084ff var(--progress), #525252 var(--progress));
+    background: linear-gradient(to right, v.$color-pri var(--progress), v.$color-progress var(--progress));
     cursor: pointer;
   }
 
@@ -109,9 +112,7 @@
 }
 
 .watch-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  @include m.flex-between();
   min-height: 44px;
   gap: 20px;
 
@@ -244,7 +245,7 @@
   }
 
   button {
-    background: #0084ff;
+    background: v.$color-pri;
     padding: 10px;
     border-radius: 4px;
   }
@@ -306,7 +307,7 @@
 }
 
 .watch-player__quick-actions button:hover {
-  background: #0084ff;
+  background: v.$color-pri;
 }
 
 @media (max-width: 800px) {
@@ -348,7 +349,7 @@
     min-width: 0;
     height: 4px;
     border-radius: 4px;
-    background: linear-gradient(to right, #0084ff var(--volume-progress), #525252 var(--volume-progress));
+    background: linear-gradient(to right, v.$color-pri var(--volume-progress), v.$color-progress var(--volume-progress));
     cursor: pointer;
   }
 
@@ -357,7 +358,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #0084ff;
+    background: v.$color-pri;
   }
 
   input::-moz-range-thumb {
@@ -365,13 +366,13 @@
     height: 14px;
     border: 0;
     border-radius: 50%;
-    background: #0084ff;
+    background: v.$color-pri;
   }
 
   span {
     width: 36px;
     font-size: 12px;
-    color: #d4d4d4;
+    color: v.$color-text-sec1;
   }
 }
 
@@ -403,7 +404,7 @@
   &__subtitle {
     font-size: 12px;
     line-height: 16px;
-    color: #a3a3a3;
+    color: v.$color-text-sec2;
     margin: 4px 0 0;
   }
 
@@ -431,12 +432,12 @@
 
     button {
       padding: 0;
-      color: #a3a3a3;
+      color: v.$color-text-sec2;
       font-size: 14px;
       line-height: 20px;
 
       &.is-active {
-        color: #0084ff;
+        color: v.$color-pri;
       }
     }
   }
@@ -448,13 +449,13 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    scrollbar-color: #a3a3a3 transparent;
+    scrollbar-color: v.$color-text-sec2 transparent;
   }
 
   &__empty {
     margin: 0;
     padding: 24px 0;
-    color: #a3a3a3;
+    color: v.$color-text-sec2;
     font-size: 14px;
   }
 
@@ -462,7 +463,7 @@
     width: 100%;
     flex: 0 0 44px;
     border-radius: 8px;
-    background: #0084ff !important;
+    background: v.$color-pri !important;
     font-size: 16px;
     font-weight: 600;
 
@@ -526,13 +527,13 @@
     span {
       font-size: 12px;
       line-height: 16px;
-      color: #a3a3a3;
+      color: v.$color-text-sec2;
     }
 
     em {
       font-size: 12px;
       line-height: 16px;
-      color: #0084ff;
+      color: v.$color-pri;
       font-style: normal;
     }
   }
@@ -560,15 +561,15 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid #a3a3a3 !important;
+  border: 1px solid v.$color-text-sec2 !important;
   border-radius: 999px;
   padding: 8px 16px;
   font-size: 14px;
   white-space: nowrap;
 
   &.is-active {
-    background: #0084ff !important;
-    border-color: #0084ff !important;
+    background: v.$color-pri !important;
+    border-color: v.$color-pri !important;
   }
 
   svg {
@@ -586,12 +587,12 @@
 
   button {
     font-size: 14px;
-    color: #a3a3a3;
+    color: v.$color-text-sec2;
     padding: 0 0 6px;
 
     &.is-active {
-      color: #0084ff;
-      border-bottom: 2px solid #0084ff;
+      color: v.$color-pri;
+      border-bottom: 2px solid v.$color-pri;
     }
   }
 }
@@ -605,7 +606,7 @@
   &__notice {
     font-size: 12px;
     line-height: 18px;
-    color: #a3a3a3;
+    color: v.$color-text-sec2;
     margin: 0 0 12px;
   }
 
@@ -619,7 +620,7 @@
   }
 
   &__messages>p {
-    color: #a3a3a3;
+    color: v.$color-text-sec2;
     font-size: 14px;
   }
 
@@ -630,7 +631,7 @@
     font-size: 14px;
 
     strong {
-      color: #a3a3a3;
+      color: v.$color-text-sec2;
       font-size: 13px;
     }
 
@@ -656,7 +657,7 @@
     }
 
     button {
-      background: #0084ff;
+      background: v.$color-pri;
       border-radius: 8px;
       padding: 0 14px;
 
@@ -703,12 +704,12 @@
       font-size: 14px;
 
       &.is-playing {
-        color: #0084ff;
+        color: v.$color-pri;
       }
     }
 
     small {
-      color: #a3a3a3;
+      color: v.$color-text-sec2;
       font-size: 12px;
       line-height: 16px;
       display: -webkit-box;
@@ -764,7 +765,7 @@
 }
 .watch-page .watch-next-episode-notice svg {
   flex-shrink: 0;
-  color: #0084ff;
+  color: v.$color-pri;
 }
 @keyframes watch-next-episode-appear {
   from { opacity: 0; transform: translate(-50%, 8px); }

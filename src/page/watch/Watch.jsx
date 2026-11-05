@@ -61,20 +61,12 @@ export const Watch = () => {
   const goToNextEpisode = () => {
     if (type !== 'tv') return;
 
-    const currentNumber = Number(episodeNumber);
-
-    const next = episodes.find(
-      ep => Number(ep.episode_number) === currentNumber + 1
-    );
-
+    const next = episodes.find(ep => Number(ep.episode_number) === Number(episodeNumber) + 1);
     if (!next) {
       console.log('마지막 회차입니다.');
       return;
     }
-
-    const nextNumber = Number(next.episode_number);
-
-    openEpisode(nextNumber, true);
+    openEpisode(Number(next.episode_number), true);
   };
 
   useEffect(() => {

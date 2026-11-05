@@ -1,19 +1,22 @@
+@use '../../scss/variables' as v;
+@use '../../scss/mixins' as m;
+
 // Figma 상세페이지: 2813:12874 / 컴포넌트: 4413:52999
 // 공용 Header, Footer, ContentRail은 MainLayout과 기존 컴포넌트를 그대로 사용합니다.
 .detail-page {
   --detail-card: #262626;
-  --detail-muted: #a3a3a3;
+  --detail-muted: #{v.$color-text-sec2};
   --detail-border: rgba(255, 255, 255, .05);
-  --detail-blue: #5d9eff;
+  --detail-blue: #{v.$color-text-blue};
   color: #fff;
   background: linear-gradient(180deg, rgba(63, 162, 255, .15), transparent 600px), var(--detail-bg);
   min-height: 100vh;
-  font-family: 'Pretendard', sans-serif;
+  font-family: v.$font-main;
 
   &__inner {
     // max-width: 1920px;
     margin: 0 auto;
-    padding-inline: $padding-main;
+    padding-inline: v.$padding-main;
   }
 
   button,
@@ -40,8 +43,7 @@
 .detail-hero {
   position: relative;
   height: 676px;
-  display: flex;
-  align-items: center;
+  @include m.flex($ai: center);
   overflow: hidden;
   border-radius: 8px;
   background: #1c2530;
@@ -435,7 +437,7 @@
   color: #fff;
   border: 1px solid var(--detail-border);
   border-radius: 8px;
-  font-family: 'Pretendard', sans-serif;
+  font-family: v.$font-main;
 
   &__head,
   &__tools {
