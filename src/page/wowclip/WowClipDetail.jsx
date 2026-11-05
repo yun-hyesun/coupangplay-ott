@@ -25,7 +25,7 @@ export function WowClipDetail() {
     if (!clipId) return undefined;
     return subscribeClipComments(clipId, setComments, () => setError('댓글을 불러오지 못했습니다. Firebase 연결을 확인해주세요.'));
   }, [clipId]);
-  const sorted = useMemo(() => [...comments].sort((a, b) => sort === 'old' ? (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0) : (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)), [comments, sort]);
+  const sorted = useMemo(() => [...comments].sort((a, b) => sort === 'like' ? (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0) : (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)), [comments, sort]);
   const submit = async (event) => {
     event.preventDefault(); setError('');
     if (busy) return;
@@ -63,7 +63,7 @@ export function WowClipDetail() {
             <p className="wowclip-detail__disclaimer">현재 클립은 영상 파일이 아닌 편집 정보만 저장되어 있어 실제 영상 재생은 지원하지 않습니다.</p>
           </section>
           <aside className="wowclip-detail__comments" aria-label="클립 댓글">
-            <header className="wowclip-detail__comments-header"><h2>댓글 <span>{comments.length}</span></h2><select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="댓글 정렬"><option value="new">최신순</option><option value="old">오래된순</option></select></header>
+            <header className="wowclip-detail__comments-header"><h2>댓글 <span>{comments.length}</span></h2><select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="댓글 정렬"><option value="new">최신순</option><option value="like">인기순</option></select></header>
             <div className="wowclip-detail__comment-list" aria-live="polite">{sorted.length ? sorted.map((comment) => <article key={comment.id} className="wowclip-detail__comment"><div className="wowclip-detail__avatar" aria-hidden="true">▶</div><div className="wowclip-detail__comment-content"><p><strong>{comment.authorName || '사용자'}</strong><span> · {dateText(comment.createdAt)}</span></p>{comment.parentId && <small>답글</small>}<p className="wowclip-detail__comment-body">{comment.body}</p><div className="wowclip-detail__comment-actions"><button type="button" onClick={() => { setReplyTo(comment.id); setText(`@${comment.authorName || '사용자'} `); }}>답글</button>{user?.uid === comment.authorId && <button type="button" onClick={() => remove(comment)}>삭제</button>}</div></div></article>) : <p className="wowclip-detail__empty">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p>}</div>
             <form className="wowclip-detail__composer" onSubmit={submit}><label htmlFor="wowclip-comment-input">댓글 남기기</label>{replyTo && <div className="wowclip-detail__reply">답글 작성 중 <button type="button" onClick={() => { setReplyTo(null); setText(''); }}>취소</button></div>}<textarea id="wowclip-comment-input" placeholder={user ? '이 장면은 어땠나요?' : '로그인 후 댓글을 남길 수 있습니다.'} value={text} maxLength={500} onChange={(e) => setText(e.target.value)} disabled={!user || busy} rows={3} /><div className="wowclip-detail__compose-bottom"><span>{text.length}/500</span>{user ? <button type="submit" disabled={busy || !text.trim()}>{busy ? '등록 중…' : '등록'}</button> : <Link to="/login">로그인</Link>}</div>{error && <p className="wowclip-detail__error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}</form>
           </aside>
