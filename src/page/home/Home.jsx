@@ -33,7 +33,6 @@ const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSp
 
       {/* 최근 본 콘텐츠와 비슷한 작품 */}
 
-      {/* 와우 클립 */}
 
       <ContentRail railKey="home-binge" />
 

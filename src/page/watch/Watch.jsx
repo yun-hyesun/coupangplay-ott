@@ -20,8 +20,6 @@ const formatTime = (seconds) => {
   return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
 };
 
-// 실제 클립 API 연결 전에는 공개 클립을 허위로 생성하지 않습니다.
-const PUBLIC_CLIPS = [];
 const PLAYBACK_SPEEDS = [0.5, 1, 1.5, 2];
 const SETTINGS_OPTIONS = [
   { tab: 'quality', label: '해상도' },
@@ -112,9 +110,7 @@ export const Watch = () => {
   const [muted, setMuted] = useState(false);
   const [volumeOpen, setVolumeOpen] = useState(false);
   const [volume, setVolume] = useState(100);
-  const [clipSort, setClipSort] = useState('recommended');
   const [togetherMode, setTogetherMode] = useState(false);
-  const [communityTab, setCommunityTab] = useState('clips');
   const [chatDraft, setChatDraft] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [sessionId, setSessionId] = useState(null);
@@ -159,7 +155,7 @@ export const Watch = () => {
   };
   const setVideoVolume = (next) => { setVolume(next); setMuted(next === 0); if (videoRef.current) videoRef.current.volume = next / 100; };
   const title = content.title || content.name || '콘텐츠 제목';
-  // 같이 보기 해제 시 실시간 채팅 화면을 닫고 와우 클립으로 돌아갑니다.
+  // 같이 보기 해제 시 시청 세션 연결을 종료합니다.
   // URL의 ?session=... 을 공유하면 같은 시청 세션에 참여할 수 있습니다.
   useEffect(() => {
     if (!togetherMode || !sessionId) return;
@@ -169,11 +165,10 @@ export const Watch = () => {
   const toggleTogetherMode = async () => {
     if (togetherMode) {
       setTogetherMode(false);
-      setCommunityTab('clips');
       setSessionId(null);
       return;
     }
-    if (!auth.currentUser) { setChatError('같이 보기를 사용하려면 로그인해 주세요.'); setPanel('clips'); return; }
+    if (!auth.currentUser) { setChatError('같이 보기를 사용하려면 로그인해 주세요.'); setPanel('chat'); return; }
     try {
       setChatError('');
       const existing = new URLSearchParams(location.search).get('session');
@@ -181,12 +176,11 @@ export const Watch = () => {
       const nextId = existing ? await joinWatchSession(existing, args) : await createWatchSession(args);
       setSessionId(nextId);
       setTogetherMode(true);
-    } catch (err) { setChatError(communityError(err)); setPanel('clips'); }
+    } catch (err) { setChatError(communityError(err)); setPanel('chat'); }
   };
   const toggleCommunityPanel = () => {
-    if (panel === 'clips') { setPanel(null); return; }
-    setCommunityTab('clips');
-    setPanel('clips');
+    if (panel === 'chat') { setPanel(null); return; }
+    setPanel('chat');
   };
   const sendChat = async (event) => {
     event.preventDefault();
@@ -372,7 +366,7 @@ export const Watch = () => {
             </div>
             <div className="watch-controls__right">
               <button type="button" aria-label="회차 목록" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}><WatchIcon name="episodes" /></button>
-              <button type="button" aria-label={togetherMode ? '와우 클립 및 실시간 채팅' : '와우 클립'} aria-expanded={panel === 'clips'} onClick={toggleCommunityPanel}><WatchIcon name="clips" /></button>
+              <button type="button" aria-label="실시간 채팅" aria-expanded={panel === 'chat'} onClick={toggleCommunityPanel}><WatchIcon name="chat" /></button>
               <button type="button" aria-label="설정" onClick={() => { setPanel(panel === 'settings' ? null : 'settings'); setSettingsTab('main'); }}><WatchIcon name="settings" /></button>
               <button type="button" aria-label="전체 화면" onClick={toggleFullscreen}><WatchIcon name="fullscreen" /></button>
             </div>
@@ -381,7 +375,7 @@ export const Watch = () => {
 
         {panel && (
           <aside className={`watch-panel ${panel === 'settings' ? 'watch-panel--settings' : ''}`} aria-label="플레이어 부가 패널">
-            {panel !== 'settings' && <div className="watch-panel__header"><div><h2>{({ episodes: '회차', clips: togetherMode && communityTab === 'chat' ? '실시간 채팅' : '와우 클립' })[panel]}</h2>{panel === 'clips' && communityTab !== 'chat' && <p className="watch-panel__subtitle">시청자가 AI로 만든 공개 클립</p>}</div><button type="button" onClick={() => setPanel(null)} aria-label="패널 닫기"><WatchIcon name="close" /></button></div>}
+            {panel !== 'settings' && <div className="watch-panel__header"><div><h2>{({ episodes: '회차', chat: '실시간 채팅' })[panel]}</h2></div><button type="button" onClick={() => setPanel(null)} aria-label="패널 닫기"><WatchIcon name="close" /></button></div>}
             {panel === 'episodes' && <div className="watch-panel__body">
               {episodes.length === 0 ? <p>회차 정보는 시즌 API 연결 후 표시됩니다.</p> : episodes.map((ep, index) => (
                 <button className="watch-episode" key={ep.id || index} type="button" onClick={() => openEpisode(ep.episode_number || index + 1)}>
@@ -412,40 +406,21 @@ export const Watch = () => {
               </div>
               {settingsTab !== 'main' && settingsTab !== 'speed' && <span className="sr-only" role="status">{SETTINGS_MESSAGES[settingsTab]}</span>}
             </div>}
-            {panel === 'clips' && <div className="watch-clips">
-              {chatError && !togetherMode && <p role="alert">{chatError}</p>}
-              {togetherMode && <div className="watch-community-tabs" role="tablist" aria-label="같이 보기 메뉴">
-                <button role="tab" aria-selected={communityTab === 'clips'} className={communityTab === 'clips' ? 'is-active' : ''} onClick={() => setCommunityTab('clips')} type="button">와우 클립</button>
-                <button role="tab" aria-selected={communityTab === 'chat'} className={communityTab === 'chat' ? 'is-active' : ''} onClick={() => setCommunityTab('chat')} type="button">실시간 채팅</button>
-              </div>}
-              {communityTab === 'chat' && togetherMode ? <div className="watch-chat" role="tabpanel">
-                <p className="watch-chat__notice">같이 보기 모드 · 같은 시청 세션 참여자에게 실시간으로 표시됩니다.</p>
-                {sessionId && <button type="button" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}${location.pathname}?session=${encodeURIComponent(sessionId)}`)}>세션 초대 링크 복사</button>}
-                {chatError && <p role="alert">{chatError}</p>}
-                <div className="watch-chat__messages" aria-live="polite">
-                  {chatMessages.length === 0 ? <p>아직 메시지가 없습니다.</p> : chatMessages.map(message => <div className="watch-chat__message" key={message.id}><strong>{message.senderId === auth.currentUser?.uid ? '나' : message.senderName || '사용자'}</strong><span>{message.text}</span></div>)}
-                </div>
-                <form className="watch-chat__form" onSubmit={sendChat}>
-                  <input value={chatDraft} onChange={event => setChatDraft(event.target.value)} maxLength={300} placeholder="메시지를 입력하세요" aria-label="실시간 채팅 메시지" />
-                  <button type="submit" disabled={!chatDraft.trim() || sendingChat} aria-label="메시지 보내기">전송</button>
-                </form>
-              </div> : <>
-                <div className="watch-clips__sort" aria-label="클립 정렬">
-                  <button type="button" className={clipSort === 'recommended' ? 'is-active' : ''} onClick={() => setClipSort('recommended')}>추천순</button>
-                  <button type="button" className={clipSort === 'recent' ? 'is-active' : ''} onClick={() => setClipSort('recent')}>최신순</button>
-                </div>
-                <div className="watch-clips__list">
-                  {PUBLIC_CLIPS.length === 0 ? <p className="watch-clips__empty">등록된 공개 클립이 없습니다.</p> : [...PUBLIC_CLIPS].sort((a, b) => clipSort === 'recent' ? new Date(b.createdAt) - new Date(a.createdAt) : (b.score || 0) - (a.score || 0)).map(clip => (
-                    <button className="watch-clip-card" type="button" key={clip.id} onClick={() => clip.startTime != null && videoRef.current && (videoRef.current.currentTime = clip.startTime)}>
-                      <span className="watch-clip-card__thumbnail">{clip.thumbnail && <img src={clip.thumbnail} alt="" />}<WatchIcon name="play" /><small>{clip.durationLabel}</small></span>
-                      <span className="watch-clip-card__info"><strong>{clip.title}</strong><span>{clip.contentTitle}</span><span>{clip.author}</span><em>AI 클립 · 공개 · 조회 {clip.views ?? 0}</em></span>
-                    </button>
-                  ))}
-                </div>
-                <button className="watch-clips__create" type="button" disabled title="AI 클립 생성 기능은 별도 서비스 연동이 필요합니다">AI로 클립 만들기</button>
-              </>}
-            </div>}
-          </aside>
+            {panel === 'chat' && <div className="watch-chat" role="region" aria-label="실시간 채팅">
+               {!togetherMode ? <p className="watch-chat__notice">같이 보기를 켜면 실시간 채팅에 참여할 수 있습니다.</p> : <p className="watch-chat__notice">같이 보기 모드 · 같은 시청 세션 참여자에게 실시간으로 표시됩니다.</p>}
+               {togetherMode && sessionId && <button type="button" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}${location.pathname}?session=${encodeURIComponent(sessionId)}`)}>세션 초대 링크 복사</button>}
+               {chatError && <p role="alert">{chatError}</p>}
+               {togetherMode && <>
+                 <div className="watch-chat__messages" aria-live="polite">
+                   {chatMessages.length === 0 ? <p>아직 메시지가 없습니다.</p> : chatMessages.map(message => <div className="watch-chat__message" key={message.id}><strong>{message.senderId === auth.currentUser?.uid ? '나' : message.senderName || '사용자'}</strong><span>{message.text}</span></div>)}
+                 </div>
+                 <form className="watch-chat__form" onSubmit={sendChat}>
+                   <input value={chatDraft} onChange={event => setChatDraft(event.target.value)} maxLength={300} placeholder="메시지를 입력하세요" aria-label="실시간 채팅 메시지" />
+                   <button type="submit" disabled={!chatDraft.trim() || sendingChat} aria-label="메시지 보내기">전송</button>
+                 </form>
+               </>}
+             </div>}
+           </aside>
         )}
       </div>
     </main>
