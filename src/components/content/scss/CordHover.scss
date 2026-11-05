@@ -6,7 +6,7 @@
     .card-hover-content {opacity: 1; visibility: visible; @include pos-abs-center-scale-n(); @include trans();}
   } 
 
-  &--ver .card-hover-content {width: auto; height: 100%; aspect-ratio: 1 / 1;}
+  &--ver .card-hover-content {width: auto; height: 110%; aspect-ratio: 1 / 1;}
   
 }
 .card-hover-content {@include pos-abs-center-scale-s($s:.5); background: $color-bg2; color: #fff; width: 110%; border-radius: $card-radius; overflow: hidden; z-index: 100; opacity: 0; visibility: hidden;  box-shadow: 0 0 30px rgba(0, 0, 0, .2);
