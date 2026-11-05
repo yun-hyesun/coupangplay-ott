@@ -44,9 +44,9 @@ const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSp
 
       {error && <p role="alert">스포츠 영상을 불러오지 못했습니다.</p>}
       {highlights.length > 0 && (
-        <ContentRail title="경기 하이라이트" items={highlights} showMore={false} />
+        <ContentRail title="다시 보는 경기 하이라이트" items={highlights} showMore={false} />
       )}
-      
+
       {/* {replays.length > 0 && (
         <ContentRail title="다시 보는 경기" items={replays} showMore={false} />
       )}

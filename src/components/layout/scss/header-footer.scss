@@ -30,6 +30,9 @@
         .header-search-form {@include flex-between($gap: 20px);
   
           .header-search-btn {width: 20px; height: 20px; background: url(images/search.svg) no-repeat center / contain;}
+
+          input {font-weight: $font-w-R-400;}
+          input::placeholder {color: $color-text-sec1; font-size: 14px;}
         }
 
       }

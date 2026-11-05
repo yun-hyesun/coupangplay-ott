@@ -81,6 +81,13 @@
   height: 20px;
   background: url(images/search.svg) no-repeat center/contain;
 }
+.header .inner .header-right .header-search .header-search-form input {
+  font-weight: 400;
+}
+.header .inner .header-right .header-search .header-search-form input::placeholder {
+  color: #D4D4D4;
+  font-size: 14px;
+}
 .header .inner .header-right .myPage-btn {
   width: 35px;
 }

@@ -45,6 +45,8 @@ import { MyFeedback } from './page/my/MyFeedback';
 
 // 더보기
 import { More } from './page/more/More';
+// 검색
+import { Search } from './page/search/Search';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
@@ -105,7 +107,10 @@ function App() {
 
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
+        {/* 메인스포츠 하이라이트 */}
         <Route path="/watch/sports/:id" element={<SportsWatch />} />
+        {/* 검색 */}
+        <Route path="/search" element={<Search />} />
 
 
       </Route>

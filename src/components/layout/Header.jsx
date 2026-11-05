@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
+import { SearchInput } from '../../page/search/components/SearchInput';
 import './scss/header-footer.scss'
 
 export const Header = () => {
@@ -134,28 +135,7 @@ export const Header = () => {
 
           {/* 검색 */}
           <li className="header-search">
-            <form
-              className="header-search-form"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <button
-                type="button"
-                className="header-search-btn"
-                aria-label="검색"
-              />
-
-              <label
-                htmlFor="header-search-input"
-                className="sr-only"
-              >
-                검색
-              </label>
-
-              <input
-                type="search"
-                id="header-search-input"
-              />
-            </form>
+            <SearchInput />
           </li>
 
           {/* 로그인한 경우 프로필 메뉴 */}
@@ -263,3 +243,4 @@ export const Header = () => {
     </header>
   );
 };
+
