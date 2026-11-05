@@ -1,3 +1,4 @@
+import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
 import { useSportsRails } from './useSportsRails';
 import { MainBanner } from '../../components/content/MainBanner';
 import { Channel } from './components/Channel';
@@ -10,12 +11,19 @@ import './scss/home.scss';
 export const Home = () => {
 const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSportsRails();
 
+  const { history, ownerKey } = useProfileWatchHistory();
+  const continueWatching = history
+    .filter((item) => item.backdrop_path && !item.completed)
+    .map((item) => ({ ...item, resume: true, ownerKey }));
+
   return (
     <main>
       <MainBanner type="all"/>
       <Channel />
 
-      {/* 이어서 시청하기: 시청 기록 연결 후 추가 */}
+      {continueWatching.length > 0 && (
+        <ContentRail title="이어서 시청하기" items={continueWatching} showMore={false} />
+      )}
 
       <ContentRail railKey="home-ranking" showMore={false}/>
 
@@ -79,3 +87,4 @@ const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSp
     </main>
   );
 };
+

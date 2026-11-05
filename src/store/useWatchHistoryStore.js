@@ -5,7 +5,8 @@ import {
     doc,
     getDocs,
     setDoc,
-    serverTimestamp
+    serverTimestamp,
+    writeBatch
 } from 'firebase/firestore';
 
 import { auth, db } from '../firebase/firebase';
@@ -101,12 +102,32 @@ export const useWatchHistoryStore = create((set, get) => ({
         }
     },
 
+    onDeleteHistory: async (ids) => {
+        const user = auth.currentUser;
+        const profile = useProfileStore.getState().currentProfile;
+        if (!user || !profile || !ids.length) return false;
+
+        try {
+            const historyRef = getHistoryRef(user.uid, profile.id);
+            for (let start = 0; start < ids.length; start += 500) {
+                const batch = writeBatch(db);
+                ids.slice(start, start + 500).forEach((id) => batch.delete(doc(historyRef, id)));
+                await batch.commit();
+            }
+            return true;
+        } finally {
+            await get().onLoadHistory();
+        }
+    },
+
     // 시청내역 저장
-    onSaveHistory: async (content) => {
+    onSaveHistory: async (content, expectedOwner) => {
         const user = auth.currentUser;
         const profile = useProfileStore.getState().currentProfile;
 
         if (!user || !profile) return false;
+
+        if (expectedOwner && expectedOwner !== `${user.uid}_${profile.id}`) return false;
 
         const mediaType = content.media_type === 'movie'
             ? 'movie'
@@ -128,10 +149,14 @@ export const useWatchHistoryStore = create((set, get) => ({
                 poster_path: content.poster_path || '',
                 progress: content.progress ?? 0,
                 info: content.info || '',
+                position: content.position ?? 0,
+                seasonNumber: content.seasonNumber ?? 1,
+                episodeNumber: content.episodeNumber ?? 1,
+                videoSrc: content.videoSrc || '',
+                youtubeKey: content.youtubeKey || '',
+                completed: content.completed === true,
                 updatedAt: serverTimestamp()
             }, { merge: true });
-
-            await get().onLoadHistory();
 
             return true;
 
@@ -152,3 +177,4 @@ export const useWatchHistoryStore = create((set, get) => ({
         });
     }
 }));
+

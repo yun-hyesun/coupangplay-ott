@@ -28,6 +28,34 @@ export const ContentCard = ({ item, type = 'movie', imageType = '가로', varian
     );
   }
 
+  if (item?.resume) {
+    const { id, title, media_type, position, seasonNumber, episodeNumber } = item;
+    return (
+      <article className="contentRail-card contentRail-card--hor">
+        <div className="contentRail-info">
+          <Link
+            className="contentRail-visual"
+            to={`/watch/${media_type}/${id}`}
+            state={{
+              content: item, ownerKey: item.ownerKey, resumeAt: position, seasonNumber, episodeNumber,
+              videoSrc: item.videoSrc, youtubeKey: item.youtubeKey, autoPlayNext: true,
+            }}
+            aria-label={`${title} 이어서 시청하기`}
+          >
+            <img src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`} alt="" loading="lazy" />
+            <progress
+              max="100"
+              value={Math.max(0, Math.min(100, item.progress || 0))}
+              aria-label="시청 진행률"
+              style={{ position: 'absolute', inset: 'auto 0 0', width: '100%' }}
+            />
+          </Link>
+          <p className="contentCard-sportsTitle">{title}</p>
+        </div>
+      </article>
+    );
+  }
+
   return <TmdbContentCard {...{ item, type, imageType, variant, index }} />;
 };
 
@@ -96,4 +124,5 @@ const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
     </article>
   );
 };
+
 
