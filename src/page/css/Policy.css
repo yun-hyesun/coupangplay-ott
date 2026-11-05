@@ -10,20 +10,16 @@
   padding: 80px 64px 140px;
   box-sizing: border-box;
 }
-.policy-page *,
-.policy-page *::before,
-.policy-page *::after {
+.policy-page *, .policy-page *::before, .policy-page *::after {
   box-sizing: border-box;
 }
-.policy-page button,
-.policy-page a {
+.policy-page button, .policy-page a {
   font-family: inherit;
 }
 .policy-page button {
   cursor: pointer;
 }
-.policy-page button:focus-visible,
-.policy-page a:focus-visible {
+.policy-page button:focus-visible, .policy-page a:focus-visible {
   outline: 2px solid #0084FF;
   outline-offset: 3px;
 }
@@ -294,4 +290,22 @@
 
 .policy-page__modal-scroll .policy-page__summary p {
   white-space: pre-line;
+}
+
+/* 원문에 포함된 모든 줄바꿈, 번호, 부칙 및 추가 정책을 보존 */
+.policy-page__full-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #d4d4d4;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+@media (max-width: 680px) {
+  .policy-page__full-text {
+    font-size: 16px;
+    line-height: 1.7;
+  }
 }
