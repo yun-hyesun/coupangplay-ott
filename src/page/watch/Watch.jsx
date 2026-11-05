@@ -3,6 +3,8 @@ import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
 import WatchIcon from './WatchIcon';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import './Watch.scss';
 import { auth } from '../../firebase/firebase';
@@ -37,7 +39,12 @@ export const Watch = () => {
   const { type, id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { state } = location;
+  const uid = useAuthStore((value) => value.user?.uid);
+  const profileId = useProfileStore((value) => value.currentProfile?.id);
+  const ownerKey = uid && profileId ? `${uid}_${profileId}` : null;
+  const state = !location.state?.ownerKey || location.state.ownerKey === ownerKey
+    ? location.state
+    : null;
   const content = state?.content ?? {};
   const seasonNumber = state?.seasonNumber ?? 1;
   const episodeNumber = state?.episodeNumber || 1;
@@ -61,7 +68,7 @@ export const Watch = () => {
     navigate(`/watch/tv/${id}`, {
       state: {
         ...state, episodes, seasonNumber, episodeNumber: nextNumber,
-        videoSrc: nextVideoSrc, autoPlayNext, showNextEpisodeNotice: autoPlayNext,
+        videoSrc: nextVideoSrc, resumeAt: 0, youtubeKey: '', autoPlayNext, showNextEpisodeNotice: autoPlayNext,
       },
     });
   };
@@ -89,11 +96,14 @@ export const Watch = () => {
   }, [id, type, seasonNumber, episodeNumber, onFetchVideo, onFetchTvVideo, onFetchSeason, onFetchEpisode, onFetchEpisodeVideo]);
   const availableVideos = type === 'tv' ? [...episodeVideos, ...tvVideos] : movieVideos;
   const selectedVideo = availableVideos.find(v => v.site === 'YouTube' && v.key && v.type === 'Trailer') || availableVideos.find(v => v.site === 'YouTube' && v.key);
-  const youtubeKey = selectedVideo?.key;
+  const youtubeKey = state?.youtubeKey || selectedVideo?.key;
   // videoSrc는 사용 가능한 직접 재생 영상 파일(mp4/webm)의 URL입니다.
   // TMDB 유튜브 예고편 키는 HTML video src로 직접 사용할 수 없습니다.
   const videoSrc = state?.videoSrc ?? '';
   const videoRef = useRef(null);
+  const lastSaved = useRef({ route: '', at: 0 });
+  const youtubePlayer = useRef(null);
+  const [youtubePlaying, setYoutubePlaying] = useState(false);
   const autoPlayAttemptedRef = useRef(false);
   const [nextEpisodeNotice, setNextEpisodeNotice] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -207,21 +217,46 @@ export const Watch = () => {
     else document.exitFullscreen?.();
   };
 
-  // 영상 재생 시 시청내역 저장
-  const handleSaveHistory = () => {
-    if (!id || !['movie', 'tv'].includes(type)) return;
+  const savePlayback = (position, total, completed = false, periodic = false) => {
+    if (!ownerKey || !id || !['movie', 'tv'].includes(type)) return;
+    if (!Number.isFinite(position) || !Number.isFinite(total) || total <= 0) return;
 
-    onSaveHistory({
-      id,
-      title,
-      media_type: type,
+    const now = Date.now();
+    if (periodic && lastSaved.current.route === location.key && now - lastSaved.current.at < 10000) return;
+    lastSaved.current = { route: location.key, at: now };
+
+    return onSaveHistory({
+      id, title, media_type: type, seasonNumber, episodeNumber,
       backdrop_path: content.backdrop_path || '',
       poster_path: content.poster_path || '',
-      progress: 0,
-      info: type === 'tv'
-        ? `시즌 ${seasonNumber} ${episodeNumber}화 · 시청 시작`
-        : '영화 · 시청 시작'
-    });
+      position: Math.floor(position),
+      progress: completed ? 100 : Math.min(100, Math.round(position / total * 100)),
+      completed,
+      videoSrc,
+      youtubeKey: videoSrc ? '' : youtubeKey,
+      info: type === 'tv' ? `시즌 ${seasonNumber} ${episodeNumber}화` : '영화',
+    }, ownerKey);
+  };
+
+  useEffect(() => {
+    if (!youtubePlaying || !youtubeKey || videoSrc) return;
+
+    const timer = window.setInterval(() => {
+      const player = youtubePlayer.current;
+      if (player) savePlayback(player.getCurrentTime(), player.getDuration(), false, true);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  });
+
+  const goBack = async () => {
+    const video = videoRef.current;
+    const player = youtubePlayer.current;
+    if (video && !video.ended) await savePlayback(video.currentTime, video.duration);
+    if (!video && youtubePlaying && player) {
+      await savePlayback(player.getCurrentTime(), player.getDuration());
+    }
+    navigate(-1);
   };
 
   return (
@@ -231,14 +266,30 @@ export const Watch = () => {
         {videoSrc ? (
           <video ref={videoRef} className="watch-player__video" src={videoSrc} key={`${id}-${seasonNumber}-${episodeNumber}-${videoSrc}`}
             playsInline muted={muted}
-            onPlay={() => {
-              setPlaying(true);
-              handleSaveHistory();
-            }} onPause={() => setPlaying(false)}
-            onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
-            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+            onPlay={() => setPlaying(true)}
+            onPause={(event) => {
+              setPlaying(false);
+              if (!event.currentTarget.ended) {
+                savePlayback(event.currentTarget.currentTime, event.currentTarget.duration);
+              }
+            }}
+            onTimeUpdate={(event) => {
+              const video = event.currentTarget;
+              setCurrentTime(video.currentTime);
+              if (!video.paused) savePlayback(video.currentTime, video.duration, false, true);
+            }}
+            onLoadedMetadata={(event) => {
+              const video = event.currentTarget;
+              setDuration(video.duration);
+              if (state?.resumeAt > 0 && state.resumeAt < video.duration) {
+                video.currentTime = state.resumeAt;
+              }
+            }}
             onCanPlay={handleVideoReady}
-            onEnded={goToNextEpisode}
+            onEnded={(event) => {
+              savePlayback(event.currentTarget.duration, event.currentTarget.duration, true);
+              goToNextEpisode();
+            }}
           />
         ) : youtubeKey ? (
           <YouTube
@@ -246,16 +297,29 @@ export const Watch = () => {
             videoId={youtubeKey}
             className="watch-player__youtube"
             iframeClassName="watch-player__youtube-frame"
-            onPlay={handleSaveHistory}
+            onPlay={(event) => {
+              youtubePlayer.current = event.target;
+              setYoutubePlaying(true);
+            }}
+            onPause={(event) => {
+              setYoutubePlaying(false);
+              savePlayback(event.target.getCurrentTime(), event.target.getDuration());
+            }}
             opts={{
               width: '100%',
               height: '100%',
               playerVars: {
                 autoplay: 1,
+                start: Math.max(0, Math.floor(state?.resumeAt || 0)),
                 playsinline: 1,
               },
             }}
-            onEnd={goToNextEpisode}
+            onEnd={(event) => {
+              setYoutubePlaying(false);
+              const total = event.target.getDuration();
+              savePlayback(total, total, true);
+              goToNextEpisode();
+            }}
           />
         ) : <div className="watch-player__placeholder">재생 가능한 예고편·클립이 없습니다.</div>}
 
@@ -267,7 +331,7 @@ export const Watch = () => {
         )}
 
         <header className="watch-player__header">
-          <button className="watch-icon-button" type="button" onClick={() => navigate(-1)} aria-label="뒤로 가기"><WatchIcon name="back" /></button>
+          <button className="watch-icon-button" type="button" onClick={goBack} aria-label="뒤로 가기"><WatchIcon name="back" /></button>
           <h1>{title}{type === 'tv' ? ` · ${episodeNumber}화` : ''}</h1>
           <button className={`watch-together-toggle ${togetherMode ? 'is-active' : ''}`} type="button" onClick={toggleTogetherMode} aria-pressed={togetherMode}>
             <WatchIcon name="together" /> 같이 보기 {togetherMode ? 'ON' : ''}
