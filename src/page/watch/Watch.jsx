@@ -425,7 +425,7 @@ export const Watch = () => {
                     </button>
                   ))}
                 </div>
-                <button className="watch-clips__create" type="button" disabled title="AI 클립 생성 기능은 별도 서비스 연동이 필요합니다">AI로 클립 만들기</button>
+                <button className="watch-clips__create" type="button" onClick={() => navigate(`/wowclip/create/${type}/${id}`, { state: { content, seasonNumber, episodeNumber, videoSrc, youtubeKey, currentTime, duration } })}>AI로 클립 만들기</button>
               </>}
             </div>}
           </aside>

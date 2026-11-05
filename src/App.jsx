@@ -20,6 +20,7 @@ import { Policy } from './page/policy/Policy';
 // 상세페이지
 import { Detail } from './page/detail/Detail';
 import { Watch } from './page/watch/Watch';
+import { WowClip } from './page/wowclip/WowClip';
 
 // 로그인, 회원가입
 import { Signup } from './page/login/SignUp';
@@ -83,6 +84,7 @@ function App() {
         {/* 상세페이지 */}
         <Route path="/detail/:type/:id" element={<Detail />} />
         <Route path="/watch/:type/:id" element={<Watch />} />
+        <Route path="/wowclip/create/:type/:id" element={<WowClip />} />
 
         {/* 로그인, 회원가입 */}
         <Route path="/login" element={<Login />} />
