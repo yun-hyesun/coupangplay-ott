@@ -93,3 +93,21 @@
     }
   }
 }
+
+/* Figma 전문 팝업: 조항별 본문은 개행과 단락 구분을 보존 */
+.policy-page__modal-scroll .policy-page__summary { gap: 12px; }
+.policy-page__modal-scroll .policy-page__summary p { white-space: pre-line; }
+
+/* 원문에 포함된 모든 줄바꿈, 번호, 부칙 및 추가 정책을 보존 */
+.policy-page__full-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #d4d4d4;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+@media (max-width: 680px) {
+  .policy-page__full-text { font-size: 16px; line-height: 1.7; }
+}
