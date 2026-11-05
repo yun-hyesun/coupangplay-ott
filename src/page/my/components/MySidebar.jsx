@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProfileStore } from '../../../store/useProfileStore';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { useSubscriptionStore } from '../../../store/useSubscriptionStore';
 import '../scss/MySidebar.scss';
 
 const MyMenus = [
@@ -14,6 +16,17 @@ const MyMenus = [
     { id: 7, title: "소식 및 혜택", path: "/my/news" },
 ];
 
+// 이용권별 SVG 아이콘
+const passIcons = {
+    'sports-pass': '/images/mypage/pass/sports-logo.svg',
+    'moa-pass': '/images/mypage/pass/moa-logo.svg',
+    'jplus-pass': '/images/mypage/pass/jplus-logo.svg',
+    'ebs-pass': '/images/mypage/pass/ebs-logo.svg',
+    'kids-pass': '/images/mypage/pass/kids-logo.svg',
+    'paramount-pass': '/images/mypage/pass/paramount-logo.svg',
+    'sony-pass': '/images/mypage/pass/sony-logo.svg',
+};
+
 export const MySidebar = ({ onOpenLanguage }) => {
     const navigate = useNavigate();
 
@@ -21,6 +34,36 @@ export const MySidebar = ({ onOpenLanguage }) => {
     const currentProfile = useProfileStore(
         (state) => state.currentProfile
     );
+
+    // 현재 로그인 계정
+    const user = useAuthStore((state) => state.user);
+    const authLoading = useAuthStore((state) => state.loading);
+
+    // 등록된 이용권 정보
+    const subscriptions = useSubscriptionStore(
+        (state) => state.subscriptions
+    );
+    const onLoadSubscriptions = useSubscriptionStore(
+        (state) => state.onLoadSubscriptions
+    );
+
+    // 로그인 계정이 변경되면 구독내역 다시 불러오기
+    useEffect(() => {
+        if (authLoading) return;
+
+        if (!user) {
+            useSubscriptionStore.getState().onResetSubscriptions();
+            return;
+        }
+
+        onLoadSubscriptions();
+    }, [user?.uid, authLoading, onLoadSubscriptions]);
+
+    // 등록된 이용권 ID
+    const registeredPassIds = subscriptions
+        .filter((subscription) => subscription.status === 'active')
+        .map((subscription) => subscription.id)
+        .filter((passId) => passIcons[passId]);
 
     // 프로필 전환
     const handleProfileChange = () => {
@@ -60,10 +103,24 @@ export const MySidebar = ({ onOpenLanguage }) => {
                     className="my-premium"
                     onClick={() => navigate('/my/subscription')}
                 >
-                    <img
-                        src="/images/mypage/premium-icon.png"
-                        alt="프리미엄 패스 아이콘"
-                    />
+                    {registeredPassIds.length > 0 ? (
+                        <div className="my-pass-icons">
+                            {registeredPassIds.map((passId) => (
+                                <img
+                                    key={passId}
+                                    src={passIcons[passId]}
+                                    alt={`${passId} 패스`}
+                                    className="my-pass-icon"
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <img
+                            src="/images/mypage/premium-icon.png"
+                            alt="프리미엄 패스 아이콘"
+                        />
+                    )}
+
                     <img
                         src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
                         alt=""

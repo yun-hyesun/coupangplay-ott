@@ -1,0 +1,260 @@
+@use "../../../scss/variables" as *;
+@use "../../../scss/mixins" as *;
+
+.my-support {
+    width: 100%;
+    min-height: 70vh;
+    background: #101114;
+    color: $color-text-pri;
+
+    .my-support-inner {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+    }
+
+    // 페이지 제목
+    .support-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+
+        padding-bottom: 24px;
+        border-bottom: 1px solid $color-border-light;
+
+        h2 {
+            font-family: $font-main;
+            font-size: 28px;
+            font-weight: 700;
+        }
+    }
+
+    &-description {
+        margin-top: 32px;
+        margin-bottom: 24px;
+        font-size: 16px;
+        color: $color-text-sec1;
+    }
+
+
+    .support-search {
+        position: relative;
+        width: 100%;
+        margin-bottom: 28px;
+
+        input {
+            width: 100%;
+            height: 54px;
+            padding: 0 60px 0 20px;
+            border: 1px solid $color-border-light;
+            border-radius: 6px;
+            background: $color-bg2;
+            color: $color-text-pri;
+            font-family: $font-main;
+            font-size: 16px;
+            outline: none;
+
+            &::placeholder {
+                color: $color-text-sec2;
+            }
+
+            &:focus {
+                border-color: $color-pri;
+            }
+        }
+
+        button {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 40px;
+            height: 40px;
+            padding: 0;
+
+            background: transparent;
+            border: none;
+            cursor: pointer;
+
+            img {
+                width: 24px;
+                height: 24px;
+                object-fit: contain;
+            }
+        }
+    }
+
+
+    .support-categories {
+        @include flex(null, center, 12px);
+        flex-wrap: wrap;
+        margin-bottom: 48px;
+
+        button {
+            min-height: 42px;
+            padding: 0 20px;
+            border: 1px solid $color-border-light;
+            border-radius: 5px;
+            background: $color-bg2;
+            color: $color-text-sec1;
+            font-family: $font-main;
+            font-size: 15px;
+            cursor: pointer;
+
+            &.active {
+                background: $color-pri;
+                border-color: $color-pri;
+                color: $color-text-pri;
+            }
+
+            &:hover:not(.active) {
+                background: #30343B;
+            }
+        }
+    }
+
+    .support-faq {
+        h3 {
+            font-size: 22px;
+            font-weight: $font-w-B-700;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            border-top: 1px solid $color-border-light;
+
+            li {
+                border-bottom: 1px solid $color-border-light;
+            }
+        }
+
+        .support-question {
+            @include flex-between(center);
+            width: 100%;
+            min-height: 68px;
+            padding: 20px 12px;
+            border: none;
+            background: transparent;
+            color: $color-text-pri;
+            font-family: $font-main;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+
+            .support-arrow {
+                font-size: 24px;
+                color: $color-text-sec2;
+                transition: transform 0.2s;
+            }
+        }
+
+        li.active .support-arrow {
+            transform: rotate(180deg);
+        }
+
+        .support-answer {
+            padding: 20px 24px 28px;
+            background: $color-bg2;
+            color: $color-text-sec1;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .support-empty {
+            padding: 80px 20px;
+            text-align: center;
+            color: $color-text-sec2;
+            border-bottom: 1px solid $color-border-light;
+        }
+    }
+
+    .support-contact {
+        margin-top: 60px;
+        padding: 32px;
+        border-radius: 8px;
+        background: $color-bg2;
+
+        h3 {
+            font-size: 20px;
+            font-weight: $font-w-SB-600;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 15px;
+            color: $color-text-sec2;
+        }
+
+        .support-phone {
+            margin-top: 16px;
+            font-size: 22px;
+            font-weight: $font-w-B-700;
+            color: $color-text-pri;
+        }
+    }
+}
+
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .my-support {
+        .my-support-inner {
+            padding: 40px 24px 80px;
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .my-support {
+        .my-support-inner {
+            padding: 24px 16px 60px;
+        }
+
+        .support-header {
+            h2 {
+                font-size: 22px;
+            }
+        }
+
+        &-description {
+            font-size: 14px;
+        }
+
+        .support-categories {
+            gap: 8px;
+            margin-bottom: 36px;
+
+            button {
+                font-size: 14px;
+                padding: 0 14px;
+            }
+        }
+
+        .support-faq {
+            h3 {
+                font-size: 20px;
+            }
+
+            .support-question {
+                font-size: 14px;
+                gap: 16px;
+            }
+
+            .support-answer {
+                font-size: 14px;
+                padding: 20px 16px;
+            }
+        }
+
+        .support-contact {
+            padding: 24px 20px;
+        }
+    }
+}

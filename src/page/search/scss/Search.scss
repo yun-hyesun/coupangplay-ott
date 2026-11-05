@@ -1,0 +1,21 @@
+.searchPage {
+  min-height: 70vh;
+  padding: 50px $padding-main;
+  color: #fff;
+
+  > .contentTitle { margin-bottom: 28px; }
+  > p, [role='status'], [role='alert'] { margin: 24px 0; }
+
+  .searchPage-more {
+    display: block;
+    margin: 40px auto 0;
+    padding: 12px 32px;
+    border: 1px solid #555;
+    border-radius: 6px;
+  }
+
+  @media (max-width: 767px) {
+    padding: 110px 20px 48px;
+  }
+}
+

@@ -147,9 +147,22 @@ export const CardHover = ({ item, type, isHover }) => {
           <Link
             to={`/watch/${type}/${item.id}`}
             className="button main-btn icon-play"
-            state={{ content: item }}
+            state={
+              item.resume
+                ? {
+                    content: item,
+                    ownerKey: item.ownerKey,
+                    resumeAt: item.position ?? 0,
+                    seasonNumber: item.seasonNumber ?? 1,
+                    episodeNumber: item.episodeNumber ?? 1,
+                    videoSrc: item.videoSrc || '',
+                    youtubeKey: item.youtubeKey || '',
+                    autoPlayNext: true,
+                  }
+                : { content: item }
+            }
           >
-            재생하기
+            {item.resume ? '이어보기' : '재생하기'}
           </Link>
 
           {/* 상세페이지 이동 */}
