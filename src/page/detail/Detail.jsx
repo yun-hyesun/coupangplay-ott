@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { StarIcon, ActionIcon, Chevron, EpisodeReviews, ReviewPopup, REVIEWS } from './DetailComponents';
+import { StarIcon, ActionIcon, Chevron, EpisodeReviews, ReviewPopup } from './DetailComponents';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useMovieStore } from '../../store/useMovieStore';
 import { ContentRail } from '../../components/content/ContentRail';
 import './Detail.scss';
+import { subscribeEpisodeReviews, createEpisodeReview, updateEpisodeReview, deleteEpisodeReview } from '../../service/reviewService';
+import { communityError } from '../../data/communityData';
 
 const EMPTY = [];
 const IMG = 'https://image.tmdb.org/t/p/original';
@@ -16,6 +18,8 @@ export const Detail = () => {
   const [openedEpisode, setOpenedEpisode] = useState(null);
   const [popupEpisode, setPopupEpisode] = useState(null);
   const [liked, setLiked] = useState(false);
+  const [reviewsByEpisode, setReviewsByEpisode] = useState({});
+  const [reviewError, setReviewError] = useState('');
 
   const key = `${type}-${id}`;
   const fetched = useMovieStore(s => s.contentDetails[key]);
@@ -44,6 +48,30 @@ export const Detail = () => {
     if (selected !== season) { setSeason(selected); return; }
     onFetchEpisode(id, Number(selected));
   }, [type, id, seasons, season, onFetchEpisode]);
+
+  // 회차별 리뷰 구독은 작품/시즌/회차가 바뀌면 자동 해제합니다.
+  useEffect(() => {
+    if (type !== 'tv' || !id || !episodes.length) return;
+    setReviewsByEpisode({});
+    const unsubscribers = episodes.map(ep => subscribeEpisodeReviews('tv', id, Number(season), ep.episode_number,
+      items => setReviewsByEpisode(prev => ({ ...prev, [ep.id]: items })),
+      err => setReviewError(communityError(err))));
+    return () => unsubscribers.forEach(unsubscribe => unsubscribe());
+  }, [type, id, season, episodes]);
+
+  const reviewArgs = ep => ({ type: 'tv', contentId: id, season: Number(season), episode: ep.episode_number });
+  const saveReview = async (ep, text, rating, spoiler) => {
+    try { setReviewError(''); await createEpisodeReview({ ...reviewArgs(ep), text, rating, spoiler }); return true; }
+    catch (err) { setReviewError(communityError(err)); return false; }
+  };
+  const editReview = async (ep, reviewId, text) => {
+    try { setReviewError(''); await updateEpisodeReview({ ...reviewArgs(ep), reviewId, text }); return true; }
+    catch (err) { setReviewError(communityError(err)); return false; }
+  };
+  const removeReview = async (ep, reviewId) => {
+    try { setReviewError(''); await deleteEpisodeReview({ ...reviewArgs(ep), reviewId }); return true; }
+    catch (err) { setReviewError(communityError(err)); return false; }
+  };
 
   const content = fetched ?? state?.content ?? {};
   const title = content.title || content.name || '작품 정보';
@@ -93,6 +121,7 @@ export const Detail = () => {
           </dl>
         </section>
 
+        {reviewError && <p className="detail-empty" role="alert">{reviewError}</p>}
         {type === 'tv' && <section className="detail-episodes" aria-labelledby="episodes-title">
           <div className="detail-section-heading"><h2 id="episodes-title">회차</h2>
             <label className="detail-season-select"><span className="sr-only">시즌 선택</span><select value={season} onChange={event => { setSeason(event.target.value); setOpenedEpisode(null); setPopupEpisode(null); }}>
@@ -104,7 +133,7 @@ export const Detail = () => {
             {!episodes.length && <p className="detail-empty">회차 정보를 불러오는 중이거나 등록된 회차가 없습니다.</p>}
             {episodes.map(ep => {
               const isOpen = openedEpisode === ep.id;
-              const reviews = REVIEWS.filter(review => String(review.episodeId) === String(ep.id));
+              const reviews = reviewsByEpisode[ep.id] ?? EMPTY;
               return <article className={`episode-item${isOpen ? ' episode-item--open' : ''}`} key={ep.id}>
                 <div className="episode-item__main">
                   <span className="episode-item__number">{ep.episode_number}</span>
@@ -128,7 +157,7 @@ export const Detail = () => {
 
         {recommendations.length > 0 && <section className="detail-recommend" aria-label="추천 콘텐츠"><ContentRail title="이런 작품은 어때요?" type={type} imageType="가로" slideView={6} items={recommendations} showMore={false} /></section>}
       </div>
-      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={REVIEWS.filter(review => String(review.episodeId) === String(popupEpisode.id))} onClose={() => setPopupEpisode(null)} />}
+      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
     </main>
   );
 };
