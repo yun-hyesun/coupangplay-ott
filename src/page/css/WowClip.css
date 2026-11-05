@@ -354,3 +354,33 @@
     font-size: 12px;
   }
 }
+.wow-clip-editor__submit-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.wow-clip-editor__submit-actions > button {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.wow-clip-editor__submit-actions .wow-clip-editor__draft {
+  background: #292d33;
+  color: #fff;
+  border: 1px solid #525252;
+}
+
+.wow-clip-editor__submit-actions .wow-clip-editor__submit {
+  background: #0084ff;
+  color: #fff;
+  border: 0;
+}
+
+.wow-clip-editor__submit-actions button:hover {
+  filter: brightness(1.12);
+}

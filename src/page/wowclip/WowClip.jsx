@@ -68,9 +68,11 @@ export function WowClip() {
       saveClip(user?.uid, clip);
       setSaved(true);
       navigate(status === 'published' ? '/wowclip' : '/my/review?tab=wowclip', {
-        state: { clipNotice: status === 'published'
-          ? '게시 기록을 이 브라우저에 저장했습니다. 실제 다른 사용자에게 공개되지는 않습니다.'
-          : '와우 클립이 임시 저장되었습니다.' }
+        state: {
+          clipNotice: status === 'published'
+            ? '게시 기록을 이 브라우저에 저장했습니다. 실제 다른 사용자에게 공개되지는 않습니다.'
+            : '와우 클립이 임시 저장되었습니다.'
+        }
       });
     } catch { setNotice('클립 정보를 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.'); }
   };

@@ -22,6 +22,7 @@ import { Detail } from './page/detail/Detail';
 import { Watch } from './page/watch/Watch';
 import { WowClip } from './page/wowclip/WowClip';
 import { WowClipGallery } from './page/wowclip/WowClipGallery';
+import { WowClipDetail } from './page/wowclip/WowClipDetail';
 
 // 로그인, 회원가입
 import { Signup } from './page/login/SignUp';
@@ -87,6 +88,7 @@ function App() {
         <Route path="/watch/:type/:id" element={<Watch />} />
         <Route path="/wowclip/create/:type/:id" element={<WowClip />} />
         <Route path="/wowclip" element={<WowClipGallery />} />
+        <Route path="/wowclip/:clipId" element={<WowClipDetail />} />
 
         {/* 로그인, 회원가입 */}
         <Route path="/login" element={<Login />} />
