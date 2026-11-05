@@ -1,8 +1,8 @@
 
-import React from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useProfileStore } from '../../../store/useProfileStore'
-import "../scss/MySidebar.scss"
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useProfileStore } from '../../../store/useProfileStore';
+import '../scss/MySidebar.scss';
 
 const MyMenus = [
     { id: 1, title: "내 티켓", path: "/my/ticket" },
@@ -14,7 +14,7 @@ const MyMenus = [
     { id: 7, title: "소식 및 혜택", path: "/my/news" },
 ];
 
-export const MySidebar = () => {
+export const MySidebar = ({ onOpenLanguage }) => {
     const navigate = useNavigate();
 
     // 현재 선택된 프로필 정보
@@ -28,13 +28,16 @@ export const MySidebar = () => {
     };
 
     return (
-        <div className='my-sidebar'>
+        <div className="my-sidebar">
             <div className="my-profile">
                 <div className="my-profile-info">
 
                     <div className="my-avatar">
                         <img
-                            src={currentProfile?.avatar || "/images/profile/profile-img/profile.svg"}
+                            src={
+                                currentProfile?.avatar ||
+                                "/images/profile/profile-img/profile.svg"
+                            }
                             alt=""
                         />
                     </div>
@@ -52,8 +55,11 @@ export const MySidebar = () => {
                     </button>
                 </div>
 
-                <button type="button" className="my-premium"
-                    onClick={() => navigate('/my/subscription')}>
+                <button
+                    type="button"
+                    className="my-premium"
+                    onClick={() => navigate('/my/subscription')}
+                >
                     <img
                         src="/images/mypage/premium-icon.png"
                         alt="프리미엄 패스 아이콘"
@@ -69,13 +75,23 @@ export const MySidebar = () => {
                 <ul>
                     {MyMenus.map((menu) => (
                         <li key={menu.id}>
-                            <Link to={menu.path}>
-                                {menu.title}
-                            </Link>
+                            {menu.title === "언어 설정" ? (
+                                <button
+                                    type="button"
+                                    className="my-menu-button"
+                                    onClick={onOpenLanguage}
+                                >
+                                    {menu.title}
+                                </button>
+                            ) : (
+                                <Link to={menu.path}>
+                                    {menu.title}
+                                </Link>
+                            )}
                         </li>
                     ))}
                 </ul>
             </nav>
         </div>
-    )
-}
+    );
+};

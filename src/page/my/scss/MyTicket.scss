@@ -1,0 +1,92 @@
+
+@use "../../../scss/mixins" as *;
+@use "../../../scss/variables" as *;
+
+.my-ticket {
+  width: 100%;
+  min-height: 100vh;
+  background: #101113;
+  color: $color-text-pri;
+
+  &__inner {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  // 페이지 제목
+  &__header {
+    padding-bottom: 24px;
+    border-bottom: 1px solid $color-border-light;
+
+    h2 {
+      font-size: 28px;
+      font-weight: $font-w-B-700;
+      line-height: 1.4;
+    }
+  }
+
+  // 구매 티켓이 없을 때
+  &__empty {
+    min-height: 600px;
+    @include flexCol-center(16px);
+    text-align: center;
+
+    h3 {
+      font-size: 22px;
+      font-weight: $font-w-B-700;
+      line-height: 1.4;
+    }
+
+    p {
+      font-size: 14px;
+      font-weight: $font-w-R-400;
+      color: $color-text-sec1;
+      line-height: 1.5;
+    }
+  }
+}
+
+// 태블릿
+@media (max-width: 1279px) {
+  .my-ticket {
+    &__inner {
+      padding: 32px 24px 60px;
+    }
+
+    &__empty {
+      min-height: 550px;
+    }
+  }
+}
+
+// 모바일
+@media (max-width: 767px) {
+  .my-ticket {
+    &__inner {
+      padding: 24px 16px 60px;
+    }
+
+    &__header {
+      padding-bottom: 20px;
+
+      h2 {
+        font-size: 24px;
+      }
+    }
+
+    &__empty {
+      min-height: 450px;
+      gap: 12px;
+
+      h3 {
+        font-size: 18px;
+      }
+
+      p {
+        font-size: 13px;
+      }
+    }
+  }
+}

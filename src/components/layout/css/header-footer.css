@@ -179,10 +179,6 @@
 .header .header-right .header-myPage .profile-dropdown-menu button:hover {
   color: #fff;
 }
-.header .header-right .header-myPage .profile-dropdown-menu a:first-child {
-  color: #fff;
-  font-weight: 500;
-}
 .header .header-right .header-myPage .profile-dropdown-menu .profile-dropdown-logout {
   margin-top: 4px;
 }
