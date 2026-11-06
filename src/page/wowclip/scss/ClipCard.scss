@@ -12,9 +12,9 @@
 .wowclip-card--short:hover { outline: 1px solid rgba(255, 255, 255, .4); outline-offset: -1px; }
 .wowclip-card--short:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .wowclip-card--short .wowclip-spoiler-cover { z-index: 2; background: rgba(0, 0, 0, .78); }
-.wowclip-page .wowclip-grid, .home-wowclip .home-wowclip-grid { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; }
+.wowclip-page .wowclip-grid { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; }
 @media (max-width: 640px) {
-  .wowclip-page .wowclip-grid, .home-wowclip .home-wowclip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .wowclip-page .wowclip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .wowclip-card-caption { right: 12px; bottom: 12px; left: 12px; }
   .wowclip-card-caption > strong { font-size: 14px; line-height: 20px; }
   .wowclip-card-author { font-size: 12px; line-height: 18px; }

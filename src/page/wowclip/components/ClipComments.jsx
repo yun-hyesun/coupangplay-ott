@@ -1,67 +1,78 @@
 import { useId, useRef, useState } from 'react';
 import { relativeTime } from '../utils/wowClipData';
 import { ClipIcon, ClipSort } from './WowClipUi';
+import { clipLikeCount, clipIsLiked } from '../utils/cloudClipData';
 
 const CommentForm = ({ onSubmit, onCancel, replyTo, inputRef }) => {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const inputId = useId();
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
+    if (sendingRef.current) return;
+    sendingRef.current = true; setSending(true);
     try {
-      onSubmit(text);
+      await onSubmit(text);
       setText(''); setError('');
       if (replyTo) inputRef.current?.focus();
       else inputRef.current?.blur();
     } catch (failure) { setError(failure.message); }
+    finally { sendingRef.current = false; setSending(false); }
   };
   return <form className="wowclip-comment-form" onSubmit={submit}>
-    <div className="wowclip-comment-form-heading"><label htmlFor={inputId}>{replyTo ? `${replyTo.author}님에게 답글` : '댓글 남기기'}</label>{replyTo && <button type="button" onClick={() => { setText(''); setError(''); onCancel(); inputRef.current?.focus(); }} aria-label="답글 작성 취소">취소</button>}</div>
+    <div className="wowclip-comment-form-heading"><label htmlFor={inputId}>{replyTo ? `${replyTo.author}님에게 답글` : '댓글 남기기'}</label>{replyTo && <button type="button" disabled={sending} onClick={() => { setText(''); setError(''); onCancel(); inputRef.current?.focus(); }} aria-label="답글 작성 취소">취소</button>}</div>
     <div className="wowclip-comment-input">
-      <textarea ref={inputRef} id={inputId} maxLength={1000} value={text} rows={2} placeholder={replyTo ? '답글을 남겨보세요.' : '이 장면은 어땠나요?'} title="Enter로 등록 · Shift+Enter로 줄바꿈 · Esc로 취소" onChange={(event) => setText(event.target.value)} aria-invalid={!!error} aria-describedby={`${inputId}-hint${error ? ` ${inputId}-error` : ''}`} onKeyDown={(event) => {
+      <textarea ref={inputRef} id={inputId} maxLength={1000} value={text} rows={2} readOnly={sending} aria-busy={sending} placeholder={replyTo ? '답글을 남겨보세요.' : '이 장면은 어땠나요?'} title="Enter로 등록 · Shift+Enter로 줄바꿈 · Esc로 취소" onChange={(event) => setText(event.target.value)} aria-invalid={!!error} aria-describedby={`${inputId}-hint${error ? ` ${inputId}-error` : ''}`} onKeyDown={(event) => {
+        if (sendingRef.current) return;
         if (event.nativeEvent.isComposing || event.keyCode === 229) return;
         if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (text.trim()) submit(event); }
         if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setText(''); setError(''); inputRef.current?.blur(); onCancel?.(); }
       }} />
     </div>
     <span className="sr-only" id={`${inputId}-hint`}>Enter로 등록, Shift+Enter로 줄바꿈, Esc로 취소합니다.</span>
+    {sending && <span className="sr-only" role="status">댓글을 저장하고 있어요.</span>}
     {error && <p className="wowclip-error" id={`${inputId}-error`} role="alert">{error}</p>}
   </form>;
 };
 
-export const ClipComments = ({ clip, owner, onAdd, onLike, notify, panel = false, onClose, onRefresh }) => {
+export const ClipComments = ({ clip, owner, onAdd, onLike, notify, panel = false, onClose, onRefresh, loading = false, error = '' }) => {
   const [sort, setSort] = useState('popular');
   const [replyTo, setReplyTo] = useState(null);
   const [openReplies, setOpenReplies] = useState({});
   const inputRef = useRef(null);
   const comments = clip.comments.filter((comment) => !comment.parentId).sort((a, b) =>
-    sort === 'popular' ? b.likes.length - a.likes.length || new Date(b.createdAt) - new Date(a.createdAt) : sort === 'oldest' ? new Date(a.createdAt) - new Date(b.createdAt) : new Date(b.createdAt) - new Date(a.createdAt));
-  const like = (id) => { try { onLike(clip.id, owner.id, id); } catch (failure) { notify(failure.message); } };
+    sort === 'popular' ? clipLikeCount(b) - clipLikeCount(a) || new Date(b.createdAt) - new Date(a.createdAt) : new Date(b.createdAt) - new Date(a.createdAt));
+  const like = async (id) => { try { await onLike(clip.id, owner.id, id); } catch (failure) { notify(failure.message); } };
   const startReply = (comment) => {
     setReplyTo({ id: comment.parentId || comment.id, author: comment.author });
     inputRef.current?.focus();
   };
   const renderComment = (comment, nested = false) => {
-    const liked = comment.likes.includes(owner.id);
+    const liked = clipIsLiked(comment, owner.id);
+    const likes = clipLikeCount(comment);
     // 클릭 전후의 두 집계값이 같은 자릿수 영역을 쓰도록 미리 확보한다.
-    const countWidth = Math.max(2, String(comment.likes.length + (liked ? 0 : 1)).length);
+    const countWidth = Math.max(2, String(likes + (liked ? 0 : 1)).length);
     return <article className={`wowclip-comment${nested ? ' wowclip-comment--reply' : ''}`} key={comment.id}>
     <img className="wowclip-avatar" src={comment.avatar || '/images/profile.svg'} alt="" width="24" height="24" />
     <div><p className="wowclip-comment-author">{comment.author} · {relativeTime(comment.createdAt)}</p><p className="wowclip-comment-text">{comment.text}</p>
-      <div className="wowclip-comment-actions"><button type="button" className="wowclip-comment-like" aria-label={`댓글 공감 ${comment.likes.length}`} aria-pressed={liked} onClick={() => like(comment.id)}><ClipIcon name="like" size={18} filled={liked} /><span className="wowclip-comment-like-count" style={{ width: `${countWidth}ch` }}>{comment.likes.length}</span></button><button type="button" onClick={() => startReply(comment)}>답글</button></div>
+      <div className="wowclip-comment-actions"><button type="button" className="wowclip-comment-like" aria-label={`댓글 공감 ${likes}`} aria-pressed={liked} onClick={() => like(comment.id)}><ClipIcon name="like" size={18} filled={liked} /><span className="wowclip-comment-like-count" style={{ width: `${countWidth}ch` }}>{likes}</span></button><button type="button" onClick={() => startReply(comment)}>답글</button></div>
     </div>
   </article>;
   };
-  const form = <CommentForm inputRef={inputRef} replyTo={replyTo} onCancel={() => setReplyTo(null)} onSubmit={(text) => {
-    onAdd(clip.id, text, owner, replyTo?.id);
+  const form = <CommentForm inputRef={inputRef} replyTo={replyTo} onCancel={() => setReplyTo(null)} onSubmit={async (text) => {
+    await onAdd(clip.id, text, owner, replyTo?.id);
     if (replyTo) setOpenReplies((previous) => ({ ...previous, [replyTo.id]: true }));
     setReplyTo(null);
   }} />;
   return <aside className={'wowclip-comments' + (panel ? ' is-panel' : '')} aria-label="클립 댓글">
-    <div className="wowclip-comments-heading"><h2>댓글 <span>{clip.comments.length}</span></h2>{panel ? <div className="wowclip-comment-panel-tools"><button type="button" aria-label="댓글 새로고침" onClick={onRefresh}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 6" /></svg></button><button type="button" aria-label="댓글 닫기" onClick={onClose}><ClipIcon name="close" /></button></div> : <ClipSort value={sort} onChange={setSort} comments />}</div>
-    {panel && <><div className="wowclip-panel-sort" role="tablist" aria-label="댓글 정렬">{[['popular', '인기순'], ['recent', '최신순'], ['oldest', '등록순']].map(([value, label]) => <button type="button" key={value} role="tab" aria-selected={sort === value} onClick={() => setSort(value)}>{label}</button>)}</div>{form}</>}
+    <div className="wowclip-comments-heading"><h2>댓글 <span>{clip.commentCount ?? clip.comments.length}</span></h2>{panel ? <div className="wowclip-comment-panel-tools"><button type="button" aria-label="댓글 새로고침" onClick={onRefresh}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2 6" /></svg></button><button type="button" aria-label="댓글 닫기" onClick={onClose}><ClipIcon name="close" /></button></div> : <ClipSort value={sort} onChange={setSort} comments />}</div>
+    {panel && <><div className="wowclip-panel-sort" role="tablist" aria-label="댓글 정렬">{[['popular', '인기순'], ['recent', '최신순']].map(([value, label]) => <button type="button" key={value} role="tab" aria-selected={sort === value} onClick={() => setSort(value)}>{label}</button>)}</div>{form}</>}
     <div className="wowclip-comments-list" role="region" aria-label="댓글 목록" tabIndex={0}>
-      {comments.length === 0 && <p className="wowclip-comments-empty">첫 댓글을 남겨보세요.</p>}
+      {loading && <p role="status">댓글을 불러오고 있어요.</p>}
+      {error && <p className="wowclip-error" role="alert">{error}</p>}
+      {!loading && !error && comments.length === 0 && <p className="wowclip-comments-empty">첫 댓글을 남겨보세요.</p>}
       {comments.map((comment) => {
         const replies = clip.comments.filter((reply) => reply.parentId === comment.id);
         const repliesId = `wowclip-replies-${clip.id}-${comment.id}`;

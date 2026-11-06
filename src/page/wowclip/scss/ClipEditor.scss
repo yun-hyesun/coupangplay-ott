@@ -1,20 +1,40 @@
 .wowclip-layout-options { display: flex; justify-content: center; gap: 16px; margin: 0 0 24px; }
-.wowclip-layout-options button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 96px; min-height: 96px; padding: 12px; border: 1px solid transparent; border-radius: 10px; background: #22262b; color: #a3a3a3; }
+.wowclip-layout-options button { display: flex; flex: 0 0 96px; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 96px; height: 112px; padding: 12px; border: 1px solid transparent; border-radius: 10px; background: #22262b; color: #a3a3a3; text-align: center; }
 .wowclip-layout-options button[aria-selected='true'] { border-color: #0084ff; background: #172c40; color: #fff; }
 .wowclip-layout-options strong { font-size: 14px; line-height: 20px; }
 .wowclip-layout-options button > span:last-child { font-size: 12px; line-height: 16px; }
+.wowclip-layout-icon-slot { display: grid; flex: 0 0 36px; place-items: center; width: 36px; height: 36px; }
 .wowclip-layout-icon { display: block; width: 32px; height: 18px; border: 2px solid currentColor; border-radius: 3px; }
 .wowclip-layout-icon.is-portrait { width: 18px; height: 32px; }
-.wowclip-editor .wowclip-editor-details { gap: 16px; min-height: 0; padding-top: 0; }
-.wowclip-editor .wowclip-editor-preview { gap: 16px; }
+.wowclip-editor .wowclip-editor-body { grid-template-rows: 24px minmax(0, 1fr); row-gap: 16px; }
+.wowclip-editor .wowclip-editor-details { grid-column: 2; grid-row: 2; gap: 16px; min-height: 0; padding-top: 0; }
+.wowclip-editor .wowclip-title-input { gap: 16px; font-size: 16px; line-height: 24px; }
+.wowclip-editor .wowclip-editor-preview { grid-column: 1; grid-row: 1 / span 2; gap: 16px; }
 .wowclip-editor-preview-label { font-size: 16px; font-weight: 600; line-height: 24px; }
+.wowclip-editor-video-heading { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.wowclip-editor .wowclip-editor-source-heading { grid-column: 2; grid-row: 1; }
+.wowclip-editor-video-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wowclip-editor-episode { flex-shrink: 0; }
 .wowclip-editor-source-player { position: relative; }
 .wowclip-crop-overlay { position: absolute; z-index: 3; inset: 0 0 44px; overflow: hidden; border-radius: 8px 8px 0 0; pointer-events: none; }
 .wowclip-crop-frame { position: absolute; top: 0; bottom: 0; border: 2px solid #0084ff; box-shadow: 0 0 0 1000px rgba(0,0,0,.55); cursor: grab; touch-action: none; pointer-events: auto; }
 .wowclip-crop-frame:active { cursor: grabbing; }
 .wowclip-crop-frame i { position: absolute; width: 8px; height: 8px; background: #fff; }
 .wowclip-crop-frame i:nth-child(1) { top: -3px; left: -3px; } .wowclip-crop-frame i:nth-child(2) { top: -3px; right: -3px; } .wowclip-crop-frame i:nth-child(3) { bottom: -3px; left: -3px; } .wowclip-crop-frame i:nth-child(4) { bottom: -3px; right: -3px; }
-.wowclip-crop-position { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 14px; line-height: 20px; }
-.wowclip-crop-position input { flex: 1; accent-color: #0084ff; }
-.wowclip-crop-position > span { flex-basis: 100%; color: #a3a3a3; font-size: 12px; }
-.wowclip-player--mirror .wowclip-youtube-frame { pointer-events: none; }
+.wowclip-crop-position { --crop-handle-size: 16px; display: grid; min-width: 0; font-size: 14px; line-height: 20px; }
+.wowclip-crop-position-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.wowclip-crop-position-heading output { color: var(--wow-secondary); font-variant-numeric: tabular-nums; }
+// 손잡이 중심의 양 끝을 영상 속 자르기 영역 중심의 이동 범위와 맞춥니다.
+.wowclip-crop-position input { display: block; width: calc(100% - var(--crop-window-width) + var(--crop-handle-size)); min-width: 0; height: 44px; margin: 0 calc(var(--crop-inset) - var(--crop-handle-size) / 2); padding: 0; border: 0; border-radius: 8px; background: transparent; appearance: none; cursor: pointer; }
+.wowclip-crop-position input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--wow-primary) 0 var(--crop-position), #525252 var(--crop-position) 100%); }
+.wowclip-crop-position input::-webkit-slider-thumb { width: var(--crop-handle-size); height: var(--crop-handle-size); margin-top: calc((4px - var(--crop-handle-size)) / 2); border: 0; border-radius: 50%; background: var(--wow-primary); appearance: none; }
+.wowclip-crop-position input::-moz-range-track { height: 4px; border-radius: 2px; background: #525252; }
+.wowclip-crop-position input::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--wow-primary); }
+.wowclip-crop-position input::-moz-range-thumb { width: var(--crop-handle-size); height: var(--crop-handle-size); border: 0; border-radius: 50%; background: var(--wow-primary); }
+.wowclip-crop-position > p { color: var(--wow-secondary); font-size: 12px; line-height: 20px; }
+@media (max-width: 1080px) {
+  .wowclip-editor .wowclip-editor-body { grid-template-rows: auto 24px auto; }
+  .wowclip-editor .wowclip-editor-preview { grid-column: 1; grid-row: 1; }
+  .wowclip-editor .wowclip-editor-source-heading { grid-column: 1; grid-row: 2; }
+  .wowclip-editor .wowclip-editor-details { grid-column: 1; grid-row: 3; }
+}
