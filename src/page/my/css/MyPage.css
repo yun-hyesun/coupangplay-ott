@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* size */
 /* size */
 /* size */
@@ -25,5 +26,47 @@
   .mypage .mypage-inner {
     padding: 40px 40px 80px;
     gap: 24px;
+  }
+}
+/* PC / 태블릿에서는 모바일 전용 영역 숨기기 */
+.mypage-mobile-profile,
+.mypage-mobile-menu {
+  display: none;
+}
+
+/* 모바일 */
+@media (max-width: 767px) {
+  .mypage .mypage-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 24px 20px 60px;
+  }
+  .mypage .mypage-desktop-sidebar {
+    display: none;
+  }
+  .mypage .mypage-mobile-profile {
+    display: block;
+    width: 100%;
+    margin-bottom: 40px;
+  }
+  .mypage .mypage-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    flex: none;
+    gap: 40px;
+    padding-left: 0;
+    overflow: visible;
+  }
+  .mypage .mypage-content > section {
+    width: 100%;
+    min-width: 0;
+  }
+  .mypage .mypage-mobile-menu {
+    display: block;
+    width: 100%;
+    margin-top: 40px;
   }
 }
