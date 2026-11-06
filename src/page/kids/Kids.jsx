@@ -1,10 +1,13 @@
 import { ContentRail } from '../../components/content/ContentRail';
 import { MainBanner } from '../../components/content/MainBanner';
+import { KidsCategoryMenu } from './components/KidsCategoryMenu';
 
 export const Kids = () => {
   return (
     <main className="kids-page">
       <MainBanner type="kids" />
+
+      <KidsCategoryMenu />
 
       <ContentRail railKey="kids-ranking" showMore={false}/>
 

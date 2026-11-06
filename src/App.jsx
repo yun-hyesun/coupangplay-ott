@@ -49,6 +49,8 @@ import { MyNews } from './page/my/MyNews';
 import { More } from './page/more/More';
 // 검색
 import { Search } from './page/search/Search';
+// 카테고리
+import { Category } from './page/category/Category';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
@@ -118,7 +120,8 @@ function App() {
         <Route path="/watch/sports/:id" element={<SportsWatch />} />
         {/* 검색 */}
         <Route path="/search" element={<Search />} />
-
+        {/* 카테고리 */}
+        <Route path="/category/:section/:categoryId" element={<Category />} />
 
       </Route>
 
