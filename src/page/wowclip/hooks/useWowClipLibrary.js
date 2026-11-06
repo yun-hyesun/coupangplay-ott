@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'coupangplay.wowclip.v1';
+const LIBRARY_EVENT = 'coupangplay:wowclip-change';
 
 const readLibrary = () => {
   try {
@@ -26,8 +27,13 @@ export const useWowClipLibrary = () => {
     const sync = (event) => {
       if (event.key === STORAGE_KEY || event.key === null) setLibrary(readLibrary());
     };
+    const syncHere = () => setLibrary(readLibrary());
     window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
+    window.addEventListener(LIBRARY_EVENT, syncHere);
+    return () => {
+      window.removeEventListener('storage', sync);
+      window.removeEventListener(LIBRARY_EVENT, syncHere);
+    };
   }, []);
 
   const update = useCallback((change) => {
@@ -40,6 +46,7 @@ export const useWowClipLibrary = () => {
       throw new Error('클립을 저장하지 못했어요. 저장 공간과 브라우저 설정을 확인해 주세요.');
     }
     setLibrary({ clips, error: '' });
+    window.dispatchEvent(new Event(LIBRARY_EVENT));
   }, []);
 
   const saveClip = (clip) => update((clips) => [clip, ...clips]);
