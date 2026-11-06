@@ -27,7 +27,7 @@
 
   &__tabs {
     @include flex-center($jc: flex-start, $gap: 24px);
-    margin: 10px 0 28px;
+    margin: 24px 0 24px;
 
     button {
       width: 145px;

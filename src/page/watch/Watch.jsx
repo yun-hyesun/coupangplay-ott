@@ -3,6 +3,8 @@ import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
 import WatchIcon from './WatchIcon';
+import WatchSettingsPanel from './WatchSettingsPanel';
+import WatchChatPanel from './WatchChatPanel';
 import { FullVideoClipButton } from '../wowclip/components/FullVideoClipButton';
 import { captureClipPlayback } from '../wowclip/utils/captureClipPlayback';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -20,19 +22,6 @@ const formatTime = (seconds) => {
   const minutes = Math.floor(seconds / 60);
   const rest = Math.floor(seconds % 60);
   return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`;
-};
-
-const PLAYBACK_SPEEDS = [0.5, 1, 1.5, 2];
-const SETTINGS_OPTIONS = [
-  { tab: 'quality', label: '해상도' },
-  { tab: 'speed', label: '재생속도' },
-  { tab: 'subtitles', label: '자막' },
-  { tab: 'audio', label: '음성' },
-];
-const SETTINGS_MESSAGES = {
-  quality: '해상도 선택은 영상 소스가 지원할 때 연결합니다.',
-  subtitles: '자막 트랙 연결 후 선택할 수 있습니다.',
-  audio: '음성 트랙 연결 후 선택할 수 있습니다.',
 };
 
 export const Watch = () => {
@@ -67,6 +56,7 @@ export const Watch = () => {
     const episode = episodes.find(ep => Number(ep.episode_number) === Number(nextNumber));
     const nextVideoSrc = episode?.videoSrc || state?.videoSrcByEpisode?.[nextNumber] || '';
     navigate(`/watch/tv/${id}`, {
+      replace: true,
       state: {
         ...state, episodes, seasonNumber, episodeNumber: nextNumber,
         videoSrc: nextVideoSrc, resumeAt: 0, youtubeKey: '', autoPlayNext, showNextEpisodeNotice: autoPlayNext,
@@ -418,55 +408,38 @@ export const Watch = () => {
           </div>
         </div>
 
-        {panel && (
-          <aside className={`watch-panel ${panel === 'settings' ? 'watch-panel--settings' : ''}`} aria-label="플레이어 부가 패널">
-            {panel !== 'settings' && <div className="watch-panel__header"><div><h2>{({ episodes: '회차', chat: '실시간 채팅' })[panel]}</h2></div><button type="button" onClick={() => setPanel(null)} aria-label="패널 닫기"><WatchIcon name="close" /></button></div>}
-            {panel === 'episodes' && <div className="watch-panel__body">
-              {episodes.length === 0 ? <p>회차 정보는 시즌 API 연결 후 표시됩니다.</p> : episodes.map((ep, index) => (
-                <button className="watch-episode" key={ep.id || index} type="button" onClick={() => openEpisode(ep.episode_number || index + 1)}>
-                  <span className="watch-episode__thumb">{ep.still_path ? <img src={`https://image.tmdb.org/t/p/w300${ep.still_path}`} alt="" /> : <WatchIcon name="play" />}</span><span className="watch-episode__info"><strong>{ep.episode_number || index + 1}회</strong><em className={Number(ep.episode_number || index + 1) === Number(episodeNumber) ? 'is-playing' : ''}>{Number(ep.episode_number || index + 1) === Number(episodeNumber) ? '현재 재생 중' : '재생하기'}</em><small>{ep.overview || ep.name || '에피소드'}</small></span>
-                </button>
-              ))}
-            </div>}
-            {panel === 'settings' && <div className="watch-settings">
-              <div className="watch-settings__header">
-                {settingsTab !== 'main' && <button type="button" onClick={() => setSettingsTab('main')} aria-label="설정 메뉴로 돌아가기"><WatchIcon name="back" /></button>}
-                <span>{settingsTab === 'main' ? '설정' : SETTINGS_OPTIONS.find(item => item.tab === settingsTab)?.label}</span>
-              </div>
-              <div className="watch-settings__items">
-                {settingsTab === 'main' && SETTINGS_OPTIONS.map(({ tab, label }) => (
-                  <button type="button" key={tab} onClick={() => setSettingsTab(tab)}>
-                    <span>{label}</span><span className="watch-settings__trailing"><span>{({ quality, speed: `${speed.toFixed(1)}배속`, subtitles: subtitle, audio })[tab]}</span><span aria-hidden="true" className="watch-settings__chevron">›</span></span>
-                  </button>
-                ))}
-                {settingsTab !== 'main' && (settingsTab === 'speed' ? PLAYBACK_SPEEDS.map(value => ({ label: `${value.toFixed(1)}배속`, value })) : settingsTab === 'quality' ? ['360', '480', '720', '1080'].map(value => ({ label: value, value })) : settingsTab === 'subtitles' ? ['끄기', '한국어', '영어', '일본어', '중국어', '스페인어', '프랑스어'].map(value => ({ label: value, value })) : ['한국어', '영어'].map(value => ({ label: value, value }))).map(({ label, value }) => {
-                  const selected = ({ speed, quality, subtitles: subtitle, audio })[settingsTab] === value;
-                  return <button type="button" key={value} aria-pressed={selected} onClick={() => {
-                    if (settingsTab === 'speed') { setSpeed(value); if (videoRef.current) videoRef.current.playbackRate = value; else youtubePlayer.current?.setPlaybackRate(value); }
-                    if (settingsTab === 'quality') setQuality(value);
-                    if (settingsTab === 'subtitles') setSubtitle(value);
-                    if (settingsTab === 'audio') setAudio(value);
-                  }}><span>{label}</span>{selected && <span className="watch-settings__check" aria-hidden="true">✓</span>}</button>;
-                })}
-              </div>
-              {settingsTab !== 'main' && settingsTab !== 'speed' && <span className="sr-only" role="status">{SETTINGS_MESSAGES[settingsTab]}</span>}
-            </div>}
-            {panel === 'chat' && <div className="watch-chat" role="region" aria-label="실시간 채팅">
-               {!togetherMode ? <p className="watch-chat__notice">같이 보기를 켜면 실시간 채팅에 참여할 수 있습니다.</p> : <p className="watch-chat__notice">같이 보기 모드 · 같은 시청 세션 참여자에게 실시간으로 표시됩니다.</p>}
-               {togetherMode && sessionId && <button type="button" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}${location.pathname}?session=${encodeURIComponent(sessionId)}`)}>세션 초대 링크 복사</button>}
-               {chatError && <p role="alert">{chatError}</p>}
-               {togetherMode && <>
-                 <div className="watch-chat__messages" aria-live="polite">
-                   {chatMessages.length === 0 ? <p>아직 메시지가 없습니다.</p> : chatMessages.map(message => <div className="watch-chat__message" key={message.id}><strong>{message.senderId === auth.currentUser?.uid ? '나' : message.senderName || '사용자'}</strong><span>{message.text}</span></div>)}
-                 </div>
-                 <form className="watch-chat__form" onSubmit={sendChat}>
-                   <input value={chatDraft} onChange={event => setChatDraft(event.target.value)} maxLength={300} placeholder="메시지를 입력하세요" aria-label="실시간 채팅 메시지" />
-                   <button type="submit" disabled={!chatDraft.trim() || sendingChat} aria-label="메시지 보내기">전송</button>
-                 </form>
-               </>}
-             </div>}
-           </aside>
-        )}
+        {panel === 'settings' && <WatchSettingsPanel
+          tab={settingsTab} onTabChange={setSettingsTab} speed={speed} quality={quality}
+          subtitle={subtitle} audio={audio} onClose={() => setPanel(null)}
+          onSelect={(tab, value) => {
+            if (tab === 'speed') {
+              setSpeed(value);
+              if (videoRef.current) videoRef.current.playbackRate = value;
+              else youtubePlayer.current?.setPlaybackRate(value);
+            }
+            if (tab === 'quality') setQuality(value);
+            if (tab === 'subtitles') setSubtitle(value);
+            if (tab === 'audio') setAudio(value);
+          }}
+        />}
+        {panel === 'chat' && <WatchChatPanel
+          togetherMode={togetherMode} sessionId={sessionId} messages={chatMessages}
+          draft={chatDraft} onDraftChange={setChatDraft} onSend={sendChat}
+          onClose={() => setPanel(null)} error={chatError} sending={sendingChat}
+          currentUid={auth.currentUser?.uid}
+          onCopyInvite={() => navigator.clipboard?.writeText(`${window.location.origin}${location.pathname}?session=${encodeURIComponent(sessionId)}`)}
+        />}
+        {panel === 'episodes' && <aside className="watch-side-panel" aria-label="회차 목록">
+          <header className="watch-side-panel__header"><h2>회차</h2><button type="button" onClick={() => setPanel(null)} aria-label="회차 목록 닫기"><WatchIcon name="close" /></button></header>
+          <div className="watch-side-panel__episodes">
+            {episodes.length === 0 ? <p>회차 정보는 시즌 API 연결 후 표시됩니다.</p> : episodes.map((ep, index) => (
+              <button className="watch-episode" key={ep.id || index} type="button" onClick={() => openEpisode(ep.episode_number || index + 1)}>
+                <span className="watch-episode__thumb">{ep.still_path ? <img src={`https://image.tmdb.org/t/p/w300${ep.still_path}`} alt="" /> : <WatchIcon name="play" />}</span>
+                <span className="watch-episode__info"><strong>{ep.episode_number || index + 1}회</strong><em className={Number(ep.episode_number || index + 1) === Number(episodeNumber) ? 'is-playing' : ''}>{Number(ep.episode_number || index + 1) === Number(episodeNumber) ? '현재 재생 중' : '재생하기'}</em><small>{ep.overview || ep.name || '에피소드'}</small></span>
+              </button>
+            ))}
+          </div>
+        </aside>}
       </div>
     </main>
   );

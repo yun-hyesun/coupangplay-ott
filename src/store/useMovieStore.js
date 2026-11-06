@@ -8,7 +8,7 @@ const YOUTUBE_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 const storeBannerMovieIds = [
   693134, // 듄: 파트 2
   361743, // 탑건: 매버릭
-  157336, // 인터스텔라 
+  157336, // 인터스텔라
   569094, // 스파이더맨: 어크로스 더 유니버스
   575264, // 미션 임파서블: 데드 레코닝 PART ONE
 ];
@@ -38,6 +38,31 @@ const requestTmdb = async (path, query = {}) => {
   }
 
   return res.json();
+};
+
+// 드라마 세부 카테고리의 키워드 ID 조회
+const categoryKeywordCache = new Map();
+
+export const fetchCategoryKeywordId = async (keyword) => {
+  if (categoryKeywordCache.has(keyword)) {
+    return categoryKeywordCache.get(keyword);
+  }
+
+  const data = await requestTmdb('/search/keyword', {
+    query: keyword,
+    page: 1,
+  });
+
+  const matched = (data.results ?? []).find(
+    (item) => item.name?.toLowerCase() === keyword.toLowerCase()
+  );
+
+  if (!matched) {
+    throw new Error(`"${keyword}" 카테고리 키워드를 찾지 못했습니다.`);
+  }
+
+  categoryKeywordCache.set(keyword, matched.id);
+  return matched.id;
 };
 
 // 작품별 관람등급 확인 결과 재사용
@@ -147,6 +172,101 @@ const checkKidsRating = (type, id) => {
   return kidsRatingRequests[key];
 };
 
+
+import { useProfileStore } from './useProfileStore';
+
+// 한국 관람등급을 숫자로 변환
+const normalizeRating = (rating) => {
+  const value = String(rating ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s/g, '');
+
+  if (['ALL', '전체', '전체관람가', '0'].includes(value)) {
+    return 0;
+  }
+
+  if (['7', '7세이상', '7세이상관람가'].includes(value)) {
+    return 7;
+  }
+
+  if (['12', '12세이상', '12세이상관람가'].includes(value)) {
+    return 12;
+  }
+
+  if (['15', '15세이상', '15세이상관람가'].includes(value)) {
+    return 15;
+  }
+
+  if (['19', '19세이상', '청소년관람불가'].includes(value)) {
+    return 19;
+  }
+
+  return null;
+};
+
+// 콘텐츠의 한국 관람등급 조회
+const getContentRating = async (type, id) => {
+  if (!['movie', 'tv'].includes(type) || !id) {
+    return null;
+  }
+
+  try {
+    const path = type === 'movie'
+      ? `/movie/${id}/release_dates`
+      : `/tv/${id}/content_ratings`;
+
+    const data = await requestTmdb(path);
+
+    let ratings = [];
+
+    if (type === 'movie') {
+      ratings = (data.results ?? [])
+        .filter(item => item.iso_3166_1 === 'KR')
+        .flatMap(item => item.release_dates ?? [])
+        .map(item => normalizeRating(item.certification));
+    } else {
+      ratings = (data.results ?? [])
+        .filter(item => item.iso_3166_1 === 'KR')
+        .map(item => normalizeRating(item.rating));
+    }
+
+    // 등급을 확인할 수 없으면 제한
+    if (ratings.length === 0 || ratings.some(r => r === null)) {
+      return null;
+    }
+
+    // 여러 등급이 존재하면 가장 높은 등급 적용
+    return Math.max(...ratings);
+
+  } catch (error) {
+    console.error('관람등급 조회 실패:', error);
+    return null;
+  }
+};
+
+// 현재 프로필의 시청 가능 여부 확인
+export const canWatchContent = async (type, id) => {
+  const profile = useProfileStore.getState().currentProfile;
+
+  // 프로필을 선택하지 않았다면 시청 제한
+  if (!profile) return false;
+
+  const contentRating = await getContentRating(type, id);
+
+  if (contentRating === null) return false;
+
+  const profileRating = normalizeRating(profile.rating);
+
+  if (profileRating === null) return false;
+
+  // 19세 콘텐츠는 성인 인증 필요
+  if (contentRating === 19 && !profile.isAdultVerified) {
+    return false;
+  }
+
+  return contentRating <= profileRating;
+};
 
 
 // 영화·TV 목록 요청 결과 재사용
@@ -281,7 +401,7 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
       }
 
       // 티빙 제공 업체 ID 찾기
-      const { kidsOnly, requiredImage, useTving: useTvingOption, ...tmdbQuery } = query;
+      const { kidsOnly, requiredImage, excludeOriginCountry, useTving: useTvingOption, ...tmdbQuery } = query;
 
       const useTving =
         !query.with_networks &&
@@ -350,6 +470,13 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
         (data.results || []).map(async (item) => {
           if (item.adult || (requiredImage && !item[requiredImage])) {
             return null;
+          }
+
+          if (excludeOriginCountry) {
+            const detail = await requestTmdb(`/${type}/${item.id}`);
+            const countries = detail.origin_country ??
+              (detail.production_countries ?? []).map((country) => country.iso_3166_1);
+            if (!countries.length || countries.includes(excludeOriginCountry)) return null;
           }
 
           const allowed = kidsOnly
@@ -1189,3 +1316,36 @@ export const useMovieStore = create((set, get) => ({
   },
 
 }));
+
+// 직접 분류한 카테고리도 기존 관람등급·제공작 조건으로 확인합니다.
+export const fetchCuratedCategoryItem = async (type, id, purchase = false) => {
+  const [detail, providers, allowed] = await Promise.all([
+    requestTmdb(`/${type}/${id}`),
+    requestTmdb(`/${type}/${id}/watch/providers`),
+    checkUnder19(type, id),
+  ]);
+  if (!allowed || detail.adult || !detail.poster_path) return null;
+
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date());
+  const date = detail.release_date || detail.first_air_date;
+  if (date && date > today) return null;
+
+  const offers = providers.results?.KR ?? {};
+  if (purchase) {
+    if (!offers.buy?.length) return null;
+  } else {
+    const isCoupang = type === 'tv' && detail.networks?.some((network) => network.id === 5169);
+    const isTving = Object.values(offers).filter(Array.isArray).flat().some((provider) =>
+      ['tving', '티빙'].includes(provider.provider_name.toLowerCase().replace(/\s/g, ''))
+    );
+    if (!isCoupang && !isTving) return null;
+  }
+
+  return {
+    ...detail,
+    media_type: type,
+    isPurchase: purchase,
+    isCoupangSeries: type === 'tv' && detail.networks?.some((network) => network.id === 5169),
+  };
+};
+

@@ -55,11 +55,11 @@ export const ClipComments = ({ clip, owner, onAdd, onLike, notify, panel = false
     // 클릭 전후의 두 집계값이 같은 자릿수 영역을 쓰도록 미리 확보한다.
     const countWidth = Math.max(2, String(likes + (liked ? 0 : 1)).length);
     return <article className={`wowclip-comment${nested ? ' wowclip-comment--reply' : ''}`} key={comment.id}>
-    <img className="wowclip-avatar" src={comment.avatar || '/images/profile.svg'} alt="" width="24" height="24" />
-    <div><p className="wowclip-comment-author">{comment.author} · {relativeTime(comment.createdAt)}</p><p className="wowclip-comment-text">{comment.text}</p>
-      <div className="wowclip-comment-actions"><button type="button" className="wowclip-comment-like" aria-label={`댓글 공감 ${likes}`} aria-pressed={liked} onClick={() => like(comment.id)}><ClipIcon name="like" size={18} filled={liked} /><span className="wowclip-comment-like-count" style={{ width: `${countWidth}ch` }}>{likes}</span></button><button type="button" onClick={() => startReply(comment)}>답글</button></div>
-    </div>
-  </article>;
+      <img className="wowclip-avatar" src={comment.avatar || '/images/profile.svg'} alt="" width="24" height="24" />
+      <div><p className="wowclip-comment-author">{comment.author} · {relativeTime(comment.createdAt)}</p><p className="wowclip-comment-text">{comment.text}</p>
+        <div className="wowclip-comment-actions"><button type="button" className="wowclip-comment-like" aria-label={`댓글 공감 ${comment.likes.length}`} aria-pressed={liked} onClick={() => like(comment.id)}><ClipIcon name="like" size={18} filled={liked} /><span className="wowclip-comment-like-count" style={{ width: `${countWidth}ch` }}>{comment.likes.length}</span></button><button type="button" onClick={() => startReply(comment)}>답글</button></div>
+      </div>
+    </article>;
   };
   const form = <CommentForm inputRef={inputRef} replyTo={replyTo} onCancel={() => setReplyTo(null)} onSubmit={async (text) => {
     await onAdd(clip.id, text, owner, replyTo?.id);

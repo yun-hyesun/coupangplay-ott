@@ -83,7 +83,7 @@ export const ClipFeed = ({ clips, selectedId, owner, revealed, onSelect, onBack,
       </div>
       <div className="wowclip-feed-navigation"><button type="button" aria-label="이전 클립" disabled={index <= 0} onClick={() => goTo(index - 1)}><FeedIcon name="up" /></button><button type="button" aria-label="다음 클립" disabled={index >= ordered.length - 1} onClick={() => goTo(index + 1)}><FeedIcon name="down" /></button></div>
     </div>
-    {commentsOpen && selected && !((selected.spoiler) && !revealed.includes(selected.id)) && <ClipComments key={selected.id} clip={selected} owner={owner} onAdd={onAdd} onLike={onCommentLike} notify={notify} panel loading={commentsLoading} error={commentsError} onClose={() => setCommentsOpen(false)} onRefresh={onRefresh} />}
+      {commentsOpen && selected && !((selected.spoiler) && !revealed.includes(selected.id)) && <ClipComments key={selected.id} clip={selected} owner={owner} onAdd={onAdd} onLike={onCommentLike} notify={notify} panel onClose={() => setCommentsOpen(false)} onRefresh={onRefresh} />}
     </div>
   </div>;
 };

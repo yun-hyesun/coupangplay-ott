@@ -1,0 +1,21 @@
+.kidsCategoryMenu {
+  min-width: 0;
+  margin: 32px 64px;
+  &-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    a { color: #bfc5ce; text-decoration: none; white-space: nowrap; }
+  }
+  .swiper-slide { width: 210px; }
+  .swiper-slide a { display: block; border-radius: 8px; overflow: hidden; }
+  .swiper-slide img { display: block; width: 100%; aspect-ratio: 210 / 119; object-fit: cover; }
+  a:focus-visible { outline: 2px solid #0084ff; outline-offset: 3px; }
+  @media (max-width: 767px) {
+    margin: 24px 20px;
+    &-heading h2 { font-size: 20px; }
+    .swiper-slide { width: 160px; }
+  }
+}

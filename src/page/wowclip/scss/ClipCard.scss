@@ -1,21 +1,149 @@
-.wowclip-card.wowclip-card--short { position: relative; display: block; width: 100%; min-width: 0; aspect-ratio: 2 / 3; overflow: hidden; border-radius: 10px; isolation: isolate; background: #16181c; color: #fff; text-align: left; }
-.wowclip-card--short::after { position: absolute; z-index: 1; inset: 35% 0 0; background: linear-gradient(transparent, rgba(0, 0, 0, .08) 30%, rgba(0, 0, 0, .86)); content: ''; pointer-events: none; }
-.wowclip-card-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(20px) brightness(.7); transform: scale(1.12); }
-.wowclip-card-picture { position: absolute; inset: 0; display: flex; align-items: center; overflow: hidden; }
-.wowclip-card-picture > img { position: relative; display: block; flex-shrink: 0; width: 100%; max-width: none; height: auto; }
-.wowclip-card--portrait .wowclip-card-picture > img { position: absolute; height: 100%; object-fit: cover; }
-.wowclip-card.is-protected .wowclip-card-picture > img { inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.wowclip-card-caption { position: absolute; z-index: 3; right: 16px; bottom: 16px; left: 16px; display: flex; flex-direction: column; gap: 4px; }
-.wowclip-card-caption > strong { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 16px; font-weight: 700; line-height: 22px; overflow-wrap: anywhere; }
-.wowclip-card-author { overflow: hidden; color: #d4d4d4; font-size: 14px; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
-.wowclip-card-views { display: flex; align-items: center; gap: 3px; color: #d4d4d4; font-size: 12px; line-height: 18px; font-variant-numeric: tabular-nums; }
-.wowclip-card--short:hover { outline: 1px solid rgba(255, 255, 255, .4); outline-offset: -1px; }
-.wowclip-card--short:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-.wowclip-card--short .wowclip-spoiler-cover { z-index: 2; background: rgba(0, 0, 0, .78); }
-.wowclip-page .wowclip-grid { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; }
+.wowclip-card.wowclip-card--short {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 10px;
+  isolation: isolate;
+  background: #16181c;
+  color: #fff;
+  text-align: left;
+}
+
+.wowclip-card--short::after {
+  position: absolute;
+  z-index: 1;
+  inset: 35% 0 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .08) 30%, rgba(0, 0, 0, .86));
+  content: '';
+  pointer-events: none;
+}
+
+.wowclip-card-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(20px) brightness(.7);
+  transform: scale(1.12);
+}
+
+.wowclip-card-picture {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.wowclip-card-picture>img {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: none;
+  height: auto;
+}
+
+.wowclip-card--portrait .wowclip-card-picture>img {
+  position: absolute;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wowclip-card.is-protected .wowclip-card-picture>img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wowclip-card-caption {
+  position: absolute;
+  z-index: 3;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wowclip-card-caption>strong {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+}
+
+.wowclip-card-author {
+  overflow: hidden;
+  color: #d4d4d4;
+  font-size: 14px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wowclip-card-views {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #d4d4d4;
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wowclip-card--short:hover {
+  outline: 1px solid rgba(255, 255, 255, .4);
+  outline-offset: -1px;
+}
+
+.wowclip-card--short:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.wowclip-card--short .wowclip-spoiler-cover {
+  z-index: 2;
+  background: rgba(0, 0, 0, .78);
+}
+
+.wowclip-page .wowclip-grid,
+.home-wowclip .home-wowclip-grid {
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 20px;
+}
+
 @media (max-width: 640px) {
-  .wowclip-page .wowclip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  .wowclip-card-caption { right: 12px; bottom: 12px; left: 12px; }
-  .wowclip-card-caption > strong { font-size: 14px; line-height: 20px; }
-  .wowclip-card-author { font-size: 12px; line-height: 18px; }
+
+  .wowclip-page .wowclip-grid,
+  .home-wowclip .home-wowclip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .wowclip-card-caption {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+  }
+
+  .wowclip-card-caption>strong {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .wowclip-card-author {
+    font-size: 12px;
+    line-height: 18px;
+  }
 }

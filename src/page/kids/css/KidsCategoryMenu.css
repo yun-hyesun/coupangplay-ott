@@ -1,0 +1,44 @@
+.kidsCategoryMenu {
+  min-width: 0;
+  margin: 32px 64px;
+}
+.kidsCategoryMenu-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.kidsCategoryMenu-heading a {
+  color: #bfc5ce;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.kidsCategoryMenu .swiper-slide {
+  width: 210px;
+}
+.kidsCategoryMenu .swiper-slide a {
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.kidsCategoryMenu .swiper-slide img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 210/119;
+  object-fit: cover;
+}
+.kidsCategoryMenu a:focus-visible {
+  outline: 2px solid #0084ff;
+  outline-offset: 3px;
+}
+@media (max-width: 767px) {
+  .kidsCategoryMenu {
+    margin: 24px 20px;
+  }
+  .kidsCategoryMenu-heading h2 {
+    font-size: 20px;
+  }
+  .kidsCategoryMenu .swiper-slide {
+    width: 160px;
+  }
+}
