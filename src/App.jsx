@@ -8,6 +8,7 @@ import { MainLayout } from './components/layout/MainLayout';
 // 메인 메뉴
 import { Home } from './page/home/Home';
 import { Sports } from './page/sports/Sports';
+import { LeagueDetail } from './page/sports/LeagueDetail';
 import { Entertainment } from './page/entertainment/Entertainment';
 import { Movie } from './page/movie/Movie';
 import { Store } from './page/store/Store';
@@ -72,6 +73,7 @@ function App() {
 
         {/* 메뉴 페이지 */}
         <Route path="/sports" element={<Sports />} />
+        <Route path="/sports/league/:leagueId" element={<LeagueDetail />} />
         <Route path="/drama" element={<Drama />} />
         <Route path="/entertainment" element={<Entertainment />} />
         <Route path="/movie" element={<Movie />} />

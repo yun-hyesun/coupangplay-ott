@@ -137,7 +137,7 @@
       "안양",
       "서울"
     ],
-    "logoPath": "/images/sports/icon/League_logo/K_League_1.png",
+    "logoPath": "/images/sports/icon/League_logo/K_League_1_Pink_Tile.svg",
     "provider": "kleague",
     "serviceLeagueId": "1",
     "featured": false
@@ -231,6 +231,7 @@
     "sport": "축구",
     "scope": "해외",
     "shortName": "MLS",
+    "logoPath": "/images/sports/icon/League_logo/MLS_Square.svg",
     "teams": [
       "LAFC",
       "댈러스",
@@ -271,6 +272,7 @@
     "sport": "축구",
     "scope": "국내",
     "shortName": "K리그2",
+    "logoPath": "/images/sports/icon/League_logo/K_League_2_Square.svg",
     "teams": [
       "경남",
       "김포",
@@ -820,6 +822,7 @@
     "sport": "축구",
     "scope": "해외",
     "shortName": "북중미챔",
+    "logoPath": "/images/sports/icon/League_logo/Concacaf_Champions_Cup_Square.svg",
     "teams": [
       "LAFC",
       "레알 에스파냐",
@@ -836,6 +839,7 @@
     "sport": "축구",
     "scope": "해외",
     "shortName": "쉬페르리",
+    "logoPath": "/images/sports/icon/League_logo/Super_Lig_Square.svg",
     "teams": [
       "베식타시"
     ],
@@ -1033,6 +1037,7 @@
     "sport": "축구",
     "scope": "해외",
     "shortName": "라리가2",
+    "logoPath": "/images/sports/icon/League_logo/La_Liga_2_Square.svg",
     "teams": [
       "안도라"
     ],
