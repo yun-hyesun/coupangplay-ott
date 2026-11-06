@@ -21,6 +21,7 @@ const genres = [
     '전체', '스포츠', '드라마', '예능',
     '영화', '스토어', '키즈'
 ];
+const mobileGenres = ['전체', '시리즈', '영화'];
 
 export const MyWatchlist = () => {
     const user = useAuthStore((state) => state.user);
@@ -65,9 +66,15 @@ export const MyWatchlist = () => {
     // 다른 장르 필터는 추후 장르 데이터 연동 시 확장
     const filteredWatchlist = currentWatchlist.filter((item) => {
         if (activeGenre === '전체') return true;
+
         if (activeGenre === '영화') {
             return item.media_type === 'movie';
         }
+
+        if (activeGenre === '시리즈') {
+            return item.media_type === 'tv';
+        }
+
         return false;
     });
 
@@ -179,6 +186,31 @@ export const MyWatchlist = () => {
                             {tab.title}
                         </Link>
                     ))}
+
+                    {/* 모바일 전용 제목 */}
+                    <h1 className="my-watchlist-mobile-title">
+                        찜 내역
+                    </h1>
+
+                    {/* 모바일 전용 편집 버튼 */}
+                    <div className="my-watchlist-mobile-actions">
+                        {isEditing ? (
+                            <button
+                                type="button"
+                                onClick={handleComplete}
+                                disabled={isDeleting}
+                            >
+                                완료
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleEdit}
+                            >
+                                편집
+                            </button>
+                        )}
+                    </div>
                 </nav>
 
                 {/* 장르 필터 + 편집 메뉴 */}
@@ -194,7 +226,8 @@ export const MyWatchlist = () => {
                                 key={genre}
                                 type="button"
                                 className={
-                                    activeGenre === genre ? 'active' : ''
+                                    `${activeGenre === genre ? 'active' : ''} ${mobileGenres.includes(genre) ? '' : 'desktop-only'
+                                    }`
                                 }
                                 onClick={() => {
                                     setActiveGenre(genre);
@@ -291,10 +324,9 @@ export const MyWatchlist = () => {
                                         }}
                                         disabled={!isEditing || isDeleting}
                                         aria-label={
-                                            `${item.title} ${
-                                                isSelected
-                                                    ? '선택 해제'
-                                                    : '선택'
+                                            `${item.title} ${isSelected
+                                                ? '선택 해제'
+                                                : '선택'
                                             }`
                                         }
                                         aria-pressed={
@@ -302,13 +334,19 @@ export const MyWatchlist = () => {
                                         }
                                     >
                                         {imagePath ? (
-                                            <img
-                                                src={
-                                                    `https://image.tmdb.org/t/p/w780${imagePath}`
-                                                }
-                                                alt=""
-                                                className="my-watchlist-image"
-                                            />
+                                            <picture>
+                                                {item.poster_path && (
+                                                    <source
+                                                        media="(max-width: 767px)"
+                                                        srcSet={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                                                    />
+                                                )}
+                                                <img
+                                                    src={`https://image.tmdb.org/t/p/w780${imagePath}`}
+                                                    alt=""
+                                                    className="my-watchlist-image"
+                                                />
+                                            </picture>
                                         ) : (
                                             <span className="my-watchlist-placeholder">
                                                 {item.title}
@@ -319,10 +357,9 @@ export const MyWatchlist = () => {
                                         {isEditing && (
                                             <span
                                                 className={
-                                                    `my-watchlist-overlay ${
-                                                        isSelected
-                                                            ? 'selected'
-                                                            : ''
+                                                    `my-watchlist-overlay ${isSelected
+                                                        ? 'selected'
+                                                        : ''
                                                     }`
                                                 }
                                             >

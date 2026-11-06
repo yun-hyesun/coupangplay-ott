@@ -11,7 +11,7 @@ const contentTabs = [
   { title: '시청내역', path: '/my/history' },
   { title: '찜한 콘텐츠', path: '/my/watchlist' },
   { title: '개별 구매', path: '/my/purchases' },
-  { title: '내 와우 클립', path: '/my/wowclip' },
+  { title: "내 와우 클립", path: "/wowclip?view=mine" },
   { title: '라이브 예약 알림', path: '/my/live' }
 ];
 
@@ -123,7 +123,6 @@ const HistoryList = ({ history, ownerKey }) => {
           className="my-history-tabs"
           aria-label="마이페이지 콘텐츠 메뉴"
         >
-          {/* [추가] 마이페이지로 돌아가기 */}
           <Link
             to="/my"
             className="my-history-back"
@@ -135,20 +134,32 @@ const HistoryList = ({ history, ownerKey }) => {
             />
           </Link>
 
-          {/* 기존 탭 메뉴 */}
+          {/* PC / 태블릿 콘텐츠 탭 */}
           {contentTabs.map((tab) => (
             <Link
               key={tab.path}
               to={tab.path}
-              className={
-                tab.path === '/my/history'
-                  ? 'active'
-                  : ''
-              }
+              className={tab.path === '/my/history' ? 'active' : ''}
             >
               {tab.title}
             </Link>
           ))}
+
+          {/* 모바일 전용 제목 */}
+          <h1 className="my-history-mobile-title">시청내역</h1>
+
+          {/* 모바일 전용 편집 버튼 */}
+          <div className="my-history-mobile-actions">
+            {isEditing ? (
+              <button type="button" onClick={handleComplete}>
+                완료
+              </button>
+            ) : (
+              <button type="button" onClick={handleEdit}>
+                편집
+              </button>
+            )}
+          </div>
         </nav>
 
 
@@ -231,6 +242,7 @@ const HistoryList = ({ history, ownerKey }) => {
                       ...item,
                       id: item.contentId,
                       resume: true,
+                      historyLayout: true,
                       ownerKey,
                       position: item.completed ? 0 : item.position,
                     }}

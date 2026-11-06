@@ -59,12 +59,13 @@ export const MyWowClip = () => {
                 </Link>
             </div>
 
+
             {!user || !currentProfile ? (
-                <p>프로필을 먼저 선택해 주세요.</p>
+                <p className="my-wowclip-message">프로필을 먼저 선택해 주세요.</p>
             ) : error ? (
-                <p>{error}</p>
+                <p className="my-wowclip-message">{error}</p>
             ) : myClips.length === 0 ? (
-                <p>아직 만든 와우 클립이 없습니다.</p>
+                <p className="my-wowclip-message">아직 만든 와우 클립이 없습니다.</p>
             ) : (
                 <div className="my-wowclip-grid">
                     {myClips.map((clip) => (
@@ -85,14 +86,12 @@ export const MyWowClip = () => {
                             </div>
 
                             <h3>{clip.title}</h3>
-
-                            <p>
-                                조회수 {clip.views || 0}회
-                            </p>
+                            <p>조회수 {clip.views || 0}회</p>
                         </Link>
                     ))}
                 </div>
             )}
+
         </section>
     );
 };

@@ -267,13 +267,13 @@
   align-items: center;
 }
 .profile-page .content-select > h2 {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-size: 36px;
   font-weight: 600;
   text-align: center;
 }
 .profile-page .content-select > p {
-  margin-bottom: 36px;
+  margin-bottom: 24px;
   color: #D4D4D4;
   font-size: 16px;
   text-align: center;
@@ -281,8 +281,8 @@
 .profile-page .content-grid {
   width: 100%;
   max-width: 1488px;
-  height: 530px;
-  max-height: none;
+  height: 65vh;
+  max-height: 750px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-rows: max-content;
@@ -292,17 +292,20 @@
   border-radius: 8px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #555 transparent;
+  scrollbar-color: #555b63 #101113;
 }
 .profile-page .content-grid::-webkit-scrollbar {
   width: 6px;
 }
+.profile-page .content-grid::-webkit-scrollbar-track {
+  background: #101113;
+}
 .profile-page .content-grid::-webkit-scrollbar-thumb {
-  background: #555;
+  background: #555b63;
   border-radius: 10px;
 }
-.profile-page .content-grid::-webkit-scrollbar-track {
-  background: transparent;
+.profile-page .content-grid::-webkit-scrollbar-thumb:hover {
+  background: #777d85;
 }
 .profile-page .content-item {
   position: relative;
@@ -359,7 +362,7 @@
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-top: 40px;
+  margin-top: 24px;
 }
 .profile-page .content-buttons button {
   width: 145px;
@@ -409,7 +412,8 @@
     min-height: 75px;
   }
   .profile-page .content-grid {
-    height: 500px;
+    height: 60vh;
+    max-height: 650px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     padding: 16px;
@@ -474,7 +478,7 @@
   }
   .profile-page .content-grid {
     height: auto;
-    max-height: 55vh;
+    max-height: 60vh;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     padding: 12px;

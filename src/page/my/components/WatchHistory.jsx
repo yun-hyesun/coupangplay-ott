@@ -6,6 +6,7 @@ import { useAuthStore } from '../../../store/useAuthStore';
 import { useProfileStore } from '../../../store/useProfileStore';
 import { useWatchHistoryStore } from '../../../store/useWatchHistoryStore';
 import { ContentRail } from '../../../components/content/ContentRail';
+import { ContentCard } from '../../../components/content/ContentCard';
 
 import '../scss/WatchHistory.scss';
 
@@ -66,14 +67,14 @@ export const WatchHistory = () => {
         ownerKey === expectedOwnerKey;
 
     const items = isCurrentList
-    ? history
-        .filter((item) => !item.completed && item.backdrop_path)
-        .map((item) => ({
-            ...item,
-            resume: true,
-            ownerKey: expectedOwnerKey,
-        }))
-    : [];
+        ? history
+            .filter((item) => !item.completed && item.backdrop_path)
+            .map((item) => ({
+                ...item,
+                resume: true,
+                ownerKey: expectedOwnerKey,
+            }))
+        : [];
 
     const isLoading =
         authLoading ||
@@ -107,21 +108,46 @@ export const WatchHistory = () => {
             </div>
 
             {isLoading ? (
-                <p>시청내역을 불러오는 중입니다.</p>
+                <p className="watch-history-message">시청내역을 불러오는 중입니다.</p>
             ) : !user || !currentProfile ? (
-                <p>프로필을 먼저 선택해 주세요.</p>
+                <p className="watch-history-message">프로필을 먼저 선택해 주세요.</p>
             ) : error ? (
-                <p>{error}</p>
+                <p className="watch-history-message">{error}</p>
             ) : !isCurrentList ? (
-                <p>시청내역을 불러오지 못했습니다.</p>
+                <p className="watch-history-message">시청내역을 불러오지 못했습니다.</p>
             ) : items.length === 0 ? (
-                <p>아직 시청한 콘텐츠가 없습니다.</p>
+                <p className="watch-history-message">아직 시청한 콘텐츠가 없습니다.</p>
             ) : (
-                <ContentRail
-                    title=""
-                    items={items}
-                    showMore={false}
-                />
+                <div className="watch-history-content">
+
+                    <>
+                        {/* PC + 태블릿 : 기존 Swiper 유지 */}
+                        <div className="watch-history-desktop">
+                            <ContentRail
+                                title=""
+                                items={items}
+                                showMore={false}
+                            />
+                        </div>
+
+                        {/* 모바일 : 2열 그리드 */}
+                        <div className="watch-history-mobile">
+                            {items.slice(0, 4).map((item) => (
+                                <div
+                                    className="watch-history-mobile-item"
+                                    key={`${item.media_type}-${item.id}`}
+                                >
+                                    <ContentCard
+                                        item={item}
+                                        type={item.media_type || 'movie'}
+                                        imageType="가로"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </>
+
+                </div>
             )}
         </section>
     );
