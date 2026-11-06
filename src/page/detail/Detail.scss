@@ -45,7 +45,7 @@
   height: 676px;
   @include m.flex($ai: center);
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 30px; // 메인 배너 .swiper-slide와 동일
   background: #1c2530;
 
   &__image {
@@ -63,8 +63,9 @@
   }
 
   &__content {
-    position: relative;
+    position: absolute;
     z-index: 1;
+    bottom: 10%;
     max-width: 800px;
     padding: 64px;
   }
@@ -80,19 +81,20 @@
 
   h1 {
     margin: 20px 0;
-    font-size: clamp(40px, 4vw, 72px);
+    font-size: clamp(40px, 4vw, 64px);
+    font-weight: 700;
     line-height: 1.15;
   }
 
-  &__description {
-    font-size: 18px;
-    line-height: 1.7;
-    color: #d4d4d4;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
-  }
+  // &__description {
+  //   font-size: 18px;
+  //   line-height: 1.7;
+  //   color: #d4d4d4;
+  //   display: -webkit-box;
+  //   -webkit-box-orient: vertical;
+  //   -webkit-line-clamp: 3;
+  //   overflow: hidden;
+  // }
 
   &__actions {
     display: flex;
@@ -121,9 +123,14 @@
 }
 
 .detail-info {
+  max-width: 1752px;
+  margin-inline: auto;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1136fr) minmax(280px, 592fr);
   gap: 120px;
+  width: 100%;
+  margin: auto 0;
   padding: 64px 0 0;
 
   &__main {
@@ -194,6 +201,29 @@
     overflow-y: auto;
     overscroll-behavior-y: contain;
     align-content: start;
+
+    // 영상 페이지 회차 목록과 동일한 스크롤바 디자인
+    scrollbar-width: thin;
+    scrollbar-color: #525b69 #1b1e23;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #1b1e23;
+      border-radius: 999px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #525b69;
+      border: 2px solid #1b1e23;
+      border-radius: 999px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #0084ff;
+    }
   }
 }
 
