@@ -3,7 +3,7 @@ import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
 import WatchIcon from './WatchIcon';
-import { FullVideoClipButton } from '../wowclip/FullVideoClipButton';
+import { FullVideoClipButton } from '../wowclip/components/FullVideoClipButton';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';

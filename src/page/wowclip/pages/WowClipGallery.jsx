@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../store/useAuthStore';
-import { readClips } from '../../components/wowclip/clipStorage';
-import { WowClipCard } from '../../components/wowclip/WowClipCard';
-import './WowClipGallery.scss';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { readClips } from '../../../components/wowclip/clipStorage';
+import { WowClipCard } from '../../../components/wowclip/WowClipCard';
+import '../scss/WowClipGallery.scss';
 
 // Figma 시안에 등장하는 작품명을 활용한 데모 카드입니다. 실제 다른 사용자 게시물이 아닙니다.
 export const SAMPLE_CLIPS = [
