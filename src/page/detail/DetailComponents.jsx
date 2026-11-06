@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { auth } from '../../firebase/firebase';
 
+// 별점
 const StarIcon = ({ size = 14 }) => <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" /></svg>;
 // 별 하나의 좌우를 각각 0.5점 단위로 선택합니다.
 const RatingStars = ({ value, onChange, size = 28 }) => (
@@ -25,6 +26,8 @@ const ActionIcon = ({ name }) => name === 'share' ? <svg width="20" height="20" 
 
 // 리뷰 데이터는 별도 API/스토어 연결 전까지 비워 둡니다.
 // 데이터 형식: { id, episodeId, author, content, rating, likes, createdAt }
+
+// 리뷰
 const REVIEWS = [];
 
 const Chevron = ({ up = false }) => (
@@ -33,6 +36,7 @@ const Chevron = ({ up = false }) => (
   </svg>
 );
 
+// 리뷰 필터
 const ReviewSort = ({ sort, onSort, spoilerHidden, onToggleSpoiler }) => (
   <div className="detail-review-sort" aria-label="리뷰 정렬">
     <button type="button" className={sort === 'popular' ? 'is-active' : ''} onClick={() => onSort('popular')}>인기순</button>
@@ -47,6 +51,7 @@ const sortReviews = (reviews, sort) => [...reviews].sort((a, b) => sort === 'pop
   ? (Number(b.likes) || 0) - (Number(a.likes) || 0) || (Number(b.rating) || 0) - (Number(a.rating) || 0)
   : new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
+// 회차별 리뷰
 const EpisodeReviews = ({ episode, reviews, onOpenPopup }) => {
   const [sort, setSort] = useState('popular');
   const [spoilerHidden, setSpoilerHidden] = useState(true);
@@ -61,6 +66,7 @@ const EpisodeReviews = ({ episode, reviews, onOpenPopup }) => {
   </div>;
 };
 
+// 리뷰 항목
 const ReviewItem = ({ review, onEdit, onDelete }) => {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(review.content);
@@ -74,6 +80,7 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
   </article>;
 };
 
+// 리뷰 팝업
 const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, error }) => {
   const [sort, setSort] = useState('popular');
   const [spoilerHidden, setSpoilerHidden] = useState(true);

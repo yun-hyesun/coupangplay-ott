@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, A11y } from 'swiper/modules';
 import { useMovieStore } from '../../store/useMovieStore';
@@ -37,6 +37,7 @@ export const ContentRail = ({
   const loading = useMovieStore((state) => givenItems === undefined && state.railLoading[configId]);
   const error = useMovieStore((state) => givenItems === undefined && state.railErrors[configId]);
   const onFetchRail = useMovieStore((state) => state.onFetchRail);
+  const location = useLocation();
 
   useEffect(() => {
     if (config && givenItems === undefined) {
@@ -75,6 +76,7 @@ export const ContentRail = ({
         <Link
           className={intro ? 'contentRail-intro-link button' : 'contentRail-more'}
           to={`/more?rail=${encodeURIComponent(railKey)}`}
+          state={{ from: location.pathname }}
         >
           {intro?.linkText ?? '더보기'}
         </Link>

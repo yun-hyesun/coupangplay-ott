@@ -1,0 +1,122 @@
+@use "../../../scss/variables" as *;
+
+.voucher-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.voucher-modal {
+    width: 100%;
+    max-width: 430px;
+    min-height: 340px;
+
+    padding: 30px;
+    background: #24272c;
+    border-radius: 12px;
+
+    color: $color-text-pri;
+
+    .voucher-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-bottom: 24px;
+
+        h3 {
+            font-family: $font-main;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        button {
+            padding: 0 4px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+        }
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        min-height: 240px;
+
+        input {
+            width: 100%;
+            height: 48px;
+            padding: 0 20px;
+
+            background: #3c3c3c;
+            border: 1px solid transparent;
+            border-radius: 4px;
+
+            color: #fff;
+            font-family: $font-main;
+            font-size: 16px;
+            outline: none;
+
+            &::placeholder {
+                color: $color-text-sec2;
+            }
+
+            &:focus {
+                border-color: $color-pri;
+            }
+        }
+
+        .voucher-message {
+            margin-top: 12px;
+            color: $color-text-sec1;
+            font-size: 14px;
+        }
+
+        .voucher-submit {
+            width: 100%;
+            height: 48px;
+            margin-top: auto;
+
+            background: $color-pri;
+            border: none;
+            border-radius: 6px;
+
+            color: #fff;
+            font-family: $font-main;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+
+            &:disabled {
+                background: #303339;
+                color: #999;
+                cursor: not-allowed;
+            }
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    .voucher-modal {
+        max-width: 100%;
+        min-height: 300px;
+        padding: 24px 20px;
+
+        .voucher-modal-header h3 {
+            font-size: 18px;
+        }
+
+        form {
+            min-height: 210px;
+        }
+    }
+}

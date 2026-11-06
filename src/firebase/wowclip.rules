@@ -1,0 +1,117 @@
+// 와우클립 전용 규칙입니다. 기존 users/profiles/reviews/watchSessions 규칙은
+// 유지한 채 아래 match /wowClips 블록만 현재 배포 규칙의 documents 안에 합칩니다.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /wowClips/{clipId} {
+      function signedIn() { return request.auth != null; }
+      function clipPath() { return /databases/$(database)/documents/wowClips/$(clipId); }
+      function readable() { return get(clipPath()).data.deleted == false; }
+      function live() { return resource.data.deleted == false; }
+      function reactionPath() { return /databases/$(database)/documents/wowClips/$(clipId)/likes/$(request.auth.uid); }
+      function viewPath() { return /databases/$(database)/documents/wowClips/$(clipId)/views/$(request.auth.uid); }
+      function added(path) { return !exists(path) && existsAfter(path) && getAfter(path).data.uid == request.auth.uid; }
+      function removed(path) { return exists(path) && !existsAfter(path) && get(path).data.uid == request.auth.uid; }
+      function likeDelta(path, oldCount, newCount) {
+        return (added(path) && newCount == oldCount + 1) || (removed(path) && oldCount > 0 && newCount == oldCount - 1);
+      }
+      function validOwner(data) {
+        return data.authorUid == request.auth.uid && data.profileId is string && data.profileId.size() > 0 && data.profileId.size() <= 128
+          && data.ownerId == request.auth.uid + ':' + data.profileId
+          && data.author is string && data.author.size() > 0 && data.author.size() <= 100
+          && data.avatar is string && data.avatar.size() <= 2048;
+      }
+
+      // 링크 전용은 목록 조회에서 제외되지만 링크를 아는 사람은 읽을 수 있습니다.
+      allow get: if !exists(clipPath()) || live();
+      allow list: if live() && (resource.data.visibility == 'public' || (signedIn() && resource.data.authorUid == request.auth.uid));
+      allow create: if signedIn() && clipId.matches('^[A-Za-z0-9_-]{1,128}$')
+        && request.resource.data.keys().hasOnly(['content','videoKey','videoTitle','title','start','end','visibility','spoiler','layout','cropX','seasonNumber','episodeNumber','authorUid','profileId','ownerId','author','avatar','createdAt','deleted','likeCount','commentCount','views','lastCommentId'])
+        && validOwner(request.resource.data)
+        && request.resource.data.content is map
+        && request.resource.data.content.keys().hasOnly(['id','media_type','title','backdrop_path','poster_path','number_of_seasons'])
+        && request.resource.data.content.id is string && request.resource.data.content.id.size() > 0
+        && request.resource.data.content.media_type in ['tv','movie']
+        && request.resource.data.content.title is string && request.resource.data.content.title.size() <= 300
+        && request.resource.data.videoKey is string && request.resource.data.videoKey.matches('^[A-Za-z0-9_-]{11}$')
+        && request.resource.data.videoTitle is string && request.resource.data.videoTitle.size() <= 300
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 80
+        && request.resource.data.start is number && request.resource.data.end is number
+        && request.resource.data.start >= 0 && request.resource.data.end > request.resource.data.start
+        && request.resource.data.visibility in ['public','link'] && request.resource.data.spoiler is bool
+        && request.resource.data.layout in ['portrait','landscape']
+        && request.resource.data.cropX is number && request.resource.data.cropX >= 0 && request.resource.data.cropX <= 100
+        && (request.resource.data.seasonNumber == null || (request.resource.data.seasonNumber is int && request.resource.data.seasonNumber >= 0))
+        && (request.resource.data.episodeNumber == null || (request.resource.data.episodeNumber is int && request.resource.data.episodeNumber >= 1))
+        && request.resource.data.createdAt == request.time && request.resource.data.deleted == false
+        && request.resource.data.likeCount == 0 && request.resource.data.commentCount == 0 && request.resource.data.views == 0
+        && request.resource.data.lastCommentId == null;
+      allow update: if signedIn() && live() && (
+        (resource.data.authorUid == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleted']) && request.resource.data.deleted == true)
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+          && likeDelta(reactionPath(), resource.data.likeCount, request.resource.data.likeCount))
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
+          && added(viewPath()) && request.resource.data.views == resource.data.views + 1)
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount','lastCommentId'])
+          && request.resource.data.commentCount == resource.data.commentCount + 1
+          && request.resource.data.lastCommentId is string
+          && !exists(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(request.resource.data.lastCommentId))
+          && getAfter(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(request.resource.data.lastCommentId)).data.authorUid == request.auth.uid)
+      );
+      allow delete: if false;
+
+      match /likes/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid && readable();
+        allow list: if false;
+        allow create: if signedIn() && request.auth.uid == uid && readable()
+          && request.resource.data.keys().hasOnly(['uid','createdAt']) && request.resource.data.uid == uid
+          && request.resource.data.createdAt == request.time
+          && getAfter(clipPath()).data.likeCount == get(clipPath()).data.likeCount + 1;
+        allow delete: if signedIn() && request.auth.uid == uid && readable()
+          && getAfter(clipPath()).data.likeCount == get(clipPath()).data.likeCount - 1;
+        allow update: if false;
+      }
+      match /views/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid && readable();
+        allow list: if false;
+        allow create: if signedIn() && request.auth.uid == uid && readable()
+          && request.resource.data.keys().hasOnly(['uid','createdAt']) && request.resource.data.uid == uid
+          && request.resource.data.createdAt == request.time
+          && getAfter(clipPath()).data.views == get(clipPath()).data.views + 1;
+        allow update, delete: if false;
+      }
+      match /comments/{commentId} {
+        function commentReaction() { return /databases/$(database)/documents/wowClips/$(clipId)/commentLikes/$(commentId + '_' + request.auth.uid); }
+        allow read: if readable();
+        allow create: if signedIn() && readable()
+          && request.resource.data.keys().hasOnly(['text','parentId','authorUid','profileId','ownerId','author','avatar','createdAt','likeCount'])
+          && validOwner(request.resource.data)
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000
+          && (request.resource.data.parentId == null || (request.resource.data.parentId is string
+            && get(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(request.resource.data.parentId)).data.parentId == null))
+          && request.resource.data.createdAt == request.time && request.resource.data.likeCount == 0
+          && getAfter(clipPath()).data.commentCount == get(clipPath()).data.commentCount + 1
+          && getAfter(clipPath()).data.lastCommentId == commentId;
+        allow update: if signedIn() && readable()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+          && likeDelta(commentReaction(), resource.data.likeCount, request.resource.data.likeCount);
+        allow delete: if false;
+      }
+      match /commentLikes/{reactionId} {
+        function commentPath() { return /databases/$(database)/documents/wowClips/$(clipId)/comments/$(request.resource.data.commentId); }
+        allow get: if signedIn() && readable() && (!exists(/databases/$(database)/documents/wowClips/$(clipId)/commentLikes/$(reactionId)) || resource.data.uid == request.auth.uid);
+        allow list: if signedIn() && readable() && resource.data.uid == request.auth.uid;
+        allow create: if signedIn() && readable()
+          && request.resource.data.keys().hasOnly(['uid','commentId','createdAt'])
+          && request.resource.data.uid == request.auth.uid && request.resource.data.commentId is string
+          && reactionId == request.resource.data.commentId + '_' + request.auth.uid
+          && request.resource.data.createdAt == request.time
+          && getAfter(commentPath()).data.likeCount == get(commentPath()).data.likeCount + 1;
+        allow delete: if signedIn() && readable() && resource.data.uid == request.auth.uid
+          && getAfter(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(resource.data.commentId)).data.likeCount
+            == get(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(resource.data.commentId)).data.likeCount - 1;
+        allow update: if false;
+      }
+    }
+  }
+}

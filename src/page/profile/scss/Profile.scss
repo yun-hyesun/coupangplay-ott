@@ -354,14 +354,14 @@
         align-items: center;
 
         >h2 {
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             font-size: 36px;
             font-weight: 600;
             text-align: center;
         }
 
         >p {
-            margin-bottom: 36px;
+            margin-bottom: 24px;
             color: $color-text-sec1;
             font-size: 16px;
             text-align: center;
@@ -372,8 +372,8 @@
     .content-grid {
         width: 100%;
         max-width: 1488px;
-        height: 530px;
-        max-height: none;
+        height: 65vh;
+        max-height: 750px;
 
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -388,20 +388,25 @@
 
         overflow-y: auto;
 
+        // 피드백 페이지와 동일한 스크롤바
         scrollbar-width: thin;
-        scrollbar-color: #555 transparent;
+        scrollbar-color: #555b63 #101113;
 
         &::-webkit-scrollbar {
             width: 6px;
         }
 
+        &::-webkit-scrollbar-track {
+            background: #101113;
+        }
+
         &::-webkit-scrollbar-thumb {
-            background: #555;
+            background: #555b63;
             border-radius: 10px;
         }
 
-        &::-webkit-scrollbar-track {
-            background: transparent;
+        &::-webkit-scrollbar-thumb:hover {
+            background: #777d85;
         }
     }
 
@@ -473,7 +478,7 @@
         display: flex;
         justify-content: center;
         gap: 12px;
-        margin-top: 40px;
+        margin-top: 24px;
 
         button {
             width: 145px;
@@ -540,7 +545,8 @@
         }
 
         .content-grid {
-            height: 500px;
+            height: 60vh;
+            max-height: 650px;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
             padding: 16px;
@@ -628,7 +634,7 @@
 
         .content-grid {
             height: auto;
-            max-height: 55vh;
+            max-height: 60vh;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 10px;
             padding: 12px;

@@ -50,6 +50,7 @@ const ResumeContentCard = ({ item }) => {
   return (
     <article
       className="contentRail-card contentRail-card--hor watchRail"
+      data-history-layout={item.historyLayout ? 'list' : undefined}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
       onFocus={() => setIsHover(false)}
@@ -113,7 +114,7 @@ const ResumeContentCard = ({ item }) => {
   );
 };
 
-  const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
+const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
   const [isHover, setIsHover] = useState(false);
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);
@@ -138,7 +139,7 @@ const ResumeContentCard = ({ item }) => {
   }, [id, imagePath, isKnownPurchase, mediaType, onCheckPurchase]);
 
   if (!item || !imagePath) return null;
-  
+
   return (
     <article
       className={`contentRail-card ${imageType === '세로' ? 'contentRail-card--ver' : 'contentRail-card--hor'}`}
