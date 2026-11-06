@@ -10,9 +10,13 @@ const SPORTS_SETTINGS_CATEGORIES = [
   ...new Set(SPORTS_LEAGUES.map((league) => league.sport).filter((sport) => sport !== "축구")),
 ];
 
-function getLeaguesForCategory(category) {
+function getLeaguesForCategory(category, includedLeagueId = "") {
   if (category === "추천") {
-    return SPORTS_LEAGUES.filter((league) => league.featured);
+    const recommendedLeagues = SPORTS_LEAGUES.filter((league) => league.featured);
+    const includedLeague = SPORTS_LEAGUES.find((league) => league.id === includedLeagueId);
+    return includedLeague && !recommendedLeagues.some((league) => league.id === includedLeague.id)
+      ? [...recommendedLeagues, includedLeague]
+      : recommendedLeagues;
   }
 
   if (category === "축구") {
@@ -73,6 +77,10 @@ function reorderIds(ids, draggedId, targetId) {
 export function SportsSettingsModal({
   isOpen,
   onClose,
+  initialTab = "leagues",
+  initialCategory = "추천",
+  initialExpandedLeagueId = "",
+  title = "전체보기",
   selectedLeagueIds,
   onToggleLeague,
   onReorderLeagues,
@@ -109,11 +117,11 @@ export function SportsSettingsModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setActiveTab("leagues");
-    setActiveCategory("추천");
-    setExpandedLeagueIds([]);
+    setActiveTab(initialTab);
+    setActiveCategory(initialCategory);
+    setExpandedLeagueIds(initialExpandedLeagueId ? [initialExpandedLeagueId] : []);
     setNotice("");
-  }, [isOpen]);
+  }, [isOpen, initialTab, initialCategory, initialExpandedLeagueId]);
 
   useEffect(() => {
     if (!isOpen || activeTab !== "teams") return;
@@ -137,8 +145,8 @@ export function SportsSettingsModal({
   }, [isOpen, activeTab, expandedLeagueIds, selectedTeamIds]);
 
   const visibleLeagues = useMemo(
-    () => getLeaguesForCategory(activeCategory),
-    [activeCategory],
+    () => getLeaguesForCategory(activeCategory, initialExpandedLeagueId),
+    [activeCategory, initialExpandedLeagueId],
   );
 
   const teamsByLeague = useMemo(
@@ -212,7 +220,7 @@ export function SportsSettingsModal({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="sports-settings-modal__header">
-          <h2 id="sports-settings-title">전체보기</h2>
+          <h2 id="sports-settings-title">{title}</h2>
           <button
             type="button"
             className="sports-settings-modal__close"
@@ -442,7 +450,7 @@ export function SportsSettingsModal({
                     aria-pressed={activeCategory === category}
                     onClick={() => {
                       setActiveCategory(category);
-                      setExpandedLeagueIds([]);
+                      setExpandedLeagueIds(initialExpandedLeagueId ? [initialExpandedLeagueId] : []);
                       setNotice("");
                     }}
                   >
