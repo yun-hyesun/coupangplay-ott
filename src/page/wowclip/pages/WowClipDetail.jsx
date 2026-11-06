@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { readClips } from '../../../components/wowclip/clipStorage';
-import { formatClipTime } from '../../../components/wowclip/ClipRange';
+import { formatClipTime } from '../../../components/wowclip/formatClipTime';
 import { createClipComment, deleteClipComment, subscribeClipComments } from '../../../service/wowClipCommentService';
-import { SAMPLE_CLIPS } from './WowClipGallery';
+import { SAMPLE_CLIPS } from '../data/sampleClips';
 import '../scss/WowClipDetail.scss';
 
 const dateText = (value) => value?.toDate?.()?.toLocaleString('ko-KR') || '방금 전';
@@ -12,6 +12,10 @@ export function WowClipDetail() {
   const { clipId } = useParams();
   const user = useAuthStore((s) => s.user);
   const clip = useMemo(() => [...readClips(user?.uid), ...SAMPLE_CLIPS].find((item) => item.id === clipId), [clipId, user?.uid]);
+  return <ClipDetailSession key={JSON.stringify([clipId, user?.uid])} clipId={clipId} user={user} clip={clip} />;
+}
+
+function ClipDetailSession({ clipId, user, clip }) {
   const [comments, setComments] = useState([]);
   const [sort, setSort] = useState('new');
   const [text, setText] = useState('');
@@ -21,9 +25,12 @@ export function WowClipDetail() {
   const [notice, setNotice] = useState('');
   const [revealed, setRevealed] = useState(false);
   useEffect(() => {
-    setComments([]); setError(''); setReplyTo(null); setRevealed(false);
     if (!clipId) return undefined;
-    return subscribeClipComments(clipId, setComments, () => setError('댓글을 불러오지 못했습니다. Firebase 연결을 확인해주세요.'));
+    let active = true;
+    const stop = subscribeClipComments(clipId,
+      (next) => { if (active) setComments(next); },
+      () => { if (active) setError('댓글을 불러오지 못했습니다. Firebase 연결을 확인해주세요.'); });
+    return () => { active = false; stop(); };
   }, [clipId]);
   const sorted = useMemo(() => [...comments].sort((a, b) => sort === 'like' ? (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0) : (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)), [comments, sort]);
   const submit = async (event) => {

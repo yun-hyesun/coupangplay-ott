@@ -4,7 +4,7 @@ import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import React, { act } from 'react';
 import renderer from 'react-test-renderer';
-import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const events = new EventTarget();
@@ -37,7 +37,7 @@ test('비로그인 제작 클릭은 원본/편집을 열지 않고 로그인으�
   assert.equal(direct.toJSON(), null);
 });
 
-test('인증 확인 중에는 제작 버튼을 잠그고 로그아웃하면 열린 편집도 닫힌다', async () => {
+test('인증 확인 중에는 제작을 잠그고 로그아웃한 편집은 다시 로그인해도 자동으로 열리지 않는다', async () => {
   useAuthStore.setState({ user: null, loading: true });
   const root = await mount(withRoutes(h(FullVideoClipButton, { getSource: () => source })));
   assert.equal(root.root.findByProps({ 'aria-label': '클립 만들기' }).props.disabled, true);
@@ -45,6 +45,12 @@ test('인증 확인 중에는 제작 버튼을 잠그고 로그아웃하면 열�
   await act(async () => root.root.findByProps({ 'aria-label': '클립 만들기' }).props.onClick());
   assert.equal(root.root.findAllByProps({ 'aria-label': '클립 만들기' }).length >= 2, true);
   await act(async () => useAuthStore.setState({ user: null, loading: false }));
+  assert.equal(root.root.findAllByType('section').length, 0);
+  await act(async () => useAuthStore.setState({ user: { uid: 'alice' }, loading: false }));
+  assert.equal(root.root.findAllByType('section').length, 0);
+  await act(async () => root.root.findByProps({ 'aria-label': '클립 만들기' }).props.onClick());
+  assert.equal(root.root.findAllByType('section').length, 1);
+  await act(async () => useAuthStore.setState({ user: { uid: 'bob' }, loading: false }));
   assert.equal(root.root.findAllByType('section').length, 0);
 });
 
@@ -103,4 +109,40 @@ test('클립 이동 오류와 로그아웃 뒤 이전 댓글·계정 데이터�
   assert.equal(stale.stopped, true); assert.equal(library.loading, true); assert.deepEqual(library.clips, []);
   await act(async () => stale.data([{ id: 'alice-private', comments: [] }]));
   assert.deepEqual(library.clips, []);
+});
+
+test('보존된 상세 화면도 클립·계정이 바뀌면 댓글·답글·스포일러 상태를 초기화하고 늦은 구독을 무시한다', async () => {
+  const { WowClipDetail } = await import('../../src/page/wowclip/pages/WowClipDetail.jsx');
+  useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
+  const subscriptions = [];
+  globalThis.__wowLegacyComments = { subscribe: (id, data, error) => {
+    const item = { id, data, error, stopped: false };
+    subscriptions.push(item);
+    return () => { item.stopped = true; };
+  } };
+  let navigate;
+  const DetailRoute = () => { navigate = useNavigate(); return h(WowClipDetail); };
+  const root = await mount(h(MemoryRouter, { initialEntries: ['/wowclip/sample-office'] },
+    h(Routes, null, h(Route, { path: '/wowclip/:clipId', element: h(DetailRoute) }))));
+  const first = subscriptions.at(-1);
+  await act(async () => first.data([{ id: 'first-comment', body: '이전 클립 댓글', authorName: 'bob' }]));
+  await act(async () => root.root.findAllByType('button').find(button => button.children[0] === '스포일러 보기').props.onClick());
+  await act(async () => root.root.findAllByType('button').find(button => button.children[0] === '답글').props.onClick());
+  assert.equal(root.root.findAllByProps({ className: 'wowclip-detail__reply' }).length, 1);
+  assert.equal(root.root.findAllByProps({ className: 'wowclip-detail__spoiler' }).length, 0);
+  await act(async () => navigate('/wowclip/sample-hidden'));
+  assert.equal(first.stopped, true);
+  assert.equal(root.root.findAllByProps({ className: 'wowclip-detail__reply' }).length, 0);
+  assert.equal(root.root.findByType('textarea').props.value, '');
+  assert.equal(root.root.findAllByProps({ className: 'wowclip-detail__spoiler' }).length, 1);
+  await act(async () => { first.data([{ id: 'stale', body: '늦은 댓글' }]); first.error(new Error('늦은 오류')); });
+  assert.equal(root.root.findAllByProps({ className: 'wowclip-detail__comment' }).length, 0);
+  assert.equal(root.root.findAllByProps({ role: 'alert' }).length, 0);
+  const second = subscriptions.at(-1);
+  await act(async () => second.data([{ id: 'second-comment', body: '새 댓글', authorName: 'bob' }]));
+  await act(async () => root.root.findByType('textarea').props.onChange({ target: { value: '다른 계정에 남기지 않기' } }));
+  await act(async () => useAuthStore.setState({ user: { uid: 'bob' }, loading: false }));
+  assert.equal(second.stopped, true);
+  assert.equal(root.root.findByType('textarea').props.value, '');
+  assert.equal(root.root.findAllByProps({ className: 'wowclip-detail__comment' }).length, 0);
 });

@@ -1,5 +1,9 @@
 .wowclip-player .wowclip-media-window { position: absolute; inset: 0; overflow: hidden; }
 .wowclip-player .wowclip-media-source { position: absolute; inset: 0; width: 100%; height: 100%; }
+.wowclip-player .wowclip-player-poster { position: absolute; z-index: 1; inset: 0; pointer-events: none; }
+.wowclip-player .wowclip-player-controls, .wowclip-player .wowclip-player-center { z-index: 3; }
+.wowclip-player-status { position: absolute; z-index: 2; top: 16px; left: 16px; right: 16px; padding: 12px; border-radius: 8px; background: var(--wow-card); color: var(--wow-secondary); font-size: 14px; line-height: 20px; }
+.wowclip-player--compact .wowclip-player-status { right: 128px; }
 .wowclip-player.is-format-portrait .wowclip-media-window { right: auto; left: 50%; width: auto; height: 100%; aspect-ratio: 9 / 16; transform: translateX(-50%); }
 .wowclip-player.is-format-portrait .wowclip-media-source { right: auto; }
 .wowclip-player.wowclip-player--mirror { overflow: hidden; }
@@ -11,6 +15,13 @@
 .wowclip-player.wowclip-player--compact .wowclip-seek input { height: 3px; margin: 0; border-radius: 0; }
 .wowclip-player-top-controls { position: absolute; z-index: 6; top: 16px; right: 16px; display: flex; gap: 8px; }
 .wowclip-player-top-controls button { border-radius: 50%; background: rgba(35, 37, 41, .8); }
-.wowclip-player.wowclip-player--compact .wowclip-player-center { z-index: 4; }
+.wowclip-player.wowclip-player--compact .wowclip-player-center {
+  z-index: 1; inset: 0; width: 100%; height: 100%;
+  border-radius: inherit; background: transparent; transform: none;
+  touch-action: pan-y;
+}
+.wowclip-player.wowclip-player--compact .wowclip-player-center:focus-visible { outline-offset: -4px; }
+.wowclip-player-center-symbol { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: rgba(0, 0, 0, .35); pointer-events: none; }
+.wowclip-player-center:hover .wowclip-player-center-symbol { background: rgba(0, 0, 0, .65); }
 .wowclip-player-center.is-playing { opacity: 0; }
 .wowclip-player:hover .wowclip-player-center.is-playing, .wowclip-player-center.is-playing:focus-visible { opacity: 1; }

@@ -12,8 +12,12 @@ const isLivePlayer = (player) => {
 export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, onPosition, autoPlay = false, loop = false, compact = false, controls = true, muted: givenMuted, onMutedChange, onPlaybackChange, onFirstPlay }) => {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
+  const aliveRef = useRef(true);
+  const attemptRef = useRef(0);
   const countedRef = useRef(false);
   const [mounted, setMounted] = useState(preview || autoPlay);
+  const [ready, setReady] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [initialStart] = useState(clip.start);
   const pendingSeekRef = useRef(previewRequest?.time ?? clip.start);
   const previewingRef = useRef(preview);
@@ -31,20 +35,36 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
   const end = Math.min(Math.max(start + 0.1, clip.end), duration || clip.end);
 
   const resetPlayer = useCallback(() => {
+    attemptRef.current++;
     playerRef.current = null;
-    setPlaying(false); setMounted(false);
+    setPlaying(false); setReady(false); setMounted(false);
     setError('영상을 불러오지 못했어요. 재생을 다시 눌러 주세요.');
   }, []);
   const runPlayer = useCallback((action) => {
     const player = playerRef.current;
     if (!player) return;
-    const recover = () => queueMicrotask(() => { if (playerRef.current === player) resetPlayer(); });
+    const token = attemptRef.current;
+    const recover = () => queueMicrotask(() => { if (aliveRef.current && playerRef.current === player) resetPlayer(); });
     try {
-      if (!isLivePlayer(player)) { playerRef.current = null; return; }
+      if (!isLivePlayer(player)) {
+        playerRef.current = null;
+        queueMicrotask(() => { if (aliveRef.current && attemptRef.current === token && !playerRef.current) setReady(false); });
+        return;
+      }
       return action(player);
     } catch { recover(); }
   }, [resetPlayer]);
-  useEffect(() => () => { playerRef.current = null; }, []);
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => { aliveRef.current = false; playerRef.current = null; };
+  }, []);
+  useEffect(() => {
+    if (!mounted || ready) return;
+    const timer = window.setTimeout(() => {
+      if (aliveRef.current && attemptRef.current === attempt) resetPlayer();
+    }, 15000);
+    return () => window.clearTimeout(timer);
+  }, [mounted, ready, attempt, resetPlayer]);
   useEffect(() => { runPlayer((player) => { if (muted) player.mute(); else player.unMute(); }); }, [muted, runPlayer]);
   useEffect(() => {
     if (!preview || !previewRequest) return;
@@ -76,7 +96,13 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
   }, [mounted, playing, start, end, onPosition, loop, runPlayer]);
   const togglePlayback = () => {
     setError('');
-    if (!mounted) { desiredPlayingRef.current = true; previewingRef.current = false; setMounted(true); return; }
+    desiredPlayingRef.current = !playing;
+    if (!playing) previewingRef.current = false;
+    if (!mounted) {
+      const next = ++attemptRef.current;
+      setAttempt(next); setReady(false); setMounted(true);
+      return;
+    }
     runPlayer((player) => {
     let time = player.getCurrentTime();
     if (playing) { desiredPlayingRef.current = false; player.pauseVideo(); onPlaybackChange?.(false, time); }
@@ -96,10 +122,10 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
   return <div className={'wowclip-player is-format-' + layout + (preview ? ' wowclip-player--preview' : '') + (compact ? ' wowclip-player--compact' : '') + (!controls ? ' wowclip-player--mirror' : '')} ref={containerRef} data-playing={playing} data-position={position.toFixed(2)}>
     <div className="wowclip-player-visual"><div className="wowclip-media-window"><div className="wowclip-media-source" style={layout === 'portrait' ? { width: '316.049383%', left: sourceLeftPercent(cropX) + '%' } : undefined}>
       {!mounted && <img className="wowclip-player-poster" src={clipImage(clip)} alt="" />}
-      {mounted && <YouTube videoId={clip.videoKey} title={clip.videoTitle || clip.title} className="wowclip-youtube" iframeClassName="wowclip-youtube-frame" opts={{ width: '100%', height: '100%', playerVars: { controls: 0, playsinline: 1, rel: 0, start: Math.floor(initialStart) } }}
-        onReady={({ target }) => { if (!isLivePlayer(target)) return; playerRef.current = target; runPlayer((player) => { const length = player.getDuration(); setDuration(length); onDuration?.(length); player.seekTo(preview ? pendingSeekRef.current : start, true); if (muted) player.mute(); if (!preview || desiredPlayingRef.current) player.playVideo(); }); }}
+      {mounted && <YouTube key={attempt} videoId={clip.videoKey} title={clip.videoTitle || clip.title} className="wowclip-youtube" iframeClassName="wowclip-youtube-frame" opts={{ width: '100%', height: '100%', playerVars: { controls: 0, playsinline: 1, rel: 0, start: Math.floor(initialStart) } }}
+        onReady={({ target }) => { if (!aliveRef.current || attemptRef.current !== attempt || !isLivePlayer(target)) return; playerRef.current = target; setReady(true); runPlayer((player) => { const length = player.getDuration(); setDuration(length); onDuration?.(length); player.seekTo(preview ? pendingSeekRef.current : start, true); if (muted) player.mute(); if (desiredPlayingRef.current) player.playVideo(); }); }}
         onStateChange={({ data, target }) => {
-          if (target !== playerRef.current) return;
+          if (!aliveRef.current || attemptRef.current !== attempt || target !== playerRef.current) return;
           runPlayer((player) => {
           if (preview && data === 1 && !desiredPlayingRef.current) { player.pauseVideo(); setPlaying(false); }
           else {
@@ -109,10 +135,10 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
           }
           });
         }}
-        onError={resetPlayer} />}
+        onError={() => { if (aliveRef.current && attemptRef.current === attempt) resetPlayer(); }} />}
     </div></div></div>
     {controls && <div className="wowclip-player-controls">
-      {!preview && <label className="wowclip-seek"><span className="sr-only">클립 재생 위치</span><input type="range" min={start} max={end} step="0.1" value={Math.max(start, Math.min(end, position))} onChange={seek} disabled={!mounted} /></label>}
+      {!preview && <label className="wowclip-seek"><span className="sr-only">클립 재생 위치</span><input type="range" min={start} max={end} step="0.1" value={Math.max(start, Math.min(end, position))} onChange={seek} disabled={!ready} /></label>}
       {!compact && <div className="wowclip-player-buttons">
         <IconButton icon={playing ? 'pause' : 'play'} label={playing ? '일시정지' : '구간 재생'} onClick={togglePlayback} />{preview && <span>구간 재생</span>}
         <IconButton icon={muted ? 'mute' : 'volume'} label={muted ? '소리 켜기' : '소리 끄기'} aria-pressed={muted} onClick={toggleSound} />{preview ? <span>소리</span> : <span className="wowclip-player-time">{formatTime(Math.max(0, position - start))} / {formatTime(end - start)}</span>}
@@ -122,7 +148,8 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
       </div>}
     </div>}
     {compact && controls && <div className="wowclip-player-top-controls"><IconButton icon={muted ? 'mute' : 'volume'} label={muted ? '소리 켜기' : '소리 끄기'} aria-pressed={muted} onClick={toggleSound} /><IconButton icon="fullscreen" label="전체 화면" onClick={fullscreen} /></div>}
+    {mounted && !ready && <p className="wowclip-player-status" role="status">영상을 불러오고 있어요.</p>}
     {error && <p className="wowclip-player-error" role="alert">{error}</p>}
-    {controls && (!mounted || !playing || compact) && <button type="button" className={'wowclip-player-center' + (playing ? ' is-playing' : '')} aria-label={playing ? '일시정지' : preview ? '선택 구간 미리보기' : '클립 재생'} onClick={togglePlayback}><ClipIcon name={playing ? 'pause' : 'play'} /></button>}
+    {controls && (!mounted || !playing || compact) && <button type="button" className={'wowclip-player-center' + (playing ? ' is-playing' : '')} aria-label={playing ? '일시정지' : preview ? '선택 구간 미리보기' : '클립 재생'} onClick={togglePlayback}>{compact ? <span className="wowclip-player-center-symbol" aria-hidden="true"><ClipIcon name={playing ? 'pause' : 'play'} /></span> : <ClipIcon name={playing ? 'pause' : 'play'} />}</button>}
   </div>;
 };

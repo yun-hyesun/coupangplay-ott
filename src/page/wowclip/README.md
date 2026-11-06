@@ -19,6 +19,7 @@ wowclip/
 - `App.jsx` → `WowClip.jsx` → `components/ClipCard` 또는 `components/ClipFeed`.
 - 홈의 `WowClipSection` → 같은 카드와 저장소. 공개 클립을 공감·최신순으로 최대 8개 표시한다.
 - 본편 `Watch` → `components/FullVideoClipButton` → 로그인 확인 → `components/ClipEditor` → Firestore 저장 완료 후 감상 화면. 비로그인은 로그인으로 안내하며 인증 확인 중에는 제작을 잠그고 로그아웃하면 열린 편집도 닫는다.
+- 제작 상태는 로그인 UID별로 구분한다. 로그아웃 후 같은 계정으로 다시 로그인하거나 다른 계정으로 바꾸어도 이전 편집창을 자동으로 다시 열지 않는다.
 - 페이지 루트의 import 경로는 유지했다. 홈·Watch는 옮긴 모듈 경로만 변경했다.
 
 ## 동작
@@ -28,6 +29,8 @@ wowclip/
 목록에는 인기순·최신순 정렬만 제공한다. 기간별 탭과 날짜 필터는 없으며 과거 링크의 `period` 값도 목록을 제한하지 않는다.
 
 감상 화면은 세로 스크롤·방향키·이전/다음 버튼으로 저장된 클립을 이어 본다. 활성 클립의 플레이어 하나만 마운트하고 선택 구간을 반복한다. 하트, 댓글, 공유, 본인 클립 삭제를 제공한다. 감상 화면에는 제작 버튼이 없고 본편에서만 제작한다.
+
+감상 영상은 전체 영역을 클릭·탭하면 재생/일시정지가 전환된다. 같은 재생 버튼을 Enter/Space로 조작할 수 있고 세로 스와이프는 유지한다. 진행 바·소리·전체 화면·풀영상 링크는 영상 토글과 겹치지 않는 별도 조작 영역이다. 편집기의 자르기 영역과 조작 방식은 유지한다.
 
 감상 정보 뒤의 그라데이션은 영상 하단 전체 폭에 적용해 텍스트 너비에서 사각형으로 끊기지 않는다. 풀영상 버튼과 작품 정보는 같은 32px 높이의 flex 행에서 정렬하며 좁은 화면에서는 항목 단위로 줄바꿈한다.
 
@@ -48,18 +51,19 @@ wowclip/
 - 댓글·공감·조회 기록은 별도 문서로 저장하고 집계는 트랜잭션으로 갱신한다. 댓글/답글은 서버 저장 성공 후에만 입력을 비우고 실패하면 내용을 보존한다. 조회 수는 현재 로그인 계정별 최초 재생 수다.
 - 연결의 보안 규칙과 현재 실서버 검증 한계는 [Firebase 적용 안내](../../firebase/README.wowclip.md)에 있다. 현재 관리 인증이 HTTP 403이어서 새 규칙을 실제 서버에 배포하지 못했으며, 기존 팀 규칙 파일을 덮어쓰지 않았다.
 - YouTube 기본 조작부는 숨기고 자체 조작부를 쓴다. YouTube의 제목·브랜드 표시 전체를 제거하는 기능은 아니다.
+- 플레이어가 준비되는 동안 불러오기 상태를 표시하고, 준비 전에 누른 재생 요청은 준비 후 실행한다. 준비가 15초 안에 끝나지 않으면 포스터와 재시도 안내를 표시한다. 포스터가 재생 버튼을 덮지 않도록 조작부의 레이어 순서를 분리했다. 이전 시도의 늦은 이벤트가 새 재생이나 조회 집계를 바꾸지 않게 구분한다. 외부 YouTube 영상의 재생 가능 여부를 보장하는 기능은 아니다.
 
 ## 별도 화면 코드 보존
 
 `pages/WowClipGallery.jsx`, `pages/WowClipDetail.jsx`, `pages/WowClipCreate.jsx`는 현재 App 라우트나 본편 제작 버튼에서 사용하지 않는다. 이 코드는 별도 `src/components/wowclip/clipStorage.js`와 `coupang-wowclip-v2` 형식을 사용한다. 현재 저장소와 자동으로 합치거나 라우트를 교체하지 않았다. 기존 샘플 데이터와 Firebase 댓글 연동도 실사용 흐름에 연결하지 않았다.
 
-`WowClipCreate`는 기존 WowClip 파일 뒤에 붙어 있던 편집 모듈을 분리해 이름만 구분한 것이다. 기존 코드의 삭제나 기능 통합 없이 보존했다. 편집용 SCSS도 `scss/WowClipCreate.scss`로 분리해 해당 화면에서만 불러온다. 이 세 파일에 남아 있던 기존 lint 진단은 실사용 코드의 검수와 구분한다.
+`WowClipCreate`는 기존 WowClip 파일 뒤에 붙어 있던 편집 모듈을 분리해 이름만 구분한 것이다. 기존 코드의 삭제나 기능 통합 없이 보존했다. 편집용 SCSS도 `scss/WowClipCreate.scss`로 분리해 해당 화면에서만 불러온다. 보존 코드의 검사 오류도 정리했다. 시간 표시는 `src/components/wowclip/formatClipTime.js`, 기존 예시 데이터는 `data/sampleClips.js`로 분리했고 현재 라우트에는 연결하지 않았다. 별도 상세 화면은 클립·계정별로 댓글·답글·스포일러 상태와 구독을 초기화한다.
 
 ## 검증
 
 ```sh
 node --test src/page/wowclip/utils/*.test.js
-npx eslint src/page/wowclip/WowClip.jsx src/page/wowclip/components src/page/wowclip/hooks src/page/wowclip/utils src/page/home/components/WowClipSection.jsx
+npx eslint src/page/wowclip src/components/wowclip src/service/wowClipService.js src/service/wowClipCommentService.js src/page/home/components/WowClipSection.jsx
 npm run build
 ```
 

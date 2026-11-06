@@ -48,7 +48,7 @@ export const ClipFeed = ({ clips, selectedId, owner, revealed, onSelect, onBack,
   };
   const perform = async (action) => { try { await action(); } catch (failure) { notify(failure.message); } };
   return <div className={'wowclip-shortfeed' + (commentsOpen ? ' has-comments' : '')}>
-    <div className="wowclip-feed-toolbar"><button type="button" className="wowclip-back" onClick={onBack}><ClipIcon name="back" />와우 클립</button><span role="status" aria-live="polite">{index + 1} / {ordered.length}{index === ordered.length - 1 && <span> · 마지막 클립</span>}</span></div>
+    <div className="wowclip-feed-toolbar"><button type="button" className="wowclip-back" onClick={onBack}><ClipIcon name="back" />와우 클립</button></div>
     <div className="wowclip-feed-body"><div className="wowclip-feed-column">
       <div className="wowclip-feed-scroll" ref={scrollRef} role="region" aria-label="클립 연속 감상" tabIndex={0} onKeyDown={(event) => {
         if (event.target.closest('input, textarea, select') || event.nativeEvent.isComposing) return;

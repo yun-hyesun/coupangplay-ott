@@ -8,10 +8,15 @@ import { useWowClipLibrary } from '../hooks/useWowClipLibrary';
 import '../scss/WowClip.scss';
 
 // 원본 시청 플레이어에만 배치하는 진입점. 클립 감상 화면에서는 사용하지 않습니다.
-export const FullVideoClipButton = ({ getSource, disabled = false }) => {
+export const FullVideoClipButton = (props) => {
+  const user = useAuthStore((state) => state.user);
+  return <ClipCreationSession key={user?.uid || 'guest'} {...props} user={user} />;
+};
+
+// 로그아웃·계정 전환 시 편집 상태와 해당 구독을 함께 정리합니다.
+const ClipCreationSession = ({ getSource, disabled = false, user }) => {
   const [source, setSource] = useState(null);
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
   const authLoading = useAuthStore((state) => state.loading);
   const profile = useProfileStore((state) => state.currentProfile);
   const library = useWowClipLibrary();
