@@ -1,0 +1,216 @@
+.categoryPage {
+  padding: 50px 64px 80px;
+  min-height: 100vh;
+}
+.categoryPage-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: #bfc5ce;
+  font-size: 14px;
+  text-decoration: none;
+}
+.categoryPage-back span {
+  font-size: 24px;
+  line-height: 1;
+}
+.categoryPage-back:hover {
+  color: #fff;
+}
+.categoryPage-title {
+  margin: 0 0 36px;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+}
+.categoryPage-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.categoryPage-sort select {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #262a31;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.categoryPage-sort select:focus-visible {
+  outline: 2px solid #0084ff;
+  outline-offset: 3px;
+}
+.categoryPage-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.categoryPage-selected button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid #3d4653;
+  border-radius: 6px;
+  background: #202630;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.categoryPage-selected button span {
+  color: #aab5c4;
+  font-size: 18px;
+}
+.categoryPage-selected .categoryPage-reset {
+  border-color: transparent;
+  background: transparent;
+  color: #aeb7c4;
+  text-decoration: underline;
+}
+.categoryPage-message {
+  padding: 32px 0;
+  color: #bfc5ce;
+  text-align: center;
+}
+.categoryPage-more {
+  display: block;
+  min-width: 140px;
+  margin: 28px auto 0;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 8px;
+  background: #262a31;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.categoryPage-more:hover {
+  background: #363c46;
+}
+@media (max-width: 767px) {
+  .categoryPage {
+    padding: 100px 20px 48px;
+  }
+  .categoryPage-title {
+    margin-bottom: 24px;
+    font-size: 26px;
+  }
+}
+
+.categoryFilter {
+  position: relative;
+}
+.categoryFilter-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #262a31;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.categoryFilter-trigger.is-open {
+  border-color: #566170;
+}
+.categoryFilter-trigger:focus-visible {
+  outline: 2px solid #0084ff;
+  outline-offset: 3px;
+}
+.categoryFilter-label {
+  color: #bfc5ce;
+}
+.categoryFilter-arrow {
+  margin-left: 4px;
+  transition: transform 0.2s;
+}
+.categoryFilter-trigger.is-open .categoryFilter-arrow {
+  transform: rotate(180deg);
+}
+.categoryFilter-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 50;
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  padding: 20px;
+  border: 1px solid #3c424d;
+  border-radius: 12px;
+  background: #20242c;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+.categoryFilter-actions {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #373d47;
+}
+.categoryFilter-actions button {
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.categoryFilter-actions button:last-child {
+  color: #aeb7c4;
+}
+.categoryFilter-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 12px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.categoryFilter-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #e2e5e9;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.categoryFilter-option input {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin: 3px 0 0;
+  accent-color: #0084ff;
+}
+.categoryFilter-option:has(input:checked) {
+  color: #53aaff;
+}
+.categoryFilter-done {
+  width: 100%;
+  margin-top: 20px;
+  padding: 11px;
+  border: 0;
+  border-radius: 8px;
+  background: #0074df;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.categoryFilter-done:hover {
+  background: #0084ff;
+}
+@media (max-width: 767px) {
+  .categoryFilter-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -27,7 +27,7 @@ const passIcons = {
     'sony-pass': '/images/mypage/pass/sony-logo.svg',
 };
 
-export const MySidebar = ({ onOpenLanguage }) => {
+export const MySidebar = ({ onOpenLanguage, mode = "all" }) => {
     const navigate = useNavigate();
 
     // 현재 선택된 프로필 정보
@@ -49,6 +49,7 @@ export const MySidebar = ({ onOpenLanguage }) => {
 
     // 로그인 계정이 변경되면 구독내역 다시 불러오기
     useEffect(() => {
+        if (mode === "menu") return;
         if (authLoading) return;
 
         if (!user) {
@@ -57,7 +58,7 @@ export const MySidebar = ({ onOpenLanguage }) => {
         }
 
         onLoadSubscriptions();
-    }, [user?.uid, authLoading, onLoadSubscriptions]);
+    }, [user?.uid, authLoading, onLoadSubscriptions, mode]);
 
     // 등록된 이용권 ID
     const registeredPassIds = subscriptions
@@ -72,83 +73,89 @@ export const MySidebar = ({ onOpenLanguage }) => {
 
     return (
         <div className="my-sidebar">
-            <div className="my-profile">
-                <div className="my-profile-info">
 
-                    <div className="my-avatar">
-                        <img
-                            src={
-                                currentProfile?.avatar ||
-                                "/images/profile/profile-img/profile.svg"
-                            }
-                            alt=""
-                        />
+            {/* 프로필 영역: 전체 또는 프로필 모드 */}
+            {mode !== "menu" && (
+                <div className="my-profile">
+                    <div className="my-profile-info">
+
+                        <div className="my-avatar">
+                            <img
+                                src={
+                                    currentProfile?.avatar ||
+                                    "/images/profile/profile-img/profile.svg"
+                                }
+                                alt=""
+                            />
+                        </div>
+
+                        <span className="my-username">
+                            {currentProfile?.name || "프로필 선택"}
+                        </span>
+
+                        <button
+                            type="button"
+                            className="profile-change"
+                            onClick={handleProfileChange}
+                        >
+                            프로필 전환
+                        </button>
                     </div>
-
-                    <span className="my-username">
-                        {currentProfile?.name || "프로필 선택"}
-                    </span>
 
                     <button
                         type="button"
-                        className="profile-change"
-                        onClick={handleProfileChange}
+                        className="my-premium"
+                        onClick={() => navigate('/my/subscription')}
                     >
-                        프로필 전환
+                        {registeredPassIds.length > 0 ? (
+                            <div className="my-pass-icons">
+                                {registeredPassIds.map((passId) => (
+                                    <img
+                                        key={passId}
+                                        src={passIcons[passId]}
+                                        alt={`${passId} 패스`}
+                                        className="my-pass-icon"
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <span className="my-pass-guide">
+                                원하는 패스를 구독해 보세요.
+                            </span>
+                        )}
+
+                        <img
+                            src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
+                            alt=""
+                        />
                     </button>
                 </div>
+            )}
 
-                <button
-                    type="button"
-                    className="my-premium"
-                    onClick={() => navigate('/my/subscription')}
-                >
-                    {registeredPassIds.length > 0 ? (
-                        <div className="my-pass-icons">
-                            {registeredPassIds.map((passId) => (
-                                <img
-                                    key={passId}
-                                    src={passIcons[passId]}
-                                    alt={`${passId} 패스`}
-                                    className="my-pass-icon"
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <img
-                            src="/images/mypage/premium-icon.png"
-                            alt="프리미엄 패스 아이콘"
-                        />
-                    )}
-
-                    <img
-                        src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
-                        alt=""
-                    />
-                </button>
-            </div>
-
-            <nav className="my-menu" aria-label="마이페이지 메뉴">
-                <ul>
-                    {MyMenus.map((menu) => (
-                        <li key={menu.id}>
-                            {menu.title === "언어 설정" ? (
-                                <button
-                                    type="button"
-                                    className="my-menu-button"
-                                    onClick={onOpenLanguage}
-                                >
-                                    {menu.title}
-                                </button>
-                            ) : (
-                                <Link to={menu.path}>
-                                    {menu.title}
-                                </Link>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            </nav>
+            {/* 사이드 메뉴: 전체 또는 메뉴 모드 */}
+            {mode !== "profile" && (
+                <nav className="my-menu" aria-label="마이페이지 메뉴">
+                    <ul>
+                        {MyMenus.map((menu) => (
+                            <li key={menu.id}>
+                                {menu.title === "언어 설정" ? (
+                                    <button
+                                        type="button"
+                                        className="my-menu-button"
+                                        onClick={onOpenLanguage}
+                                    >
+                                        {menu.title}
+                                    </button>
+                                ) : (
+                                    <Link to={menu.path}>
+                                        {menu.title}
+                                    </Link>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            )}
         </div>
     );
 };

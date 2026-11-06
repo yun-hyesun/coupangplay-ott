@@ -1,13 +1,15 @@
 
 import React from 'react';
 import './scss/MyTicket.scss';
+// [추가] 공통 페이지 헤더
+import { MyPageHeader } from './components/MyPageHeader';
 
 export const MyTicket = () => {
   return (
     <main className="my-ticket">
       <div className="my-ticket__inner">
         <div className="my-ticket__header">
-          <h2>내 티켓</h2>
+          <MyPageHeader title="내 티켓" />
         </div>
 
         <div className="my-ticket__empty">

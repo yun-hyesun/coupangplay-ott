@@ -4,7 +4,24 @@
 .watchlist {
   width: 100%;
 }
-.watchlist .watchlist-header {
+.my-watchlist .my-watchlist-tabs .my-watchlist-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-right: -20px;
+}
+.my-watchlist .my-watchlist-tabs .my-watchlist-back img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.my-watchlist .my-watchlist-tabs .my-watchlist-back:hover {
+  opacity: 0.7;
+}
+.my-watchlist .my-watchlist-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -91,6 +108,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.my-watchlist .my-watchlist-empty {
+  padding: 100px 20px;
+  font-size: 18px;
+  color: #A3A3A3;
+  text-align: center;
+}
+.my-watchlist .my-watchlist-mobile-title,
+.my-watchlist .my-watchlist-mobile-actions {
+  display: none;
+}
 
 @media (min-width: 768px) and (max-width: 1279px) {
   .watchlist .watchlist-heading h2 {
@@ -100,26 +127,136 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
   }
+  .my-watchlist .my-watchlist-back {
+    margin-right: -12px;
+  }
 }
 @media (max-width: 767px) {
-  .watchlist .watchlist-heading h2 {
-    font-size: 20px;
+  .my-watchlist .my-watchlist-inner {
+    padding: 30px 20px 60px;
   }
-  .watchlist .watchlist-heading span {
-    font-size: 24px;
-  }
-  .watchlist .watchlist-more {
-    font-size: 16px;
-  }
-  .watchlist .watchlist-message {
-    padding: 60px 16px;
-    font-size: 15px;
-  }
-  .watchlist .watchlist-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .my-watchlist .my-watchlist-tabs {
+    display: flex;
+    align-items: center;
     gap: 12px;
+    padding-bottom: 0;
+    border-bottom: none;
+    overflow: visible;
   }
-  .watchlist .watchlist-title {
+  .my-watchlist .my-watchlist-tabs > a:not(.my-watchlist-back) {
+    display: none;
+  }
+  .my-watchlist .my-watchlist-tabs .my-watchlist-back {
+    display: flex;
+    margin-right: 0;
+    width: 24px;
+    height: 24px;
+  }
+  .my-watchlist .my-watchlist-tabs .my-watchlist-mobile-title {
+    display: block;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #FFFFFF;
+  }
+  .my-watchlist .my-watchlist-tabs .my-watchlist-mobile-actions {
+    display: flex;
+    margin-left: auto;
+  }
+  .my-watchlist .my-watchlist-tabs .my-watchlist-mobile-actions button {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #A3A3A3;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .my-watchlist .my-watchlist-tabs .my-watchlist-mobile-actions button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .my-watchlist .my-watchlist-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    margin: 24px 0 32px;
+  }
+  .my-watchlist .my-watchlist-genres {
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .my-watchlist .my-watchlist-genres::-webkit-scrollbar {
+    display: none;
+  }
+  .my-watchlist .my-watchlist-genres button {
+    flex-shrink: 0;
+    padding: 10px 18px;
+    border-radius: 50px;
+    background: #202123;
+    color: #FFFFFF;
+    font-size: 14px;
+  }
+  .my-watchlist .my-watchlist-genres button.active {
+    background: #fff;
+    color: #111;
+  }
+  .my-watchlist .my-watchlist-genres button.desktop-only {
+    display: none;
+  }
+  .my-watchlist .my-watchlist-actions {
+    display: none;
+  }
+  .my-watchlist .my-watchlist-actions:has(.delete) {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+  }
+  .my-watchlist .my-watchlist-actions:has(.delete) button {
+    font-size: 14px;
+  }
+  .my-watchlist .my-watchlist-actions:has(.delete) button:last-child {
+    display: none;
+  }
+  .my-watchlist .my-watchlist-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 12px;
+  }
+  .my-watchlist .my-watchlist-thumbnail {
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: 8px;
+  }
+  .my-watchlist .my-watchlist-thumbnail picture {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .my-watchlist .my-watchlist-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .my-watchlist .my-watchlist-overlay {
+    padding: 8px;
+  }
+  .my-watchlist .my-watchlist-check {
+    width: 24px;
+    height: 24px;
+  }
+  .my-watchlist .my-watchlist-placeholder {
+    font-size: 14px;
+  }
+  .my-watchlist .my-watchlist-info h3 {
     font-size: 16px;
+  }
+  .my-watchlist .my-watchlist-empty {
+    margin: 0;
+    padding: 20px 16px;
+    font-size: 15px;
+    text-align: center;
+    color: #D4D4D4;
   }
 }

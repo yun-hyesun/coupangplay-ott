@@ -31,7 +31,7 @@
   // 리뷰 관리 탭
   &__tabs {
     @include flex($jc: flex-start, $ai: center);
-    margin-top: 16px;
+    margin-top: 24px;
 
     button {
       position: relative;

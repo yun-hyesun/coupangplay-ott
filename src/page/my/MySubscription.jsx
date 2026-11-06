@@ -8,6 +8,9 @@ import { SubscriptionMenu } from './components/MySubscriptionMenu';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSubscriptionStore } from '../../store/useSubscriptionStore';
 
+// [추가] 공통 페이지 헤더
+import { MyPageHeader } from './components/MyPageHeader';
+
 import './scss/MySubscription.scss';
 import './scss/MySubscriptionUi.scss';
 import { MySubscriptionButton } from './components/MySubscriptionButton';
@@ -100,8 +103,7 @@ export const MySubscription = () => {
             <div className="my-subscription-inner">
 
                 <div className="subscription-header">
-                    <h2>내 구독내역</h2>
-                    <MySubscriptionButton secondary onClick={() => navigate('/my/subscription/passes')}>구독 패스 둘러보기</MySubscriptionButton>
+                    <MyPageHeader title="내 구독내역" />
 
                     <button
                         type="button"

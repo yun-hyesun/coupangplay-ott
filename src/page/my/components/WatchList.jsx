@@ -6,7 +6,7 @@ import { useWatchlistStore } from '../../../store/useWatchlistStore'
 import { useProfileStore } from '../../../store/useProfileStore'
 import '../scss/Watchlist.scss'
 
-export const Watchlist = () => {
+export const WatchList = () => {
     // 로그인 사용자
     const user = useAuthStore((state) => state.user);
     const authLoading = useAuthStore((state) => state.loading);
@@ -130,12 +130,18 @@ export const Watchlist = () => {
                         >
                             <div className="watchlist-thumbnail">
                                 {item.backdrop_path || item.poster_path ? (
-                                    <img
-                                        src={`https://image.tmdb.org/t/p/w780${item.backdrop_path ||
-                                            item.poster_path
-                                            }`}
-                                        alt={item.title}
-                                    />
+                                    <picture>
+                                        {item.poster_path && (
+                                            <source
+                                                media="(max-width: 767px)"
+                                                srcSet={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
+                                            />
+                                        )}
+                                        <img
+                                            src={`https://image.tmdb.org/t/p/w780${item.backdrop_path || item.poster_path}`}
+                                            alt={item.title}
+                                        />
+                                    </picture>
                                 ) : (
                                     <span>이미지 없음</span>
                                 )}
