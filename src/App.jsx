@@ -26,9 +26,9 @@ import { Signup } from './page/login/SignUp';
 import { Login } from './page/login/Login';
 
 // 프로필
-import { ProfileSelect } from './page/profile/ProfileSelect';
+import { ProfileSelect } from '././page/profile/ProfileSelect';
 import { ProfileCreate } from './page/profile/ProfileCreate';
-import { ProfileEdit } from './page/profile/ProfileEdit';
+import { ProfileEdit } from '././page/profile/ProfileEdit';
 
 // 마이페이지
 import { MyPage } from './page/my/MyPage';
@@ -36,6 +36,9 @@ import { MyHistory } from './page/my/MyHistory';
 import { MyWatchlist } from './page/my/MyWatchlist';
 import { MyPurchases } from './page/my/MyPurchases';
 import { MyLive } from './page/my/MyLive';
+import { MyPassGuide } from './page/my/MyPassGuide';
+import { MySubscriptionCheckout } from './page/my/MySubscriptionCheckout';
+import { MyMembership } from './page/my/MyMembership';
 import { MySubscription } from './page/my/MySubscription';
 import { MyPaymentHistory } from './page/my/MyPaymentHistory';
 import { MyTicket } from './page/my/MyTicket';
@@ -107,6 +110,9 @@ function App() {
         <Route path="/my/news" element={<MyNews />} />
 
         {/* 구독내역 */}
+        <Route path="/my/subscription/passes" element={<MyPassGuide />} />
+        <Route path="/my/subscription/checkout" element={<MySubscriptionCheckout />} />
+        <Route path="/my/subscription/membership" element={<MyMembership />} />
         <Route path="/my/subscription" element={<MySubscription />} />
         <Route path="/my/subscription/payment" element={<MyPaymentHistory />} />
 

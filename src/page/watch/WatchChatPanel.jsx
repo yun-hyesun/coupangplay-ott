@@ -11,10 +11,10 @@ export default function WatchChatPanel({ togetherMode, sessionId, messages, draf
     <div className="watch-side-panel__messages" aria-live="polite">
       {!togetherMode ? <p className="watch-side-panel__empty">화면 오른쪽 상단의 같이 보기를 켜면 실시간 채팅을 이용할 수 있어요.</p>
         : messages.length === 0 ? <p className="watch-side-panel__empty">아직 채팅이 없어요. 첫 메시지를 남겨보세요.</p>
-        : messages.map(message => <div className="watch-side-panel__message" key={message.id}>
-          <strong>{message.senderId === currentUid ? '나' : message.senderName || '사용자'}</strong>
-          <p>{message.text}</p>
-        </div>)}
+          : messages.map(message => <div className="watch-side-panel__message" key={message.id}>
+            <strong>{message.senderId === currentUid ? '나' : message.senderName || '사용자'}</strong>
+            <p>{message.text}</p>
+          </div>)}
     </div>
     <form className="watch-side-panel__compose" onSubmit={onSend}>
       <input value={draft} onChange={event => onDraftChange(event.target.value)} maxLength={300} placeholder={togetherMode ? '메시지를 입력하세요' : '같이 보기에서 채팅할 수 있어요'} aria-label="실시간 채팅 메시지" disabled={!togetherMode} />

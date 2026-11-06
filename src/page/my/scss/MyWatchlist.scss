@@ -1,245 +1,115 @@
 @use "../../../scss/variables" as *;
 
-.my-watchlist {
+.watchlist {
     width: 100%;
-    min-height: 100vh;
-    background: $color-bg;
-    color: $color-text-pri;
 
-    .my-watchlist-inner {
-        width: 100%;
-        padding: 50px $padding-main 100px;
-    }
-
-    // ========================================
-    // 상단 콘텐츠 탭
-    // ========================================
-    .my-watchlist-tabs {
-        display: flex;
-        align-items: center;
-        gap: 40px;
-
-        width: 100%;
-        padding-bottom: 24px;
-        border-bottom: 2px solid $color-border-light;
-
-        a {
-            font-family: $font-main;
-            font-size: 24px;
-            font-weight: 500;
-            color: $color-text-sec2;
-            text-decoration: none;
-            white-space: nowrap;
-            transition: color 0.2s;
-
-            &:hover {
-                color: $color-text-pri;
-            }
-
-            &.active {
-                color: $color-text-pri;
-                font-weight: 600;
-            }
-        }
-    }
-
-    // ========================================
-    // 장르 필터 + 편집 메뉴
-    // ========================================
-    .my-watchlist-toolbar {
+    // 찜한 콘텐츠 제목 영역
+    .watchlist-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 24px;
-
-        width: 100%;
-        margin: 28px 0 32px;
+        margin-bottom: 24px;
     }
 
-    // 장르 필터
-    .my-watchlist-genres {
+    // 제목 + 화살표
+    .watchlist-heading {
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 28px;
+        gap: 10px;
+        color: $color-text-pri;
+        text-decoration: none;
 
-        button {
-            padding: 0;
-            border: none;
-            background: transparent;
-
+        h2 {
+            margin: 0;
             font-family: $font-main;
-            font-size: 18px;
-            font-weight: 500;
-            color: $color-text-sec2;
+            font-size: 28px;
+            font-weight: 600;
+        }
 
-            cursor: pointer;
-            transition: color 0.2s;
+        .watchlist-arrow {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
 
-            &:hover,
-            &.active {
-                color: $color-text-pri;
-            }
+        &:hover {
+            opacity: 0.8;
         }
     }
 
-    // 오른쪽 편집 메뉴
-    .my-watchlist-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 16px;
-        flex-shrink: 0;
+    // 오른쪽 점 세 개
+    .watchlist-more {
+        color: $color-text-sec1;
+        font-size: 22px;
+        letter-spacing: 3px;
+        text-decoration: none;
+        line-height: 1;
 
-        button {
-            padding: 0;
-            border: none;
-            background: transparent;
-
-            font-family: $font-main;
-            font-size: 16px;
-            font-weight: 500;
-            color: $color-text-sec2;
-            white-space: nowrap;
-
-            cursor: pointer;
-            transition: color 0.2s;
-
-            &:hover {
-                color: $color-text-pri;
-            }
-
-            &.delete {
-                color: #ff5555;
-            }
-
-            &:disabled {
-                opacity: 0.4;
-                cursor: not-allowed;
-            }
+        &:hover {
+            color: $color-text-pri;
         }
     }
 
-    // ========================================
-    // 찜한 콘텐츠 목록
-    // ========================================
-    .my-watchlist-grid {
+    // 찜 목록 안내 문구
+    .watchlist-message {
+        padding: 80px 20px;
+        color: $color-text-sec1;
+        font-size: 16px;
+        text-align: center;
+    }
+
+    // 찜한 콘텐츠 카드 목록
+    .watchlist-grid {
         display: grid;
         width: 100%;
         grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 32px 20px;
+        gap: 20px;
     }
 
-    .my-watchlist-item {
-        min-width: 0;
-    }
-
-    // 콘텐츠 썸네일
-    .my-watchlist-thumbnail {
-        position: relative;
+    .watchlist-item {
         display: block;
+        min-width: 0;
+        color: $color-text-pri;
+        text-decoration: none;
+
+        &:hover .watchlist-thumbnail img {
+            transform: scale(1.05);
+        }
+    }
+
+    // 가로형 콘텐츠 썸네일
+    .watchlist-thumbnail {
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         width: 100%;
         aspect-ratio: 16 / 9;
-        padding: 0;
-
-        border: none;
         border-radius: 8px;
-        background: #404040;
+        background: #262626;
         overflow: hidden;
 
-        cursor: pointer;
-
-        &:disabled {
-            cursor: default;
-            opacity: 1;
+        img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
         }
 
-        &:focus-visible {
-            outline: 2px solid $color-pri;
-            outline-offset: 3px;
-        }
-    }
-
-    // TMDB 이미지
-    .my-watchlist-image {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    // 이미지가 없는 콘텐츠
-    .my-watchlist-placeholder {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        width: 100%;
-        height: 100%;
-        padding: 12px;
-
-        font-size: 18px;
-        font-weight: 500;
-        color: $color-text-pri;
-        text-align: center;
-    }
-
-    // ========================================
-    // 편집 모드 오버레이
-    // ========================================
-    .my-watchlist-overlay {
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-
-        display: flex;
-        justify-content: flex-end;
-        align-items: flex-start;
-
-        // 피그마 기준 수정값
-        padding: 13px;
-
-        background: rgba(0, 0, 0, 0.45);
-
-        &.selected {
-            background: rgba(0, 0, 0, 0.65);
+        span {
+            color: $color-text-sec1;
+            font-size: 16px;
         }
     }
 
-    // SVG 체크 아이콘
-    .my-watchlist-check {
-        display: block;
-        width: 34px;
-        height: 34px;
-        object-fit: contain;
-    }
-
-    // ========================================
-    // 콘텐츠 정보
-    // ========================================
-    .my-watchlist-info {
+    .watchlist-title {
         margin-top: 12px;
-
-        h3 {
-            margin: 0;
-            font-family: $font-main;
-            font-size: 18px;
-            font-weight: 500;
-            color: $color-text-pri;
-
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-    }
-
-    // 찜한 콘텐츠가 없을 때
-    .my-watchlist-empty {
-        padding: 100px 20px;
-        font-size: 18px;
-        color: $color-text-sec2;
-        text-align: center;
+        font-size: 16px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 
@@ -249,117 +119,46 @@
 
 // 태블릿
 @media (min-width: 768px) and (max-width: 1279px) {
-    .my-watchlist {
-        .my-watchlist-inner {
-            padding: 40px 40px 80px;
+    .watchlist {
+        .watchlist-heading h2 {
+            font-size: 24px;
         }
 
-        .my-watchlist-tabs {
-            gap: 28px;
-
-            a {
-                font-size: 20px;
-            }
-        }
-
-        .my-watchlist-genres {
-            gap: 20px;
-
-            button {
-                font-size: 16px;
-            }
-        }
-
-        .my-watchlist-grid {
+        .watchlist-grid {
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 28px 16px;
+            gap: 16px;
         }
     }
 }
 
 // 모바일
 @media (max-width: 767px) {
-    .my-watchlist {
-        .my-watchlist-inner {
-            padding: 30px 20px 60px;
-        }
-
-        // 상단 탭 가로 스크롤
-        .my-watchlist-tabs {
-            gap: 24px;
-            padding-bottom: 18px;
-
-            overflow-x: auto;
-            scrollbar-width: none;
-
-            &::-webkit-scrollbar {
-                display: none;
+    .watchlist {
+        .watchlist-heading {
+            h2 {
+                font-size: 20px;
             }
 
-            a {
-                font-size: 16px;
+            span {
+                font-size: 24px;
             }
         }
 
-        .my-watchlist-toolbar {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 20px;
-            margin: 24px 0;
+        .watchlist-more {
+            font-size: 16px;
         }
 
-        // 장르 필터 가로 스크롤
-        .my-watchlist-genres {
-            flex-wrap: nowrap;
-            gap: 20px;
-            overflow-x: auto;
-            scrollbar-width: none;
-
-            &::-webkit-scrollbar {
-                display: none;
-            }
-
-            button {
-                flex-shrink: 0;
-                font-size: 14px;
-            }
+        .watchlist-message {
+            padding: 60px 16px;
+            font-size: 15px;
         }
 
-        .my-watchlist-actions {
-            gap: 14px;
-
-            button {
-                font-size: 14px;
-            }
-        }
-
-        // 모바일 2열
-        .my-watchlist-grid {
+        .watchlist-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 24px 12px;
+            gap: 12px;
         }
 
-        .my-watchlist-overlay {
-            padding: 8px;
-        }
-
-        .my-watchlist-check {
-            width: 24px;
-            height: 24px;
-        }
-
-        .my-watchlist-placeholder {
-            font-size: 14px;
-        }
-
-        .my-watchlist-info {
-            h3 {
-                font-size: 16px;
-            }
-        }
-
-        .my-watchlist-empty {
-            padding: 80px 16px;
+        .watchlist-title {
             font-size: 16px;
         }
     }

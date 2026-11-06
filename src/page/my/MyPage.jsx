@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { MySidebar } from './components/MySidebar';
-import { Watchlist } from './components/WahchList';
-import { WatchHistory } from './components/WatchHistory';
-import { PurchaseList } from './components/PurchaseList';
-import { LiveReminder } from './components/LiveReminder';
-import { LanguageModal } from './components/LanguageModal';
+import { Watchlist } from './components/MyWatchList';
+import { WatchHistory } from './components/MyWatchHistory';
+import { PurchaseList } from './components/MyPurchaseList';
+import { LiveReminder } from './components/MyLiveReminder';
+import { LanguageModal } from './components/MyLanguageModal';
 
 import './scss/MyPage.scss';
 
