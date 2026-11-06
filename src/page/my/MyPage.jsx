@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MySidebar } from './components/MySidebar';
 import { WatchHistory } from './components/WatchHistory';
@@ -18,7 +17,6 @@ export const MyPage = () => {
   return (
     <main className="mypage">
       <div className="mypage-inner">
-
         {/* PC / 태블릿 사이드바 */}
         <div className="mypage-desktop-sidebar">
           <MySidebar onOpenLanguage={openLanguageModal} />
@@ -35,7 +33,7 @@ export const MyPage = () => {
         {/* 콘텐츠 영역 */}
         <div className="mypage-content">
           <WatchHistory />
-          <WatchList/>
+          <WatchList />
           <PurchaseList />
           <MyWowClip />
           <LiveReminder />

@@ -49,7 +49,6 @@ export const Policy = () => {
 
         <section className="policy-page__content" aria-labelledby="policy-title">
           <h2 id="policy-title">{policy.title}</h2>
-          <p className="policy-page__notice">원문 기반 요약 시안 · 내용 확인 2026.10.28</p>
           <p className="policy-page__disclaimer">이 화면은 정책의 요약본이며 법적 효력을 가진 전문이 아닙니다. 정확한 조항과 최신 개정 내용은 공식 원문을 확인해 주세요.</p>
           <div className="policy-page__summaries">
             {policy.summary.map(([heading, content]) => (
@@ -62,7 +61,7 @@ export const Policy = () => {
           <button type="button" className="policy-page__button" onClick={() => setIsModalOpen(true)}>
             자세히 보기
           </button>
-          <p className="policy-page__source">참조 원문 <a href={policy.url} target="_blank" rel="noopener noreferrer">{policy.url}</a></p>
+          {/* <p className="policy-page__source">참조 원문 <a href={policy.url} target="_blank" rel="noopener noreferrer">{policy.url}</a></p> */}
         </section>
       </div>
 
@@ -75,7 +74,6 @@ export const Policy = () => {
               <h2 id="policy-modal-title">{policy.title}</h2>
               <button ref={closeRef} className="policy-page__button" type="button" onClick={() => setIsModalOpen(false)}>닫기</button>
             </header>
-            <p className="policy-page__modal-description">{policy.path === '/privacy' ? '개인정보 처리방침 전문은 아직 제공되지 않아 요약만 표시합니다.' : '제공된 원문 전체 수록 · 조항 및 부칙 포함 (공식 원문과 차이가 있을 수 있습니다.)'}</p>
             <div className="policy-page__modal-scroll" tabIndex={0} aria-label="약관 내용 스크롤 영역">
               {policyFullText[policy.path] ? (
                 <div className="policy-page__full-text">{policyFullText[policy.path]}</div>
@@ -89,8 +87,7 @@ export const Policy = () => {
               )}
             </div>
             <footer className="policy-page__modal-footer">
-              <a className="policy-page__button" href={policy.url} target="_blank" rel="noopener noreferrer">공식 사이트에서 전문 읽기</a>
-              <span>공식 원문은 새 창에서 열립니다.</span>
+              <a className="policy-page__button" href={policy.url} target="_blank" rel="noopener noreferrer">쿠팡에서 전문 읽기</a>
             </footer>
           </section>
         </div>

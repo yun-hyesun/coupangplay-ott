@@ -1,0 +1,288 @@
+/* size */
+/* size */
+/* size */
+.wowclip-gallery {
+  min-height: calc(100vh - 76px);
+  background: #0f1114;
+  color: #fff;
+  font-family: "Pretendard", sans-serif;
+}
+
+.wowclip-gallery__inner {
+  max-width: 1920px;
+  margin: auto;
+  padding: 48px 64px 90px;
+}
+
+.wowclip-gallery__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.wowclip-gallery__header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 40px;
+}
+
+.wowclip-gallery__header p {
+  margin-top: 8px;
+  color: #a3a3a3;
+  font-size: 16px;
+}
+
+.wowclip-gallery__controls {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.wowclip-gallery__sort {
+  color: #a3a3a3;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.wowclip-gallery__sort select {
+  margin-left: 8px;
+  background: #292d33;
+  color: #fff;
+  border: 1px solid #525252;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.wowclip-gallery__mine {
+  background: #292d33;
+  color: #fff;
+  border-radius: 8px;
+  padding: 12px 18px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.wowclip-gallery__notice,
+.wowclip-gallery__local {
+  color: #a3a3a3;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.wowclip-gallery__notice {
+  color: #d4d4d4;
+}
+
+.wowclip-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px 16px;
+}
+
+.wowclip-gallery__empty {
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.wowclip-gallery__empty h2 {
+  font-size: 22px;
+}
+
+.wowclip-gallery__empty p {
+  color: #a3a3a3;
+}
+
+.wowclip-gallery__empty a {
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: #0084ff;
+  color: #fff;
+  text-decoration: none;
+}
+
+.wowclip-card {
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1b1e23;
+  min-width: 0;
+}
+
+.wowclip-card__poster {
+  aspect-ratio: 16/9;
+  position: relative;
+  background: #262626;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.wowclip-card__art {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, #273d5b, #10141b 70%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.wowclip-card__art span {
+  color: #5d9eff;
+  letter-spacing: 0.2em;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wowclip-card__art strong {
+  font-size: 22px;
+}
+
+.wowclip-card__poster--hidden .wowclip-card__art {
+  filter: brightness(0.25) blur(8px);
+}
+
+.wowclip-card__play {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.wowclip-card:hover .wowclip-card__play {
+  opacity: 1;
+}
+
+.wowclip-card__reveal {
+  z-index: 1;
+  background: #292d33;
+  color: #fff;
+  padding: 12px 16px;
+  border: 1px solid #737373;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wowclip-card__duration {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  background: rgba(0, 0, 0, 0.7333333333);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.wowclip-card__info {
+  padding: 16px;
+}
+
+.wowclip-card__info h3 {
+  font-size: 18px;
+  line-height: 28px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wowclip-card__info p {
+  color: #d4d4d4;
+  margin-top: 4px;
+  font-size: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wowclip-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 20px;
+  color: #a3a3a3;
+  font-size: 12px;
+}
+
+.wowclip-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.wowclip-card__actions button {
+  padding: 8px 12px;
+  border: 1px solid #525252;
+  background: #292d33;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+  .wowclip-gallery__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 800px) {
+  .wowclip-gallery__inner {
+    padding: 32px 20px 64px;
+  }
+  .wowclip-gallery__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wowclip-gallery__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .wowclip-gallery__header h1 {
+    font-size: 28px;
+  }
+}
+@media (max-width: 520px) {
+  .wowclip-gallery__grid {
+    grid-template-columns: 1fr;
+  }
+  .wowclip-gallery__controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+.wowclip-card__play {
+  z-index: 2;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.wowclip-card__play:focus-visible,
+.wowclip-card__title-link:focus-visible {
+  outline: 2px solid #0084ff;
+  outline-offset: 3px;
+}
+
+.wowclip-card__title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.wowclip-card__title-link:hover {
+  text-decoration: underline;
+}
+
+.wowclip-card__poster:focus-within .wowclip-card__play {
+  opacity: 1;
+}

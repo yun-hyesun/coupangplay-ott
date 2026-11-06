@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { VoucherModal } from './components/VoucherModal';
-import { SubscriptionMenu } from './components/SubscriptionMenu';
+import { VoucherModal } from './components/MyVoucherModal';
+import { SubscriptionMenu } from './components/MySubscriptionMenu';
 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSubscriptionStore } from '../../store/useSubscriptionStore';
@@ -12,6 +12,10 @@ import { useSubscriptionStore } from '../../store/useSubscriptionStore';
 import { MyPageHeader } from './components/MyPageHeader';
 
 import './scss/MySubscription.scss';
+import './scss/MySubscriptionUi.scss';
+import { MySubscriptionButton } from './components/MySubscriptionButton';
+import { MySubscriptionActions } from './components/MySubscriptionActions';
+import { MySubscriptionModal } from './components/MySubscriptionModal';
 
 export const MySubscription = () => {
     const navigate = useNavigate();
@@ -19,6 +23,9 @@ export const MySubscription = () => {
     const user = useAuthStore((state) => state.user);
     const authLoading = useAuthStore((state) => state.loading);
     const [cancelTarget, setCancelTarget] = useState(null);
+    const [actionBusy, setActionBusy] = useState(false);
+    const [actionError, setActionError] = useState('');
+    const [cancelDone, setCancelDone] = useState(false);
 
     const {
         subscriptions,
@@ -69,18 +76,26 @@ export const MySubscription = () => {
     // 구독 해지 팝업 열기
     const handleCancelSubscription = (subscription) => {
         setOpenMenuId(null);
+        setActionError('');
         setCancelTarget(subscription);
     };
 
-    // 구독 해지 확정
+    // 서버가 정기결제 중단을 확인한 후에만 완료 상태를 표시합니다.
     const handleConfirmCancel = async () => {
-        if (!cancelTarget || loading) return;
-
-        const success = await onCancelSubscription(cancelTarget.id);
-
-        if (success) {
-            setCancelTarget(null);
-        }
+        if (!cancelTarget || actionBusy || !user) return;
+        setActionBusy(true); setActionError('');
+        try {
+            await MySubscriptionActions({id:cancelTarget.id,action:'cancel',user});
+            if (useAuthStore.getState().user?.uid !== user.uid) return;
+            setCancelTarget(null); setCancelDone(true); await onLoadSubscriptions();
+        } catch (e) { setActionError(e.message); }
+        finally { setActionBusy(false); }
+    };
+    const handleResume = async (subscription) => {
+        if(actionBusy || !user)return;
+        setActionBusy(true);setActionError('');
+        try{await MySubscriptionActions({id:subscription.id,action:'resume',user});await onLoadSubscriptions();}
+        catch(e){setActionError(e.message);}finally{setActionBusy(false);}
     };
 
     return (
@@ -164,9 +179,8 @@ export const MySubscription = () => {
                                 <div className="subscription-info">
                                     <h3>{subscription.name}</h3>
                                     <p>{subscription.billingCycle}</p>
-                                    <p>
-                                        다음 결제일 {subscription.nextPaymentDate}
-                                    </p>
+                                    <p>{subscription.status === 'cancel_pending' ? `이용 종료일 ${subscription.endDate || subscription.nextPaymentDate}` : `다음 결제일 ${subscription.nextPaymentDate}`}</p>
+                                    {subscription.status === 'cancel_pending' && <div className="my-pass-cancel-banner"><p>구독 해지가 신청되었습니다. 이용기간 종료일까지 서비스를 이용할 수 있습니다.</p><MySubscriptionButton secondary disabled={actionBusy} onClick={()=>handleResume(subscription)}>해지 신청 취소</MySubscriptionButton></div>}
                                 </div>
 
                                 <div className="subscription-menu-wrap">
@@ -214,6 +228,7 @@ export const MySubscription = () => {
                         </span>
                     </div>
                 )}
+                {(error || actionError) && subscriptions.length > 0 && <p role="alert">{error || actionError}</p>}
             </div>
 
             {isVoucherOpen && (
@@ -225,57 +240,19 @@ export const MySubscription = () => {
             )}
 
 
-            {cancelTarget && (
-                <div
-                    className="subscription-modal-overlay"
-                    onClick={() => {
-                        if (!loading) setCancelTarget(null);
-                    }}
-                >
-                    <div
-                        className="subscription-cancel-modal"
-                        role="alertdialog"
-                        aria-modal="true"
-                        aria-labelledby="cancel-modal-title"
-                        aria-describedby="cancel-modal-description"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <h3 id="cancel-modal-title">구독 해지</h3>
-
-                        <p id="cancel-modal-description">
-                            <strong>{cancelTarget.name}</strong> 이용권을
-                            <br />
-                            정말 해지하시겠습니까?
-                        </p>
-
-                        <span className="cancel-modal-notice">
-                            해지 후에는 구독 목록에서 해당 이용권이 삭제됩니다.
-                        </span>
-
-                        <div className="subscription-modal-buttons">
-                            <button
-                                type="button"
-                                className="cancel-close-btn"
-                                onClick={() => setCancelTarget(null)}
-                                disabled={loading}
-                            >
-                                취소
-                            </button>
-
-                            <button
-                                type="button"
-                                className="cancel-confirm-btn"
-                                onClick={handleConfirmCancel}
-                                disabled={loading}
-                            >
-                                {loading ? '처리 중...' : '해지하기'}
-                            </button>
-                        </div>
-                    </div>
+            {cancelTarget && <MySubscriptionModal title="구독 해지" onClose={() => setCancelTarget(null)} busy={actionBusy}>
+                <p><strong>{cancelTarget.name}</strong> 이용권을 해지하시겠습니까?</p>
+                <p>구독 해지 후에도 이용기간 종료일까지 서비스를 이용할 수 있습니다.</p>
+                {actionError && <p role="alert">{actionError}</p>}
+                <div className="my-pass-modal-actions">
+                    <MySubscriptionButton secondary disabled={actionBusy} onClick={() => setCancelTarget(null)}>돌아가기</MySubscriptionButton>
+                    <MySubscriptionButton disabled={actionBusy} onClick={handleConfirmCancel}>{actionBusy ? '처리 중…' : '구독 해지'}</MySubscriptionButton>
                 </div>
-            )}
+            </MySubscriptionModal>}
 
 
+
+            {cancelDone && <MySubscriptionModal title="구독 해지가 신청되었습니다" onClose={()=>setCancelDone(false)}><p>이용기간 종료일까지 서비스를 이용할 수 있습니다.</p><MySubscriptionButton onClick={()=>setCancelDone(false)}>확인</MySubscriptionButton></MySubscriptionModal>}
         </main>
     );
 };
