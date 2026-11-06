@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useAuthStore } from '../../store/useAuthStore';
-import { readClips } from '../../components/wowclip/clipStorage';
-import { formatClipTime } from '../../components/wowclip/ClipRange';
-import { createClipComment, deleteClipComment, subscribeClipComments } from '../../service/wowClipCommentService';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { readClips } from '../../../components/wowclip/clipStorage';
+import { formatClipTime } from '../../../components/wowclip/ClipRange';
+import { createClipComment, deleteClipComment, subscribeClipComments } from '../../../service/wowClipCommentService';
 import { SAMPLE_CLIPS } from './WowClipGallery';
-import './WowClipDetail.scss';
+import '../scss/WowClipDetail.scss';
 
 const dateText = (value) => value?.toDate?.()?.toLocaleString('ko-KR') || '방금 전';
 export function WowClipDetail() {

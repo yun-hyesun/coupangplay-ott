@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import WatchIcon from '../watch/WatchIcon';
+import WatchIcon from '../../watch/WatchIcon';
 
 const clipIcons = { scissors: 'scissors', spoiler: 'eye-off', link: 'link' };
 
