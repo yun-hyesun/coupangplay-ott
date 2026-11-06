@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ContentTitle } from '../../../components/content/ContentTitle';
-import { ClipCard } from '../../wowclip/ClipCard';
-import { useWowClipLibrary } from '../../wowclip/useWowClipLibrary';
-import '../../wowclip/WowClip.scss';
+import { ClipCard } from '../../wowclip/components/ClipCard';
+import { useWowClipLibrary } from '../../wowclip/hooks/useWowClipLibrary';
+import '../../wowclip/scss/WowClip.scss';
 import '../scss/WowClipSection.scss';
 
 export const WowClipSection = () => {

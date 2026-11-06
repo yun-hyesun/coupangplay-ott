@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react';
-import { relativeTime } from './wowClipData';
+import { relativeTime } from '../utils/wowClipData';
 import { ClipIcon, ClipSort } from './WowClipUi';
 
 const CommentForm = ({ onSubmit, onCancel, replyTo, inputRef }) => {
