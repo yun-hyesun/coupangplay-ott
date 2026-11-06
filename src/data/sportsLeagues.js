@@ -12,6 +12,7 @@ const SCHEDULE_API_LEAGUE_IDS = new Set([
 // 표시 순서는 기존 카탈로그를 따르고 API 일정이 연결된 리그만 포함합니다.
 export const SPORTS_LEAGUES = catalog.filter((league) => SCHEDULE_API_LEAGUE_IDS.has(league.id)).map((league) => ({
   ...league,
+  whiteLogoPath: `/images/sports/league-detail/white-logos/${league.id}.png`,
   ...(ESPN_LEAGUE_PATHS[league.id] ? { espnPath: ESPN_LEAGUE_PATHS[league.id] } : {}),
 }));
 export const SPORTS_LEAGUE_BY_ID = Object.fromEntries(SPORTS_LEAGUES.map((league) => [league.id, league]));

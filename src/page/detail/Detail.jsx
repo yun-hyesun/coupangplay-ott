@@ -242,9 +242,9 @@ export const Detail = () => {
 
             <h1 id="detail-title">{title}</h1>
 
-            <p className="detail-hero__description">
+            {/* <p className="detail-hero__description">
               {overview}
-            </p>
+            </p> */}
 
             <div className="detail-hero__actions">
               <Link

@@ -1,3 +1,4 @@
+import { CategoryMenu } from '../../components/content/CategoryMenu';
 import { ContentRail } from '../../components/content/ContentRail';
 import { MainBanner } from '../../components/content/MainBanner';
 
@@ -5,6 +6,7 @@ export const Movie = () => {
   return (
     <main>
       <MainBanner type="movie"/>
+      <CategoryMenu section="movie" />
 
       <ContentRail
         title="인기 영화 TOP 20" 

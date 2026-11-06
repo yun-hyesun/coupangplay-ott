@@ -1,11 +1,10 @@
-
 @use "../../../scss/mixins" as *;
 @use "../../../scss/variables" as *;
 
 .my-feedback {
     width: 100%;
     min-height: 100vh;
-     background: #101113; // [추가] 내 티켓과 동일한 배경색
+    background: #101113; // [추가] 내 티켓과 동일한 배경색
     color: $color-text-pri;
 
     // ========================================
@@ -132,6 +131,27 @@
 
         border: 1px solid $color-border;
         background: #101113;
+
+        // 스크롤바 스타일
+        scrollbar-width: thin;
+        scrollbar-color: #555b63 #101113;
+
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: #101113;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #555b63;
+            border-radius: 10px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+            background: #777d85;
+        }
 
         li {
             width: 100%;

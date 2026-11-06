@@ -7,6 +7,10 @@
   background: #080B12;
   color: #FFFFFF;
 }
+.my-history .my-history-mobile-title,
+.my-history .my-history-mobile-actions {
+  display: none;
+}
 .my-history .my-history-inner {
   width: 100%;
   padding: 50px clamp(20px, 4vw, 80px) 100px;
@@ -239,29 +243,50 @@
     padding: 30px 20px 60px;
   }
   .my-history .my-history-tabs {
-    gap: 24px;
-    padding-bottom: 18px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 0;
+    border-bottom: none;
+    overflow: visible;
   }
-  .my-history .my-history-tabs::-webkit-scrollbar {
+  .my-history .my-history-tabs > a:not(.my-history-back) {
     display: none;
   }
-  .my-history .my-history-tabs a {
-    font-size: 16px;
+  .my-history .my-history-tabs .my-history-back {
+    display: flex;
+    margin-right: 0;
+    width: 24px;
+    height: 24px;
   }
-  .my-history .my-history-back {
-    margin-right: -8px;
+  .my-history .my-history-tabs .my-history-mobile-title {
+    display: block;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #FFFFFF;
+  }
+  .my-history .my-history-tabs .my-history-mobile-actions {
+    display: flex;
+    margin-left: auto;
+  }
+  .my-history .my-history-tabs .my-history-mobile-actions button {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #A3A3A3;
+    font-size: 14px;
+    cursor: pointer;
   }
   .my-history .my-history-toolbar {
     flex-direction: column;
     align-items: stretch;
-    gap: 20px;
+    gap: 16px;
     margin: 24px 0;
   }
   .my-history .my-history-genres {
     flex-wrap: nowrap;
-    gap: 20px;
+    gap: 8px;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -270,17 +295,51 @@
   }
   .my-history .my-history-genres button {
     flex-shrink: 0;
+    padding: 10px 18px;
+    border-radius: 50px;
+    background: #202123;
+    color: #FFFFFF;
     font-size: 14px;
+  }
+  .my-history .my-history-genres button.active {
+    background: #fff;
+    color: #111;
   }
   .my-history .my-history-actions {
-    gap: 14px;
+    display: none;
   }
-  .my-history .my-history-actions button {
-    font-size: 14px;
+  .my-history:has(.my-history-mobile-actions button) .my-history-toolbar .my-history-actions:has(.delete) {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .my-history:has(.my-history-mobile-actions button) .my-history-toolbar .my-history-actions:has(.delete) button:last-child {
+    display: none;
   }
   .my-history .my-history-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px 12px;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .my-history .my-history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .my-history .my-history-thumbnail {
+    width: 45%;
+    flex-shrink: 0;
+  }
+  .my-history .my-history-info {
+    flex: 1;
+    min-width: 0;
+    margin-top: 0;
+  }
+  .my-history .my-history-info h3 {
+    font-size: 16px;
+    white-space: normal;
+    line-height: 1.4;
+  }
+  .my-history .my-history-info p {
+    font-size: 13px;
   }
   .my-history .my-history-overlay {
     padding: 8px;
@@ -292,14 +351,44 @@
   .my-history .my-history-placeholder {
     font-size: 14px;
   }
-  .my-history .my-history-info h3 {
-    font-size: 16px;
-  }
-  .my-history .my-history-info p {
-    font-size: 14px;
-  }
   .my-history .my-history-empty {
     padding: 80px 16px;
     font-size: 16px;
+  }
+  .my-history .watchRail[data-history-layout=list] {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+  .my-history .watchRail[data-history-layout=list] .contentRail-info {
+    display: grid;
+    grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
+    width: 100%;
+    min-width: 0;
+  }
+  .my-history .watchRail[data-history-layout=list] .contentRail-visual {
+    grid-column: 1;
+    grid-row: 1/span 2;
+    width: 100%;
+    aspect-ratio: 16/9;
+  }
+  .my-history .watchRail[data-history-layout=list] .contentCard-sportsTitle {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .my-history .watchRail[data-history-layout=list] .contentCard-resumeInfo {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #D4D4D4;
   }
 }

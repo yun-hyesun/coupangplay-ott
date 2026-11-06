@@ -138,6 +138,32 @@ export const MyLive = () => {
                             {tab.title}
                         </Link>
                     ))}
+
+
+                    {/* 모바일 전용 제목 */}
+                    <h1 className="my-live-mobile-title">
+                        라이브 예약 알림
+                    </h1>
+
+                    {/* 모바일 전용 편집 버튼 */}
+                    <div className="my-live-mobile-actions">
+                        {isEditing ? (
+                            <button
+                                type="button"
+                                onClick={handleComplete}
+                            >
+                                완료
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleEdit}
+                            >
+                                편집
+                            </button>
+                        )}
+                    </div>
+
                 </nav>
 
 

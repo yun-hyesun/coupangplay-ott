@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ClipRange, formatClipTime } from '../../../components/wowclip/ClipRange';
+import { ClipRange } from '../../../components/wowclip/ClipRange';
+import { formatClipTime } from '../../../components/wowclip/formatClipTime';
 import '../scss/WowClipCreate.scss';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { saveClip } from '../../../components/wowclip/clipStorage';
@@ -28,13 +29,11 @@ export function WowClipCreate() {
   const [description, setDescription] = useState('');
   const [spoiler, setSpoiler] = useState(false);
   const [notice, setNotice] = useState('');
-  const [saved, setSaved] = useState(false);
   const titleOfContent = source.content?.name || source.content?.title || source.content?.original_name || source.content?.original_title || '시청 중인 영상';
   const videoSrc = source.videoSrc || '';
   const onRangeChange = (nextStart, nextEnd) => {
     setStart(nextStart);
     setEnd(nextEnd);
-    setSaved(false);
     if (video.current) { video.current.pause(); video.current.currentTime = nextStart; }
     setPlaying(false);
   };
@@ -66,7 +65,6 @@ export function WowClipCreate() {
     };
     try {
       saveClip(user?.uid, clip);
-      setSaved(true);
       navigate(status === 'published' ? '/wowclip' : '/my/review?tab=wowclip', {
         state: {
           clipNotice: status === 'published'
@@ -87,13 +85,13 @@ export function WowClipCreate() {
               <div className="wow-clip-editor__screen">
                 {videoSrc ? <video ref={video} src={videoSrc} playsInline muted={muted} onEnded={() => setPlaying(false)} onError={() => setNotice('원본 영상 파일을 불러올 수 없습니다.')} /> : <div className="wow-clip-editor__placeholder"><span>WOW CLIP</span><strong>{titleOfContent}</strong><p>클립 구간 미리보기</p><small>원본 영상 파일 연결 시 이곳에서 재생됩니다.</small></div>}
               </div>
-              <div className="wow-clip-editor__player-actions"><button type="button" onClick={preview}>{playing ? 'Ⅱ' : '▶'} <span>구간 재생</span></button><button type="button" onClick={() => { setMuted(!muted); if (video.current) video.current.muted = !muted; }}>{muted ? '음소거' : '소리'}</button><button type="button" className="wow-clip-editor__captions" onClick={() => setCaptions(!captions)} aria-pressed={captions}>CC　자막 {captions ? '켜짐' : '꺼짐'}</button></div>
+              <div className="wow-clip-editor__player-actions"><button type="button" onClick={preview}>{playing ? 'Ⅱ' : '▶'} <span>구간 재생</span></button><button type="button" onClick={() => { setMuted(!muted); if (video.current) video.current.muted = !muted; }}>{muted ? '음소거' : '소리'}</button><button type="button" className="wow-clip-editor__captions" onClick={() => setCaptions(!captions)} aria-pressed={captions}>CC{'\u3000'}자막 {captions ? '켜짐' : '꺼짐'}</button></div>
             </div>
             <ClipRange start={start} end={end} min={windowMin} max={windowMax} onChange={onRangeChange} />
             <p className="wow-clip-editor__help">양쪽 파란 손잡이로 시작·종료 시간을 조절하세요. 키보드 방향키로 1초씩 이동할 수 있습니다.</p>
           </div>
           <div className="wow-clip-editor__form">
-            <label>클립 제목<input maxLength={60} value={title} onChange={(e) => { setTitle(e.target.value); setSaved(false); }} placeholder="장면을 소개하는 제목을 입력하세요" /></label>
+            <label>클립 제목<input maxLength={60} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="장면을 소개하는 제목을 입력하세요" /></label>
             <label>클립 소개<textarea maxLength={200} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="이 장면을 추천하는 이유를 남겨보세요" /></label>
             <fieldset><legend>공개 범위</legend><label><input type="radio" checked={visibility === 'public'} onChange={() => setVisibility('public')} /> 와우클립 공개</label><label><input type="radio" checked={visibility === 'link'} onChange={() => setVisibility('link')} /> 링크 전용</label></fieldset>
             <label className="wow-clip-editor__checkbox"><input type="checkbox" checked={spoiler} onChange={(e) => setSpoiler(e.target.checked)} /> 스포일러 포함</label>

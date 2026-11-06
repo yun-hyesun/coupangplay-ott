@@ -106,6 +106,21 @@
   overflow-y: auto;
   border: 1px solid #262626;
   background: #101113;
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+}
+.my-feedback__options::-webkit-scrollbar {
+  width: 6px;
+}
+.my-feedback__options::-webkit-scrollbar-track {
+  background: #101113;
+}
+.my-feedback__options::-webkit-scrollbar-thumb {
+  background: #555b63;
+  border-radius: 10px;
+}
+.my-feedback__options::-webkit-scrollbar-thumb:hover {
+  background: #777d85;
 }
 .my-feedback__options li {
   width: 100%;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./scss/Sports.scss";
 
 import {
@@ -29,7 +30,9 @@ import {
 } from "../../service/sportsService";
 
 const SHOW_LIVE_SECTION = false;
+const LEAGUE_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-leagues";
 const TEAM_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-teams";
+const VALID_SPORTS_LEAGUE_IDS = new Set(SPORTS_LEAGUES.map((league) => league.id));
 const VALID_SPORTS_TEAM_IDS = new Set(Object.values(SPORTS_TEAMS_BY_LEAGUE).flat().map((team) => team.id));
 const SEOUL_TIME_ZONE = "Asia/Seoul";
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -43,6 +46,19 @@ function getSeoulDateKey(date = new Date()) {
   }).formatToParts(date);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return values.year + "-" + values.month + "-" + values.day;
+}
+
+function readSelectedLeagueIds() {
+  try {
+    const stored = window.localStorage.getItem(LEAGUE_SUBSCRIPTIONS_STORAGE_KEY);
+    if (stored === null) return DEFAULT_SELECTED_LEAGUE_IDS;
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed)
+      ? [...new Set(parsed.filter((id) => typeof id === "string" && VALID_SPORTS_LEAGUE_IDS.has(id)))].slice(0, 10)
+      : DEFAULT_SELECTED_LEAGUE_IDS;
+  } catch {
+    return DEFAULT_SELECTED_LEAGUE_IDS;
+  }
 }
 
 function shiftDate(dateKey, amount) {
@@ -295,9 +311,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
 export const Sports = () => {
   const leagueListDrag = useHorizontalDragScroll();
   const [activeCategory, setActiveCategory] = useState("전체");
-  const [selectedLeagueIds, setSelectedLeagueIds] = useState(
-    DEFAULT_SELECTED_LEAGUE_IDS,
-  );
+  const [selectedLeagueIds, setSelectedLeagueIds] = useState(readSelectedLeagueIds);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState(() => {
     try {
@@ -509,6 +523,17 @@ export const Sports = () => {
   useEffect(() => {
     try {
       window.localStorage.setItem(
+        LEAGUE_SUBSCRIPTIONS_STORAGE_KEY,
+        JSON.stringify(selectedLeagueIds),
+      );
+    } catch {
+      // Keep the current selection in memory when local storage is unavailable.
+    }
+  }, [selectedLeagueIds]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
         TEAM_SUBSCRIPTIONS_STORAGE_KEY,
         JSON.stringify(selectedTeamIds),
       );
@@ -629,17 +654,15 @@ export const Sports = () => {
             {visibleLeagues.map((league) => {
               const selected = selectedLeagueIds.includes(league.id);
               return (
-                <button
-                  type="button"
+                <Link
                   key={league.id}
+                  to={`/sports/league/${encodeURIComponent(league.id)}`}
                   className={
                     "sports-league-chip" +
                     (selected ? " is-selected" : "")
                   }
                   style={league.accent ? { "--sports-chip-color": league.accent } : undefined}
-                  aria-label={league.name + (selected ? " 선택 해제" : " 추가")}
-                  aria-pressed={selected}
-                  onClick={() => toggleLeague(league)}
+                  aria-label={league.name + " 상세 페이지"}
                 >
                   {league.logoPath ? (
                     <img src={league.logoPath} alt="" loading="lazy" draggable={false} />
@@ -654,7 +677,7 @@ export const Sports = () => {
                     </span>
                   )}
                   <span className="sr-only">{league.name}</span>
-                </button>
+                </Link>
               );
             })}
           </div>
@@ -698,7 +721,11 @@ export const Sports = () => {
         <div className="sports-featured-leagues">
           {featuredLeagues.map((league) => (
             <article className="sports-featured-league" key={league.id}>
-              <div className="sports-featured-league__emblem">
+              <Link
+                className="sports-featured-league__emblem"
+                to={`/sports/league/${encodeURIComponent(league.id)}`}
+                aria-label={`${league.name} 상세 페이지`}
+              >
                 <span className="sports-featured-league__logo">
                   {league.logoPath ? (
                     <img src={league.logoPath} alt="" loading="lazy" />
@@ -706,19 +733,14 @@ export const Sports = () => {
                     <span>{getLeagueAbbreviation(league)}</span>
                   )}
                 </span>
-              </div>
+              </Link>
               <h3>{league.name}</h3>
               <p>경기 일정과 영상 보기</p>
-              <button
-                type="button"
-                onClick={() => {
-                  document
-                    .getElementById("sports-schedule-title")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
+              <Link
+                to={`/sports/league/${encodeURIComponent(league.id)}`}
               >
                 리그 둘러보기 <span aria-hidden="true">→</span>
-              </button>
+              </Link>
             </article>
           ))}
         </div>

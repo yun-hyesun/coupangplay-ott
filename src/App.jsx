@@ -8,6 +8,7 @@ import { MainLayout } from './components/layout/MainLayout';
 // 메인 메뉴
 import { Home } from './page/home/Home';
 import { Sports } from './page/sports/Sports';
+import { LeagueDetail } from './page/sports/LeagueDetail';
 import { Entertainment } from './page/entertainment/Entertainment';
 import { Movie } from './page/movie/Movie';
 import { Store } from './page/store/Store';
@@ -26,9 +27,9 @@ import { Signup } from './page/login/SignUp';
 import { Login } from './page/login/Login';
 
 // 프로필
-import { ProfileSelect } from './page/profile/ProfileSelect';
+import { ProfileSelect } from '././page/profile/ProfileSelect';
 import { ProfileCreate } from './page/profile/ProfileCreate';
-import { ProfileEdit } from './page/profile/ProfileEdit';
+import { ProfileEdit } from '././page/profile/ProfileEdit';
 
 // 마이페이지
 import { MyPage } from './page/my/MyPage';
@@ -36,6 +37,9 @@ import { MyHistory } from './page/my/MyHistory';
 import { MyWatchlist } from './page/my/MyWatchlist';
 import { MyPurchases } from './page/my/MyPurchases';
 import { MyLive } from './page/my/MyLive';
+import { MyPassGuide } from './page/my/MyPassGuide';
+import { MySubscriptionCheckout } from './page/my/MySubscriptionCheckout';
+import { MyMembership } from './page/my/MyMembership';
 import { MySubscription } from './page/my/MySubscription';
 import { MyPaymentHistory } from './page/my/MyPaymentHistory';
 import { MyTicket } from './page/my/MyTicket';
@@ -49,6 +53,8 @@ import { MyNews } from './page/my/MyNews';
 import { More } from './page/more/More';
 // 검색
 import { Search } from './page/search/Search';
+// 카테고리
+import { Category } from './page/category/Category';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
@@ -73,6 +79,7 @@ function App() {
 
         {/* 메뉴 페이지 */}
         <Route path="/sports" element={<Sports />} />
+        <Route path="/sports/league/:leagueId" element={<LeagueDetail />} />
         <Route path="/drama" element={<Drama />} />
         <Route path="/entertainment" element={<Entertainment />} />
         <Route path="/movie" element={<Movie />} />
@@ -108,6 +115,9 @@ function App() {
         <Route path="/my/news" element={<MyNews />} />
 
         {/* 구독내역 */}
+        <Route path="/my/subscription/passes" element={<MyPassGuide />} />
+        <Route path="/my/subscription/checkout" element={<MySubscriptionCheckout />} />
+        <Route path="/my/subscription/membership" element={<MyMembership />} />
         <Route path="/my/subscription" element={<MySubscription />} />
         <Route path="/my/subscription/payment" element={<MyPaymentHistory />} />
 
@@ -118,7 +128,8 @@ function App() {
         <Route path="/watch/sports/:id" element={<SportsWatch />} />
         {/* 검색 */}
         <Route path="/search" element={<Search />} />
-
+        {/* 카테고리 */}
+        <Route path="/category/:section/:categoryId" element={<Category />} />
 
       </Route>
 

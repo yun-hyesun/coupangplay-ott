@@ -157,6 +157,32 @@ export const MyPurchases = () => {
                             {tab.title}
                         </Link>
                     ))}
+
+
+                    {/* 모바일 전용 제목 */}
+                    <h1 className="my-purchases-mobile-title">
+                        개별 구매
+                    </h1>
+
+                    {/* 모바일 전용 편집 버튼 */}
+                    <div className="my-purchases-mobile-actions">
+                        {isEditing ? (
+                            <button
+                                type="button"
+                                onClick={handleComplete}
+                            >
+                                완료
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleEdit}
+                            >
+                                편집
+                            </button>
+                        )}
+                    </div>
+
                 </nav>
 
 
