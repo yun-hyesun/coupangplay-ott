@@ -6,6 +6,7 @@ import WatchIcon from './WatchIcon';
 import WatchSettingsPanel from './WatchSettingsPanel';
 import WatchChatPanel from './WatchChatPanel';
 import { FullVideoClipButton } from '../wowclip/components/FullVideoClipButton';
+import { captureClipPlayback } from '../wowclip/utils/captureClipPlayback';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
@@ -34,6 +35,7 @@ export const Watch = () => {
     ? location.state
     : null;
   const content = state?.content ?? {};
+  const clipTvDetails = useMovieStore(s => type === 'tv' ? s.tvDetails[id] : null);
   const seasonNumber = state?.seasonNumber ?? 1;
   const episodeNumber = state?.episodeNumber || 1;
   const storedEpisodes = useMovieStore(s => s.episodes[`${id}-${seasonNumber}`] ?? EMPTY);
@@ -389,8 +391,13 @@ export const Watch = () => {
             <div className="watch-controls__right">
               <FullVideoClipButton disabled={!youtubeKey || !!videoSrc} getSource={() => {
                 const player = youtubePlayer.current;
-                const source = { content: { ...content, id, media_type: type }, videoKey: youtubeKey, videoTitle: selectedVideo?.name || title, currentTime: player?.getCurrentTime() || 0, duration: player?.getDuration() || 0 };
-                player?.pauseVideo();
+                const source = {
+                  content: { ...clipTvDetails, ...content, id, media_type: type, number_of_seasons: clipTvDetails?.number_of_seasons ?? content.number_of_seasons ?? null },
+                  seasonNumber: type === 'tv' ? seasonNumber : undefined,
+                  episodeNumber: type === 'tv' ? episodeNumber : undefined,
+                  videoKey: youtubeKey, videoTitle: selectedVideo?.name || title,
+                  ...captureClipPlayback(player, { currentTime, duration }),
+                };
                 return source;
               }} />
               <button type="button" aria-label="회차 목록" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}><WatchIcon name="episodes" /></button>

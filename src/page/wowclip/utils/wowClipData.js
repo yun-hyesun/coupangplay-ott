@@ -1,3 +1,5 @@
+import { clipEpisodeDetails } from './clipSource.js';
+
 export const formatTime = (seconds = 0) => {
   const value = Math.max(0, Math.floor(Number(seconds) || 0));
   return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
@@ -21,26 +23,32 @@ export const clipImage = (clip, protectedImage = false) =>
 
 export const contentTitle = (content) => content?.title || content?.name || '작품';
 
-export const makeClip = ({ content, video, title, start, end, visibility, spoiler, owner, layout = 'landscape', cropX = 50 }) => ({
-  id: crypto.randomUUID(),
-  content: {
-    id: content.id,
-    media_type: content.media_type || (content.title ? 'movie' : 'tv'),
-    title: contentTitle(content),
-    backdrop_path: content.backdrop_path || null,
-    poster_path: content.poster_path || null,
-  },
-  videoKey: video.key,
-  videoTitle: video.name,
-  title: title.trim() || `${contentTitle(content)}에서 오린 장면`,
-  start, end, visibility, spoiler,
-  layout: layout === 'portrait' ? 'portrait' : 'landscape',
-  cropX: Number.isFinite(cropX) ? Math.max(0, Math.min(100, cropX)) : 50,
-  views: 0,
-  ownerId: owner.id,
-  author: owner.name,
-  avatar: owner.avatar,
-  createdAt: new Date().toISOString(),
-  likes: [],
-  comments: [],
-});
+export const makeClip = ({ content, video, title, start, end, visibility, spoiler, owner, seasonNumber, episodeNumber, layout = 'landscape', cropX = 50 }) => {
+  const mediaType = content.media_type || (content.title ? 'movie' : 'tv');
+  const episode = clipEpisodeDetails({ content: { ...content, media_type: mediaType }, seasonNumber, episodeNumber });
+  return {
+    id: crypto.randomUUID(),
+    content: {
+      id: content.id,
+      media_type: mediaType,
+      title: contentTitle(content),
+      backdrop_path: content.backdrop_path || null,
+      poster_path: content.poster_path || null,
+      ...(mediaType === 'tv' ? { number_of_seasons: episode.numberOfSeasons } : {}),
+    },
+    ...(mediaType === 'tv' ? { seasonNumber: episode.seasonNumber, episodeNumber: episode.episodeNumber } : {}),
+    videoKey: video.key,
+    videoTitle: video.name,
+    title: title.trim() || `${contentTitle(content)}에서 오린 장면`,
+    start, end, visibility, spoiler,
+    layout: layout === 'portrait' ? 'portrait' : 'landscape',
+    cropX: Number.isFinite(cropX) ? Math.max(0, Math.min(100, cropX)) : 50,
+    views: 0,
+    ownerId: owner.id,
+    author: owner.name,
+    avatar: owner.avatar,
+    createdAt: new Date().toISOString(),
+    likes: [],
+    comments: [],
+  };
+};
