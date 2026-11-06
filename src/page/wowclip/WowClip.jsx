@@ -27,6 +27,7 @@ const contentTabs = [
 export const WowClip = () => {
   const [params, setParams] = useSearchParams();
   const location = useLocation();
+
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.currentProfile);
   const library = useWowClipLibrary();
@@ -39,29 +40,39 @@ export const WowClip = () => {
   const [now] = useState(() => Date.now());
 
   const owner = {
-    id: (user?.uid || 'local') + ':' + (profile?.id || 'default'),
+    id: `${user?.uid || 'local'}:${profile?.id || 'default'}`,
     name: profile?.name || user?.displayName || '나',
-    avatar: profile?.avatar || '/images/profile.svg'
+    avatar: profile?.avatar || '/images/profile.svg',
   };
 
   const mine = params.get('view') === 'mine';
   const sort = params.get('sort') === 'recent' ? 'recent' : 'popular';
   const period = params.get('period') || 'all';
   const selectedId = params.get('clip');
+
   const selected = library.clips.find((clip) => clip.id === selectedId);
-  const protectedClip = selected?.spoiler && !revealed.includes(selected.id);
+  const protectedClip =
+    selected?.spoiler && !revealed.includes(selected.id);
 
   useEffect(() => {
     if (!notice) return;
+
     const timer = window.setTimeout(() => setNotice(''), 5000);
+
     return () => window.clearTimeout(timer);
   }, [notice]);
 
   const updateParams = (change, replace = false) => {
     const next = new URLSearchParams(params);
-    Object.entries(change).forEach(([key, value]) =>
-      value ? next.set(key, value) : next.delete(key)
-    );
+
+    Object.entries(change).forEach(([key, value]) => {
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+    });
+
     setParams(next, { replace });
   };
 
