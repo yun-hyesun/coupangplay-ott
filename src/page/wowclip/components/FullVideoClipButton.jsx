@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/useAuthStore';
-import { useProfileStore } from '../../store/useProfileStore';
+import { useAuthStore } from '../../../store/useAuthStore';
+import { useProfileStore } from '../../../store/useProfileStore';
 import { ClipEditor } from './ClipEditor';
 import { ClipIcon } from './WowClipUi';
-import { useWowClipLibrary } from './useWowClipLibrary';
-import './WowClip.scss';
+import { useWowClipLibrary } from '../hooks/useWowClipLibrary';
+import '../scss/WowClip.scss';
 
 // 원본 시청 플레이어에만 배치하는 진입점. 클립 감상 화면에서는 사용하지 않습니다.
 export const FullVideoClipButton = ({ getSource, disabled = false }) => {

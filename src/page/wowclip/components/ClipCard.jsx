@@ -1,7 +1,7 @@
-import { clipImage, contentTitle } from './wowClipData';
-import { clipPresentation, formatViews, sourceLeftPercent } from './clipPresentation';
+import { clipImage, contentTitle } from '../utils/wowClipData';
+import { clipPresentation, formatViews, sourceLeftPercent } from '../utils/clipPresentation';
 import { ClipIcon } from './WowClipUi';
-import './ClipCard.scss';
+import '../scss/ClipCard.scss';
 
 export const ClipCard = ({ clip, onOpen }) => {
   const { layout, cropX } = clipPresentation(clip);

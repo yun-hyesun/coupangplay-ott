@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { ClipPlayer } from './ClipPlayer';
 import { ClipComments } from './ClipComments';
 import { ClipIcon } from './WowClipUi';
-import { clipImage, contentTitle, relativeTime } from './wowClipData';
-import './ClipFeed.scss';
+import { clipImage, contentTitle, relativeTime } from '../utils/wowClipData';
+import '../scss/ClipFeed.scss';
 
 const FeedIcon = ({ name }) => <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{({ up: <path d="m6 15 6-6 6 6" />, down: <path d="m6 9 6 6 6-6" />, comment: <path d="M4 4h16v13H8l-4 4V4Z" />, share: <><path d="m15 3 6 6-6 6V3Z" /><path d="M15 7C7 7 4 11 3 18c3-4 6-5 12-5" /></>, more: <><circle cx="12" cy="5" r="1" fill="currentColor" /><circle cx="12" cy="12" r="1" fill="currentColor" /><circle cx="12" cy="19" r="1" fill="currentColor" /></> })[name]}</svg>;
 
