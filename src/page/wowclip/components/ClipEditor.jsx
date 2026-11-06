@@ -2,8 +2,10 @@ import { useRef, useState } from 'react';
 import { ClipModal } from './WowClipUi';
 import { ClipPlayer } from './ClipPlayer';
 import { contentTitle, formatTime, makeClip } from '../utils/wowClipData';
+import { clipEpisodeLabel } from '../utils/clipSource';
 import { initialClipWindow, moveClipRange } from '../utils/clipTimeline';
 import { ClipCropSelector } from './ClipCropSelector';
+import { useAuthStore } from '../../../store/useAuthStore';
 import '../scss/ClipEditor.scss';
 
 const Timeline = ({ range, onChange, minimum, maximum, position }) => {
@@ -55,11 +57,11 @@ const Timeline = ({ range, onChange, minimum, maximum, position }) => {
 };
 
 export const ClipEditor = ({ owner, source, onClose, onSave }) => {
+  const user = useAuthStore((state) => state.user);
   const [initial] = useState(() => initialClipWindow(source?.duration, source?.currentTime));
   const [range, setRange] = useState({ start: initial.start, end: initial.end });
   const [bounds, setBounds] = useState({ start: initial.contextStart, end: initial.contextEnd });
   const [previewRequest, setPreviewRequest] = useState({ time: initial.start, revision: 0 });
-  const [mirrorRequest, setMirrorRequest] = useState({ time: initial.start, revision: 0 });
   const [layout, setLayout] = useState('landscape');
   const [cropX, setCropX] = useState(50);
   const [previewPosition, setPreviewPosition] = useState(initial.start);
@@ -69,28 +71,26 @@ export const ClipEditor = ({ owner, source, onClose, onSave }) => {
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
-  if (!source?.fullVideo || !source.videoKey || !source.content) return null;
+  if (!user || !source?.fullVideo || !source.videoKey || !source.content) return null;
   const updateRange = (next, time, play = false) => {
     setRange(next);
     setPreviewRequest((previous) => ({ time, play, revision: previous.revision + 1 }));
-    setMirrorRequest((previous) => ({ time, play, revision: previous.revision + 1 }));
   };
   const submit = async (event) => {
     event.preventDefault();
     if (!ready) { setError('영상을 불러온 뒤 구간을 확인해 주세요.'); return; }
-    if (saving) return;
-    setSaving(true);
-    try { await onSave(makeClip({ content: source.content, video: { key: source.videoKey, name: source.videoTitle }, title, ...range, visibility, spoiler, owner, layout, cropX })); }
-    catch (failure) { setError(failure.message); setSaving(false); }
+    if (savingRef.current) return;
+    savingRef.current = true; setSaving(true);
+    try { await onSave(makeClip({ content: source.content, video: { key: source.videoKey, name: source.videoTitle }, seasonNumber: source.seasonNumber, episodeNumber: source.episodeNumber, title, ...range, visibility, spoiler, owner, layout, cropX })); }
+    catch (failure) { setError(failure.message); savingRef.current = false; setSaving(false); }
   };
 
   return <ClipModal title="클립 만들기" onClose={onClose} className="wowclip-editor">
-    <div className="wowclip-layout-options" role="tablist" aria-label="클립 화면 형식">{[['landscape', '가로형', '16:9'], ['portrait', '세로형', '9:16']].map(([value, label, ratio]) => <button key={value} type="button" role="tab" aria-selected={layout === value} onClick={() => setLayout(value)}><span className={'wowclip-layout-icon is-' + value} aria-hidden="true" /><strong>{label}</strong><span>{ratio}</span></button>)}</div>
     <form className="wowclip-editor-body" onSubmit={submit}>
       <div className="wowclip-editor-preview">
-        <h3 className="wowclip-editor-preview-label">구간과 화면 선택</h3>
-        <div className="wowclip-editor-source-player"><ClipPlayer clip={{ videoKey: source.videoKey, videoTitle: source.videoTitle, ...range }} preview previewRequest={previewRequest} onPosition={setPreviewPosition} onPlaybackChange={(play, time) => setMirrorRequest((previous) => ({ time, play, revision: previous.revision + 1 }))} onDuration={(length) => {
+        <div className="wowclip-editor-source-player"><ClipPlayer clip={{ videoKey: source.videoKey, videoTitle: source.videoTitle, ...range }} preview previewRequest={previewRequest} onPosition={setPreviewPosition} onDuration={(length) => {
           if (!(length > 0)) return;
           setReady(true);
           const corrected = initialClipWindow(length, source.currentTime);
@@ -100,17 +100,15 @@ export const ClipEditor = ({ owner, source, onClose, onSave }) => {
             updateRange(next, next.start);
           }
         }} />{layout === 'portrait' && <ClipCropSelector value={cropX} onChange={setCropX} />}</div>
-        {layout === 'portrait' && <label className="wowclip-crop-position">화면 위치<input type="range" min="0" max="100" step="1" value={cropX} onChange={(event) => setCropX(Number(event.target.value))} /><span>영역을 좌우로 움직여 담을 부분을 선택하세요.</span></label>}
         <Timeline range={range} onChange={updateRange} minimum={bounds.start} maximum={bounds.end} position={previewPosition} />
       </div>
       <div className="wowclip-editor-details">
-        <h3 className="wowclip-editor-preview-label">클립 미리보기</h3>
-        <ClipPlayer clip={{ videoKey: source.videoKey, videoTitle: source.videoTitle, ...range, layout, cropX }} preview previewRequest={mirrorRequest} controls={false} muted />
-        <div className="wowclip-editor-source"><h3>{contentTitle(source.content)}</h3><p>{source.videoTitle}</p></div>
+        <h3 className="wowclip-editor-preview-label wowclip-editor-video-heading wowclip-editor-source-heading"><span className="wowclip-editor-video-title" title={contentTitle(source.content)}>{contentTitle(source.content)}</span>{clipEpisodeLabel(source) && <span className="wowclip-editor-episode">· {clipEpisodeLabel(source)}</span>}</h3>
         <label className="wowclip-title-input">클립 제목<input value={title} maxLength={80} placeholder="이 장면에 제목을 붙여보세요." onChange={(event) => setTitle(event.target.value)} /></label>
-        <fieldset className="wowclip-sharing"><legend>공유 설정</legend><p>공유 범위</p><div className="wowclip-share-options">
-          {[['link', '링크로만 공유'], ['public', '와우 클립에 공개']].map(([value, label]) => <label key={value}><input type="radio" name="clip-visibility" value={value} checked={visibility === value} onChange={() => setVisibility(value)} /><span>{label}</span></label>)}
-        </div><label className="wowclip-checkbox"><input type="checkbox" checked={spoiler} onChange={(event) => setSpoiler(event.target.checked)} />스포일러 보호</label><p className="wowclip-sharing-help">{visibility === 'public' ? '이 브라우저의 와우 클립 목록에 표시해요.' : '전체 목록에 표시하지 않고 내 클립에 보관해요.'}</p></fieldset>
+        <fieldset className="wowclip-format-setting"><legend>화면 형식</legend><div className="wowclip-layout-options wowclip-segmented" data-selected-index={layout === 'portrait' ? 1 : 0}>{[['landscape', '가로형', '16:9'], ['portrait', '세로형', '9:16']].map(([value, label, ratio]) => <label key={value}><input type="radio" name="clip-layout" value={value} aria-label={`${label} ${ratio}`} checked={layout === value} onChange={() => setLayout(value)} /><span className="wowclip-layout-option"><span className="wowclip-layout-icon-slot" aria-hidden="true"><span className={'wowclip-layout-icon is-' + value} /></span><span className="wowclip-layout-label"><strong>{label}</strong><span>{ratio}</span></span></span></label>)}</div></fieldset>
+        <fieldset className="wowclip-sharing"><legend>공유 설정</legend><div className="wowclip-share-options wowclip-segmented" data-selected-index={visibility === 'link' ? 1 : 0}>
+          {[['public', '와우 클립에 공개'], ['link', '링크로만 공유']].map(([value, label]) => <label key={value}><input type="radio" name="clip-visibility" value={value} checked={visibility === value} onChange={() => setVisibility(value)} /><span>{label}</span></label>)}
+        </div><label className="wowclip-checkbox"><input type="checkbox" checked={spoiler} onChange={(event) => setSpoiler(event.target.checked)} />스포일러 보호</label><p className="wowclip-sharing-help">{visibility === 'public' ? '와우 클립 목록에서 누구나 볼 수 있어요.' : '전체 목록에 표시하지 않고 링크가 있는 사람에게만 공유해요.'}</p></fieldset>
         {error && <p className="wowclip-error" role="alert">{error}</p>}
         <div className="wowclip-editor-submit"><p>선택한 영상의 구간을 클립으로 저장해요.</p><button type="submit" className="wowclip-button wowclip-button--primary" disabled={!ready || saving}>{saving ? '저장 중…' : visibility === 'public' ? '와우 클립에 공개' : '저장하고 링크 복사'}</button></div>
       </div>
