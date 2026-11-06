@@ -54,20 +54,32 @@ test('인증 확인 중에는 제작을 잠그고 로그아웃한 편집은 다�
   assert.equal(root.root.findAllByType('section').length, 0);
 });
 
-test('클립 저장 실패는 감상으로 이동하지 않고 성공한 뒤에만 이동한다', async () => {
+test('직접 조절한 세로 위치·공유 방식을 저장하고 실패 시 편집 값을 유지해 다시 저장한다', async () => {
   useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
   let rejectSave, resolveSave;
-  globalThis.__wowUiService.saveClip = () => new Promise((resolve, reject) => { resolveSave = resolve; rejectSave = reject; });
+  const savedClips = [];
+  globalThis.__wowUiService.saveClip = (clip) => { savedClips.push(clip); return new Promise((resolve, reject) => { resolveSave = resolve; rejectSave = reject; }); };
   const root = await mount(withRoutes(h(FullVideoClipButton, { getSource: () => source })));
   await act(async () => root.root.findByProps({ 'aria-label': '클립 만들기' }).props.onClick());
+  assert.equal(root.root.findByProps({ type: 'radio', value: 'public' }).props.checked, true);
+  await act(async () => root.root.findByProps({ type: 'radio', value: 'portrait' }).props.onChange());
+  await act(async () => root.root.findByProps({ 'aria-label': '세로 화면 위치' }).props.onKeyDown({ key: 'ArrowRight', shiftKey: true, preventDefault() {} }));
+  await act(async () => root.root.findByProps({ type: 'radio', value: 'link' }).props.onChange());
   let pending;
   await act(async () => { pending = root.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
+  assert.equal(savedClips[0].layout, 'portrait');
+  assert.equal(savedClips[0].cropX, 60);
+  assert.equal(savedClips[0].visibility, 'link');
   assert.equal(root.root.findByProps({ 'aria-label': '현재 경로' }).children[0], '/watch/tv/78648');
   await act(async () => { rejectSave(new Error('검수 저장 실패')); await pending; });
   assert.equal(root.root.findByProps({ role: 'alert' }).children[0], '검수 저장 실패');
   assert.equal(root.root.findByProps({ 'aria-label': '현재 경로' }).children[0], '/watch/tv/78648');
+  assert.equal(root.root.findByProps({ 'aria-label': '세로 화면 위치' }).props['aria-valuenow'], 60);
+  await act(async () => root.root.findByProps({ 'aria-label': '세로 화면 위치' }).props.onKeyDown({ key: 'ArrowLeft', shiftKey: true, preventDefault() {} }));
   await act(async () => { pending = root.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
   await act(async () => { resolveSave(); await pending; });
+  assert.equal(savedClips[1].cropX, 50);
+  assert.equal(savedClips[1].visibility, 'link');
   assert.equal(root.root.findByProps({ 'aria-label': '현재 경로' }).children[0], '/wowclip');
 });
 
