@@ -1,4 +1,6 @@
 import { useState } from 'react';
+// [추가] 공통 페이지 헤더
+import { MyPageHeader } from './components/MyPageHeader';
 
 import './scss/MyReview.scss';
 
@@ -25,7 +27,7 @@ export const MyReview = () => {
       <div className="my-review__inner">
         {/* 페이지 제목 */}
         <div className="my-review__header">
-          <h2>리뷰 관리</h2>
+          <MyPageHeader title="리뷰 관리" />
         </div>
 
         {/* 리뷰 탭 */}

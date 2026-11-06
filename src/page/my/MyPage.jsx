@@ -8,6 +8,7 @@ import { LiveReminder } from './components/LiveReminder';
 import { LanguageModal } from './components/LanguageModal';
 
 import './scss/MyPage.scss';
+import { MyWowClip } from './MyWowClip';
 
 export const MyPage = () => {
   // 언어 설정 모달 상태
@@ -26,6 +27,7 @@ export const MyPage = () => {
           <WatchHistory />
           <Watchlist />
           <PurchaseList />
+          <MyWowClip />
           <LiveReminder />
         </div>
       </div>
