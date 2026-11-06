@@ -14,31 +14,60 @@ import './scss/WowClipBrowse.scss';
 export const WowClip = () => {
   const [params, setParams] = useSearchParams();
   const location = useLocation();
+
   const user = useAuthStore((state) => state.user);
   const profile = useProfileStore((state) => state.currentProfile);
   const library = useWowClipLibrary();
-  const [revealed, setRevealed] = useState(() => location.state?.createdClipId ? [location.state.createdClipId] : []);
+
+  const [revealed, setRevealed] = useState(() =>
+    location.state?.createdClipId ? [location.state.createdClipId] : []
+  );
   const [deleteId, setDeleteId] = useState(null);
   const [notice, setNotice] = useState(location.state?.notice || '');
   const [now] = useState(() => Date.now());
-  const owner = { id: (user?.uid || 'local') + ':' + (profile?.id || 'default'), name: profile?.name || user?.displayName || '나', avatar: profile?.avatar || '/images/profile.svg' };
+
+  const owner = {
+    id: `${user?.uid || 'local'}:${profile?.id || 'default'}`,
+    name: profile?.name || user?.displayName || '나',
+    avatar: profile?.avatar || '/images/profile.svg',
+  };
+
   const mine = params.get('view') === 'mine';
   const sort = params.get('sort') === 'recent' ? 'recent' : 'popular';
   const period = params.get('period') || 'all';
   const selectedId = params.get('clip');
+
   const selected = library.clips.find((clip) => clip.id === selectedId);
-  const protectedClip = selected?.spoiler && !revealed.includes(selected.id);
+  const protectedClip =
+    selected?.spoiler && !revealed.includes(selected.id);
+
   useEffect(() => {
     if (!notice) return;
+
     const timer = window.setTimeout(() => setNotice(''), 5000);
+
     return () => window.clearTimeout(timer);
   }, [notice]);
+
   const updateParams = (change, replace = false) => {
     const next = new URLSearchParams(params);
-    Object.entries(change).forEach(([key, value]) => value ? next.set(key, value) : next.delete(key));
+
+    Object.entries(change).forEach(([key, value]) => {
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+    });
+
     setParams(next, { replace });
   };
-  const backToList = () => { updateParams({ clip: null }); window.scrollTo({ top: 0 }); };
+
+  const backToList = () => {
+    updateParams({ clip: null });
+    window.scrollTo({ top: 0 });
+  };
+
   const copyLink = async (clip) => {
     const url = new URL('/wowclip', window.location.origin);
     url.search = new URLSearchParams({ clip: clip.id });

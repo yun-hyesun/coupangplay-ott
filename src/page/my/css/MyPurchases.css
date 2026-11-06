@@ -35,6 +35,23 @@
   color: #FFFFFF;
   font-weight: 600;
 }
+.my-purchases .my-purchases-tabs .my-purchases-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-right: -20px;
+}
+.my-purchases .my-purchases-tabs .my-purchases-back img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.my-purchases .my-purchases-tabs .my-purchases-back:hover {
+  opacity: 0.7;
+}
 .my-purchases .my-purchases-toolbar {
   display: flex;
   justify-content: space-between;
@@ -194,6 +211,9 @@
   .my-purchases .my-purchases-tabs a {
     font-size: 20px;
   }
+  .my-purchases .my-purchases-back {
+    margin-right: -12px;
+  }
   .my-purchases .my-purchases-genres {
     gap: 20px;
   }
@@ -220,6 +240,9 @@
   }
   .my-purchases .my-purchases-tabs a {
     font-size: 16px;
+  }
+  .my-purchases .my-purchases-back {
+    margin-right: -8px;
   }
   .my-purchases .my-purchases-toolbar {
     flex-direction: column;

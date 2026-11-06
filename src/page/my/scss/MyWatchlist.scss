@@ -41,6 +41,27 @@
                 font-weight: 600;
             }
         }
+
+        // 뒤로가기 버튼
+        .my-watchlist-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-right: -20px;
+
+            img {
+                width: 24px;
+                height: 24px;
+                object-fit: contain;
+            }
+
+            &:hover {
+                opacity: 0.7;
+            }
+        }
     }
 
     // ========================================
@@ -274,6 +295,10 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 28px 16px;
         }
+
+        .my-watchlist-back {
+            margin-right: -12px;
+        }
     }
 }
 
@@ -299,6 +324,10 @@
             a {
                 font-size: 16px;
             }
+        }
+
+        .my-watchlist-back {
+            margin-right: -8px;
         }
 
         .my-watchlist-toolbar {

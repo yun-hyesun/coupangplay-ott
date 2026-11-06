@@ -19,9 +19,16 @@
         align-items: center;
         justify-content: space-between;
         gap: 20px;
+        width: 100%;
 
         padding-bottom: 24px;
         border-bottom: 1px solid $color-border-light;
+
+        .my-page-header {
+            flex: 1;
+            min-width: 0;
+            width: auto;
+        }
 
         h2 {
             font-family: $font-main;
@@ -33,6 +40,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
+            white-space: nowrap;
 
             padding: 12px 16px;
 

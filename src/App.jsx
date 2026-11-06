@@ -47,13 +47,14 @@ import { MyNews } from './page/my/MyNews';
 
 // 더보기
 import { More } from './page/more/More';
-import { WowClip } from './page/wowclip/WowClip';
 // 검색
 import { Search } from './page/search/Search';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
 import { SportsWatch } from './page/home/components/SportsWatch';
+
+import { WowClip } from './page/wowclip/WowClip';
 
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);

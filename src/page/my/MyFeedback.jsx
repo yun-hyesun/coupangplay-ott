@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { MyPageHeader } from './components/MyPageHeader';
 import './scss/MyFeedback.scss';
 
 const feedbackTopics = [
@@ -21,7 +22,6 @@ export const MyFeedback = () => {
 
     const isValid = topic !== '' && content.trim() !== '';
 
-
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -36,11 +36,18 @@ export const MyFeedback = () => {
         setIsOpen(false);
     };
 
-
     return (
         <main className="my-feedback">
+
+            {/* [수정] 내 티켓과 동일한 공통 헤더 영역 */}
+            <div className="my-feedback__container">
+                <div className="my-feedback__header">
+                    <MyPageHeader title="피드백 남기기" />
+                </div>
+            </div>
+
+            {/* [수정] 기존 피드백 폼은 별도 중앙 정렬 영역으로 유지 */}
             <div className="my-feedback__inner">
-                <h2>피드백 남기기</h2>
 
                 <p className="my-feedback__description">
                     남겨주신 피드백은 서비스 개선에 활용됩니다.
@@ -122,6 +129,7 @@ export const MyFeedback = () => {
                 </form>
             </div>
 
+            {/* 기존 피드백 제출 완료 모달 유지 */}
             {showCompleteModal && (
                 <div
                     className="feedback-modal-overlay"

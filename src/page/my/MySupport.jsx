@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react'
+// [추가] 공통 페이지 헤더
+import { MyPageHeader } from './components/MyPageHeader';
 import './scss/MySupport.scss'
 
 // 자주 묻는 질문 데이터
@@ -84,7 +86,7 @@ export const MySupport = () => {
         <main className="my-support">
             <div className="my-support-inner">
                 <div className="support-header">
-                    <h2>고객센터</h2>
+                    <MyPageHeader title="고객센터" />
                 </div>
 
                 <p className="my-support-description">

@@ -1,5 +1,7 @@
 
 import { useState } from 'react';
+// [추가] 공통 페이지 헤더
+import { MyPageHeader } from './components/MyPageHeader';
 import './scss/MyCoupon.scss';
 
 const coupons = [
@@ -45,7 +47,7 @@ export const MyCoupon = () => {
     <main className="my-coupon">
       <div className="my-coupon__inner">
         <header className="my-coupon__header">
-          <h2>할인 쿠폰</h2>
+          <MyPageHeader title="할인 쿠폰" />
         </header>
 
         <div className="my-coupon__tabs" role="tablist" aria-label="쿠폰 상태">

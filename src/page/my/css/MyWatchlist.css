@@ -35,6 +35,23 @@
   color: #FFFFFF;
   font-weight: 600;
 }
+.my-watchlist .my-watchlist-tabs .my-watchlist-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-right: -20px;
+}
+.my-watchlist .my-watchlist-tabs .my-watchlist-back img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.my-watchlist .my-watchlist-tabs .my-watchlist-back:hover {
+  opacity: 0.7;
+}
 .my-watchlist .my-watchlist-toolbar {
   display: flex;
   justify-content: space-between;
@@ -198,6 +215,9 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 28px 16px;
   }
+  .my-watchlist .my-watchlist-back {
+    margin-right: -12px;
+  }
 }
 @media (max-width: 767px) {
   .my-watchlist .my-watchlist-inner {
@@ -214,6 +234,9 @@
   }
   .my-watchlist .my-watchlist-tabs a {
     font-size: 16px;
+  }
+  .my-watchlist .my-watchlist-back {
+    margin-right: -8px;
   }
   .my-watchlist .my-watchlist-toolbar {
     flex-direction: column;
