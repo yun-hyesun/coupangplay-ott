@@ -11,6 +11,7 @@ const contentTabs = [
   { title: '시청내역', path: '/my/history' },
   { title: '찜한 콘텐츠', path: '/my/watchlist' },
   { title: '개별 구매', path: '/my/purchases' },
+  { title: '내 와우 클립', path: '/my/wowclip' },
   { title: '라이브 예약 알림', path: '/my/live' }
 ];
 
@@ -116,11 +117,25 @@ const HistoryList = ({ history, ownerKey }) => {
     <main className="my-history">
       <div className="my-history-inner">
 
+
         {/* 상단 콘텐츠 탭 */}
         <nav
           className="my-history-tabs"
           aria-label="마이페이지 콘텐츠 메뉴"
         >
+          {/* [추가] 마이페이지로 돌아가기 */}
+          <Link
+            to="/my"
+            className="my-history-back"
+            aria-label="마이페이지로 돌아가기"
+          >
+            <img
+              src="/images/icon/icon-arrow_back_gray.svg"
+              alt=""
+            />
+          </Link>
+
+          {/* 기존 탭 메뉴 */}
           {contentTabs.map((tab) => (
             <Link
               key={tab.path}
@@ -135,6 +150,8 @@ const HistoryList = ({ history, ownerKey }) => {
             </Link>
           ))}
         </nav>
+
+
 
         {/* 장르 필터 및 편집 메뉴 */}
         <div className="my-history-toolbar">

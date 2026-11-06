@@ -1,31 +1,66 @@
+
 @use "../../../scss/mixins" as *;
 @use "../../../scss/variables" as *;
 
 .my-feedback {
     width: 100%;
     min-height: 100vh;
+     background: #101113; // [추가] 내 티켓과 동일한 배경색
     color: $color-text-pri;
+
+    // ========================================
+    // [추가] 공통 페이지 헤더 영역
+    // MyTicket과 동일한 1400px 레이아웃
+    // ========================================
+
+    &__container {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 24px 0;
+    }
+
+    &__header {
+        padding-bottom: 24px;
+        border-bottom: 1px solid $color-border-light;
+
+        .my-page-header {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .my-page-header__back {
+            position: static;
+            transform: none;
+        }
+
+        .my-page-header h2 {
+            margin: 0;
+            font-family: $font-main;
+            font-size: 28px;
+            font-weight: $font-w-B-700;
+            line-height: 1.4;
+            text-align: left;
+        }
+    }
+
+    // ========================================
+    // 피드백 입력 영역
+    // 기존 430px 중앙 정렬 유지
+    // ========================================
 
     &__inner {
         width: 100%;
         max-width: 430px;
         margin: 0 auto;
-        padding: 130px 0 100px;
+        padding: 80px 0 100px;
 
         @include flexCol;
         align-items: center;
     }
 
-    h2 {
-        font-family: $font-main;
-        font-size: 32px;
-        font-weight: $font-w-B-700;
-        line-height: 1.4;
-        text-align: center;
-    }
-
     &__description {
-        margin-top: 24px;
+        margin-top: 0;
         margin-bottom: 32px;
 
         font-size: 16px;
@@ -165,7 +200,10 @@
     }
 }
 
-// 피드백 제출 완료 모달
+// ========================================
+// 피드백 제출 완료 모달 (기존 유지)
+// ========================================
+
 .feedback-modal-overlay {
     position: fixed;
     inset: 0;
@@ -222,30 +260,19 @@
     }
 }
 
-@media (max-width: 767px) {
-    .feedback-modal {
-        padding: 30px 20px;
-
-        h3 {
-            font-size: 20px;
-        }
-
-        p {
-            font-size: 14px;
-        }
-
-        button {
-            width: 100%;
-            max-width: 145px;
-        }
-    }
-}
+// ========================================
+// 반응형
+// ========================================
 
 // 태블릿
 @media (min-width: 768px) and (max-width: 1279px) {
     .my-feedback {
+        &__container {
+            padding: 32px 24px 0;
+        }
+
         &__inner {
-            padding-top: 100px;
+            padding-top: 80px;
         }
     }
 }
@@ -253,13 +280,21 @@
 // 모바일
 @media (max-width: 767px) {
     .my-feedback {
+        &__container {
+            padding: 24px 16px 0;
+        }
+
+        &__header {
+            padding-bottom: 20px;
+
+            .my-page-header h2 {
+                font-size: 24px;
+            }
+        }
+
         &__inner {
             width: calc(100% - 32px);
             padding: 80px 0;
-        }
-
-        h2 {
-            font-size: 26px;
         }
 
         &__description {
@@ -281,6 +316,23 @@
         &__submit {
             width: 100%;
             height: 50px;
+        }
+    }
+
+    .feedback-modal {
+        padding: 30px 20px;
+
+        h3 {
+            font-size: 20px;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            max-width: 145px;
         }
     }
 }

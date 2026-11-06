@@ -41,6 +41,27 @@
                 font-weight: 600;
             }
         }
+
+        // 뒤로가기 버튼
+        .my-purchases-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-right: -20px;
+
+            img {
+                width: 24px;
+                height: 24px;
+                object-fit: contain;
+            }
+
+            &:hover {
+                opacity: 0.7;
+            }
+        }
     }
 
     // ========================================
@@ -268,6 +289,10 @@
             }
         }
 
+        .my-purchases-back {
+            margin-right: -12px;
+        }
+
         .my-purchases-genres {
             gap: 20px;
 
@@ -290,7 +315,6 @@
             padding: 30px 20px 60px;
         }
 
-        // 상단 탭 가로 스크롤
         .my-purchases-tabs {
             gap: 24px;
             padding-bottom: 18px;
@@ -305,6 +329,10 @@
             a {
                 font-size: 16px;
             }
+        }
+
+        .my-purchases-back {
+            margin-right: -8px;
         }
 
         .my-purchases-toolbar {

@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react'
+// [추가] 공통 페이지 헤더
+import { MyPageHeader } from './components/MyPageHeader';
 import './scss/MyNews.scss'
 
 // 공지사항 및 이벤트 샘플 데이터
@@ -56,7 +58,7 @@ export const MyNews = () => {
             <div className="my-news-inner">
                 {/* 페이지 제목 */}
                 <div className="news-header">
-                    <h2>소식 및 혜택</h2>
+                    <MyPageHeader title="소식 및 혜택" />
                 </div>
 
                 <p className="my-news-description">

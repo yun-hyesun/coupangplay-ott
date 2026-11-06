@@ -1,0 +1,115 @@
+/* size */
+/* size */
+/* size */
+.my-wowclip {
+  width: 100%;
+}
+.my-wowclip .my-wowclip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.my-wowclip .my-wowclip-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #FFFFFF;
+  text-decoration: none;
+}
+.my-wowclip .my-wowclip-heading h2 {
+  margin: 0;
+  font-family: "Pretendard", sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+.my-wowclip .my-wowclip-heading .my-wowclip-arrow {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+.my-wowclip .my-wowclip-heading:hover {
+  opacity: 0.8;
+}
+.my-wowclip .my-wowclip-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.my-wowclip .my-wowclip-more:hover {
+  opacity: 0.8;
+}
+.my-wowclip .my-wowclip-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 20px;
+}
+.my-wowclip .my-wowclip-item {
+  min-width: 0;
+  color: #FFFFFF;
+  text-decoration: none;
+}
+.my-wowclip .my-wowclip-item h3 {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.my-wowclip .my-wowclip-item p {
+  margin-top: 6px;
+  color: #D4D4D4;
+  font-size: 16px;
+}
+.my-wowclip .my-wowclip-item:hover .my-wowclip-thumbnail img {
+  transform: scale(1.05);
+}
+.my-wowclip .my-wowclip-thumbnail {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9/16;
+  border-radius: 8px;
+  background: #292D33;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.my-wowclip .my-wowclip-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.my-wowclip .my-wowclip-thumbnail span {
+  color: #D4D4D4;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .my-wowclip .my-wowclip-heading h2 {
+    font-size: 24px;
+  }
+  .my-wowclip .my-wowclip-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .my-wowclip .my-wowclip-heading h2 {
+    font-size: 20px;
+  }
+  .my-wowclip .my-wowclip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .my-wowclip .my-wowclip-item h3 {
+    font-size: 16px;
+  }
+  .my-wowclip .my-wowclip-item p {
+    font-size: 14px;
+  }
+}

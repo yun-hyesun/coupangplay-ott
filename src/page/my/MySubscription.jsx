@@ -8,6 +8,9 @@ import { SubscriptionMenu } from './components/SubscriptionMenu';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSubscriptionStore } from '../../store/useSubscriptionStore';
 
+// [추가] 공통 페이지 헤더
+import { MyPageHeader } from './components/MyPageHeader';
+
 import './scss/MySubscription.scss';
 
 export const MySubscription = () => {
@@ -85,7 +88,7 @@ export const MySubscription = () => {
             <div className="my-subscription-inner">
 
                 <div className="subscription-header">
-                    <h2>내 구독내역</h2>
+                    <MyPageHeader title="내 구독내역" />
 
                     <button
                         type="button"
