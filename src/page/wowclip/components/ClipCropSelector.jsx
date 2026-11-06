@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { clipPresentation, cropLeftPercent, PORTRAIT_CROP_WIDTH } from './clipPresentation';
+import { clipPresentation, cropLeftPercent, PORTRAIT_CROP_WIDTH } from '../utils/clipPresentation';
 
 export const ClipCropSelector = ({ value, onChange }) => {
   const dragRef = useRef(null);

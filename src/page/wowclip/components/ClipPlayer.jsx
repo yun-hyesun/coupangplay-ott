@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import YouTube from 'react-youtube';
-import { clipImage, formatTime } from './wowClipData';
-import { clipPresentation, sourceLeftPercent } from './clipPresentation';
+import { clipImage, formatTime } from '../utils/wowClipData';
+import { clipPresentation, sourceLeftPercent } from '../utils/clipPresentation';
 import { ClipIcon, IconButton } from './WowClipUi';
-import './ClipPlayer.scss';
+import '../scss/ClipPlayer.scss';
 
 export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, onPosition, autoPlay = false, loop = false, compact = false, controls = true, muted: givenMuted, onMutedChange, onPlaybackChange, onFirstPlay }) => {
   const containerRef = useRef(null);

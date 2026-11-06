@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
 import { ClipModal } from './WowClipUi';
 import { ClipPlayer } from './ClipPlayer';
-import { contentTitle, formatTime, makeClip } from './wowClipData';
-import { initialClipWindow, moveClipRange } from './clipTimeline';
+import { contentTitle, formatTime, makeClip } from '../utils/wowClipData';
+import { initialClipWindow, moveClipRange } from '../utils/clipTimeline';
 import { ClipCropSelector } from './ClipCropSelector';
-import './ClipEditor.scss';
+import '../scss/ClipEditor.scss';
 
 const Timeline = ({ range, onChange, minimum, maximum, position }) => {
   const trackRef = useRef(null);
