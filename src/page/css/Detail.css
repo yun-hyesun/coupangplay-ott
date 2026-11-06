@@ -97,11 +97,14 @@
 }
 
 .detail-info {
+  max-width: 1752px;
+  margin-inline: auto;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1136fr) minmax(280px, 592fr);
   gap: 120px;
   width: 100%;
-  margin-inline: 0;
+  margin: auto 0;
   padding: 64px 0 0;
 }
 .detail-info__main {

@@ -123,11 +123,14 @@
 }
 
 .detail-info {
+  max-width: 1752px;
+  margin-inline: auto;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1136fr) minmax(280px, 592fr);
   gap: 120px;
   width: 100%;
-  margin-inline: 0; // 메인 .swiper-wrapper와 동일한 좌측 기준: $padding-main
+  margin: auto 0;
   padding: 64px 0 0;
 
   &__main {
@@ -198,6 +201,29 @@
     overflow-y: auto;
     overscroll-behavior-y: contain;
     align-content: start;
+
+    // 영상 페이지 회차 목록과 동일한 스크롤바 디자인
+    scrollbar-width: thin;
+    scrollbar-color: #525b69 #1b1e23;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #1b1e23;
+      border-radius: 999px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #525b69;
+      border: 2px solid #1b1e23;
+      border-radius: 999px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #0084ff;
+    }
   }
 }
 

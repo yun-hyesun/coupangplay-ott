@@ -478,6 +478,28 @@ $surface: #262626;
   min-height: 0;
   overflow-y: auto;
   padding: 16px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: #525b69 #1b1e23;
+
+  // Chrome, Edge, Safari: 회차 목록에만 적용
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #1b1e23;
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #525b69;
+    border: 2px solid #1b1e23;
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #0084ff;
+  }
 }
 
 .watch-side-panel__episodes>p {

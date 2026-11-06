@@ -54,6 +54,7 @@ export const Watch = () => {
     const episode = episodes.find(ep => Number(ep.episode_number) === Number(nextNumber));
     const nextVideoSrc = episode?.videoSrc || state?.videoSrcByEpisode?.[nextNumber] || '';
     navigate(`/watch/tv/${id}`, {
+      replace: true,
       state: {
         ...state, episodes, seasonNumber, episodeNumber: nextNumber,
         videoSrc: nextVideoSrc, resumeAt: 0, youtubeKey: '', autoPlayNext, showNextEpisodeNotice: autoPlayNext,
