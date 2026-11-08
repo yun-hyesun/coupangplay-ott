@@ -69,6 +69,14 @@ function getRaceStatus(startTime, hasResult) {
   return "FINISHED";
 }
 
+export async function getF1SeasonScheduleUnits(year) {
+  const data = await fetchF1SeasonData(year, "races", 100);
+  return data.MRData.RaceTable.Races.map(race => {
+    const instant = race.date && race.time ? Date.parse(`${race.date}T${race.time}`) : NaN;
+    return { competitionCode: "f1", round: Number(race.round), matchday: Number(race.round), scheduleSegment: `${race.round}라운드`, utcDate: Number.isFinite(instant) ? new Date(instant).toISOString() : null, status: getRaceStatus(instant, false) };
+  });
+}
+
 export async function getF1RacesForDate(seoulDate) {
   const year = Number(seoulDate?.slice(0, 4));
   if (!/^\d{4}-\d{2}-\d{2}$/.test(seoulDate || "") || !Number.isInteger(year)) return [];

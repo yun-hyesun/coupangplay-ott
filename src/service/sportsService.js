@@ -1,6 +1,8 @@
 import { KLEAGUE_LEAGUES } from "../data/kleagueLeagues";
 import { findSportsTeam, SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
 
+export { getFootballStandings, supportsFootballStandings } from "./leagueStandingsService";
+
 // ===================== K리그 (kleague.com) =====================
 // 개발 중에는 vite 프록시(/kleague → www.kleague.com)를 거칩니다.
 const KLEAGUE_BASE = "/kleague";
@@ -63,7 +65,7 @@ export async function getAllKleagueStandings() {
   );
 }
 
-async function getKleagueScheduleMonth(leagueId, year, month) {
+export async function getKleagueScheduleMonth(leagueId, year, month) {
   const cacheKey = `${leagueId}:${year}-${month}`;
   const cached = kleagueScheduleCache.get(cacheKey);
   if (cached && Date.now() - cached.time < KLEAGUE_SCHEDULE_CACHE_MS) {
@@ -97,18 +99,22 @@ async function getKleagueScheduleMonth(leagueId, year, month) {
   return schedule;
 }
 
-function normalizeKleagueMatch(match) {
+export function getKleagueScheduleUnitFields(match) {
   const matchDate = String(match.gameDate || "").replaceAll(".", "-");
   const matchTime = /^\d{2}:\d{2}$/.test(match.gameTime || "")
     ? match.gameTime + ":00"
     : "";
-  const utcDate = matchTime
-    ? new Date(`${matchDate}T${matchTime}+09:00`).toISOString()
-    : null;
+  const instant = matchTime ? Date.parse(`${matchDate}T${matchTime}+09:00`) : NaN;
+  const utcDate = Number.isFinite(instant) ? new Date(instant).toISOString() : null;
   const statusCode = String(match.gameStatus || "").toUpperCase();
   const isLive = /^(1H|2H|H1|H2|HT|ET|PEN|LIVE|IN_PLAY)$/.test(statusCode);
   const isFinished = match.endYn === "Y" || statusCode === "FE";
-  const hasStarted = isLive || isFinished;
+  return { competitionCode: `kleague-${match.leagueId}`, matchday: match.roundId, stage: match.codeName || "", status: isFinished ? "FINISHED" : isLive ? "IN_PLAY" : "SCHEDULED", utcDate };
+}
+
+function normalizeKleagueMatch(match) {
+  const fields = getKleagueScheduleUnitFields(match);
+  const hasStarted = fields.status === "IN_PLAY" || fields.status === "FINISHED";
   const leagueId = String(match.leagueId);
   const league = KLEAGUE_LEAGUES.find((item) => item.id === leagueId);
   const homeTeam = findSportsTeam(`kleague-${leagueId}`, { teamId: match.homeTeam, name: match.homeTeamName });
@@ -119,10 +125,7 @@ function normalizeKleagueMatch(match) {
     gameId: `kleague-${leagueId}-${match.gameId}`,
     competitionCode: `kleague-${leagueId}`,
     competitionName: league.name,
-    matchday: match.roundId,
-    stage: match.codeName || "",
-    status: isFinished ? "FINISHED" : isLive ? "IN_PLAY" : "SCHEDULED",
-    utcDate,
+    ...fields,
     home: {
       teamId: match.homeTeam,
       name: homeTeam.name,
@@ -231,6 +234,7 @@ export async function getNbaStandings() {
 
 // 해외 축구·NFL·NBA 일정은 ESPN, F1은 Jolpica, K리그 일정과 NBA 순위는 기존 연결을 사용합니다.
 export {
+  getEspnScheduleForRange as getMatchesForRange,
   getEspnFootballMatches as getFootballMatches,
   getAllEspnFootballMatches as getAllFootballMatches,
   getEspnFootballScheduleForDate as getFootballScheduleForDate,
