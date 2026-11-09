@@ -162,7 +162,7 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
                 : { content: item }
             }
           >
-            {item.resume ? '이어보기' : '재생하기'}
+            {fromStore ? '구매하기' : item.resume ? '이어보기' : '재생하기'}
           </Link>
 
           {/* 상세페이지 이동 */}
