@@ -67,9 +67,9 @@ export const MyNews = () => {
                     <MyPageHeader title="소식 및 혜택" />
                 </div>
 
-                <p className="my-news-description">
+                {/* <p className="my-news-description">
                     쿠팡플레이의 새로운 소식과 다양한 혜택을 확인하세요.
-                </p>
+                </p> */}
 
                 {/* 카테고리 */}
                 <div className="news-categories">

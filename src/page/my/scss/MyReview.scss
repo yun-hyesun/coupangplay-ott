@@ -94,89 +94,49 @@
     }
   }
 
-  &__write-button {
-    padding: 9px 18px;
-    border: 1px solid $color-border-light;
-    border-radius: 6px;
-    background: transparent;
-    color: $color-text-pri;
-    font-family: $font-main;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
 
-    &:hover:not(:disabled) {
-      background: #383a3e;
+  &__write-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    font-family: $font-main;
+    font-size: 16px;
+    font-weight: 500;
+    color: $color-text-sec2;
+    white-space: nowrap;
+
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $color-text-pri;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $color-pri;
+      outline-offset: 4px;
+      border-radius: 2px;
     }
 
     &:disabled {
-      opacity: 0.6;
+      opacity: 0.4;
       cursor: not-allowed;
     }
   }
-}
 
+}
 
 
 // 태블릿
-@media (min-width: 768px) and (max-width: 1279px) {
-  .my-review {
-    &__inner {
-      padding: 32px 24px 60px;
-    }
 
-    &__tabs button {
-      font-size: 18px;
-    }
-
-    &__empty {
-      min-height: 550px;
-    }
-  }
-}
 
 // 모바일
-@media (max-width: 767px) {
-  .my-review {
-    &__inner {
-      padding: 24px 16px 60px;
-    }
-
-    &__header {
-      padding-bottom: 20px;
-
-      h2 {
-        font-size: 24px;
-      }
-    }
-
-    &__tabs {
-      margin-top: 16px;
-
-      button {
-        padding: 0 12px;
-        font-size: 16px;
-
-        &:not(:last-child)::after {
-          height: 16px;
-        }
-      }
-    }
-
-    &__empty {
-      min-height: 450px;
-      gap: 12px;
-
-      h3 {
-        font-size: 18px;
-      }
-
-      p {
-        font-size: 13px;
-      }
-    }
-  }
-}
 
 
 /* ========================================
@@ -194,7 +154,7 @@
     margin: 24px 0 16px;
     font-family: $font-main;
     font-size: 16px;
-    color: $color-text-sec1;
+    color: $color-text-blue;
   }
 
   // 리뷰 목록
@@ -738,24 +698,101 @@
   }
 }
 
+
+// 태블릿
+
+
+// 모바일
+
 // ========================================
 // 반응형
 // ========================================
 
-// 태블릿
 @media (min-width: 768px) and (max-width: 1279px) {
+  .my-review {
+    &__inner {
+      padding: 32px 24px 60px;
+    }
+
+    &__tabs button {
+      font-size: 18px;
+    }
+
+    &__empty {
+      min-height: 550px;
+    }
+  }
+
   .review-delete-modal {
     .review-delete-modal-header h3 {
       font-size: 30px;
     }
   }
+
+  .my-review {
+    &__poster {
+      width: 140px;
+    }
+
+    &__group-layout {
+      gap: 20px;
+    }
+  }
+
+  .my-review {
+    &__item {
+      padding: 22px 12px;
+    }
+
+    &__content {
+      font-size: 15px;
+    }
+  }
 }
 
-// 모바일
 @media (max-width: 767px) {
+  .my-review {
+    &__inner {
+      padding: 24px 16px 60px;
+    }
+
+    &__header {
+      padding-bottom: 20px;
+
+      h2 {
+        font-size: 24px;
+      }
+    }
+
+    &__tabs {
+      margin-top: 16px;
+
+      button {
+        padding: 0 12px;
+        font-size: 16px;
+
+        &:not(:last-child)::after {
+          height: 16px;
+        }
+      }
+    }
+
+    &__empty {
+      min-height: 450px;
+      gap: 12px;
+
+      h3 {
+        font-size: 18px;
+      }
+
+      p {
+        font-size: 13px;
+      }
+    }
+  }
+
   .review-delete-modal {
     max-width: 380px;
-    padding: 32px 20px 24px;
 
     .review-delete-modal-header h3 {
       font-size: 26px;
@@ -776,11 +813,7 @@
       }
     }
   }
-}
 
-
-
-@media (max-width: 767px) {
   .review-delete-modal {
     padding: 24px;
     min-height: 300px;
@@ -789,10 +822,7 @@
       font-size: 16px;
     }
   }
-}
 
-
-@media (max-width: 767px) {
   .my-review {
     &__menu {
       width: 92px;
@@ -802,31 +832,12 @@
       padding: 12px;
       font-size: 14px;
     }
-  }
-}
 
-
-@media (prefers-reduced-motion: reduce) {
-  .my-review__expand {
-    transition: none;
-  }
-}
-
-
-
-@media (min-width: 768px) and (max-width: 1279px) {
-  .my-review {
-    &__poster {
-      width: 140px;
-    }
-
-    &__group-layout {
-      gap: 20px;
+    &__write-button {
+      font-size: 14px;
     }
   }
-}
 
-@media (max-width: 767px) {
   .my-review {
     &__group-layout {
       gap: 14px;
@@ -853,28 +864,7 @@
       font-size: 12px;
     }
   }
-}
 
-
-/* ========================================
-   태블릿
-======================================== */
-@media (min-width: 768px) and (max-width: 1279px) {
-  .my-review {
-    &__item {
-      padding: 22px 12px;
-    }
-
-    &__content {
-      font-size: 15px;
-    }
-  }
-}
-
-/* ========================================
-   모바일
-======================================== */
-@media (max-width: 767px) {
   .my-review {
     &__count {
       margin: 20px 0 12px;
@@ -908,5 +898,11 @@
     &__edited {
       font-size: 12px;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-review__expand {
+    transition: none;
   }
 }

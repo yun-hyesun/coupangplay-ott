@@ -42,7 +42,7 @@
     .support-search {
         position: relative;
         width: 100%;
-        margin-bottom: 28px;
+        margin-bottom: 0;
 
         input {
             width: 100%;
@@ -93,42 +93,43 @@
 
 
     .support-categories {
-        @include flex(null, center, 12px);
+        display: flex;
+        align-items: center;
         flex-wrap: wrap;
-        margin-bottom: 48px;
+        gap: 28px;
+
+        width: 100%;
+        margin: 24px 0;
 
         button {
-            min-height: 42px;
-            padding: 0 20px;
-            border: 1px solid $color-border-light;
-            border-radius: 5px;
-            background: $color-bg2;
-            color: $color-text-sec1;
+            padding: 0;
+            border: none;
+            background: transparent;
+
             font-family: $font-main;
-            font-size: 15px;
+            font-size: 18px;
+            font-weight: 500;
+            color: $color-text-sec2;
+
             cursor: pointer;
+            transition: color 0.2s;
 
+            &:hover,
             &.active {
-                background: $color-pri;
-                border-color: $color-pri;
                 color: $color-text-pri;
-            }
-
-            &:hover:not(.active) {
-                background: #30343B;
             }
         }
     }
 
     .support-faq {
-        h3 {
-            font-size: 22px;
-            font-weight: $font-w-B-700;
-            margin-bottom: 20px;
-        }
+        // h3 {
+        //     font-size: 22px;
+        //     font-weight: $font-w-B-700;
+        //     margin-bottom: 20px;
+        // }
 
         ul {
-            border-top: 1px solid $color-border-light;
+            border-top: none;
 
             li {
                 border-bottom: 1px solid $color-border-light;
@@ -139,8 +140,8 @@
         .support-question {
             @include flex-between(center);
             width: 100%;
-            min-height: 68px;
-            padding: 20px 12px;
+            min-height: 70px;
+            padding: 20px 16px;
             border: none;
             background: transparent;
             color: $color-text-pri;
@@ -149,6 +150,13 @@
             text-align: left;
             cursor: pointer;
 
+            // 소식 및 혜택과 동일한 hover 효과
+            transition: background 0.2s ease;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.03);
+            }
+
             .support-arrow {
                 display: flex;
                 align-items: center;
@@ -156,6 +164,7 @@
                 width: 24px;
                 height: 24px;
                 flex-shrink: 0;
+                margin-left: 16px;
 
                 img {
                     display: block;
@@ -167,6 +176,8 @@
                 }
             }
 
+
+
             // 질문이 열렸을 때
             &[aria-expanded="true"] {
                 .support-arrow img {
@@ -176,10 +187,12 @@
         }
 
         .support-answer {
-            padding: 24px 24px;
+            padding: 24px 12px;
             background: $color-bg2;
+            border-radius: 0 0 6px 6px;
+
             color: $color-text-sec1;
-            font-size: 15px;
+            font-size: 16px;
             line-height: 1.8;
         }
 
@@ -246,6 +259,14 @@
             padding: 40px 24px 80px;
         }
     }
+
+    .support-categories {
+        gap: 20px;
+
+        button {
+            font-size: 16px;
+        }
+    }
 }
 
 // 모바일
@@ -265,34 +286,56 @@
             font-size: 14px;
         }
 
+
         .support-categories {
-            gap: 8px;
-            margin-bottom: 36px;
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 12px;
+
+            width: 100%;
+            margin: 24px 0 32px;
+            overflow-x: auto;
+            scrollbar-width: none;
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
 
             button {
+                flex-shrink: 0;
+                padding: 10px 18px;
+                border: none;
+                border-radius: 50px;
+                background: #202123;
+
+                color: $color-text-pri;
                 font-size: 14px;
-                padding: 0 14px;
+                font-weight: 500;
+
+                &.active {
+                    background: #fff;
+                    color: #111;
+                    font-weight: 600;
+                }
             }
         }
 
+
         .support-faq {
-            h3 {
-                font-size: 20px;
-            }
+            // h3 {
+            //     font-size: 20px;
+            // }
 
             .support-question {
                 font-size: 14px;
                 gap: 16px;
+                padding: 18px 8px;
             }
 
             .support-answer {
                 font-size: 14px;
-                padding: 20px 16px;
+                padding: 20px 12px;
             }
-        }
-
-        .support-contact {
-            padding: 24px 20px;
         }
     }
 }
