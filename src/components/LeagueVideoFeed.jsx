@@ -4,11 +4,16 @@ import { A11y, Navigation } from "swiper/modules";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
 import { formatVideoDate, formatVideoMonth, getCurrentVideoMonth, groupLeagueVideos, shiftVideoMonth } from "../data/leagueVideoGroups";
 import { getMatchesForRange } from "../service/sportsService";
+import { getLeagueSeasonSchedule } from "../service/leagueScheduleService";
+import { getScheduleSeason } from "../data/leagueScheduleView";
+import { getScheduleGameDate } from "../data/leagueScheduleRange";
 import { getLeagueVideoPage } from "../service/leagueVideosService";
 import { getLeagueRoundOptions } from "../service/leagueScheduleUnitsService";
 import { resolveScheduleUnitState } from "../data/leagueScheduleUnits";
 import { EmptyMessage, TeamImage, VideoCard } from "./LeagueDetailShared";
 import { LeagueVideoTeamFilter } from "./LeagueVideoTeamFilter";
+import { LeagueVideoMonthPicker } from "./LeagueVideoMonthPicker";
+import { useLeagueVideoMonthNavigation } from "../hooks/useLeagueVideoMonthNavigation";
 import "swiper/css";
 import "swiper/css/navigation";
 import "./scss/LeagueVideoFeed.scss";
@@ -16,10 +21,12 @@ import "./scss/LeagueVideoFeed.scss";
 const ASSETS = "/images/sports/league-detail/videos/";
 const EMPTY_RESULT = { videos: [], nextPageToken: "", error: "", loadingMore: false };
 const EMPTY_FIXTURES = [];
+const SEASON_FIXTURE_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC"]);
 
-export function LeagueVideoFeed({ league, scoresOn }) {
+export function LeagueVideoFeed({ league, scoresOn, subscribedTeamIds = [] }) {
   const [mode, setMode] = useState("date");
   const [month, setMonth] = useState(getCurrentVideoMonth);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [teamId, setTeamId] = useState("");
   const [round, setRound] = useState("");
   const [roundResult, setRoundResult] = useState(null);
@@ -34,13 +41,14 @@ export function LeagueVideoFeed({ league, scoresOn }) {
   const fixtureKey = `${league.id}:${month}`;
   const fixtures = fixtureResult?.key === fixtureKey ? fixtureResult.games : EMPTY_FIXTURES;
   const currentMonth = getCurrentVideoMonth();
+  const monthNavigation = useLeagueVideoMonthNavigation(league.id, month, currentMonth, mode === "date" && !calendarOpen, setMonth);
   const currentFixtures = currentFixtureResult?.leagueId === league.id && currentFixtureResult.month === currentMonth ? currentFixtureResult.games : EMPTY_FIXTURES;
   const roundState = resolveScheduleUnitState(roundResult?.leagueId === league.id ? roundResult : null, currentFixtures, currentFixtureResult?.month, currentMonth);
   const roundOptions = roundState?.options || [];
   const selectedRound = roundOptions.some(option => option.value === round) ? round : "";
   const queryMonth = mode === "date" ? month : "";
   const query = useMemo(() => ({ league: league.id, scope: mode === "team" ? "team" : "month", month: queryMonth, team: selectedTeam?.name || "" }), [league.id, mode, queryMonth, selectedTeam?.name]);
-  const key = JSON.stringify(query) + ":" + selectedRound + ":" + attempt;
+  const key = JSON.stringify(query) + ":" + attempt;
   const state = result?.key === key ? result : EMPTY_RESULT;
   const loading = result?.key !== key;
   const groups = useMemo(() => groupLeagueVideos({ leagueId: league.id, videos: state.videos, fixtures, teamId: selectedTeam?.id, round: selectedRound, month: queryMonth }), [league.id, state.videos, fixtures, selectedTeam?.id, selectedRound, queryMonth]);
@@ -79,10 +87,14 @@ export function LeagueVideoFeed({ league, scoresOn }) {
     endDate.setUTCDate(0);
     const to = endDate.toISOString().slice(0, 10);
     // Match dates and scores are optional enrichment; YouTube results render independently.
-    getMatchesForRange(league.id, month + "-01", to, { signal: controller.signal }).then(data => {
+    const request = SEASON_FIXTURE_LEAGUES.has(league.id)
+      ? getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, month + "-01"), { signal: controller.signal })
+      : getMatchesForRange(league.id, month + "-01", to, { signal: controller.signal });
+    request.then(data => {
       if (!controller.signal.aborted) {
-        setFixtureResult({ key: fixtureKey, games: data.games });
-        if (month === getCurrentVideoMonth()) setCurrentFixtureResult({ leagueId: league.id, month, games: data.games });
+        const games = data.games.filter(game => getScheduleGameDate(game)?.startsWith(month));
+        setFixtureResult({ key: fixtureKey, games });
+        if (month === getCurrentVideoMonth()) setCurrentFixtureResult({ leagueId: league.id, month, games });
       }
     }).catch(() => {
       if (!controller.signal.aborted) setFixtureResult({ key: fixtureKey, games: [] });
@@ -106,10 +118,6 @@ export function LeagueVideoFeed({ league, scoresOn }) {
     }
   }
 
-  function changeMonth(event) {
-    if (event.target.validity.valid && event.target.value) setMonth(event.target.value);
-  }
-
   return (
     <section className={"league-video-feed" + (mode === "team" ? " league-video-feed--team" : "")} aria-label={`${league.name} 동영상`}>
       <div className="league-video-feed__toolbar">
@@ -131,17 +139,16 @@ export function LeagueVideoFeed({ league, scoresOn }) {
           {roundState.stale && roundState.checkedAt && <span> ({new Date(roundState.checkedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })} 확인)</span>}
           {" "}<button type="button" onClick={() => setRoundAttempt(value => value + 1)}>다시 조회</button></p>}
         {roundState?.unavailable && !roundState.error && <p className="league-video-feed__round-error" role="status">현재 API에서 확인된 경기 구분이 없습니다.</p>}
-        {mode === "team" ? <LeagueVideoTeamFilter league={league} teams={teams} selectedTeamId={selectedTeam?.id || ""} onSelectTeam={setTeamId} /> : <div className="league-video-feed__date-row">
+        {mode === "team" ? <LeagueVideoTeamFilter league={league} teams={teams} selectedTeamId={selectedTeam?.id || ""} subscribedTeamIds={subscribedTeamIds} onSelectTeam={setTeamId} /> : <div className="league-video-feed__date-row">
           <div className="league-video-feed__month-controls">
-            <button className="league-video-feed__month-arrow league-video-feed__month-arrow--prev" type="button" aria-label="이전 달" disabled={month <= "2010-01"} onClick={() => setMonth(value => shiftVideoMonth(value, -1))}>
+            <button className="league-video-feed__month-arrow league-video-feed__month-arrow--prev" type="button" aria-label="이전 달" disabled={!monthNavigation.previous} onClick={() => setMonth(monthNavigation.previous)}>
               <span><img src={ASSETS + "month-prev.svg"} alt="" /></span>
             </button>
             <h2>{formatVideoMonth(month)}</h2>
-            <label className="league-video-feed__calendar" title="조회할 월 선택">
+            <button type="button" className="league-video-feed__calendar" title="조회할 월 선택" aria-label="조회할 월 선택" aria-haspopup="dialog" aria-expanded={calendarOpen} onClick={() => setCalendarOpen(true)}>
               <img src={ASSETS + "calendar.svg"} alt="" />
-              <input type="month" aria-label="조회할 월 선택" min="2010-01" max={currentMonth} value={month} onChange={changeMonth} onInput={changeMonth} />
-            </label>
-            <button className="league-video-feed__month-arrow" type="button" aria-label="다음 달" disabled={month >= currentMonth} onClick={() => setMonth(value => shiftVideoMonth(value, 1))}>
+            </button>
+            <button className="league-video-feed__month-arrow" type="button" aria-label="다음 달" disabled={!monthNavigation.next} onClick={() => setMonth(monthNavigation.next)}>
               <img src={ASSETS + "month-next.svg"} alt="" />
             </button>
           </div>
@@ -149,6 +156,8 @@ export function LeagueVideoFeed({ league, scoresOn }) {
         </div>}
       </div>
 
+      {mode === "date" && monthNavigation.incomplete && <p className="league-video-feed__round-error" role="status">일부 월의 경기 일정을 확인하지 못했습니다. <button type="button" onClick={monthNavigation.retry}>다시 조회</button></p>}
+      {mode === "date" && calendarOpen && <LeagueVideoMonthPicker leagueId={league.id} value={month} maxMonth={currentMonth} onSelect={setMonth} onClose={() => setCalendarOpen(false)} />}
       <div className="league-video-feed__results" aria-busy={loading || state.loadingMore}>
         {loading ? <div className="league-video-feed__loading" role="status">
           <span className="league-video-feed__sr-only">쿠팡플레이 스포츠 영상을 불러오는 중입니다.</span>
@@ -175,7 +184,7 @@ export function LeagueVideoFeed({ league, scoresOn }) {
           {state.notice && <p className="league-video-feed__round-error" role="status">{state.notice} <button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button></p>}
           {state.error && <div className="league-video-feed__error" role="alert"><p>{state.error}</p><button type="button" onClick={() => state.videos.length ? loadMore() : setAttempt(value => value + 1)}>다시 시도</button></div>}
           {state.nextPageToken && <button className="league-video-feed__more" type="button" onClick={loadMore} disabled={state.loadingMore}>{state.loadingMore ? "불러오는 중…" : "영상 더 보기"}</button>}
-          <p className="league-video-feed__source"><a href="https://www.youtube.com/@CoupangPlaySports" target="_blank" rel="noopener noreferrer">쿠팡플레이 스포츠 공식 YouTube</a> · {selectedTeam?.name || league.name}</p>
+          <p className="league-video-feed__source"></p>
         </>}
       </div>
     </section>
