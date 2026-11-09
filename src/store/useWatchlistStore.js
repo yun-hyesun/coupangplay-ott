@@ -123,7 +123,7 @@ export const useWatchlistStore = create((set, get) => ({
 
         if (
             !content?.id ||
-            !['movie', 'tv'].includes(content.media_type)
+            !['movie', 'tv', 'sports'].includes(content.media_type)
         ) {
             set({ error: '콘텐츠 정보가 올바르지 않습니다.' });
             return false;
@@ -142,6 +142,10 @@ export const useWatchlistStore = create((set, get) => ({
                     title: content.title || content.name || '',
                     poster_path: content.poster_path || null,
                     backdrop_path: content.backdrop_path || null,
+                    leagueId: content.leagueId || null,
+                    startTime: content.startTime || null,
+                    homeName: content.homeName || null,
+                    awayName: content.awayName || null,
                     createdAt: serverTimestamp()
                 }
             );

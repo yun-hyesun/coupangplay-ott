@@ -9,7 +9,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "./scss/MatchRelatedVideos.scss";
 
-export function MatchRelatedVideos({ game, id, initialVideos = [] }) {
+export function MatchRelatedVideos({ game, id, initialVideos = [], returnTab }) {
   const { competitionCode, matchday, scheduleSegment, raceName } = game;
   const homeName = game.home?.name;
   const awayName = game.away?.name;
@@ -48,7 +48,7 @@ export function MatchRelatedVideos({ game, id, initialVideos = [] }) {
         a11y={{ prevSlideMessage: "이전 관련 영상", nextSlideMessage: "다음 관련 영상", slideLabelMessage: "관련 영상 {{index}} / {{slidesLength}}" }}
       >
         {result.videos.map(video => <SwiperSlide key={video.id}>
-          <VideoCard video={{ ...video, meta }} variant="fixture" />
+          <VideoCard video={{ ...video, meta }} variant="fixture" returnTab={returnTab} />
         </SwiperSlide>)}
       </Swiper>}
       {result.loading && result.videos.length === 0 && <div className="sports-match-videos__loading" role="status">

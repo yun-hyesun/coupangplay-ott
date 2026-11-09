@@ -29,6 +29,9 @@ import { getMatchVideoKey } from "../../data/matchRelatedVideos";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
 import { useAuthStore } from "../../store/useAuthStore";
 import { getF1RacesForDate } from "../../service/f1Service";
+import { auth } from "../../firebase/firebase";
+import { useProfileStore } from "../../store/useProfileStore";
+import { useWatchlistStore } from "../../store/useWatchlistStore";
 import {
   getFootballScheduleForDate,
   getFootballLiveMatches,
@@ -232,6 +235,74 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
   const isEnded = status.modifier === "ended";
   const playAction = status.modifier === "live";
   const hasRelatedVideos = Boolean(relatedVideos?.length);
+  const isScheduled = status.modifier === "scheduled";
+  const watchlist = useWatchlistStore((state) => state.watchlist);
+  const ownerKey = useWatchlistStore((state) => state.ownerKey);
+  const onAddWatchlist = useWatchlistStore((state) => state.onAddWatchlist);
+  const onRemoveWatchlist = useWatchlistStore((state) => state.onRemoveWatchlist);
+  const currentProfile = useProfileStore((state) => state.currentProfile);
+
+  const [saving, setSaving] = useState(false);
+
+  const matchId = game.gameId ?? game.id;
+
+  const favoriteContent = {
+    id: `${game.competitionCode || game.leagueId || "sports"}_${matchId}`,
+    media_type: "sports",
+    title: `${game.home?.name || "홈 팀"} vs ${game.away?.name || "원정 팀"}`,
+    leagueId: game.competitionCode || game.leagueId || null,
+    startTime: game.utcDate || game.startTime || null,
+    homeName: game.home?.name || "홈 팀",
+    awayName: game.away?.name || "원정 팀"
+  };
+
+  const currentOwnerKey =
+    auth.currentUser && currentProfile
+      ? `${auth.currentUser.uid}_${currentProfile.id}`
+      : null;
+
+  const isFavorite =
+    ownerKey === currentOwnerKey &&
+    watchlist.some(
+      (item) =>
+        item.media_type === "sports" &&
+        String(item.id) === favoriteContent.id
+    );
+
+  const handleFavorite = async (event) => {
+    event.stopPropagation();
+
+    if (saving) return;
+
+    if (!auth.currentUser || !currentProfile) {
+      alert("로그인 후 프로필을 선택해 주세요.");
+      return;
+    }
+
+    if (matchId == null) {
+      alert("경기 ID가 없습니다.");
+      return;
+    }
+
+    if (ownerKey !== currentOwnerKey) {
+      alert("찜 목록을 불러온 후 다시 시도해 주세요.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const success = isFavorite
+        ? await onRemoveWatchlist(favoriteContent)
+        : await onAddWatchlist(favoriteContent);
+
+      if (!success) {
+        alert("찜하기 처리에 실패했습니다.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
   const detailsExpanded = !playAction && expanded && (!isEnded || hasRelatedVideos);
   const liveVideoId = playAction ? getSportsVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
   const scheduleSubLabel = getScheduleSubLabel(game);
@@ -245,12 +316,23 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
     <div className={"sports-fixture-wrap" + (isEnded ? " sports-fixture-wrap--ended" : "") + (detailsExpanded ? " is-expanded" : "")}>
       <article className="sports-fixture">
         <div className="sports-fixture__status">
-          {playAction ? <LiveBadge label="라이브 경기" className="sports-fixture__live-badge" /> : <span className={"sports-status sports-status--" + status.modifier}>
-            {status.label}
-          </span>}
+          {playAction ? (
+            <LiveBadge label="라이브 경기" className="sports-fixture__live-badge" />
+          ) : (
+            <span className={"sports-status sports-status--" + status.modifier}>
+              {status.label}
+            </span>
+          )}
+
           <span className="sports-quality">
             {game.quality || game.competitionCode || "경기"}
           </span>
+
+          {isEnded && hasRelatedVideos && (
+            <span className="sports-fixture__highlight-badge">
+              하이라이트
+            </span>
+          )}
         </div>
 
         <div className="sports-fixture__team sports-fixture__team--home">
@@ -283,8 +365,24 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           <TeamCrest team={game.away} />
           <span>{game.away.name}</span>
         </div>
-
-        {(!isEnded || hasRelatedVideos) && <button
+        {isScheduled && (
+          <button
+            type="button"
+            className="sports-fixture__action sports-fixture__favorite-button"
+            onClick={handleFavorite}
+            disabled={saving || matchId == null}
+            aria-label={isFavorite ? "경기 찜 해제" : "경기 찜하기"}
+            aria-pressed={isFavorite}
+            title={isFavorite ? "찜 해제" : "찜하기"}
+          >
+            <img
+              className="sports-fixture__favorite-icon"
+              src={`/images/sports/league-detail/schedule-${isFavorite ? "check" : "plus"}.svg`}
+              alt=""
+            />
+          </button>
+        )}
+        {!isScheduled && (!isEnded || hasRelatedVideos) && (<button
           type="button"
           className={"sports-fixture__action" + (playAction ? " is-active" : "")}
           aria-label={playAction ? (liveVideoId ? "라이브 경기 재생" : "라이브 중계 미연결") : isEnded ? `${game.home.name} vs ${game.away.name} 관련 영상 ${detailsExpanded ? "접기" : "펼치기"}` : detailsExpanded ? "경기 정보 접기" : "경기 정보 펼치기"}
@@ -306,7 +404,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
               aria-hidden="true"
             />
           )}
-        </button>}
+        </button>)}
       </article>
 
       {detailsExpanded && (isEnded ? (
@@ -331,6 +429,14 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
 
 export const Sports = () => {
   const navigate = useNavigate();
+  const currentProfile = useProfileStore((state) => state.currentProfile);
+  const onLoadWatchlist = useWatchlistStore((state) => state.onLoadWatchlist);
+
+  useEffect(() => {
+    if (auth.currentUser && currentProfile?.id) {
+      onLoadWatchlist();
+    }
+  }, [currentProfile?.id, onLoadWatchlist]);
   const user = useAuthStore((state) => state.user);
   const authLoading = useAuthStore((state) => state.loading);
   const canShowSubscriptions = Boolean(user && !authLoading);
@@ -495,7 +601,7 @@ export const Sports = () => {
 
         errors.push(
           providers[index] + ": " +
-            (result.reason?.message || "일정을 불러오지 못했습니다."),
+          (result.reason?.message || "일정을 불러오지 못했습니다."),
         );
       });
 

@@ -46,7 +46,7 @@ export const SportsWatch = () => {
           />
         )}
         <header className="watch-player__header">
-          <button className="watch-icon-button" type="button" onClick={goBack} aria-label={returnTo === '/' ? '홈으로 돌아가기' : returnTo === '/sports' ? '스포츠 메인으로 돌아가기' : '동영상 목록으로 돌아가기'}><WatchIcon name="back" /></button>
+          <button className="watch-icon-button" type="button" onClick={goBack} aria-label={returnTo === '/' ? '홈으로 돌아가기' : returnTo === '/sports' ? '스포츠 메인으로 돌아가기' : state?.returnTab === 'schedule' ? '경기 일정으로 돌아가기' : '동영상 목록으로 돌아가기'}><WatchIcon name="back" /></button>
           <h1>{title}</h1>
         </header>
       </div>

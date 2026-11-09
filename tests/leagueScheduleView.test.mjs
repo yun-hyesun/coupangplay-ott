@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { getCalendarDays, getRecentScheduleGame, getRoundWindow, getScheduleRounds, getScheduleSeason, getSeasonRange, groupScheduleGames } from "../src/data/leagueScheduleView.js";
+import { getCalendarDays, getRecentScheduleGame, getRoundWindow, getScheduleDateWindow, getScheduleRounds, getScheduleSeason, getSeasonRange, groupScheduleGames } from "../src/data/leagueScheduleView.js";
 
 const game = (id, utcDate, matchday, status = "SCHEDULED") => ({ gameId: id, utcDate, matchday, status, competitionCode: "PL" });
 
@@ -46,4 +46,35 @@ test("calendar has six weeks with leap day and adjacent-month dates", () => {
   assert.ok(days.includes("2028-02-29"));
   assert.ok(days.includes("2028-01-31"));
   assert.ok(days.includes("2028-03-01"));
+});
+
+test("date buttons contain only actual Korean match dates and skip long gaps without duplicate days", () => {
+  const fixtures = [
+    game("before-midnight", "2026-11-07T14:59:00Z", 12),
+    game("after-midnight", "2026-11-07T15:00:00Z", 12),
+    game("same-day", "2026-11-08T01:00:00Z", 12),
+    game("monday", "2026-11-08T20:00:00Z", 12),
+    game("after-break", "2026-11-20T15:00:00Z", 13),
+    game("invalid", "invalid", 13),
+  ];
+  const window = getScheduleDateWindow(fixtures, "2026-11-10");
+  assert.deepEqual(window.items, ["2026-11-07", "2026-11-08", "2026-11-09", "2026-11-21"]);
+  assert.equal(window.selectedDate, "2026-11-21");
+  assert.equal(window.hasPrevious, false);
+  assert.equal(window.hasNext, false);
+});
+
+test("date navigation moves between fixture days across months and stops at the season edges", () => {
+  const dates = ["2026-10-31", "2026-11-01", "2026-11-02", "2026-11-07", "2026-11-08", "2026-11-09", "2026-11-21", "2026-11-22", "2026-11-23", "2026-11-24", "2026-12-01", "2026-12-02", "2026-12-04", "2026-12-05", "2026-12-06", "2026-12-10"];
+  const fixtures = dates.map((date, index) => game(String(index), `${date}T12:00:00+09:00`, 12));
+  const middle = getScheduleDateWindow(fixtures, "2026-11-09");
+  assert.deepEqual(middle.items, ["2026-11-02", "2026-11-07", "2026-11-08", "2026-11-09", "2026-11-21", "2026-11-22", "2026-11-23"]);
+  assert.equal(middle.previousDate, "2026-10-31");
+  assert.equal(middle.nextDate, "2026-12-04");
+  const last = getScheduleDateWindow(fixtures, middle.nextDate);
+  assert.equal(last.selectedDate, "2026-12-04");
+  assert.equal(last.hasNext, false);
+  assert.equal(getScheduleDateWindow(fixtures, "2020-01-01").hasPrevious, false);
+  assert.equal(getScheduleDateWindow(fixtures, "2027-01-01").selectedDate, "2026-12-10");
+  assert.deepEqual(getScheduleDateWindow([], "2026-11-09").items, []);
 });

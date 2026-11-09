@@ -40,6 +40,19 @@ export function getRoundWindow(options, selectedValue, offset = 0) {
   return { start, items: options.slice(start, start + 5), hasPrevious: start > 0, hasNext: start + 5 < options.length };
 }
 
+export function getScheduleDateWindow(games, selectedDate) {
+  const dates = [...new Set(games.map(getScheduleGameDate).filter(Boolean))].sort();
+  if (!dates.length) return { items: [], selectedDate: "", hasPrevious: false, hasNext: false, previousDate: null, nextDate: null };
+  const nextIndex = dates.findIndex(date => date >= selectedDate);
+  const index = nextIndex < 0 ? dates.length - 1 : nextIndex;
+  const start = Math.min(Math.max(0, dates.length - 7), Math.max(0, index - 3));
+  return {
+    items: dates.slice(start, start + 7), selectedDate: dates[index],
+    hasPrevious: start > 0, hasNext: start + 7 < dates.length,
+    previousDate: dates[Math.max(0, index - 7)], nextDate: dates[Math.min(dates.length - 1, index + 7)],
+  };
+}
+
 export function groupScheduleGames(games, { mode, dateKey, round }) {
   const groups = new Map();
   const seen = new Set();

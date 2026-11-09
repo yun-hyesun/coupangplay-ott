@@ -408,8 +408,8 @@ export const LeagueDetail = () => {
           isMyLeague={isMyLeague}
           onToggleMyLeague={handleToggleMyLeague}
           onOpenTeamSettings={handleOpenTeamSettings}
-          selectedLeagueCount={subscribedLeagueIds.length}
-          selectedTeams={selectedTeams}
+          selectedLeagueCount={user ? subscribedLeagueIds.length : 0}
+          selectedTeams={user ? selectedTeams : []}
           isCompact={isCompactHeader}
           activeTab={activeTab}
           onTabChange={(tabId, targetId) => {
@@ -427,7 +427,6 @@ export const LeagueDetail = () => {
         scoresOn={scoresOn}
         today={today}
         selectedTeams={selectedTeams}
-        onViewVideos={() => { setActiveTab("videos"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
       /> : <>
       <LeagueHome league={league} scheduleState={broadcastState.leagueId === league.id ? broadcastState : { games: [], loading: true, errors: [] }} />
       <LeagueSchedule

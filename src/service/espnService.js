@@ -37,7 +37,7 @@ const SEOUL_DATE_FORMAT = new Intl.DateTimeFormat("en-CA", {
 function parseDateKey(dateKey) {
   const date = new Date(`${dateKey}T00:00:00Z`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) ||
-      !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== dateKey) {
+    !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== dateKey) {
     throw new RangeError("경기 조회 날짜가 올바르지 않습니다.");
   }
   return date;
@@ -61,36 +61,90 @@ function getQueryDates(seoulDate) {
 async function espnFetch(path, params, expectedField) {
   const query = new URLSearchParams(params).toString();
   const key = `${path}?${query}`;
+
   const cached = cache.get(key);
-  if (cached && Date.now() < cached.expiresAt) return cached.data;
-  if (pending.has(key)) return pending.get(key);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.data;
+  }
+
+  if (pending.has(key)) {
+    return pending.get(key);
+  }
 
   const request = (async () => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
+
     try {
-      const response = await fetch(`${ESPN_BASE}/${key}`, { signal: controller.signal });
-      if (!response.ok) throw new Error(`ESPN 조회 오류: ${response.status}`);
+      const url = `${ESPN_BASE}/${key}`;
+      let response;
+
+      try {
+        response = await fetch(url, {
+          signal: controller.signal,
+        });
+      } catch (error) {
+        console.error("[ESPN 요청 실패]", {
+          url,
+          error,
+        });
+
+        throw error;
+      }
+
+      if (!response.ok) {
+        console.error("[ESPN HTTP 오류]", {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+        });
+
+        throw new Error(`ESPN 조회 오류: ${response.status}`);
+      }
+
       const data = await response.json();
-      if (expectedField === "events" && !Array.isArray(data.events)) {
+
+      if (
+        expectedField === "events" &&
+        !Array.isArray(data.events)
+      ) {
         throw new Error("ESPN 경기 응답 형식이 올바르지 않습니다.");
       }
-      if (expectedField === "teams" && !Array.isArray(data.sports?.[0]?.leagues?.[0]?.teams)) {
+
+      if (
+        expectedField === "teams" &&
+        !Array.isArray(data.sports?.[0]?.leagues?.[0]?.teams)
+      ) {
         throw new Error("ESPN 팀 응답 형식이 올바르지 않습니다.");
       }
-      const hasLiveGame = data.events?.some((event) =>
-        (event.status || event.competitions?.[0]?.status)?.type?.state === "in",
+
+      const hasLiveGame = data.events?.some(
+        (event) =>
+          (event.status || event.competitions?.[0]?.status)
+            ?.type?.state === "in"
       );
-      cache.set(key, { data, expiresAt: Date.now() + (hasLiveGame ? 30000 : 300000) });
+
+      cache.set(key, {
+        data,
+        expiresAt: Date.now() + (hasLiveGame ? 30000 : 300000),
+      });
+
       return data;
     } catch (error) {
-      if (error.name === "AbortError") throw new Error("ESPN 조회 시간이 초과되었습니다.", { cause: error });
+      if (error.name === "AbortError") {
+        throw new Error("ESPN 조회 시간이 초과되었습니다.", {
+          cause: error,
+        });
+      }
+
       throw error;
     } finally {
       clearTimeout(timeout);
     }
   })();
+
   pending.set(key, request);
+
   try {
     return await request;
   } finally {
