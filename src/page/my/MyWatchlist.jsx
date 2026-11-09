@@ -375,8 +375,8 @@ export const MyWatchlist = () => {
                                                 <img
                                                     src={
                                                         isSelected
-                                                            ? '/images/mypage/checked-true.svg'
-                                                            : '/images/mypage/checked-false.svg'
+                                                            ? '/images/icon/DesignSystem_Icon02/icon-favorite_added.svg'
+                                                            : '/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg'
                                                     }
                                                     alt=""
                                                     className="my-watchlist-check"

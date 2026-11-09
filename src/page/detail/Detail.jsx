@@ -18,11 +18,25 @@ const imageUrl = (path) => path ? `${IMG}${path}` : '';
 
 export const Detail = () => {
   const { type, id } = useParams();
-  const { state, search } = useLocation();
-  // 스토어 상세페이지는 새로고침 후에도 구매 버튼을 유지합니다.
-  const isStoreDetail = state?.fromStore === true || new URLSearchParams(search).get("from") === "store";
 
-  const [season, setSeason] = useState('1');
+  const { state, search } = useLocation();
+
+  // 마이페이지에서 전달받은 리뷰 작성 대상
+  const reviewRequest = new URLSearchParams(search);
+  const requestedSeason = reviewRequest.get('reviewSeason');
+  const requestedEpisode = reviewRequest.get('reviewEpisode');
+
+  const hasReviewRequest =
+    type === 'tv' &&
+    requestedSeason !== null &&
+    requestedEpisode !== null &&
+    /^\d+$/.test(requestedSeason) &&
+    /^[1-9]\d*$/.test(requestedEpisode);
+
+  const [season, setSeason] = useState(() =>
+    hasReviewRequest ? String(Number(requestedSeason)) : '1'
+  );
+
   const [openedEpisode, setOpenedEpisode] = useState(null);
   const [popupEpisode, setPopupEpisode] = useState(null);
   const [reviewsByEpisode, setReviewsByEpisode] = useState({});
@@ -76,6 +90,15 @@ export const Detail = () => {
     }
   }, [type, id, onFetchContentDetail, onFetchSeason]);
 
+
+  // 마이페이지에서 리뷰 작성 요청 시 대상 시즌 선택
+  useEffect(() => {
+    if (hasReviewRequest) {
+      setSeason(String(Number(requestedSeason)));
+    }
+  }, [type, id, search, hasReviewRequest, requestedSeason]);
+
+
   // 시즌 / 회차 불러오기
   useEffect(() => {
     if (type !== 'tv' || !id || !seasons.length) return;
@@ -97,6 +120,39 @@ export const Detail = () => {
 
     onFetchEpisode(id, Number(selected));
   }, [type, id, seasons, season, onFetchEpisode]);
+
+
+  // 요청한 시즌과 회차가 준비되면 기존 리뷰 팝업 열기
+  useEffect(() => {
+    if (!hasReviewRequest || !seasons.length) return;
+
+    if (season !== String(Number(requestedSeason))) return;
+
+    if (
+      !seasons.some(
+        (s) => s.season_number === Number(requestedSeason)
+      )
+    ) return;
+
+    if (!episodes.length) return;
+
+    const targetEpisode = episodes.find(
+      (ep) => ep.episode_number === Number(requestedEpisode)
+    );
+
+    if (!targetEpisode) return;
+
+    setOpenedEpisode(targetEpisode.id);
+    setPopupEpisode(targetEpisode);
+  }, [
+    hasReviewRequest,
+    requestedSeason,
+    requestedEpisode,
+    season,
+    seasons,
+    episodes
+  ]);
+
 
   // 회차별 리뷰 구독은 작품/시즌/회차가 바뀌면 자동 해제합니다.
   useEffect(() => {

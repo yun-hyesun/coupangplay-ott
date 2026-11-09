@@ -3,21 +3,30 @@
 @use "../../../scss/mixins" as *;
  // #################### header
 
-.header {height: 70px; padding-inline: $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
+.header {min-height: 70px; padding: clamp(10px, 1.25vw, 18px) $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
   &.active {background: $color-bg;}
   &.active .header-search:has(.is-open) {background: $color-border;}
 
+  
   .inner {@include flex-between(); height: 100%;
-
-    .header-left {@include flex-center($gap: 50px);
+    @include tablet {
+      @include flex-between($ai:flex-start);
+    }
     
+    
+    .header-left {@include flex-center($gap: 50px);
+      
       .header-logo {width: 170px;
         img {width: 100%;}
       }
-
+      
       .header-nav-menu {@include flex-center();
-        a {padding: 8px 15px; border-radius: 10px;}
+        a {display: block; padding: 8px 15px; border-radius: 10px;}
         .active {background: rgba(255,255,255,.2);}
+      }
+
+      @include tablet {
+        @include flex-center($ai:flex-start, $gap: 20px); flex-direction: column;
       }
     }
 
@@ -25,12 +34,10 @@
 
       .header-login {background: $color-pri; font-size: 14px; padding: 5px 15px; border-radius: 30px;}
 
-      .header-search {@include flex-center(); height: 44px; padding: 5px 10px 5px 15px;  border-radius: 30px;
-
-        &:has(.is-open) {border: 1px solid $color-border-light;}
+      .header-search {@include flex-center(); height: 44px; position: relative;
         
-        .header-search-form {@include flex-center();
-          &.is-open {gap: 10px;}
+        .header-search-form {@include flex-center(); height: 100%; padding: 5px 10px 5px 15px; border-radius: 30px; @include pos-abs($r:0);
+          &.is-open {gap: 10px; border: 1px solid $color-border-light;}
   
           .header-search-btn {width: 20px; height: 20px; background: url(/images/search.svg) no-repeat center / contain;}
           
@@ -213,42 +220,103 @@
   }
 }
 
-
 // #################### footer
 .footer {padding: 60px $padding-main; color: $color-text-sec2;
-  .inner {@include flex-between($ai:flex-start);
+  .inner {
 
-    .footer-left {font-size: 19px;
+    @include tablet {
+      gap: 40px;
+      flex-direction: column;
+    }
 
-      .footer-logo {width: 240px; margin-bottom: 40px;
+    // ############## top
+    .footer-top {@include flex-between();  margin-bottom: 40px;
+      .footer-logo {width: 240px;
+        
+        @include tablet {
+          width: clamp(180px, 20vw ,240px);
+        }
         img {width: 100%;}
       }
 
-      .footer-address {line-height: 1.8;}
-      .footer-nav-menu {@include flex-center($gap: 40px); font-size: 20px; margin-top: 50px;
-
-        &:first-of-type {font-weight: $font-w-SB-600;}
-      }
-    } 
-
-    .footer-right {
-      .footer-inquiry {@include flex-center($gap: 60px, $jc: flex-start); font-size: 22px; font-weight: $font-w-SB-600;}
-
-      .footer-info {font-size: 19px; margin-block: 40px 40px;
-
-        &-list {@include flex-center($gap: 60px, $jc: flex-start);
-
-          dt {width: 150px;}
-          dd {color: $color-text-sec1;}
+      .footer-inquiry {@include flex-center($gap: 60px, $jc: flex-start); font-size: clamp(18px, 1.52vw ,22px); font-weight: $font-w-SB-600; margin-right: 50px;
+      
+      
+        @include tablet {
+          margin: 0;
+          gap: clamp(30px, 5vw, 60px);
         }
       }
 
-      .footer-sns {@include flex-center($gap: 10px, $jc: flex-start);
-        a {display: block; width: 60px;
-          img {width: 100%;}
+    }
+
+    // ############## meddle
+    .footer-meddle {@include flex-between($ai:flex-start);
+
+      @include tablet {
+        flex-direction: column;
+      }
+
+      .footer-left {font-size: clamp(14px, 1.31vw, 19px);
+        .footer-address {line-height: 1.8;}
+
+      } 
+
+      .footer-right {@include flexCol;
+
+        @include tablet {
+          margin-top: clamp(20px, 3.33vw, 40px);
+          width: 100%;
+        }
+        
+        .footer-info {font-size: clamp(14px, 1.31vw, 19px); margin-block-end: 40px;
+  
+          &-list {@include flex-center($gap: 60px, $jc: flex-start);
+
+            @include tablet {
+              gap: clamp(30px, 5vw ,60px);
+            }
+            
+            dt {width: 150px;}
+            dd {color: $color-text-sec1;}
+  
+          }
+        }
+        
+        .footer-sns {@include flex-center($gap: 10px, $jc: flex-start);
+
+          a {display: block; width: 60px;
+            img {width: 100%;
+            
+            
+            }
+            @include tablet {
+              width: clamp(50px, 5vw, 60px);
+            }
+          }
+  
+          @include tablet {
+            justify-content: center;
+            gap: clamp(5px, 0.83vw, 10px)
+          }
         }
       }
     }
+    
+    
+
+    // ############## bottom 
+    .footer-bottom {
+      .footer-nav-menu {@include flex($gap: 10px 40px); font-size: clamp(16px, 1.38vw, 20px); margin-top: clamp(30px, 4.17vw ,50px); flex-wrap: wrap;
+
+        @include tablet {
+          justify-content: center;    
+        }
+
+      &:first-of-type {font-weight: $font-w-SB-600;}
+    }
+    }
+
 
   }
 }

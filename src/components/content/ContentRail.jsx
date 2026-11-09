@@ -7,6 +7,7 @@ import { railConfig } from '../../data/railConfig';
 import { makeParams, makeRailId } from '../../data/contentQuery';
 import { ContentCard } from './ContentCard';
 import { ContentTitle } from './ContentTitle';
+import { railBreakpoints } from '../../data/railBreakpoints';
 import 'swiper/css';
 import './scss/ContentRail.scss';
 
@@ -18,6 +19,8 @@ export const ContentRail = ({
   showMore = true,
   kidsOnly = false,
   intro,
+  layout = 'horizontal',
+  variant,
   ...options
 }) => {
   const baseConfig = railKey ? railConfig[railKey] : options;
@@ -25,13 +28,32 @@ export const ContentRail = ({
   const config = baseConfig
     ? {
         ...baseConfig,
+        variant: variant ?? baseConfig.variant ?? 'default',
         kidsOnly: kidsOnly || baseConfig.kidsOnly || false,
       }
     : null;
 
   const configId = makeRailId(config ?? {});
   const type = config?.type || 'movie';
-  const imageType = config?.imageType || '가로';
+
+  // layout으로 지정하면 카드 이미지 비율도 함께 변경
+  const imageType =
+    layout === 'vertical'
+      ? '세로'
+      : config?.imageType || '가로';
+
+  // 왼쪽 채널 소개(intro)가 있으면 채널형 설정 적용
+  const railType =
+    intro || layout === 'channel'
+      ? 'channel'
+      : config?.variant === 'ranking'
+        ? 'ranking'
+        : imageType === '세로'
+          ? 'vertical'
+          : 'horizontal';
+
+  const breakpoints = railBreakpoints[railType];
+  
 
   const savedItems = useMovieStore((state) => state.rails[configId]);
   const loading = useMovieStore((state) => givenItems === undefined && state.railLoading[configId]);
@@ -95,8 +117,11 @@ export const ContentRail = ({
           prevSlideMessage: '이전 작품',
           nextSlideMessage: '다음 작품',
         }}
-        slidesPerView={config.slideView || 'auto'}
-        spaceBetween={10}
+        // slidesPerView={config.slideView || 'auto'}
+        // spaceBetween={10}
+        slidesPerView={breakpoints[0].slidesPerView}
+        spaceBetween={breakpoints[0].spaceBetween}
+        breakpoints={breakpoints}
       >
         {visibleItems.map((item, index) => {
           const itemType = item.media_type || type;
