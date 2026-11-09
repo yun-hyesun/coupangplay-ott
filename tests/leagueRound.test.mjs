@@ -28,7 +28,7 @@ test("only started or completed matches at the actual instant determine the late
 test("current-season API, shared cache, and timed refresh advance the round without using a video month", async () => {
   let calls = 0;
   globalThis.fetch = async url => {
-    assert.equal(url, "/football-data/competitions/PL/matches?status=FINISHED,IN_PLAY,PAUSED");
+    assert.equal(url, "/football-data/competitions/PL/matches?season=2026");
     await new Promise(setImmediate);
     return ok("PL", [match(10), match(38, "FINISHED", "2026-05-01T00:00:00Z", { season: { startDate: "2025-08-01" } }), match(50, "FINISHED", undefined, { stage: "FINAL" }), ...(++calls > 1 ? [match(11, "IN_PLAY", "2026-11-08T03:55:00Z")] : [])]);
   };

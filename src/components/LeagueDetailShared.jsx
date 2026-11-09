@@ -1,5 +1,12 @@
 import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
+import { Link, useLocation } from "react-router-dom";
+import { getSportsVideoId } from "../data/sportsVideoPlayback";
 import { formatBroadcastDate, getBroadcastStatus } from "../data/leagueBroadcasts";
+import { auth } from "../firebase/firebase";
+import { useEffect, useState } from "react";
+import { useWatchlistStore } from "../store/useWatchlistStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { useProfileStore } from "../store/useProfileStore";
 import "./content/scss/ContentCard.scss";
 
 const SEOUL_TIME_ZONE = "Asia/Seoul";
@@ -78,54 +85,237 @@ export function EmptyMessage({ children }) {
   return <p className="league-detail__empty" role="status">{children}</p>;
 }
 
-function LiveBadge({ label }) {
+export function LiveBadge({ label, className = "" }) {
   return (
-    <span className="contentCard-badge live league-detail__live-badge" aria-label={label}>
+    <span className={"contentCard-badge live league-detail__live-badge" + (className ? " " + className : "")} aria-label={label}>
       <i aria-hidden="true"><span /></i>LIVE
     </span>
   );
 }
 
+
 export function MatchCard({ game, leagueId, scoresOn }) {
   const status = getGameStatus(game.status);
   const isRace = Boolean(game.raceName);
-  const homeName = isRace ? game.raceName : game.home?.name || "홈 팀";
-  const awayName = isRace ? "그랑프리" : game.away?.name || "원정 팀";
-  const hasScore = scoresOn && status.type === "ended" && game.home?.score != null && game.away?.score != null;
-  const quality = ["4K", "HDR"].includes(game.broadcastQuality) ? game.broadcastQuality : null;
+
+  const homeName = isRace
+    ? game.raceName
+    : game.home?.name || "홈 팀";
+
+  const awayName = isRace
+    ? "그랑프리"
+    : game.away?.name || "원정 팀";
+
+  const hasScore =
+    scoresOn &&
+    status.type === "ended" &&
+    game.home?.score != null &&
+    game.away?.score != null;
+
+  const quality = ["4K", "HDR"].includes(
+    game.broadcastQuality
+  )
+    ? game.broadcastQuality
+    : null;
+
+  // 기존 찜하기 Store
+  const watchlist = useWatchlistStore(
+    (state) => state.watchlist
+  );
+  const ownerKey = useWatchlistStore(
+    (state) => state.ownerKey
+  );
+  const onLoadWatchlist = useWatchlistStore(
+    (state) => state.onLoadWatchlist
+  );
+  const onAddWatchlist = useWatchlistStore(
+    (state) => state.onAddWatchlist
+  );
+  const onRemoveWatchlist = useWatchlistStore(
+    (state) => state.onRemoveWatchlist
+  );
+
+  const user = useAuthStore((state) => state.user);
+  const currentProfile = useProfileStore(
+    (state) => state.currentProfile
+  );
+
+  const [saving, setSaving] = useState(false);
+
+  // 경기 고유 ID
+  const matchId = game.gameId ?? game.id;
+
+  const favoriteContent = {
+    id: `${leagueId}_${matchId}`,
+    media_type: "sports",
+    title: isRace
+      ? homeName
+      : `${homeName} vs ${awayName}`,
+    leagueId,
+    startTime:
+      game.utcDate || game.startTime || null,
+    homeName,
+    awayName
+  };
+
+  const currentUid = auth.currentUser?.uid || user?.uid;
+  const currentOwnerKey =
+    currentUid && currentProfile?.id
+      ? `${currentUid}_${currentProfile.id}`
+      : null;
+
+  // 현재 프로필의 찜 목록 불러오기
+  useEffect(() => {
+    if (
+      currentOwnerKey &&
+      ownerKey !== currentOwnerKey
+    ) {
+      onLoadWatchlist();
+    }
+  }, [currentOwnerKey, ownerKey, onLoadWatchlist]);
+
+  // 찜 여부
+  const isFavorite =
+    ownerKey === currentOwnerKey &&
+    watchlist.some(
+      (item) =>
+        item.media_type === "sports" &&
+        String(item.id) === favoriteContent.id
+    );
+
+  // 찜 추가 / 해제
+  const handleFavorite = async (event) => {
+    event.stopPropagation();
+
+    if (saving) return;
+
+    if (!auth.currentUser || !currentProfile) {
+      alert("로그인 후 프로필을 선택해 주세요.");
+      return;
+    }
+
+    if (matchId == null) {
+      alert("경기 ID가 없어 찜할 수 없습니다.");
+      return;
+    }
+
+    if (ownerKey !== currentOwnerKey) {
+      await onLoadWatchlist();
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const success = isFavorite
+        ? await onRemoveWatchlist(favoriteContent)
+        : await onAddWatchlist(favoriteContent);
+
+      if (!success) {
+        alert("찜 목록을 변경하지 못했습니다.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <article className="league-detail__match-card" data-match-status={status.type}>
-      {status.type === "live" ? <LiveBadge label="라이브 경기" /> : (
-        <span className={"league-detail__match-badge league-detail__match-badge--" + status.type} aria-label={status.label}>
+    <article
+      className="league-detail__match-card"
+      data-match-status={status.type}
+    >
+      {status.type === "live" ? (
+        <LiveBadge label="라이브 경기" />
+      ) : (
+        <span
+          className={
+            "league-detail__match-badge league-detail__match-badge--" +
+            status.type
+          }
+          aria-label={status.label}
+        >
           {status.label}
         </span>
       )}
+
       <div className="league-detail__match-teams">
         <div className="league-detail__match-team league-detail__match-team--home">
           <TeamImage team={game.home} leagueId={leagueId} />
           <span title={homeName}>{homeName}</span>
         </div>
+
         <div className="league-detail__match-center">
           {hasScore ? (
-            <strong>{game.home.score} <i>:</i> {game.away.score}</strong>
+            <strong>
+              {game.home.score} <i>:</i> {game.away.score}
+            </strong>
           ) : (
-            <strong>{formatGameTime(game.utcDate || game.startTime)}</strong>
+            <strong>
+              {formatGameTime(game.utcDate || game.startTime)}
+            </strong>
           )}
-          <span>{formatGameDate(game.utcDate || game.startTime || game.dateKey)}</span>
+
+          <span>
+            {formatGameDate(
+              game.utcDate ||
+              game.startTime ||
+              game.dateKey
+            )}
+          </span>
         </div>
+
         <div className="league-detail__match-team league-detail__match-team--away">
-          {!isRace && <TeamImage team={game.away} leagueId={leagueId} />}
+          {!isRace && (
+            <TeamImage team={game.away} leagueId={leagueId} />
+          )}
           <span title={awayName}>{awayName}</span>
         </div>
       </div>
-      <div className="league-detail__match-action" aria-hidden="true">
-        <span className="league-detail__match-action-icon"><img src={"/images/sports/league-detail/schedule-" + (status.type === "scheduled" ? "plus" : "play") + ".svg"} alt="" /></span>
-        {quality && <span className="league-detail__match-quality">{quality}</span>}
+
+      <div className="league-detail__match-action">
+        {status.type === "scheduled" ? (
+          <button
+            type="button"
+            className="league-detail__favorite-button"
+            onClick={handleFavorite}
+            disabled={saving || matchId == null}
+            aria-pressed={isFavorite}
+            aria-label={
+              isFavorite ? "경기 찜 해제" : "경기 찜하기"
+            }
+            title={
+              isFavorite ? "찜 해제" : "찜하기"
+            }
+          >
+            <span className="league-detail__match-action-icon">
+              <img
+                src={`/images/sports/league-detail/schedule-${isFavorite ? "check" : "plus"}.svg`}
+                alt=""
+              />
+            </span>
+          </button>
+        ) : (
+          <span
+            className="league-detail__match-action-icon"
+            aria-hidden="true"
+          >
+            <img
+              src="/images/sports/league-detail/schedule-play.svg"
+              alt=""
+            />
+          </span>
+        )}
+
+        {quality && (
+          <span className="league-detail__match-quality">
+            {quality}
+          </span>
+        )}
       </div>
     </article>
   );
 }
+
 
 export function BroadcastCard({ game, leagueId }) {
   const isLive = getBroadcastStatus(game.status) === "live";
@@ -162,9 +352,12 @@ export function BroadcastCard({ game, leagueId }) {
   );
 }
 
-function HighlightBadge({ kind = "highlight" }) {
+function HighlightBadge({ kind = "highlight", fixture = false }) {
   const assets = "/images/sports/league-detail/popular/";
   const feedAssets = "/images/sports/league-detail/videos/";
+  const fixtureAssets = "/images/sports/league-detail/schedule/related-";
+  const highlightAssets = fixture ? fixtureAssets : assets;
+  const recommendAssets = fixture ? fixtureAssets : feedAssets;
   if (kind === "replay") return (
     <span className="league-detail__replay-badge" aria-label="다시보기">
       <span className="league-detail__replay-symbol" aria-hidden="true">
@@ -177,42 +370,47 @@ function HighlightBadge({ kind = "highlight" }) {
   const recommend = kind === "recommend";
   return (
     <span className={"league-detail__highlight-badge" + (recommend ? " league-detail__highlight-badge--recommend" : "")} aria-label={recommend ? "추천 영상" : "하이라이트"}>
-      <img className="league-detail__highlight-bg" src={recommend ? feedAssets + "recommend-bg.svg" : assets + "highlight-bg.svg"} alt="" />
-      <span className="league-detail__highlight-symbol" aria-hidden="true"><img src={assets + "highlight-symbol.svg"} alt="" /></span>
+      <img className="league-detail__highlight-bg" src={recommend ? recommendAssets + "recommend-bg.svg" : highlightAssets + "highlight-bg.svg"} alt="" />
+      <span className="league-detail__highlight-symbol" aria-hidden="true"><img src={highlightAssets + "highlight-symbol.svg"} alt="" /></span>
       <span className="league-detail__highlight-symbol-overlay" aria-hidden="true">
-        <img src={assets + "highlight-symbol-overlay.svg"} alt="" />
-        <img src={assets + "highlight-symbol-overlay.svg"} alt="" />
+        <img src={highlightAssets + "highlight-symbol-overlay.svg"} alt="" />
+        <img src={highlightAssets + "highlight-symbol-overlay.svg"} alt="" />
       </span>
-      <img className="league-detail__highlight-label" src={recommend ? feedAssets + "recommend-label.svg" : assets + "highlight-label.svg"} alt="" />
+      <img className="league-detail__highlight-label" src={recommend ? recommendAssets + "recommend-label.svg" : highlightAssets + "highlight-label.svg"} alt="" />
     </span>
   );
 }
 
-export function VideoCard({ video, rank, badge = "하이라이트", variant }) {
+export function VideoCard({ video, rank, badge = "하이라이트", variant, returnTab }) {
+  const location = useLocation();
   const ranked = rank != null;
-  const feed = variant === "feed";
-  const VideoMain = video.url ? "a" : "div";
+  const fixture = variant === "fixture";
+  const feed = variant === "feed" || fixture;
+  const videoId = getSportsVideoId(video);
+  const VideoMain = videoId ? Link : video.url ? "a" : "div";
+  const playbackProps = videoId ? {
+    to: `/watch/sports/${encodeURIComponent(videoId)}`,
+    state: { title: video.title, returnTo: location.pathname + location.search, returnTab: returnTab || (variant === "feed" ? "videos" : "home") },
+  } : video.url ? { href: video.url, target: "_blank", rel: "noopener noreferrer" } : {};
   const views = video.viewCount == null ? "" : `조회수 ${new Intl.NumberFormat("ko-KR").format(video.viewCount)}회`;
   const videoTooltip = views ? `${video.title}\n${views}` : video.title;
   return (
-    <article className={"league-detail__video-card" + (ranked ? " league-detail__video-card--ranked" : "") + (feed ? " league-detail__video-card--feed" : "") + (rank >= 10 ? " league-detail__video-card--double" : "")}>
+    <article className={"league-detail__video-card" + (ranked ? " league-detail__video-card--ranked" : "") + (feed ? " league-detail__video-card--feed" : "") + (fixture ? " league-detail__video-card--fixture" : "") + (rank >= 10 ? " league-detail__video-card--double" : "")}>
       {ranked && <span className="league-detail__video-rank" aria-label={rank + "위"}>{rank}</span>}
       <VideoMain
         className="league-detail__video-main"
-        href={video.url || undefined}
-        target={video.url ? "_blank" : undefined}
-        rel={video.url ? "noopener noreferrer" : undefined}
-        aria-label={video.url ? `${video.title} · ${views} · YouTube에서 새 탭으로 보기` : undefined}
-        title={video.url ? videoTooltip : undefined}
+        {...playbackProps}
+        aria-label={videoId ? `${video.title} 재생${views ? " · " + views : ""}` : video.url ? `${video.title} · 외부 영상 보기` : undefined}
+        title={videoId || video.url ? videoTooltip : undefined}
       >
         <div className="league-detail__video-media">
           <img src={video.image} alt="" loading="lazy" />
           {!ranked && !feed && <span className="league-detail__video-badge"><span aria-hidden="true">▶</span> {badge}</span>}
-          {ranked || feed ? <span className={feed ? "league-detail__feed-play" : "league-detail__popular-play"} aria-hidden="true"><span><img src={feed ? "/images/sports/league-detail/videos/video-play.svg" : "/images/sports/league-detail/popular/video-play.svg"} alt="" /></span></span> : <span className="league-detail__play" aria-hidden="true"><span /></span>}
+          {ranked || feed ? <span className={feed ? "league-detail__feed-play" : "league-detail__popular-play"} aria-hidden="true"><span><img src={fixture ? "/images/sports/league-detail/schedule/related-video-play.svg" : feed ? "/images/sports/league-detail/videos/video-play.svg" : "/images/sports/league-detail/popular/video-play.svg"} alt="" /></span></span> : <span className="league-detail__play" aria-hidden="true"><span /></span>}
           {ranked && video.quality && <span className="league-detail__video-quality">{video.quality}</span>}
           {video.duration && <span className="league-detail__duration">{video.duration}</span>}
         </div>
-        {(ranked || feed) && <HighlightBadge kind={feed ? video.kind : "highlight"} />}
+        {(ranked || feed) && <HighlightBadge kind={feed ? video.kind : "highlight"} fixture={fixture} />}
         <h3 title={videoTooltip}>{video.title}</h3>
         {!ranked && video.meta && <p>{video.meta}</p>}
       </VideoMain>

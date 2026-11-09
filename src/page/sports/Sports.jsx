@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./scss/Sports.scss";
 
@@ -19,10 +19,19 @@ import {
 } from "../../data/sportsPageContent";
 import { SportsBanner } from "./components/SportsBanner";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
+import { MatchRelatedVideos } from "../../components/MatchRelatedVideos";
+import { LiveBadge } from "../../components/LeagueDetailShared";
 import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
+import { useScheduleMatchVideos } from "../../hooks/useScheduleMatchVideos";
 import { getScheduleUnitLabel } from "../../data/leagueScheduleUnits";
+import { getSportsVideoId } from "../../data/sportsVideoPlayback";
+import { getMatchVideoKey } from "../../data/matchRelatedVideos";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
+import { useAuthStore } from "../../store/useAuthStore";
 import { getF1RacesForDate } from "../../service/f1Service";
+import { auth } from "../../firebase/firebase";
+import { useProfileStore } from "../../store/useProfileStore";
+import { useWatchlistStore } from "../../store/useWatchlistStore";
 import {
   getFootballScheduleForDate,
   getFootballLiveMatches,
@@ -148,9 +157,16 @@ function TeamCrest({ team }) {
 function SportsVideoCard({ card, badge, live = false }) {
   const league = card.competitionCode ? getLeague(card.competitionCode) : null;
   const category = card.category || league?.name || card.competitionName || "스포츠";
+  const videoId = getSportsVideoId(card);
+  const Card = videoId ? Link : "article";
+  const playbackProps = videoId ? {
+    to: `/watch/sports/${encodeURIComponent(videoId)}`,
+    state: { title: card.title, returnTo: "/sports" },
+    "aria-label": `${card.title} 재생`,
+  } : {};
 
   return (
-    <article className={"sports-video-card" + (live ? " sports-video-card--live" : " sports-video-card--editorial")}>
+    <Card className={"sports-video-card" + (live ? " sports-video-card--live" : " sports-video-card--editorial")} {...playbackProps}>
       <div className="sports-video-card__media">
         <img src={card.image} alt="" loading="lazy" />
         {badge && (
@@ -186,7 +202,7 @@ function SportsVideoCard({ card, badge, live = false }) {
           )}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -212,8 +228,83 @@ function VideoSection({ id, title, cards, layout = "grid", badge }) {
   );
 }
 
-function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
+function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
+  const navigate = useNavigate();
+  const detailsId = useId();
   const status = getGameStatus(game.status);
+  const isEnded = status.modifier === "ended";
+  const playAction = status.modifier === "live";
+  const hasRelatedVideos = Boolean(relatedVideos?.length);
+  const isScheduled = status.modifier === "scheduled";
+  const watchlist = useWatchlistStore((state) => state.watchlist);
+  const ownerKey = useWatchlistStore((state) => state.ownerKey);
+  const onAddWatchlist = useWatchlistStore((state) => state.onAddWatchlist);
+  const onRemoveWatchlist = useWatchlistStore((state) => state.onRemoveWatchlist);
+  const currentProfile = useProfileStore((state) => state.currentProfile);
+
+  const [saving, setSaving] = useState(false);
+
+  const matchId = game.gameId ?? game.id;
+
+  const favoriteContent = {
+    id: `${game.competitionCode || game.leagueId || "sports"}_${matchId}`,
+    media_type: "sports",
+    title: `${game.home?.name || "홈 팀"} vs ${game.away?.name || "원정 팀"}`,
+    leagueId: game.competitionCode || game.leagueId || null,
+    startTime: game.utcDate || game.startTime || null,
+    homeName: game.home?.name || "홈 팀",
+    awayName: game.away?.name || "원정 팀"
+  };
+
+  const currentOwnerKey =
+    auth.currentUser && currentProfile
+      ? `${auth.currentUser.uid}_${currentProfile.id}`
+      : null;
+
+  const isFavorite =
+    ownerKey === currentOwnerKey &&
+    watchlist.some(
+      (item) =>
+        item.media_type === "sports" &&
+        String(item.id) === favoriteContent.id
+    );
+
+  const handleFavorite = async (event) => {
+    event.stopPropagation();
+
+    if (saving) return;
+
+    if (!auth.currentUser || !currentProfile) {
+      alert("로그인 후 프로필을 선택해 주세요.");
+      return;
+    }
+
+    if (matchId == null) {
+      alert("경기 ID가 없습니다.");
+      return;
+    }
+
+    if (ownerKey !== currentOwnerKey) {
+      alert("찜 목록을 불러온 후 다시 시도해 주세요.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const success = isFavorite
+        ? await onRemoveWatchlist(favoriteContent)
+        : await onAddWatchlist(favoriteContent);
+
+      if (!success) {
+        alert("찜하기 처리에 실패했습니다.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+  const detailsExpanded = !playAction && expanded && (!isEnded || hasRelatedVideos);
+  const liveVideoId = playAction ? getSportsVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
   const scheduleSubLabel = getScheduleSubLabel(game);
   const hasScore =
     scoresOn &&
@@ -222,15 +313,26 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
     game.away.score != null;
 
   return (
-    <div className={"sports-fixture-wrap" + (expanded ? " is-expanded" : "")}>
+    <div className={"sports-fixture-wrap" + (isEnded ? " sports-fixture-wrap--ended" : "") + (detailsExpanded ? " is-expanded" : "")}>
       <article className="sports-fixture">
         <div className="sports-fixture__status">
-          <span className={"sports-status sports-status--" + status.modifier}>
-            {status.label}
-          </span>
+          {playAction ? (
+            <LiveBadge label="라이브 경기" className="sports-fixture__live-badge" />
+          ) : (
+            <span className={"sports-status sports-status--" + status.modifier}>
+              {status.label}
+            </span>
+          )}
+
           <span className="sports-quality">
             {game.quality || game.competitionCode || "경기"}
           </span>
+
+          {isEnded && hasRelatedVideos && (
+            <span className="sports-fixture__highlight-badge">
+              하이라이트
+            </span>
+          )}
         </div>
 
         <div className="sports-fixture__team sports-fixture__team--home">
@@ -263,40 +365,93 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
           <TeamCrest team={game.away} />
           <span>{game.away.name}</span>
         </div>
-
-        <button
+        {isScheduled && (
+          <button
+            type="button"
+            className="sports-fixture__action sports-fixture__favorite-button"
+            onClick={handleFavorite}
+            disabled={saving || matchId == null}
+            aria-label={isFavorite ? "경기 찜 해제" : "경기 찜하기"}
+            aria-pressed={isFavorite}
+            title={isFavorite ? "찜 해제" : "찜하기"}
+          >
+            <img
+              className="sports-fixture__favorite-icon"
+              src={`/images/sports/league-detail/schedule-${isFavorite ? "check" : "plus"}.svg`}
+              alt=""
+            />
+          </button>
+        )}
+        {!isScheduled && (!isEnded || hasRelatedVideos) && (<button
           type="button"
-          className={"sports-fixture__action" + (status.modifier === "live" ? " is-active" : "")}
-          aria-label={expanded ? "경기 정보 접기" : "경기 정보 펼치기"}
-          aria-expanded={expanded}
-          onClick={onToggle}
+          className={"sports-fixture__action" + (playAction ? " is-active" : "")}
+          aria-label={playAction ? (liveVideoId ? "라이브 경기 재생" : "라이브 중계 미연결") : isEnded ? `${game.home.name} vs ${game.away.name} 관련 영상 ${detailsExpanded ? "접기" : "펼치기"}` : detailsExpanded ? "경기 정보 접기" : "경기 정보 펼치기"}
+          aria-expanded={playAction ? undefined : detailsExpanded}
+          aria-controls={detailsExpanded ? detailsId : undefined}
+          disabled={playAction && !liveVideoId}
+          title={playAction && !liveVideoId ? "아직 연결된 라이브 중계 영상이 없습니다." : undefined}
+          onClick={playAction ? () => {
+            if (liveVideoId) navigate(`/watch/sports/${encodeURIComponent(liveVideoId)}`, {
+              state: { title: `${game.home.name} vs ${game.away.name} LIVE`, returnTo: "/sports" },
+            });
+          } : onToggle}
         >
-          {status.modifier === "live" ? "▶" : (
+          {playAction ? "▶" : (
             <img
               className="sports-fixture__expand-icon"
-              src="/images/sports/icon/sports-accordion-arrow.svg"
+              src={isEnded ? "/images/sports/league-detail/schedule/related-collapse.svg" : "/images/sports/icon/sports-accordion-arrow.svg"}
               alt=""
               aria-hidden="true"
             />
           )}
-        </button>
+        </button>)}
       </article>
 
-      {expanded && (
-        <div className="sports-fixture__extra">
+      {detailsExpanded && (isEnded ? (
+        <MatchRelatedVideos
+          key={[game.gameId, game.utcDate || game.startTime, game.matchday, game.home.name, game.away.name].join(":")}
+          game={game}
+          id={detailsId}
+          initialVideos={relatedVideos}
+        />
+      ) : (
+        <div id={detailsId} className="sports-fixture__extra">
           <span>{game.competitionName || "리그 경기"}</span>
           <span>{game.stage || game.matchday ? game.stage || game.matchday + " 라운드" : "경기 정보"}</span>
           {game.venue && <span>{game.venue}</span>}
           {game.winnerName && <span>우승자 {game.winnerName}</span>}
           <span>한국 시간 {formatGameTime(game.utcDate || game.startTime)}</span>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
 export const Sports = () => {
+  const navigate = useNavigate();
+  const currentProfile = useProfileStore((state) => state.currentProfile);
+  const onLoadWatchlist = useWatchlistStore((state) => state.onLoadWatchlist);
+
+  useEffect(() => {
+    if (auth.currentUser && currentProfile?.id) {
+      onLoadWatchlist();
+    }
+  }, [currentProfile?.id, onLoadWatchlist]);
+  const user = useAuthStore((state) => state.user);
+  const authLoading = useAuthStore((state) => state.loading);
+  const canShowSubscriptions = Boolean(user && !authLoading);
   const leagueListDrag = useHorizontalDragScroll();
+  const featuredRailRef = useRef(null);
+  const calendarRailRef = useRef(null);
+  const scrollRail = (ref, direction) => {
+    const element = ref.current;
+    if (!element) return;
+    const card = element.querySelector(":scope > *");
+    const gap = parseFloat(getComputedStyle(element).gap) || 0;
+    const step = card ? card.getBoundingClientRect().width + gap : 160;
+    const count = Math.max(1, Math.floor(element.clientWidth / step));
+    element.scrollBy({ left: direction * step * count, behavior: "smooth" });
+  };
   const [activeCategory, setActiveCategory] = useState("전체");
   const [selectedLeagueIds, setSelectedLeagueIds] = useState(readSelectedLeagueIds);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -313,6 +468,7 @@ export const Sports = () => {
   });
   const [selectedDate, setSelectedDate] = useState(() => getSeoulDateKey());
   const [scoresOn, setScoresOn] = useState(false);
+  const [showAllSchedule, setShowAllSchedule] = useState(false);
   const [expandedGameIds, setExpandedGameIds] = useState([]);
   const [liveState, setLiveState] = useState({
     games: [],
@@ -324,6 +480,8 @@ export const Sports = () => {
     loading: true,
     errors: [],
   });
+  const endedGames = scheduleState.games.filter(game => getGameStatus(game.status).modifier === "ended");
+  const scheduleMatchVideos = useScheduleMatchVideos(endedGames, selectedDate);
 
   const visibleLeagues = useMemo(() => {
     if (activeCategory === "전체") return SPORTS_LEAGUES;
@@ -342,15 +500,12 @@ export const Sports = () => {
 
   const featuredLeagues = useMemo(
     () =>
-      SPORTS_FEATURED_LEAGUE_IDS.map((id) => getLeague(id)).filter(Boolean),
+      [...new Set([...SPORTS_FEATURED_LEAGUE_IDS, "f1", "BL1", "nfl", "kleague-1", "FL1"])].map((id) => getLeague(id)).filter(Boolean),
     [],
   );
 
   const calendarDays = useMemo(
-    () =>
-      Array.from({ length: 13 }, (_, index) =>
-        shiftDate(selectedDate, index - 6),
-      ),
+    () => Array.from({ length: 63 }, (_, index) => shiftDate(selectedDate, index - 31)),
     [selectedDate],
   );
 
@@ -455,14 +610,17 @@ export const Sports = () => {
 
         errors.push(
           providers[index] + ": " +
-            (result.reason?.message || "일정을 불러오지 못했습니다."),
+          (result.reason?.message || "일정을 불러오지 못했습니다."),
         );
       });
 
       games.sort(
-        (first, second) =>
-          new Date(first.utcDate || first.startTime) -
-          new Date(second.utcDate || second.startTime),
+        (first, second) => {
+          const livePriority = Number(isLive(second.status)) - Number(isLive(first.status));
+          return livePriority ||
+            new Date(first.utcDate || first.startTime) -
+            new Date(second.utcDate || second.startTime);
+        },
       );
 
       setScheduleState({ games, loading: false, errors });
@@ -479,7 +637,21 @@ export const Sports = () => {
     };
   }, [selectedDate]);
 
+  const openSettingsModal = () => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setIsSettingsModalOpen(true);
+  };
+
   const toggleLeague = (league) => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     setSelectedLeagueIds((current) => {
       if (current.includes(league.id)) {
         return current.filter((leagueId) => leagueId !== league.id);
@@ -490,6 +662,11 @@ export const Sports = () => {
   };
 
   const toggleTeam = (teamId) => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     setSelectedTeamIds((current) =>
       current.includes(teamId)
         ? current.filter((id) => id !== teamId)
@@ -508,6 +685,7 @@ export const Sports = () => {
   };
 
   useEffect(() => {
+    if (!canShowSubscriptions) return;
     try {
       window.localStorage.setItem(
         LEAGUE_SUBSCRIPTIONS_STORAGE_KEY,
@@ -516,9 +694,10 @@ export const Sports = () => {
     } catch {
       // Keep the current selection in memory when local storage is unavailable.
     }
-  }, [selectedLeagueIds]);
+  }, [selectedLeagueIds, canShowSubscriptions]);
 
   useEffect(() => {
+    if (!canShowSubscriptions) return;
     try {
       window.localStorage.setItem(
         TEAM_SUBSCRIPTIONS_STORAGE_KEY,
@@ -527,7 +706,7 @@ export const Sports = () => {
     } catch {
       // Continue without persistence when local storage is unavailable.
     }
-  }, [selectedTeamIds]);
+  }, [selectedTeamIds, canShowSubscriptions]);
 
   const renderSchedule = () => {
     if (scheduleState.loading) {
@@ -562,7 +741,7 @@ export const Sports = () => {
           </p>
         )}
         <div className="sports-fixtures">
-          {scheduleState.games.map((game) => (
+          {(showAllSchedule ? scheduleState.games : scheduleState.games.slice(0, 10)).map((game) => (
             <ScheduleMatch
               key={game.gameId}
               game={{
@@ -570,6 +749,7 @@ export const Sports = () => {
                 quality: game.competitionName || game.competitionCode,
               }}
               scoresOn={scoresOn}
+              relatedVideos={scheduleMatchVideos[getMatchVideoKey(game)]}
               expanded={expandedGameIds.includes(game.gameId)}
               onToggle={() => toggleExpandedGame(game.gameId)}
             />
@@ -579,9 +759,19 @@ export const Sports = () => {
     );
   };
 
+  useEffect(() => {
+    const rail = calendarRailRef.current;
+    if (!rail) return;
+    const selected = Array.from(rail.querySelectorAll(".sports-calendar-day"))
+      .find((item) => item.dataset.date === selectedDate);
+    if (!selected) return;
+    rail.scrollLeft = selected.offsetLeft - rail.offsetLeft - (rail.clientWidth - selected.offsetWidth) / 2;
+  }, [selectedDate, calendarDays]);
+
   const changeSelectedDate = (amount) => {
     setSelectedDate((date) => shiftDate(date, amount));
     setExpandedGameIds([]);
+    setShowAllSchedule(false);
   };
 
   return (
@@ -611,7 +801,8 @@ export const Sports = () => {
             type="button"
             className="sports-outline-button"
             aria-expanded={isSettingsModalOpen}
-            onClick={() => setIsSettingsModalOpen(true)}
+            disabled={authLoading}
+            onClick={openSettingsModal}
           >
             전체보기
           </button>
@@ -622,7 +813,8 @@ export const Sports = () => {
             className="sports-league-add"
             aria-label="관심 리그 선택"
             aria-expanded={isSettingsModalOpen}
-            onClick={() => setIsSettingsModalOpen(true)}
+            disabled={authLoading}
+            onClick={openSettingsModal}
           >
             +
           </button>
@@ -639,7 +831,7 @@ export const Sports = () => {
             onDragStart={leagueListDrag.onDragStart}
           >
             {visibleLeagues.map((league) => {
-              const selected = selectedLeagueIds.includes(league.id);
+              const selected = canShowSubscriptions && selectedLeagueIds.includes(league.id);
               return (
                 <Link
                   key={league.id}
@@ -705,7 +897,9 @@ export const Sports = () => {
         aria-labelledby="sports-featured-title"
       >
         <SectionTitle id="sports-featured-title" title="주요 리그" />
-        <div className="sports-featured-leagues">
+        <div className="sports-rail-shell sports-rail-shell--featured">
+          <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 주요 리그" onClick={() => scrollRail(featuredRailRef, -1)}>‹</button>
+          <div className="sports-featured-leagues" ref={featuredRailRef} tabIndex={0} aria-label="주요 리그 목록">
           {featuredLeagues.map((league) => (
             <article className="sports-featured-league" key={league.id}>
               <Link
@@ -722,7 +916,8 @@ export const Sports = () => {
                 </span>
               </Link>
               <h3>{league.name}</h3>
-              <p>경기 일정과 영상 보기</p>
+              <p className="sports-featured-league__type">{league.sport} · {league.scope}</p>
+              <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p>
               <Link
                 to={`/sports/league/${encodeURIComponent(league.id)}`}
               >
@@ -730,6 +925,8 @@ export const Sports = () => {
               </Link>
             </article>
           ))}
+          </div>
+          <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 주요 리그" onClick={() => scrollRail(featuredRailRef, 1)}>›</button>
         </div>
       </section>
 
@@ -740,6 +937,11 @@ export const Sports = () => {
         <div className="sports-schedule-heading">
           <SectionTitle id="sports-schedule-title" title="오늘의 경기 일정" />
           <div className="sports-schedule-actions">
+            {scheduleState.games.length > 10 && !scheduleState.loading && (
+              <button type="button" className="sports-schedule-expand" aria-expanded={showAllSchedule} onClick={() => setShowAllSchedule((value) => !value)}>
+                {showAllSchedule ? "접기" : `전체보기 (${scheduleState.games.length}경기)`}
+              </button>
+            )}
             <button
               type="button"
               className={"sports-score-toggle" + (scoresOn ? " is-on" : "")}
@@ -784,49 +986,42 @@ export const Sports = () => {
             <button
               type="button"
               className="sports-calendar-recent"
-              onClick={() => setSelectedDate(getSeoulDateKey())}
+              onClick={() => { setSelectedDate(getSeoulDateKey()); setShowAllSchedule(false); setExpandedGameIds([]); }}
             >
               최근
             </button>
           </div>
         </div>
 
-        <div className="sports-calendar-days" role="group" aria-label="경기 날짜 선택">
-          <button
-            type="button"
-            className="sports-calendar-days__arrow"
-            aria-label="이전 주"
-            onClick={() => changeSelectedDate(-7)}
-          >
-            ‹
-          </button>
+        <div className="sports-rail-shell sports-rail-shell--calendar" role="group" aria-label="경기 날짜 선택">
+          <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 날짜 보기" onClick={() => changeSelectedDate(-1)}>‹</button>
+          <div className="sports-calendar-days" ref={calendarRailRef} aria-label="선택 날짜를 중심으로 표시">
           {calendarDays.map((dateKey) => {
             const date = dateFromKey(dateKey);
             const weekday = WEEKDAYS[date.getUTCDay()];
+            const beforeMonthStart = dateKey < selectedDate.slice(0, 7) + "-01";
             return (
               <button
                 type="button"
                 key={dateKey}
+                data-date={dateKey}
+                disabled={beforeMonthStart}
+                aria-disabled={beforeMonthStart}
                 className={
                   "sports-calendar-day" +
-                  (selectedDate === dateKey ? " is-selected" : "")
+                  (selectedDate === dateKey ? " is-selected" : "") +
+                  (beforeMonthStart ? " is-unavailable" : "")
                 }
                 aria-pressed={selectedDate === dateKey}
-                onClick={() => setSelectedDate(dateKey)}
+                onClick={() => { setSelectedDate(dateKey); setShowAllSchedule(false); setExpandedGameIds([]); }}
               >
                 <span>{dateKey === getSeoulDateKey() ? "오늘" : weekday}</span>
                 <strong>{date.getUTCDate()}</strong>
               </button>
             );
           })}
-          <button
-            type="button"
-            className="sports-calendar-days__arrow"
-            aria-label="다음 주"
-            onClick={() => changeSelectedDate(7)}
-          >
-            ›
-          </button>
+          </div>
+          <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 날짜 보기" onClick={() => changeSelectedDate(1)}>›</button>
         </div>
 
         {renderSchedule()}
@@ -894,12 +1089,12 @@ export const Sports = () => {
       <SportsSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        selectedLeagueIds={selectedLeagueIds}
+        selectedLeagueIds={canShowSubscriptions ? selectedLeagueIds : []}
         onToggleLeague={toggleLeague}
-        onReorderLeagues={setSelectedLeagueIds}
-        selectedTeamIds={selectedTeamIds}
+        onReorderLeagues={(ids) => { if (canShowSubscriptions) setSelectedLeagueIds(ids); }}
+        selectedTeamIds={canShowSubscriptions ? selectedTeamIds : []}
         onToggleTeam={toggleTeam}
-        onReorderTeams={setSelectedTeamIds}
+        onReorderTeams={(ids) => { if (canShowSubscriptions) setSelectedTeamIds(ids); }}
       />
     </main>
   );

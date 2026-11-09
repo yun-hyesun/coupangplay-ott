@@ -112,7 +112,7 @@ export function getKleagueScheduleUnitFields(match) {
   return { competitionCode: `kleague-${match.leagueId}`, matchday: match.roundId, stage: match.codeName || "", status: isFinished ? "FINISHED" : isLive ? "IN_PLAY" : "SCHEDULED", utcDate };
 }
 
-function normalizeKleagueMatch(match) {
+export function normalizeKleagueMatch(match) {
   const fields = getKleagueScheduleUnitFields(match);
   const hasStarted = fields.status === "IN_PLAY" || fields.status === "FINISHED";
   const leagueId = String(match.leagueId);

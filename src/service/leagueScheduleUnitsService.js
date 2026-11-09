@@ -4,6 +4,7 @@ import { getF1SeasonScheduleUnits } from "./f1Service";
 import { getVideoDateKey } from "../data/leagueVideoGroups";
 import { buildScheduleUnitOptions, hasMatchStarted } from "../data/leagueScheduleUnits";
 import { ESPN_LEAGUE_PATHS } from "../data/espnLeagues";
+import { getFootballDataSeason } from "./footballDataSeasonService";
 
 const FOOTBALL_DATA_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC"]);
 const CACHE_MS = 5 * 60 * 1000;
@@ -151,13 +152,10 @@ async function loadMls(now) {
 
 async function loadRoundData(leagueId, now) {
   if (FOOTBALL_DATA_LEAGUES.has(leagueId)) {
-    const response = await fetch(`/football-data/competitions/${leagueId}/matches?status=FINISHED,IN_PLAY,PAUSED`, { signal: AbortSignal.timeout(15000) });
-    if (!response.ok) throw new Error(response.status === 429
-      ? "경기 정보 조회가 잠시 제한되었습니다. 잠시 후 다시 확인해 주세요."
-      : "현재 라운드를 불러오지 못했습니다.");
-    const data = await response.json();
-    if (!Array.isArray(data.matches) || (data.competition?.code && data.competition.code !== leagueId)) throw new Error("현재 라운드 정보를 확인할 수 없습니다.");
-    const season = String(data.filters?.season || "");
+    const [year, month] = getVideoDateKey(now).split("-").map(Number);
+    const seasonYear = month >= 7 ? year : year - 1;
+    const data = await getFootballDataSeason(leagueId, seasonYear);
+    const season = String(data.filters?.season || seasonYear);
     return { matches: data.matches.filter(game => (!season || !game.season?.startDate || game.season.startDate.startsWith(season)) && (!game.stage || game.stage === "REGULAR_SEASON")), source: "Football-Data", field: "matchday / utcDate / status", seasonYear: season };
   }
   if (leagueId === "nba" || leagueId === "nfl") return loadWeeks(leagueId, now);

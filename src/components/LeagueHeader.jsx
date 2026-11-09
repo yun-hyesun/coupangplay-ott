@@ -22,8 +22,8 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTa
   const logoPath = league.whiteLogoPath || league.logoPath;
   const sportIconPath = LEAGUE_ICON_PATHS[league.id] || SPORT_ICON_PATHS[league.sport] || SPORT_ICON_PATHS.축구;
   const selectedTeam = selectedTeams[0];
-  const teamCountLabel = selectedTeams.length > 9 ? "9+" : String(selectedTeams.length);
-  const leagueCountLabel = selectedLeagueCount > 9 ? "9+" : String(selectedLeagueCount);
+  const teamCountLabel = selectedTeams.length >= 9 ? "9+" : String(selectedTeams.length);
+  const leagueCountLabel = selectedLeagueCount >= 9 ? "9+" : String(selectedLeagueCount);
 
   return (
     <section className={"league-detail__hero" + (isCompact ? " is-compact" : "")} aria-label={league.name + " 리그 정보"}>
@@ -66,13 +66,14 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTa
             type="button"
             className={isMyLeague ? "is-selected" : ""}
             aria-pressed={isMyLeague}
+            aria-label={isMyLeague ? `마이 리그, 등록된 리그 ${selectedLeagueCount}개` : "마이 리그"}
             onClick={onToggleMyLeague}
           >
             <span className="league-detail__action-label">마이 리그</span>
             {isMyLeague ? (
               <>
                 <span className="league-detail__action-check" aria-hidden="true" />
-                <span className="league-detail__count-badge">{leagueCountLabel}</span>
+                {selectedLeagueCount > 0 && <span className="league-detail__count-badge" aria-hidden="true">{leagueCountLabel}</span>}
               </>
             ) : (
               <span className="league-detail__action-plus" aria-hidden="true">＋</span>
@@ -89,11 +90,11 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTa
             aria-label={selectedTeams.length ? `마이 팀 설정, 선택된 팀 ${selectedTeams.length}개` : "마이 팀 설정"}
           >
             <span className="league-detail__action-label">마이 팀</span>
-            <span className="league-detail__action-chevron" aria-hidden="true" />
+            {!selectedTeam && <span className="league-detail__action-chevron" aria-hidden="true" />}
             {selectedTeam ? (
               <>
                 <img className="league-detail__selected-team-logo" src={selectedTeam.logoPath || sportIconPath} alt="" aria-hidden="true" />
-                <span className="league-detail__count-badge">{teamCountLabel}</span>
+                <span className="league-detail__count-badge" aria-hidden="true">{teamCountLabel}</span>
               </>
             ) : (
               <img className="league-detail__action-team-icon" src={sportIconPath} alt="" aria-hidden="true" />

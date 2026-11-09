@@ -192,6 +192,63 @@ test("quota failures expose a friendly error without keys or an empty success", 
   assert.ok(!JSON.stringify(response.data).includes("do-not-expose"));
 });
 
+test("exhausted search allowance recovers through verified official uploads and shares pages across filters", async () => {
+  const calls = [];
+  const entries = [
+    { id: "abcdefghijk", title: "[라리가] 12R AT. 마드리드 vs 바르셀로나 하이라이트", publishedAt: "2026-11-08T23:00:00Z" },
+    { id: "lmnopqrstuv", title: "[라리가] 11R 바르셀로나 vs 레알 마드리드 하이라이트", publishedAt: "2026-10-25T23:00:00Z" },
+    { id: "zzzzzzzzzzz", title: "[프리미어리그] 리즈 vs 토트넘 하이라이트", publishedAt: "2026-10-24T23:00:00Z" },
+  ];
+  const handler = createLeagueVideosHandler({ apiKey: "private", fetchImpl: async url => {
+    calls.push(url.pathname.split("/").at(-1));
+    if (url.pathname.endsWith("/search")) return { ok: false, status: 429, json: async () => ({ error: { errors: [{ reason: "rateLimitExceeded" }] } }) };
+    if (url.pathname.endsWith("/channels")) return ok({ items: [{ id: CHANNEL, contentDetails: { relatedPlaylists: { uploads: "official-uploads" } } }] });
+    if (url.pathname.endsWith("/playlistItems")) {
+      assert.equal(url.searchParams.get("playlistId"), "official-uploads");
+      return ok({ items: entries.map(entry => ({ snippet: { channelId: CHANNEL, title: entry.title }, contentDetails: { videoId: entry.id, videoPublishedAt: entry.publishedAt } })), nextPageToken: "older" });
+    }
+    return ok({ items: entries.filter(entry => url.searchParams.get("id").split(",").includes(entry.id))
+      .map(entry => ({ id: entry.id, snippet: { channelId: CHANNEL, title: entry.title, publishedAt: entry.publishedAt }, contentDetails: { duration: "PT4M" } })) });
+  } });
+  const month = await invoke(handler, { league: "PD", month: "2026-11" });
+  assert.equal(month.statusCode, 200);
+  assert.equal(month.data.source, "youtube-uploads");
+  assert.deepEqual(month.data.videos.map(video => video.id), ["abcdefghijk"]);
+  assert.equal(month.data.nextPageToken, "");
+  const team = await invoke(handler, { league: "PD", scope: "team", team: "바르셀로나" });
+  assert.equal(team.statusCode, 200);
+  assert.equal(team.data.videos.length, 2);
+  assert.equal(calls.filter(value => value === "search").length, 1);
+  assert.equal(calls.filter(value => value === "channels").length, 1);
+  assert.equal(calls.filter(value => value === "playlistItems").length, 2);
+  assert.ok(!JSON.stringify(team.data).includes("private"));
+});
+
+test("upload pagination preserves all last-page videos and never resumes a playlist token as a search token", async () => {
+  let searchCalls = 0;
+  const handler = createLeagueVideosHandler({ apiKey: "test", fetchImpl: async url => {
+    if (url.pathname.endsWith("/search")) { searchCalls++; return { ok: false, status: 429, json: async () => ({}) }; }
+    if (url.pathname.endsWith("/channels")) return ok({ items: [{ id: CHANNEL, contentDetails: { relatedPlaylists: { uploads: "official" } } }] });
+    if (url.pathname.endsWith("/playlistItems")) {
+      const second = url.searchParams.get("pageToken") === "page2";
+      return ok({ ...(second ? {} : { nextPageToken: "page2" }), items: Array.from({ length: second ? 1 : 50 }, (_, index) => ({
+        snippet: { channelId: CHANNEL, title: "[라리가] AT. 마드리드 vs 바르셀로나 하이라이트" },
+        contentDetails: { videoId: `v${String(index + (second ? 50 : 0)).padStart(10,"0")}`, videoPublishedAt: "2026-11-08T23:00:00Z" },
+      })) });
+    }
+    return ok({ items: url.searchParams.get("id").split(",").map(id => ({ id, snippet: { channelId: CHANNEL,
+      title: "[라리가] AT. 마드리드 vs 바르셀로나 하이라이트", publishedAt: "2026-11-08T23:00:00Z" } })) });
+  } });
+  const query = { league: "PD", month: "2026-11" };
+  const first = await invoke(handler, query);
+  assert.equal(first.data.videos.length, 50);
+  assert.equal(first.data.nextPageToken, "uploads:page2");
+  const next = await invoke(handler, { ...query, pageToken: first.data.nextPageToken });
+  assert.equal(next.data.videos.length, 1);
+  assert.equal(next.data.nextPageToken, "");
+  assert.equal(searchCalls, 1);
+});
+
 test("real match date, home/away order and zero scores enrich related clips; duplicates are removed", () => {
   const videos = [video("a", "[프리미어리그] 10R 리즈 vs 토트넘 2분 하이라이트"), video("b", "멋진 장면 l 프리미어리그 l 리즈 vs 토트넘", "2026-11-07T21:00:00Z", "recommend"), video("a", "duplicate")];
   const fixtures = [{ id: "match1", utcDate: "2026-11-07T16:00:00Z", home: { name: "토트넘", score: 0 }, away: { name: "리즈", score: 2 } }];
