@@ -1,3 +1,4 @@
+import CommonIcon from '../../components/common/CommonIcon';
 import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { policyData } from './policyData';
@@ -59,7 +60,7 @@ export const Policy = () => {
             ))}
           </div>
           <button type="button" className="policy-page__button" onClick={() => setIsModalOpen(true)}>
-            자세히 보기
+            자세히 보기 <CommonIcon name="external" size={18} />
           </button>
           {/* <p className="policy-page__source">참조 원문 <a href={policy.url} target="_blank" rel="noopener noreferrer">{policy.url}</a></p> */}
         </section>
@@ -72,7 +73,7 @@ export const Policy = () => {
           <section className="policy-page__modal" role="dialog" aria-modal="true" aria-labelledby="policy-modal-title">
             <header className="policy-page__modal-header">
               <h2 id="policy-modal-title">{policy.title}</h2>
-              <button ref={closeRef} className="policy-page__button" type="button" onClick={() => setIsModalOpen(false)}>닫기</button>
+              <button ref={closeRef} className="policy-page__button" type="button" onClick={() => setIsModalOpen(false)}><CommonIcon name="close" size={18} /> 닫기</button>
             </header>
             <div className="policy-page__modal-scroll" tabIndex={0} aria-label="약관 내용 스크롤 영역">
               {policyFullText[policy.path] ? (
@@ -87,7 +88,7 @@ export const Policy = () => {
               )}
             </div>
             <footer className="policy-page__modal-footer">
-              <a className="policy-page__button" href={policy.url} target="_blank" rel="noopener noreferrer">쿠팡에서 전문 읽기</a>
+              <a className="policy-page__button" href={policy.url} target="_blank" rel="noopener noreferrer">쿠팡에서 전문 읽기 <CommonIcon name="external" size={18} /></a>
             </footer>
           </section>
         </div>

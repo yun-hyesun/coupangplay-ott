@@ -79,6 +79,15 @@ body:has(.wowclip-shortfeed) {
   background: #000;
 }
 
+.wowclip-feed-stage::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 42%, rgba(0, 0, 0, 0.025) 55%, rgba(0, 0, 0, 0.12) 68%, rgba(0, 0, 0, 0.32) 82%, rgba(0, 0, 0, 0.62) 100%);
+  content: "";
+  pointer-events: none;
+}
+
 .wowclip-feed-poster {
   position: absolute;
   inset: 0;
@@ -107,20 +116,12 @@ body:has(.wowclip-shortfeed) {
 .wowclip-feed-info {
   position: absolute;
   z-index: 3;
-  bottom: 28px;
+  right: 24px;
+  bottom: 36px;
   left: 24px;
-  max-width: min(640px, 100% - 48px);
-  padding: 16px 24px 8px 0;
+  max-width: 720px;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
   pointer-events: none;
-}
-
-.wowclip-feed-info::before {
-  position: absolute;
-  z-index: -1;
-  inset: -48px -36px -28px -24px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
-  content: "";
 }
 
 .wowclip-feed-info a {
@@ -164,19 +165,49 @@ body:has(.wowclip-shortfeed) {
   font-size: 12px;
 }
 
+.wowclip-feed-source-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .wowclip-feed-source,
 .wowclip-feed-category {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 32px;
-  margin: 0 6px 0 0;
-  padding: 5px 10px;
+  height: 32px;
+  max-width: 100%;
+  padding: 6px 10px;
   border-radius: 6px;
   background: rgba(65, 65, 65, 0.85);
   font-size: 13px;
   line-height: 20px;
   text-shadow: none;
+}
+
+.wowclip-feed-source {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.wowclip-feed-category {
+  min-width: 0;
+  gap: 8px;
+}
+
+.wowclip-feed-source-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wowclip-feed-episode {
+  flex-shrink: 0;
+  color: #d4d4d4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .wowclip-feed-actions {
@@ -368,10 +399,10 @@ body:has(.wowclip-shortfeed) {
     display: none;
   }
   .wowclip-feed-info {
+    right: 64px;
+    bottom: 28px;
     left: 16px;
-    bottom: 20px;
-    max-width: calc(100% - 80px);
-    padding-right: 0;
+    max-width: none;
   }
   .wowclip-feed-info h2 {
     font-size: 16px;

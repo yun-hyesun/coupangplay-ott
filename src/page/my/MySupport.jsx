@@ -89,9 +89,9 @@ export const MySupport = () => {
                     <MyPageHeader title="고객센터" />
                 </div>
 
-                <p className="my-support-description">
+                {/* <p className="my-support-description">
                     쿠팡플레이 이용 중 궁금한 점을 확인해 보세요.
-                </p>
+                </p> */}
 
                 {/* FAQ 검색 */}
                 <form className="support-search" onSubmit={handleSearch}>
@@ -126,7 +126,7 @@ export const MySupport = () => {
 
                 {/* 자주 묻는 질문 */}
                 <section className="support-faq">
-                    <h3>자주 묻는 질문</h3>
+                    {/* <h3>자주 묻는 질문</h3> */}
 
                     {filteredFaq.length > 0 ? (
                         <ul>
@@ -139,14 +139,19 @@ export const MySupport = () => {
                                         onClick={() => setOpenId(openId === faq.id ? null : faq.id)}
                                     >
                                         <span>{faq.question}</span>
-                                        <span className="support-arrow" aria-hidden="true">⌄</span>
+                                        <span className="support-arrow" aria-hidden="true"> <img
+                                            src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
+                                            alt=""
+                                        /></span>
                                     </button>
 
-                                    {openId === faq.id && (
-                                        <div className="support-answer">
-                                            {faq.answer}
+                                    <div className={`support-answer-wrap ${openId === faq.id ? 'open' : ''}`}>
+                                        <div className="support-answer-inner">
+                                            <div className="support-answer">
+                                                {faq.answer}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </li>
                             ))}
                         </ul>

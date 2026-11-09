@@ -277,6 +277,21 @@
 .watch-settings-popup__list {
   overflow-y: auto;
   padding: 0 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+}
+.watch-settings-popup__list::-webkit-scrollbar {
+  width: 6px;
+}
+.watch-settings-popup__list::-webkit-scrollbar-track {
+  background: #101113;
+}
+.watch-settings-popup__list::-webkit-scrollbar-thumb {
+  background: #555b63;
+  border-radius: 10px;
+}
+.watch-settings-popup__list::-webkit-scrollbar-thumb:hover {
+  background: #777d85;
 }
 
 .watch-settings-popup__list button {
@@ -467,6 +482,21 @@
   min-height: 0;
   overflow-y: auto;
   padding: 16px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+}
+.watch-side-panel__episodes::-webkit-scrollbar {
+  width: 6px;
+}
+.watch-side-panel__episodes::-webkit-scrollbar-track {
+  background: #101113;
+}
+.watch-side-panel__episodes::-webkit-scrollbar-thumb {
+  background: #555b63;
+  border-radius: 10px;
+}
+.watch-side-panel__episodes::-webkit-scrollbar-thumb:hover {
+  background: #777d85;
 }
 
 .watch-side-panel__episodes > p {

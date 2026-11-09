@@ -1,11 +1,11 @@
-.channel {padding-inline: $padding-main; margin: 50px 0;
+.channel {padding-inline: $padding-main; margin: clamp(20px, 3.47vw, 50px) 0;
 
 .channel-flex {@include flex-center($gap: 20px);}
 .swiper {
 
   .swiper-slide {width: auto;}
 }
-.channel-item {@include flex-center(); width: 180px; height: 90px; background: linear-gradient(90deg,#222f3c 0%, #2b4054 25%, #40566B 50%, #2b4054 75%, #222f3c 100%); border: 1px solid hsl(207, 18%, 46%); border-radius: 20px; @include trans();
+.channel-item {@include flex-center(); width: clamp(100px, 12.5vw, 180px); aspect-ratio: 2 / 1; background: linear-gradient(90deg,#222f3c 0%, #2b4054 25%, #40566B 50%, #2b4054 75%, #222f3c 100%); border: 1px solid hsl(207, 18%, 46%); border-radius:  clamp(10px, 1.38vw, 20px); @include trans();
 
   &:hover {transform: translateY(-10px);}
 
