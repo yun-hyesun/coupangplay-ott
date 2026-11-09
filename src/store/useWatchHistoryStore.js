@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 
 import { auth, db } from '../firebase/firebase';
+import { createSeriesHistoryWriter } from '../data/seriesHistoryWriter';
 import { useProfileStore } from './useProfileStore';
 
 // 프로필별 시청내역 컬렉션
@@ -24,6 +25,22 @@ const getHistoryRef = (uid, profileId) => {
     );
 };
 
+const isCurrentProfile = (uid, profileId) => auth.currentUser?.uid === uid &&
+    useProfileStore.getState().currentProfile?.id === profileId;
+
+let loadRequest = 0;
+const seriesHistoryWriter = createSeriesHistoryWriter({
+    database: db,
+    currentUid: () => auth.currentUser?.uid,
+    onError: (error, { uid, profileId }) => {
+        console.error('시청내역 저장 오류:', error);
+        if (isCurrentProfile(uid, profileId)) useWatchHistoryStore.setState({ error: error.message });
+    },
+    onRetrySaved: ({ uid, profileId }) => {
+        if (isCurrentProfile(uid, profileId)) void useWatchHistoryStore.getState().onLoadHistory();
+    }
+});
+
 export const useWatchHistoryStore = create((set, get) => ({
     history: [],
     loading: false,
@@ -32,6 +49,7 @@ export const useWatchHistoryStore = create((set, get) => ({
 
     // 시청내역 불러오기
     onLoadHistory: async () => {
+        const request = ++loadRequest;
         const user = auth.currentUser;
         const profile = useProfileStore.getState().currentProfile;
 
@@ -45,13 +63,14 @@ export const useWatchHistoryStore = create((set, get) => ({
         }
 
         const ownerKey = `${user.uid}_${profile.id}`;
+        const isCurrentRequest = () => request === loadRequest && isCurrentProfile(user.uid, profile.id);
 
-        set({
+        set((state) => ({
             loading: true,
             error: null,
-            history: [],
-            ownerKey: null
-        });
+            ...(state.ownerKey === ownerKey ? {} : { history: [], ownerKey: null })
+        }));
+        seriesHistoryWriter.retry();
 
         try {
             const snapshot = await getDocs(
@@ -70,17 +89,7 @@ export const useWatchHistoryStore = create((set, get) => ({
                 return bTime - aTime;
             });
 
-            // 다른 프로필로 변경됐는지 확인
-            const currentUser = auth.currentUser;
-            const currentProfile =
-                useProfileStore.getState().currentProfile;
-
-            if (
-                currentUser?.uid !== user.uid ||
-                currentProfile?.id !== profile.id
-            ) {
-                return [];
-            }
+            if (!isCurrentRequest()) return [];
 
             set({
                 history,
@@ -91,6 +100,7 @@ export const useWatchHistoryStore = create((set, get) => ({
             return history;
 
         } catch (error) {
+            if (!isCurrentRequest()) return [];
             console.error('시청내역 불러오기 오류:', error);
 
             set({
@@ -109,9 +119,11 @@ export const useWatchHistoryStore = create((set, get) => ({
 
         try {
             const historyRef = getHistoryRef(user.uid, profile.id);
-            for (let start = 0; start < ids.length; start += 500) {
+            const refs = ids.map((id) => doc(historyRef, id));
+            await seriesHistoryWriter.discard(refs);
+            for (let start = 0; start < refs.length; start += 500) {
                 const batch = writeBatch(db);
-                ids.slice(start, start + 500).forEach((id) => batch.delete(doc(historyRef, id)));
+                refs.slice(start, start + 500).forEach((ref) => batch.delete(ref));
                 await batch.commit();
             }
             return true;
@@ -146,7 +158,7 @@ export const useWatchHistoryStore = create((set, get) => ({
         );
 
         try {
-            await setDoc(historyDoc, {
+            const entry = {
                 id: content.id,
                 title: content.title || content.name || '',
                 media_type: mediaType,
@@ -162,8 +174,13 @@ export const useWatchHistoryStore = create((set, get) => ({
                 youtubeKey: content.youtubeKey || '',
                 completed: content.completed === true,
                 updatedAt: serverTimestamp()
-            }, { merge: true });
+            };
 
+            if (mediaType === 'tv') {
+                return await seriesHistoryWriter.save(historyDoc, entry, user.uid, profile.id);
+            }
+
+            await setDoc(historyDoc, entry, { merge: true });
             return true;
 
         } catch (error) {
@@ -175,6 +192,7 @@ export const useWatchHistoryStore = create((set, get) => ({
 
     // 시청내역 초기화
     onResetHistory: () => {
+        loadRequest++;
         set({
             history: [],
             loading: false,

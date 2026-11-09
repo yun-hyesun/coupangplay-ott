@@ -3,12 +3,6 @@
 
   &-heading { display: flex; align-items: center; gap: 16px; min-height: 44px; margin-bottom: 24px; }
   &-heading .contentRail-title { flex: 1; min-width: 0; margin: 0; font-size: 28px; font-weight: 700; line-height: 36px; }
-  &-more { display: inline-flex; flex: 0 0 104px; align-items: center; justify-content: center; gap: 4px; height: 44px; padding: 0 12px; border-radius: 8px; color: $color-text-sec1; font-size: 16px; font-weight: 600; line-height: 24px; white-space: nowrap; }
-  &-more img { display: block; flex-shrink: 0; max-width: none; }
-  &-more:hover { color: #fff; }
-  &-more:hover img { filter: brightness(0) invert(1); }
-  &-more:active { color: $color-text-sec2; }
-  &-more:active img { filter: brightness(.77); }
   .home-wowclip-slider {
     margin: -4px;
     padding: 4px;
