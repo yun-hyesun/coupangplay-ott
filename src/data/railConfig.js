@@ -1,5 +1,12 @@
 // 홈·상세 추천·더보기가 공유하는 콘텐츠 설정
 export const railConfig = {
+  // 스토어 마블 기획전: 세로 포스터 공용 카드. 티빙 기본 필터를 사용하지 않습니다.
+  'store-marvel': {
+    title: '마블 히어로즈 정주행하기',
+    type: 'movie', companies: '420', useTving: false,
+    monetizationType: 'buy', sort: 'popularity.desc',
+    imageType: '세로', gridImageType: '세로', limit: 20, fullList: true,
+  },
   //##################### 홈
   'home-ranking': { 
     title: '인기 시리즈 TOP 20',
