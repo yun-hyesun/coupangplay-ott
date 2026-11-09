@@ -10,7 +10,7 @@ import { WowClipSection } from './components/WowClipSection';
 import './scss/home.scss';
 
 export const Home = () => {
-const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSportsRails();
+  const { highlights, newsLive = [], error } = useSportsRails();
 
   const { history, ownerKey } = useProfileWatchHistory();
   const continueWatching = history
@@ -40,7 +40,7 @@ const { live, highlights, replays, newsLive = [], newsLiveError, error,} = useSp
 
       <ContentRail railKey="home-movie" />
 
-      <WowClipSection />
+      <WowClipSection history={history} />
 
       {/* 스포츠 패스 광고 */}
 

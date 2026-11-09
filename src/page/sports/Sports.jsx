@@ -20,6 +20,7 @@ import {
 import { SportsBanner } from "./components/SportsBanner";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
 import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
+import { getScheduleUnitLabel } from "../../data/leagueScheduleUnits";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
 import { getF1RacesForDate } from "../../service/f1Service";
 import {
@@ -101,22 +102,8 @@ function formatGameTime(startTime) {
   }).format(date);
 }
 
-function formatMatchday(matchday) {
-  const value = String(matchday ?? "").trim();
-  const round = /^\d+$/.test(value)
-    ? value
-    : value.match(/(?:regular season|matchday|round|week)\s*[-:#]?\s*(\d+)/i)?.[1];
-  return round ? `${round}라운드` : "";
-}
-
-function getBasketballScheduleLabel(game) {
-  return game.scheduleSegment || "";
-}
-
 function getScheduleSubLabel(game) {
-  return game.competitionCode === "nba"
-    ? getBasketballScheduleLabel(game)
-    : game.scheduleSegment || formatMatchday(game.matchday);
+  return getScheduleUnitLabel(game);
 }
 
 function getGameStatus(status = "") {

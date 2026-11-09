@@ -1,10 +1,11 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useProfileStore } from '../../store/useProfileStore';
+import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
+import { useSpoilerAccess } from '../wowclip/hooks/useSpoilerAccess';
 import { useWowClipLibrary } from '../wowclip/hooks/useWowClipLibrary';
-import { clipImage } from '../wowclip/utils/wowClipData';
+import { clipPreview } from '../wowclip/utils/wowClipData';
 
 import './scss/MyWowClip.scss';
 
@@ -23,6 +24,12 @@ export const MyWowClip = () => {
     // WowClip.jsx와 동일한 작성자 ID
     const ownerId =
         `${user?.uid || 'local'}:${currentProfile?.id || 'default'}`;
+    const historyOwner = user?.uid && currentProfile?.id
+        ? `${user.uid}_${currentProfile.id}`
+        : null;
+    const history = useWatchHistoryStore((state) =>
+        historyOwner && state.ownerKey === historyOwner ? state.history : undefined
+    );
 
     // 현재 프로필이 제작한 클립만 표시
     const myClips = clips
@@ -31,6 +38,7 @@ export const MyWowClip = () => {
             new Date(b.createdAt) - new Date(a.createdAt)
         )
         .slice(0, 5);
+    const { isProtected } = useSpoilerAccess(myClips, history);
 
     return (
         <section className="my-wowclip">
@@ -68,27 +76,25 @@ export const MyWowClip = () => {
                 <p className="my-wowclip-message">아직 만든 와우 클립이 없습니다.</p>
             ) : (
                 <div className="my-wowclip-grid">
-                    {myClips.map((clip) => (
-                        <Link
-                            key={clip.id}
-                            to={`/wowclip?view=mine&clip=${encodeURIComponent(clip.id)}`}
-                            className="my-wowclip-item"
-                        >
-                            <div className="my-wowclip-thumbnail">
-                                {clipImage(clip, false) ? (
-                                    <img
-                                        src={clipImage(clip, false)}
-                                        alt=""
-                                    />
-                                ) : (
-                                    <span>WOW CLIP</span>
-                                )}
-                            </div>
+                    {myClips.map((clip) => {
+                        const protectedClip = isProtected(clip);
+                        const { image, title } = clipPreview(clip, protectedClip);
+                        return (
+                            <Link
+                                key={clip.id}
+                                to={`/wowclip?view=mine&clip=${encodeURIComponent(clip.id)}`}
+                                className="my-wowclip-item"
+                                aria-label={protectedClip ? `스포일러 포함, ${title} 클립 보기` : undefined}
+                            >
+                                <div className="my-wowclip-thumbnail">
+                                    {image ? <img src={image} alt="" /> : <span>{protectedClip ? '스포일러가 있어요' : 'WOW CLIP'}</span>}
+                                </div>
 
-                            <h3>{clip.title}</h3>
-                            <p>조회수 {clip.views || 0}회</p>
-                        </Link>
-                    ))}
+                                <h3>{title}</h3>
+                                <p>조회수 {clip.views || 0}회</p>
+                            </Link>
+                        );
+                    })}
                 </div>
             )}
 

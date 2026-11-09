@@ -3,6 +3,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
 import { defineConfig, loadEnv } from "vite";
 import sportsHandler from "./api/sports.js";
+import { createLeagueVideosHandler } from "./api/league-videos.js";
 
 const env = loadEnv("development", process.cwd(), "");
 
@@ -11,7 +12,7 @@ const sportsApi = {
   name: "local-sports-api",
 
   configureServer(server) {
-    const { YOUTUBE_API_KEY } = loadEnv(
+    const { YOUTUBE_API_KEY, VITE_YOUTUBE_API_KEY } = loadEnv(
       server.config.mode,
       server.config.envDir,
       ""
@@ -20,9 +21,11 @@ const sportsApi = {
     if (YOUTUBE_API_KEY) {
       process.env.YOUTUBE_API_KEY ??= YOUTUBE_API_KEY;
     }
+    const leagueVideosHandler = createLeagueVideosHandler({ apiKey: YOUTUBE_API_KEY || VITE_YOUTUBE_API_KEY });
 
     server.middlewares.use((req, res, next) => {
-      if (req.url?.split("?")[0] !== "/api/sports") {
+      const path = req.url?.split("?")[0];
+      if (path !== "/api/sports" && path !== "/api/league-videos") {
         return next();
       }
 
@@ -40,7 +43,7 @@ const sportsApi = {
         return res.end(JSON.stringify(data));
       };
 
-      return sportsHandler(req, res);
+      return path === "/api/league-videos" ? leagueVideosHandler(req, res) : sportsHandler(req, res);
     });
   },
 };
@@ -66,6 +69,11 @@ export default defineConfig({
 
   server: {
     proxy: {
+      "/espn-standings": {
+        target: "https://site.api.espn.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/espn-standings/, "/apis/v2/sports"),
+      },
       "/espn-core": {
         target: "https://sports.core.api.espn.com",
         changeOrigin: true,

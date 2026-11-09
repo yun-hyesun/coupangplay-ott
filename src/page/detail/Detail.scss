@@ -201,28 +201,24 @@
     overflow-y: auto;
     overscroll-behavior-y: contain;
     align-content: start;
-
-    // 영상 페이지 회차 목록과 동일한 스크롤바 디자인
     scrollbar-width: thin;
-    scrollbar-color: #525b69 #1b1e23;
+    scrollbar-color: #555b63 #101113;
 
     &::-webkit-scrollbar {
-      width: 8px;
+      width: 6px;
     }
 
     &::-webkit-scrollbar-track {
-      background: #1b1e23;
-      border-radius: 999px;
+      background: #101113;
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #525b69;
-      border: 2px solid #1b1e23;
-      border-radius: 999px;
+      background: #555b63;
+      border-radius: 10px;
     }
 
     &::-webkit-scrollbar-thumb:hover {
-      background: #0084ff;
+      background: #777d85;
     }
   }
 }
