@@ -57,7 +57,13 @@ export const ClipComments = ({ clip, owner, onAdd, onLike, notify, panel = false
     return <article className={`wowclip-comment${nested ? ' wowclip-comment--reply' : ''}`} key={comment.id}>
       <img className="wowclip-avatar" src={comment.avatar || '/images/profile.svg'} alt="" width="24" height="24" />
       <div><p className="wowclip-comment-author">{comment.author} · {relativeTime(comment.createdAt)}</p><p className="wowclip-comment-text">{comment.text}</p>
-        <div className="wowclip-comment-actions"><button type="button" className="wowclip-comment-like" aria-label={`댓글 공감 ${comment.likes.length}`} aria-pressed={liked} onClick={() => like(comment.id)}><ClipIcon name="like" size={18} filled={liked} /><span className="wowclip-comment-like-count" style={{ width: `${countWidth}ch` }}>{comment.likes.length}</span></button><button type="button" onClick={() => startReply(comment)}>답글</button></div>
+        <div className="wowclip-comment-actions">
+          <button type="button" className="wowclip-comment-like" aria-label={`댓글 공감 ${likes}`} aria-pressed={liked} onClick={() => like(comment.id)}>
+            <ClipIcon name="like" size={18} filled={liked} />
+            <span className="wowclip-comment-like-count" style={{ width: `${countWidth}ch` }}>{likes}</span>
+          </button>
+          <button type="button" onClick={() => startReply(comment)}>답글</button>
+        </div>
       </div>
     </article>;
   };

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { clipEpisodeDetails, clipEpisodeLabel, clipWatchState } from './clipSource.js';
+import { clipEpisodeDetails, clipEpisodeLabel, clipWatchState, hasOriginalWatchHistory } from './clipSource.js';
 import { makeClip } from './wowClipData.js';
 
 const source = { content: { id: 12, media_type: 'tv', name: '검수 시리즈', number_of_seasons: 3 }, video: { key: 'apJOlU1WB94', name: '원본' }, title: '검수', start: 12, end: 17, visibility: 'public', spoiler: false, owner: { id: 'qa', name: '검수' } };
@@ -32,4 +32,28 @@ test('숫자 문자열·스페셜 회차는 유지하고 잘못된 회차는 표
   assert.equal(clipEpisodeLabel({ content: { media_type: 'tv' }, seasonNumber: '0', episodeNumber: '2' }), '스페셜 · 2화');
   assert.equal(clipEpisodeLabel({ content: { media_type: 'tv' }, seasonNumber: 1, episodeNumber: 0 }), '');
   assert.deepEqual(clipEpisodeDetails({ content: { media_type: 'tv' }, seasonNumber: false, episodeNumber: 2.5 }), { seasonNumber: null, episodeNumber: null, numberOfSeasons: null });
+});
+
+test('영화 기록은 작품과 유형, 시리즈 기록은 시즌과 회차까지 일치해야 한다', () => {
+  const movie = { content: { id: 12, media_type: 'movie' } };
+  const movieRecord = { id: '12', media_type: 'movie', position: 3, completed: false };
+  assert.equal(hasOriginalWatchHistory(movie, [movieRecord]), true);
+  assert.equal(hasOriginalWatchHistory(movie, [{ ...movieRecord, id: 34 }, { ...movieRecord, media_type: 'tv' }]), false);
+
+  const clip = makeClip({ ...source, seasonNumber: 0, episodeNumber: 7 });
+  const episodeRecord = { id: 12, media_type: 'tv', seasonNumber: '0', episodeNumber: '7' };
+  assert.equal(hasOriginalWatchHistory(clip, [episodeRecord]), true);
+  assert.equal(hasOriginalWatchHistory(clip, [movieRecord, { ...episodeRecord, seasonNumber: 1 }, { ...episodeRecord, episodeNumber: 8 }]), false);
+  assert.equal(hasOriginalWatchHistory({ ...clip, episodeNumber: null }, [episodeRecord]), false);
+});
+
+test('이어보기 회차가 바뀌어도 시청한 회차의 보호는 다시 걸리지 않는다', () => {
+  const clip = makeClip({ ...source, seasonNumber: 1, episodeNumber: 7 });
+  const history = [{
+    id: clip.content.id, media_type: 'tv', seasonNumber: 2, episodeNumber: 7,
+    watchedEpisodes: ['s1-e7', 's2-e7'],
+  }];
+  assert.equal(hasOriginalWatchHistory(clip, history), true);
+  assert.equal(hasOriginalWatchHistory({ ...clip, seasonNumber: 3 }, history), false);
+  assert.equal(hasOriginalWatchHistory({ ...clip, episodeNumber: 8 }, history), false);
 });
