@@ -1,3 +1,4 @@
+import CommonIcon from '../../components/common/CommonIcon';
 import WatchIcon from './WatchIcon';
 
 const OPTIONS = [
@@ -29,7 +30,7 @@ export default function WatchSettingsPanel({ tab, onTabChange, speed, quality, s
       {tab === 'main' ? OPTIONS.map(option => <button type="button" key={option.tab} onClick={() => onTabChange(option.tab)}>
         <span>{option.label}</span><span className="watch-settings-popup__meta">{option.tab === 'speed' ? `${speed.toFixed(1)}배속` : values[option.tab]} <span aria-hidden="true">›</span></span>
       </button>) : choices.map(choice => <button type="button" key={choice.label} aria-pressed={values[tab] === choice.value} onClick={() => onSelect(tab, choice.value)}>
-        <span>{choice.label}</span>{values[tab] === choice.value && <span className="watch-settings-popup__check" aria-hidden="true">✓</span>}
+        <span>{choice.label}</span>{values[tab] === choice.value && <span className="watch-settings-popup__check" aria-hidden="true"><CommonIcon name="check" size={18} /></span>}
       </button>)}
     </div>
   </aside>;

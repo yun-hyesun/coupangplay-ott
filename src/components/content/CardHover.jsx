@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './scss/CordHover.scss';
 
-export const CardHover = ({ item, type, isHover }) => {
+export const CardHover = ({ item, type, isHover, fromStore = false }) => {
   const [videoKey, setVideoKey] = useState(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
@@ -167,9 +167,9 @@ export const CardHover = ({ item, type, isHover }) => {
 
           {/* 상세페이지 이동 */}
           <Link
-            to={`/detail/${type}/${item.id}`}
+            to={`/detail/${type}/${item.id}${fromStore ? "?from=store" : ""}`}
             className="button icon-details"
-            state={{ content: item }}
+            state={{ content: item, fromStore }}
           >
             상세정보
           </Link>

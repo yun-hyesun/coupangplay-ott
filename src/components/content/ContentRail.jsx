@@ -109,6 +109,7 @@ export const ContentRail = ({
                 imageType={imageType}
                 variant={config.variant}
                 index={index}
+                fromStore={location.pathname === '/store' || railKey?.startsWith('store-')}
               />
             </SwiperSlide>
           );

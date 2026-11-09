@@ -1,3 +1,4 @@
+import CommonIcon from '../../components/common/CommonIcon';
 
 import { useEffect, useState } from 'react';
 import { StarIcon, ActionIcon, Chevron, EpisodeReviews, ReviewPopup } from './DetailComponents';
@@ -17,7 +18,9 @@ const imageUrl = (path) => path ? `${IMG}${path}` : '';
 
 export const Detail = () => {
   const { type, id } = useParams();
-  const { state } = useLocation();
+  const { state, search } = useLocation();
+  // 스토어 상세페이지는 새로고침 후에도 구매 버튼을 유지합니다.
+  const isStoreDetail = state?.fromStore === true || new URLSearchParams(search).get("from") === "store";
 
   const [season, setSeason] = useState('1');
   const [openedEpisode, setOpenedEpisode] = useState(null);
@@ -247,13 +250,23 @@ export const Detail = () => {
             </p> */}
 
             <div className="detail-hero__actions">
-              <Link
-                className="detail-button detail-button--primary"
-                to={`/watch/${type}/${id}`}
-                state={watchState}
-              >
-                ▶ 재생하기
-              </Link>
+              {isStoreDetail ? (
+                <button
+                  className="detail-button detail-button--primary"
+                  type="button"
+                  onClick={() => alert('구매 기능은 아직 연결되지 않았습니다.')}
+                >
+                  구매하기
+                </button>
+              ) : (
+                <Link
+                  className="detail-button detail-button--primary"
+                  to={`/watch/${type}/${id}`}
+                  state={watchState}
+                >
+                  <CommonIcon name="play" size={20} /> 재생하기
+                </Link>
+              )}
 
               {/* Firebase 찜하기 버튼 */}
               <button
@@ -468,7 +481,7 @@ export const Detail = () => {
                         )}
 
                         <span className="episode-item__play">
-                          ▶
+                          <CommonIcon name="play" size={20} />
                         </span>
                       </Link>
 
