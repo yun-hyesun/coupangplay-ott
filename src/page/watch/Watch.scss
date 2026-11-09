@@ -61,6 +61,15 @@ $surface: #262626;
   object-fit: contain;
 }
 
+.sports-watch {
+  .watch-player__header h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  &__error { align-content: center; gap: 20px; padding: 100px 24px; text-align: center;
+    p { margin: 0; }
+    > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+    button, a { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 10px 20px; border-radius: 8px; color: #fff; background: #262626; font-size: 16px; text-decoration: none; }
+  }
+}
+
 .watch-player__youtube,
 .watch-player__youtube-frame {
   position: absolute;
@@ -116,7 +125,9 @@ $surface: #262626;
 }
 
 .watch-icon-button svg,
-.watch-controls button svg {
+.watch-icon-button img,
+.watch-controls button svg,
+.watch-controls button img {
   width: 24px;
   height: 24px;
   flex-shrink: 0;

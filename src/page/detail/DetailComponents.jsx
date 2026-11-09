@@ -1,18 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { auth } from '../../firebase/firebase';
+import CommonIcon from '../../components/common/CommonIcon';
 
 // 별점
-const StarIcon = ({ size = 14 }) => <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" /></svg>;
+const StarIcon = ({ size = 14 }) => <CommonIcon name="star" size={size} />;
 // 별 하나의 좌우를 각각 0.5점 단위로 선택합니다.
 const RatingStars = ({ value, onChange, size = 28 }) => (
   <div className={`detail-rating-stars${onChange ? ' detail-rating-stars--interactive' : ''}`} role={onChange ? 'group' : 'img'} aria-label={`5점 만점에 ${Number(value).toFixed(1)}점`}>
     {Array.from({ length: 5 }, (_, index) => {
       const fill = Math.max(0, Math.min(1, value - index));
       return <span className="detail-rating-stars__star" key={index} style={{ width: size, height: size }}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="#a3a3a3" strokeWidth="2" strokeLinejoin="round">
-          <path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" />
-          {fill > 0 && <svg x="0" y="0" width={fill === 0.5 ? 12 : 24} height="24" viewBox={fill === 0.5 ? '0 0 12 24' : '0 0 24 24'} overflow="hidden"><path d="m12 2 3.1 6.3 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" fill="#ffd13c" stroke="#ffd13c" strokeWidth="2" /></svg>}
-        </svg>
+        <CommonIcon name="star-outline" size={size} />
+        {fill > 0 && <span aria-hidden="true" style={{ position: 'absolute', inset: 0, width: `${fill * 100}%`, overflow: 'hidden', pointerEvents: 'none' }}><CommonIcon name="star" size={size} /></span>}
         {onChange && <>
           <button className="detail-rating-stars__hit detail-rating-stars__hit--left" type="button" aria-label={`${index + 0.5}점 선택`} aria-pressed={value === index + 0.5} onClick={() => onChange(Math.max(1, index + 0.5))} />
           <button className="detail-rating-stars__hit detail-rating-stars__hit--right" type="button" aria-label={`${index + 1}점 선택`} aria-pressed={value === index + 1} onClick={() => onChange(index + 1)} />
@@ -22,7 +21,7 @@ const RatingStars = ({ value, onChange, size = 28 }) => (
   </div>
 );
 
-const ActionIcon = ({ name }) => name === 'share' ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4" /></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z" /></svg>;
+const ActionIcon = ({ name }) => <CommonIcon name={name} size={20} />;
 
 // 리뷰 데이터는 별도 API/스토어 연결 전까지 비워 둡니다.
 // 데이터 형식: { id, episodeId, author, content, rating, likes, createdAt }
@@ -30,11 +29,7 @@ const ActionIcon = ({ name }) => name === 'share' ? <svg width="20" height="20" 
 // 리뷰
 const REVIEWS = [];
 
-const Chevron = ({ up = false }) => (
-  <svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: up ? 'rotate(180deg)' : undefined }}>
-    <path d="m6 9 6 6 6-6" />
-  </svg>
-);
+const Chevron = ({ up = false }) => <CommonIcon name={up ? 'chevron-up' : 'chevron-down'} />;
 
 // 리뷰 필터
 const ReviewSort = ({ sort, onSort, spoilerHidden, onToggleSpoiler }) => (
@@ -96,8 +91,8 @@ const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, erro
   }, [onClose]);
   return <div className="detail-review-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="detail-review-popup" role="dialog" aria-modal="true" aria-labelledby="detail-review-popup-title">
-      <div className="detail-review-popup__head"><h2 id="detail-review-popup-title">{episode.episode_number}화 리뷰</h2><ReviewSort sort={sort} onSort={setSort} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} /></div>
-      <div className="detail-review-popup__compose"><label className="sr-only" htmlFor="detail-review-draft">리뷰 작성</label><textarea id="detail-review-draft" value={draft} maxLength={2000} onChange={event => setDraft(event.target.value)} placeholder="이 회차에 대한 감상을 남겨주세요." rows="1" /><div className="detail-review-popup__rating"><span>평점</span><RatingStars value={rating} onChange={setRating} /><output aria-live="polite">{rating.toFixed(1)} / 5</output></div><label><input type="checkbox" checked={spoiler} onChange={e => setSpoiler(e.target.checked)} /> 스포일러 포함</label><button type="button" disabled={saving || !draft.trim()} onClick={async () => { setSaving(true); try { if (await onSave(draft, rating, spoiler)) setDraft(''); } finally { setSaving(false); } }}>리뷰 남기기</button></div>
+      <div className="detail-review-popup__head"><h2 id="detail-review-popup-title">{episode.reviewTitle || `${episode.episode_number}화 리뷰`}</h2><ReviewSort sort={sort} onSort={setSort} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} /></div>
+      <div className="detail-review-popup__compose"><label className="sr-only" htmlFor="detail-review-draft">리뷰 작성</label><textarea id="detail-review-draft" value={draft} maxLength={2000} onChange={event => setDraft(event.target.value)} placeholder={episode.reviewPlaceholder || '이 회차에 대한 감상을 남겨주세요.'} rows="1" /><div className="detail-review-popup__rating"><span>평점</span><RatingStars value={rating} onChange={setRating} /><output aria-live="polite">{rating.toFixed(1)} / 5</output></div><label><input type="checkbox" checked={spoiler} onChange={e => setSpoiler(e.target.checked)} /> 스포일러 포함</label><button type="button" disabled={saving || !draft.trim()} onClick={async () => { setSaving(true); try { if (await onSave(draft, rating, spoiler)) setDraft(''); } finally { setSaving(false); } }}>리뷰 남기기</button></div>
       {error && <p className="detail-empty" role="alert">{error}</p>}
       <div className="detail-review-popup__list" tabIndex="0">{sorted.length ? sorted.slice(0, 5).map(review => <ReviewItem key={review.id} review={review} onEdit={onEdit} onDelete={onDelete} />) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}</div>
       <button className="detail-review-popup__close" type="button" onClick={onClose}>닫기</button>
