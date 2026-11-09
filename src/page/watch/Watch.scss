@@ -116,7 +116,9 @@ $surface: #262626;
 }
 
 .watch-icon-button svg,
-.watch-controls button svg {
+.watch-icon-button img,
+.watch-controls button svg,
+.watch-controls button img {
   width: 24px;
   height: 24px;
   flex-shrink: 0;

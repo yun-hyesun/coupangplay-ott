@@ -5,7 +5,7 @@ import { useMovieStore } from '../../store/useMovieStore';
 import "./scss/ContentCard.scss"
 
 // Swiper와 Grid가 공통으로 쓰는 카드 (기존 hover 및 class 유지)
-export const ContentCard = ({ item, type = 'movie', imageType = '가로', variant = 'default', index = 0 }) => {
+export const ContentCard = ({ item, type = 'movie', imageType = '가로', variant = 'default', index = 0, fromStore = false }) => {
   if (item?.source === 'youtube') {
     const isLive = item.kind === 'live';
     return (
@@ -32,7 +32,7 @@ export const ContentCard = ({ item, type = 'movie', imageType = '가로', varian
     return <ResumeContentCard item={item} />;
   }
 
-  return <TmdbContentCard {...{ item, type, imageType, variant, index }} />;
+  return <TmdbContentCard {...{ item, type, imageType, variant, index, fromStore }} />;
 };
 
 const ResumeContentCard = ({ item }) => {
@@ -114,7 +114,7 @@ const ResumeContentCard = ({ item }) => {
   );
 };
 
-const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
+const TmdbContentCard = ({ item, type, imageType, variant, index, fromStore }) => {
   const [isHover, setIsHover] = useState(false);
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);
@@ -153,7 +153,7 @@ const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
         </span>
       )}
       <div className="contentRail-info">
-        <Link to={`/detail/${mediaType}/${id}`} className="contentRail-visual" aria-label={`${name} 상세보기${item.isCoupangSeries ? ', 쿠팡플레이' : ''}${isPurchase ? ', 개별구매' : ''}`}>
+        <Link to={`/detail/${mediaType}/${id}${fromStore ? "?from=store" : ""}`} state={fromStore ? { fromStore: true } : undefined} className="contentRail-visual" aria-label={`${name} 상세보기${item.isCoupangSeries ? ', 쿠팡플레이' : ''}${isPurchase ? ', 개별구매' : ''}`}>
           <img src={`https://image.tmdb.org/t/p/w780${imagePath}`} alt={imageType === '가로' ? '' : name} loading="lazy" />
           {imageType === '가로' && (
             <div className="contentRail-titleArea">
@@ -175,7 +175,7 @@ const TmdbContentCard = ({ item, type, imageType, variant, index }) => {
           )}
         </Link>
       </div>
-      <CardHover item={item} type={mediaType} isHover={isHover} />
+      <CardHover item={item} type={mediaType} isHover={isHover} fromStore={fromStore} />
     </article>
   );
 };
