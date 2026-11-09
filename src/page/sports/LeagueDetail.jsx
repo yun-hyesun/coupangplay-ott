@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import "./scss/LeagueDetail.scss";
 
 import { LeagueHeader } from "../../components/LeagueHeader";
@@ -168,6 +168,14 @@ function getLeagueTheme(league) {
 
 export const LeagueDetail = () => {
   const { leagueId } = useParams();
+  const location = useLocation();
+  useEffect(() => {
+    if (location.hash !== "#league-detail-schedule-title") return;
+    const scrollToSchedule = () => document.getElementById("league-detail-schedule-title")?.scrollIntoView({ block: "start", behavior: "instant" });
+    const frame = window.requestAnimationFrame(scrollToSchedule);
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash, leagueId]);
+
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const league = SPORTS_LEAGUE_BY_ID[leagueId];
