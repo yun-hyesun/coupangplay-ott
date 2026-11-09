@@ -1,5 +1,31 @@
 @use '../../../scss/variables' as *;
 
+html:has(.wowclip-page):not(:has(.wowclip-shortfeed)),
+.wowclip-comments-list,
+.wowclip-overlay,
+.wowclip-modal {
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+
+  &::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #101113;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #555b63;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #777d85;
+  }
+}
+
 .wowclip-page,
 .wowclip-overlay,
 .wowclip-section {
@@ -670,8 +696,6 @@
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: #525252 transparent;
 }
 
 .wowclip-comments-empty {
@@ -885,8 +909,6 @@
   border-radius: 16px;
   background: var(--wow-card);
   box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
-  scrollbar-width: thin;
-  scrollbar-color: #525252 transparent;
 }
 
 .wowclip-modal:focus {
