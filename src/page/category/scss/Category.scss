@@ -43,10 +43,6 @@
     color: #fff;
     cursor: pointer;
     outline: none;
-
-    &:focus-visible {
-
-    }
   }
 
   &-selected {
@@ -108,15 +104,6 @@
   .reset-button {@include flex-center($gap: .2em);
 
     &::after {content: ''; display: block; width: 13px; height: 13px; background: url(/public/images/category/icon-replay.svg) no-repeat center / contain;}
-  }
-
-  @media (max-width: 767px) {
-    padding: 100px 20px 48px;
-
-    &-title {
-      margin-bottom: 24px;
-      font-size: 26px;
-    }
   }
 }
 

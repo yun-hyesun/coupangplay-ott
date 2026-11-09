@@ -89,3 +89,18 @@
   left: 50%;
   transform: translate(-50%, -50%) scale($s);
 }
+
+// ####### media
+// 태블릿 이하
+@mixin tablet($wd: 1199px) {
+  @media (max-width: $wd) {
+    @content;
+  }
+}
+
+// 모바일
+@mixin mobile($wd: 767px) {
+  @media (max-width: $wd) {
+    @content;
+  }
+}

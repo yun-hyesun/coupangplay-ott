@@ -1,3 +1,4 @@
+import CommonIcon from '../../components/common/CommonIcon';
 
 import { useEffect, useState } from 'react';
 import { StarIcon, ActionIcon, Chevron, EpisodeReviews, ReviewPopup } from './DetailComponents';
@@ -17,13 +18,30 @@ const imageUrl = (path) => path ? `${IMG}${path}` : '';
 
 export const Detail = () => {
   const { type, id } = useParams();
-  const { state } = useLocation();
 
-  const [season, setSeason] = useState('1');
+  const { state, search } = useLocation();
+
+  // 마이페이지에서 전달받은 리뷰 작성 대상
+  const reviewRequest = new URLSearchParams(search);
+  const requestedSeason = reviewRequest.get('reviewSeason');
+  const requestedEpisode = reviewRequest.get('reviewEpisode');
+
+  const hasReviewRequest =
+    type === 'tv' &&
+    requestedSeason !== null &&
+    requestedEpisode !== null &&
+    /^\d+$/.test(requestedSeason) &&
+    /^[1-9]\d*$/.test(requestedEpisode);
+
+  const [season, setSeason] = useState(() =>
+    hasReviewRequest ? String(Number(requestedSeason)) : '1'
+  );
+
   const [openedEpisode, setOpenedEpisode] = useState(null);
   const [popupEpisode, setPopupEpisode] = useState(null);
   const [reviewsByEpisode, setReviewsByEpisode] = useState({});
   const [reviewError, setReviewError] = useState('');
+  const [movieReviews, setMovieReviews] = useState([]);
 
   // 로그인 및 프로필 정보
   const user = useAuthStore(s => s.user);
@@ -72,6 +90,15 @@ export const Detail = () => {
     }
   }, [type, id, onFetchContentDetail, onFetchSeason]);
 
+
+  // 마이페이지에서 리뷰 작성 요청 시 대상 시즌 선택
+  useEffect(() => {
+    if (hasReviewRequest) {
+      setSeason(String(Number(requestedSeason)));
+    }
+  }, [type, id, search, hasReviewRequest, requestedSeason]);
+
+
   // 시즌 / 회차 불러오기
   useEffect(() => {
     if (type !== 'tv' || !id || !seasons.length) return;
@@ -94,6 +121,39 @@ export const Detail = () => {
     onFetchEpisode(id, Number(selected));
   }, [type, id, seasons, season, onFetchEpisode]);
 
+
+  // 요청한 시즌과 회차가 준비되면 기존 리뷰 팝업 열기
+  useEffect(() => {
+    if (!hasReviewRequest || !seasons.length) return;
+
+    if (season !== String(Number(requestedSeason))) return;
+
+    if (
+      !seasons.some(
+        (s) => s.season_number === Number(requestedSeason)
+      )
+    ) return;
+
+    if (!episodes.length) return;
+
+    const targetEpisode = episodes.find(
+      (ep) => ep.episode_number === Number(requestedEpisode)
+    );
+
+    if (!targetEpisode) return;
+
+    setOpenedEpisode(targetEpisode.id);
+    setPopupEpisode(targetEpisode);
+  }, [
+    hasReviewRequest,
+    requestedSeason,
+    requestedEpisode,
+    season,
+    seasons,
+    episodes
+  ]);
+
+
   // 회차별 리뷰 구독은 작품/시즌/회차가 바뀌면 자동 해제합니다.
   useEffect(() => {
     if (type !== 'tv' || !id || !episodes.length) return;
@@ -104,7 +164,24 @@ export const Detail = () => {
     return () => unsubscribers.forEach(unsubscribe => unsubscribe());
   }, [type, id, season, episodes]);
 
-  const reviewArgs = ep => ({ type: 'tv', contentId: id, season: Number(season), episode: ep.episode_number });
+  // 영화는 회차가 없으므로 작품당 하나의 리뷰 공간(s0-e0)을 사용합니다.
+  useEffect(() => {
+    setMovieReviews([]);
+    setReviewError('');
+    if (type !== 'movie' || !id) return;
+    let active = true;
+    const unsubscribe = subscribeEpisodeReviews('movie', id, 0, 0,
+      items => { if (active) setMovieReviews(items); },
+      err => { if (active) setReviewError(communityError(err)); });
+    return () => { active = false; unsubscribe(); };
+  }, [type, id]);
+
+  const reviewArgs = ep => ({
+    type,
+    contentId: id,
+    season: type === 'movie' ? 0 : Number(season),
+    episode: type === 'movie' ? 0 : ep.episode_number,
+  });
   const saveReview = async (ep, text, rating, spoiler) => {
     try { setReviewError(''); await createEpisodeReview({ ...reviewArgs(ep), text, rating, spoiler }); return true; }
     catch (err) { setReviewError(communityError(err)); return false; }
@@ -247,13 +324,23 @@ export const Detail = () => {
             </p> */}
 
             <div className="detail-hero__actions">
-              <Link
-                className="detail-button detail-button--primary"
-                to={`/watch/${type}/${id}`}
-                state={watchState}
-              >
-                ▶ 재생하기
-              </Link>
+              {isStoreDetail ? (
+                <button
+                  className="detail-button detail-button--primary"
+                  type="button"
+                  onClick={() => alert('구매 기능은 아직 연결되지 않았습니다.')}
+                >
+                  구매하기
+                </button>
+              ) : (
+                <Link
+                  className="detail-button detail-button--primary"
+                  to={`/watch/${type}/${id}`}
+                  state={watchState}
+                >
+                  <CommonIcon name="play" size={20} /> 재생하기
+                </Link>
+              )}
 
               {/* Firebase 찜하기 버튼 */}
               <button
@@ -328,6 +415,22 @@ export const Detail = () => {
                     총 {content.number_of_episodes}회
                   </span>
                 )}
+
+              {type === 'movie' && (
+                <button
+                  type="button"
+                  className="episode-item__review-toggle detail-info__review-toggle"
+                  aria-haspopup="dialog"
+                  onClick={() => setPopupEpisode({
+                    id: `movie-${id}`,
+                    episode_number: 0,
+                    reviewTitle: '영화 리뷰',
+                    reviewPlaceholder: '이 영화에 대한 감상을 남겨주세요.',
+                  })}
+                >
+                  리뷰 {movieReviews.length}
+                </button>
+              )}
 
               {content.videoQuality && (
                 <span className="detail-info__quality">
@@ -468,7 +571,7 @@ export const Detail = () => {
                         )}
 
                         <span className="episode-item__play">
-                          ▶
+                          <CommonIcon name="play" size={20} />
                         </span>
                       </Link>
 
@@ -541,7 +644,7 @@ export const Detail = () => {
           </section>
         )}
       </div>
-      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
+      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
     </main>
   );
 };

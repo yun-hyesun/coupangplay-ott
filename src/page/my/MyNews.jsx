@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react'
-// [추가] 공통 페이지 헤더
 import { MyPageHeader } from './components/MyPageHeader';
 import './scss/MyNews.scss'
 
@@ -49,21 +48,28 @@ export const MyNews = () => {
     const [category, setCategory] = useState('전체');
     const [selectedNews, setSelectedNews] = useState(null);
 
+    // 카테고리 필터링
     const filteredNews = newsList.filter((news) =>
         category === '전체' || news.category === category
     );
 
+    // 공지사항 열기 / 닫기
+    const handleNewsClick = (id) => {
+        setSelectedNews((prev) => prev === id ? null : id);
+    };
+
     return (
         <main className="my-news">
             <div className="my-news-inner">
-                {/* 페이지 제목 */}
+
+                {/* 공통 페이지 헤더 */}
                 <div className="news-header">
                     <MyPageHeader title="소식 및 혜택" />
                 </div>
 
-                <p className="my-news-description">
+                {/* <p className="my-news-description">
                     쿠팡플레이의 새로운 소식과 다양한 혜택을 확인하세요.
-                </p>
+                </p> */}
 
                 {/* 카테고리 */}
                 <div className="news-categories">
@@ -82,54 +88,65 @@ export const MyNews = () => {
                     ))}
                 </div>
 
-                {/* 공지 및 이벤트 목록 */}
+                {/* 공지사항 및 이벤트 목록 */}
                 <section className="news-list">
-                    {filteredNews.map((news) => (
-                        <button
-                            type="button"
-                            className="news-item"
-                            key={news.id}
-                            onClick={() => setSelectedNews(
-                                selectedNews?.id === news.id ? null : news
-                            )}
-                        >
-                            <span className="news-item-info">
-                                <span className="news-item-category">
-                                    {news.category}
-                                </span>
-                                <strong>{news.title}</strong>
-                                <span className="news-item-date">
-                                    {news.date}
-                                </span>
-                            </span>
-                            <span className="news-item-arrow" aria-hidden="true">›</span>
-                        </button>
-                    ))}
+                    {filteredNews.map((news) => {
+                        const isOpen = selectedNews === news.id;
+
+                        return (
+                            <div
+                                className={`news-list-row ${isOpen ? 'active' : ''}`}
+                                key={news.id}
+                            >
+                                {/* 공지사항 제목 */}
+                                <button
+                                    type="button"
+                                    className="news-item"
+                                    aria-expanded={isOpen}
+                                    aria-controls={`news-answer-${news.id}`}
+                                    onClick={() => handleNewsClick(news.id)}
+                                >
+                                    <span className="news-item-info">
+                                        <span className="news-item-category">
+                                            {news.category}
+                                        </span>
+
+                                        <strong>{news.title}</strong>
+
+                                        <span className="news-item-date">
+                                            {news.date}
+                                        </span>
+                                    </span>
+
+                                    {/* 디자인 시스템 화살표 */}
+                                    <span
+                                        className="news-item-arrow"
+                                        aria-hidden="true"
+                                    >
+                                        <img
+                                            src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
+                                            alt=""
+                                        />
+                                    </span>
+                                </button>
+
+                                {/* 상세 내용 아코디언 */}
+                                <div
+                                    id={`news-answer-${news.id}`}
+                                    className={`news-answer-wrap ${isOpen ? 'open' : ''}`}
+                                    aria-hidden={!isOpen}
+                                >
+                                    <div className="news-answer-inner">
+                                        <div className="news-answer">
+                                            <p>{news.content}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </section>
-
-                {/* 선택한 공지 상세 내용 */}
-                {selectedNews && (
-                    <section className="news-detail">
-                        <div className="news-detail-header">
-                            <span>{selectedNews.category}</span>
-                            <h3>{selectedNews.title}</h3>
-                            <p>{selectedNews.date}</p>
-                        </div>
-
-                        <div className="news-detail-content">
-                            {selectedNews.content}
-                        </div>
-
-                        <button
-                            type="button"
-                            className="news-detail-close"
-                            onClick={() => setSelectedNews(null)}
-                        >
-                            닫기
-                        </button>
-                    </section>
-                )}
             </div>
         </main>
-    )
-}
+    );
+};

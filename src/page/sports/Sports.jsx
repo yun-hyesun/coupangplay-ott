@@ -1,5 +1,5 @@
-import { useEffect, useId, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import "./scss/Sports.scss";
 
 import {
@@ -441,6 +441,17 @@ export const Sports = () => {
   const authLoading = useAuthStore((state) => state.loading);
   const canShowSubscriptions = Boolean(user && !authLoading);
   const leagueListDrag = useHorizontalDragScroll();
+  const featuredRailRef = useRef(null);
+  const calendarRailRef = useRef(null);
+  const scrollRail = (ref, direction) => {
+    const element = ref.current;
+    if (!element) return;
+    const card = element.querySelector(":scope > *");
+    const gap = parseFloat(getComputedStyle(element).gap) || 0;
+    const step = card ? card.getBoundingClientRect().width + gap : 160;
+    const count = Math.max(1, Math.floor(element.clientWidth / step));
+    element.scrollBy({ left: direction * step * count, behavior: "smooth" });
+  };
   const [activeCategory, setActiveCategory] = useState("전체");
   const [selectedLeagueIds, setSelectedLeagueIds] = useState(readSelectedLeagueIds);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -457,6 +468,7 @@ export const Sports = () => {
   });
   const [selectedDate, setSelectedDate] = useState(() => getSeoulDateKey());
   const [scoresOn, setScoresOn] = useState(false);
+  const [showAllSchedule, setShowAllSchedule] = useState(false);
   const [expandedGameIds, setExpandedGameIds] = useState([]);
   const [liveState, setLiveState] = useState({
     games: [],
@@ -488,15 +500,12 @@ export const Sports = () => {
 
   const featuredLeagues = useMemo(
     () =>
-      SPORTS_FEATURED_LEAGUE_IDS.map((id) => getLeague(id)).filter(Boolean),
+      [...new Set([...SPORTS_FEATURED_LEAGUE_IDS, "f1", "BL1", "nfl", "kleague-1", "FL1"])].map((id) => getLeague(id)).filter(Boolean),
     [],
   );
 
   const calendarDays = useMemo(
-    () =>
-      Array.from({ length: 13 }, (_, index) =>
-        shiftDate(selectedDate, index - 6),
-      ),
+    () => Array.from({ length: 63 }, (_, index) => shiftDate(selectedDate, index - 31)),
     [selectedDate],
   );
 
@@ -732,7 +741,7 @@ export const Sports = () => {
           </p>
         )}
         <div className="sports-fixtures">
-          {scheduleState.games.map((game) => (
+          {(showAllSchedule ? scheduleState.games : scheduleState.games.slice(0, 10)).map((game) => (
             <ScheduleMatch
               key={game.gameId}
               game={{
@@ -750,9 +759,19 @@ export const Sports = () => {
     );
   };
 
+  useEffect(() => {
+    const rail = calendarRailRef.current;
+    if (!rail) return;
+    const selected = Array.from(rail.querySelectorAll(".sports-calendar-day"))
+      .find((item) => item.dataset.date === selectedDate);
+    if (!selected) return;
+    rail.scrollLeft = selected.offsetLeft - rail.offsetLeft - (rail.clientWidth - selected.offsetWidth) / 2;
+  }, [selectedDate, calendarDays]);
+
   const changeSelectedDate = (amount) => {
     setSelectedDate((date) => shiftDate(date, amount));
     setExpandedGameIds([]);
+    setShowAllSchedule(false);
   };
 
   return (
@@ -878,7 +897,9 @@ export const Sports = () => {
         aria-labelledby="sports-featured-title"
       >
         <SectionTitle id="sports-featured-title" title="주요 리그" />
-        <div className="sports-featured-leagues">
+        <div className="sports-rail-shell sports-rail-shell--featured">
+          <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 주요 리그" onClick={() => scrollRail(featuredRailRef, -1)}>‹</button>
+          <div className="sports-featured-leagues" ref={featuredRailRef} tabIndex={0} aria-label="주요 리그 목록">
           {featuredLeagues.map((league) => (
             <article className="sports-featured-league" key={league.id}>
               <Link
@@ -895,7 +916,8 @@ export const Sports = () => {
                 </span>
               </Link>
               <h3>{league.name}</h3>
-              <p>경기 일정과 영상 보기</p>
+              <p className="sports-featured-league__type">{league.sport} · {league.scope}</p>
+              <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p>
               <Link
                 to={`/sports/league/${encodeURIComponent(league.id)}`}
               >
@@ -903,6 +925,8 @@ export const Sports = () => {
               </Link>
             </article>
           ))}
+          </div>
+          <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 주요 리그" onClick={() => scrollRail(featuredRailRef, 1)}>›</button>
         </div>
       </section>
 
@@ -913,6 +937,11 @@ export const Sports = () => {
         <div className="sports-schedule-heading">
           <SectionTitle id="sports-schedule-title" title="오늘의 경기 일정" />
           <div className="sports-schedule-actions">
+            {scheduleState.games.length > 10 && !scheduleState.loading && (
+              <button type="button" className="sports-schedule-expand" aria-expanded={showAllSchedule} onClick={() => setShowAllSchedule((value) => !value)}>
+                {showAllSchedule ? "접기" : `전체보기 (${scheduleState.games.length}경기)`}
+              </button>
+            )}
             <button
               type="button"
               className={"sports-score-toggle" + (scoresOn ? " is-on" : "")}
@@ -957,49 +986,42 @@ export const Sports = () => {
             <button
               type="button"
               className="sports-calendar-recent"
-              onClick={() => setSelectedDate(getSeoulDateKey())}
+              onClick={() => { setSelectedDate(getSeoulDateKey()); setShowAllSchedule(false); setExpandedGameIds([]); }}
             >
               최근
             </button>
           </div>
         </div>
 
-        <div className="sports-calendar-days" role="group" aria-label="경기 날짜 선택">
-          <button
-            type="button"
-            className="sports-calendar-days__arrow"
-            aria-label="이전 주"
-            onClick={() => changeSelectedDate(-7)}
-          >
-            ‹
-          </button>
+        <div className="sports-rail-shell sports-rail-shell--calendar" role="group" aria-label="경기 날짜 선택">
+          <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 날짜 보기" onClick={() => changeSelectedDate(-1)}>‹</button>
+          <div className="sports-calendar-days" ref={calendarRailRef} aria-label="선택 날짜를 중심으로 표시">
           {calendarDays.map((dateKey) => {
             const date = dateFromKey(dateKey);
             const weekday = WEEKDAYS[date.getUTCDay()];
+            const beforeMonthStart = dateKey < selectedDate.slice(0, 7) + "-01";
             return (
               <button
                 type="button"
                 key={dateKey}
+                data-date={dateKey}
+                disabled={beforeMonthStart}
+                aria-disabled={beforeMonthStart}
                 className={
                   "sports-calendar-day" +
-                  (selectedDate === dateKey ? " is-selected" : "")
+                  (selectedDate === dateKey ? " is-selected" : "") +
+                  (beforeMonthStart ? " is-unavailable" : "")
                 }
                 aria-pressed={selectedDate === dateKey}
-                onClick={() => setSelectedDate(dateKey)}
+                onClick={() => { setSelectedDate(dateKey); setShowAllSchedule(false); setExpandedGameIds([]); }}
               >
                 <span>{dateKey === getSeoulDateKey() ? "오늘" : weekday}</span>
                 <strong>{date.getUTCDate()}</strong>
               </button>
             );
           })}
-          <button
-            type="button"
-            className="sports-calendar-days__arrow"
-            aria-label="다음 주"
-            onClick={() => changeSelectedDate(7)}
-          >
-            ›
-          </button>
+          </div>
+          <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 날짜 보기" onClick={() => changeSelectedDate(1)}>›</button>
         </div>
 
         {renderSchedule()}
