@@ -124,11 +124,14 @@
   .sports-video-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 28px 16px; }
   .sports-video-grid--live { grid-template-columns: repeat(4,minmax(0,1fr)); }
   .sports-video-card {
+    display: block;
     min-width: 0;
+    color: inherit;
+    text-decoration: none;
+    &:focus-visible { outline: 2px solid $color-pri; outline-offset: 4px; border-radius: 10px; }
     &__media {
       position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: 10px; background: #1c2631;
-      > img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
-      &:hover > img { transform: scale(1.04); }
+      > img { display: block; width: 100%; height: 100%; object-fit: cover; }
     }
     &__badge {
       position: absolute; top: 0; left: 0; display: inline-flex; min-height: 24px;
@@ -141,8 +144,11 @@
       position: absolute; top: 50%; left: 50%; display: grid; width: 50px; height: 50px;
       place-items: center; border-radius: 50%; background: rgba(12,18,24,.64);
       transform: translate(-50%,-50%); backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none; transition: opacity .18s ease;
       &::before { width: 0; height: 0; margin-left: 4px; border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-left: 13px solid #fff; content: ''; }
     }
+    &:hover .sports-video-card__play, &:focus-visible .sports-video-card__play { opacity: 1; }
+    @media (hover: none) { &__play { opacity: 1; } }
     &__duration { position: absolute; right: 7px; bottom: 7px; padding: 3px 6px; border-radius: 4px; color: #fff; font-size: 11px; background: rgba(0,0,0,.8); }
     &__details { display: flex; min-height: 56px; align-items: flex-start; gap: 12px; padding-top: 10px; }
     &__league-logo {
@@ -253,7 +259,14 @@
   .sports-status {
     background: $color-pri;
     &--ended { background: #535b65; }
-    &--live { background: #db2632; }
+  }
+  .sports-fixture__live-badge.contentCard-badge.live {
+    position: relative; top: auto; right: auto; left: auto; flex-shrink: 0;
+    width: 48px; height: 24px; padding: .3em .55em; gap: .5em;
+    border-radius: 5px; font-size: 12px; line-height: 1;
+    i { flex-shrink: 0; width: .25em; height: .25em;
+      &::before { backdrop-filter: blur(.09375em); }
+    }
   }
   .sports-quality { background: rgba(255,255,255,.1); }
 
@@ -426,6 +439,7 @@
       }
     }
     .sports-status, .sports-quality { min-height: 20px; padding: 3px 6px; font-size: 10px; }
+    .sports-fixture__live-badge.contentCard-badge.live { width: 40px; height: 20px; font-size: 10px; }
     .sports-promo {
       min-height: 280px; margin: 46px 20px 0;
       > img { object-position: 60% center; }

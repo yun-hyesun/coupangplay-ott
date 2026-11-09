@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useId, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./scss/Sports.scss";
 
 import {
@@ -19,9 +19,15 @@ import {
 } from "../../data/sportsPageContent";
 import { SportsBanner } from "./components/SportsBanner";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
+import { MatchRelatedVideos } from "../../components/MatchRelatedVideos";
+import { LiveBadge } from "../../components/LeagueDetailShared";
 import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
+import { useScheduleMatchVideos } from "../../hooks/useScheduleMatchVideos";
 import { getScheduleUnitLabel } from "../../data/leagueScheduleUnits";
+import { getSportsVideoId } from "../../data/sportsVideoPlayback";
+import { getMatchVideoKey } from "../../data/matchRelatedVideos";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
+import { useAuthStore } from "../../store/useAuthStore";
 import { getF1RacesForDate } from "../../service/f1Service";
 import {
   getFootballScheduleForDate,
@@ -148,9 +154,16 @@ function TeamCrest({ team }) {
 function SportsVideoCard({ card, badge, live = false }) {
   const league = card.competitionCode ? getLeague(card.competitionCode) : null;
   const category = card.category || league?.name || card.competitionName || "스포츠";
+  const videoId = getSportsVideoId(card);
+  const Card = videoId ? Link : "article";
+  const playbackProps = videoId ? {
+    to: `/watch/sports/${encodeURIComponent(videoId)}`,
+    state: { title: card.title, returnTo: "/sports" },
+    "aria-label": `${card.title} 재생`,
+  } : {};
 
   return (
-    <article className={"sports-video-card" + (live ? " sports-video-card--live" : " sports-video-card--editorial")}>
+    <Card className={"sports-video-card" + (live ? " sports-video-card--live" : " sports-video-card--editorial")} {...playbackProps}>
       <div className="sports-video-card__media">
         <img src={card.image} alt="" loading="lazy" />
         {badge && (
@@ -186,7 +199,7 @@ function SportsVideoCard({ card, badge, live = false }) {
           )}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }
 
@@ -212,8 +225,15 @@ function VideoSection({ id, title, cards, layout = "grid", badge }) {
   );
 }
 
-function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
+function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
+  const navigate = useNavigate();
+  const detailsId = useId();
   const status = getGameStatus(game.status);
+  const isEnded = status.modifier === "ended";
+  const playAction = status.modifier === "live";
+  const hasRelatedVideos = Boolean(relatedVideos?.length);
+  const detailsExpanded = !playAction && expanded && (!isEnded || hasRelatedVideos);
+  const liveVideoId = playAction ? getSportsVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
   const scheduleSubLabel = getScheduleSubLabel(game);
   const hasScore =
     scoresOn &&
@@ -222,12 +242,12 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
     game.away.score != null;
 
   return (
-    <div className={"sports-fixture-wrap" + (expanded ? " is-expanded" : "")}>
+    <div className={"sports-fixture-wrap" + (isEnded ? " sports-fixture-wrap--ended" : "") + (detailsExpanded ? " is-expanded" : "")}>
       <article className="sports-fixture">
         <div className="sports-fixture__status">
-          <span className={"sports-status sports-status--" + status.modifier}>
+          {playAction ? <LiveBadge label="라이브 경기" className="sports-fixture__live-badge" /> : <span className={"sports-status sports-status--" + status.modifier}>
             {status.label}
-          </span>
+          </span>}
           <span className="sports-quality">
             {game.quality || game.competitionCode || "경기"}
           </span>
@@ -264,38 +284,56 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle }) {
           <span>{game.away.name}</span>
         </div>
 
-        <button
+        {(!isEnded || hasRelatedVideos) && <button
           type="button"
-          className={"sports-fixture__action" + (status.modifier === "live" ? " is-active" : "")}
-          aria-label={expanded ? "경기 정보 접기" : "경기 정보 펼치기"}
-          aria-expanded={expanded}
-          onClick={onToggle}
+          className={"sports-fixture__action" + (playAction ? " is-active" : "")}
+          aria-label={playAction ? (liveVideoId ? "라이브 경기 재생" : "라이브 중계 미연결") : isEnded ? `${game.home.name} vs ${game.away.name} 관련 영상 ${detailsExpanded ? "접기" : "펼치기"}` : detailsExpanded ? "경기 정보 접기" : "경기 정보 펼치기"}
+          aria-expanded={playAction ? undefined : detailsExpanded}
+          aria-controls={detailsExpanded ? detailsId : undefined}
+          disabled={playAction && !liveVideoId}
+          title={playAction && !liveVideoId ? "아직 연결된 라이브 중계 영상이 없습니다." : undefined}
+          onClick={playAction ? () => {
+            if (liveVideoId) navigate(`/watch/sports/${encodeURIComponent(liveVideoId)}`, {
+              state: { title: `${game.home.name} vs ${game.away.name} LIVE`, returnTo: "/sports" },
+            });
+          } : onToggle}
         >
-          {status.modifier === "live" ? "▶" : (
+          {playAction ? "▶" : (
             <img
               className="sports-fixture__expand-icon"
-              src="/images/sports/icon/sports-accordion-arrow.svg"
+              src={isEnded ? "/images/sports/league-detail/schedule/related-collapse.svg" : "/images/sports/icon/sports-accordion-arrow.svg"}
               alt=""
               aria-hidden="true"
             />
           )}
-        </button>
+        </button>}
       </article>
 
-      {expanded && (
-        <div className="sports-fixture__extra">
+      {detailsExpanded && (isEnded ? (
+        <MatchRelatedVideos
+          key={[game.gameId, game.utcDate || game.startTime, game.matchday, game.home.name, game.away.name].join(":")}
+          game={game}
+          id={detailsId}
+          initialVideos={relatedVideos}
+        />
+      ) : (
+        <div id={detailsId} className="sports-fixture__extra">
           <span>{game.competitionName || "리그 경기"}</span>
           <span>{game.stage || game.matchday ? game.stage || game.matchday + " 라운드" : "경기 정보"}</span>
           {game.venue && <span>{game.venue}</span>}
           {game.winnerName && <span>우승자 {game.winnerName}</span>}
           <span>한국 시간 {formatGameTime(game.utcDate || game.startTime)}</span>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
 export const Sports = () => {
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const authLoading = useAuthStore((state) => state.loading);
+  const canShowSubscriptions = Boolean(user && !authLoading);
   const leagueListDrag = useHorizontalDragScroll();
   const [activeCategory, setActiveCategory] = useState("전체");
   const [selectedLeagueIds, setSelectedLeagueIds] = useState(readSelectedLeagueIds);
@@ -324,6 +362,8 @@ export const Sports = () => {
     loading: true,
     errors: [],
   });
+  const endedGames = scheduleState.games.filter(game => getGameStatus(game.status).modifier === "ended");
+  const scheduleMatchVideos = useScheduleMatchVideos(endedGames, selectedDate);
 
   const visibleLeagues = useMemo(() => {
     if (activeCategory === "전체") return SPORTS_LEAGUES;
@@ -460,9 +500,12 @@ export const Sports = () => {
       });
 
       games.sort(
-        (first, second) =>
-          new Date(first.utcDate || first.startTime) -
-          new Date(second.utcDate || second.startTime),
+        (first, second) => {
+          const livePriority = Number(isLive(second.status)) - Number(isLive(first.status));
+          return livePriority ||
+            new Date(first.utcDate || first.startTime) -
+            new Date(second.utcDate || second.startTime);
+        },
       );
 
       setScheduleState({ games, loading: false, errors });
@@ -479,7 +522,21 @@ export const Sports = () => {
     };
   }, [selectedDate]);
 
+  const openSettingsModal = () => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setIsSettingsModalOpen(true);
+  };
+
   const toggleLeague = (league) => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     setSelectedLeagueIds((current) => {
       if (current.includes(league.id)) {
         return current.filter((leagueId) => leagueId !== league.id);
@@ -490,6 +547,11 @@ export const Sports = () => {
   };
 
   const toggleTeam = (teamId) => {
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     setSelectedTeamIds((current) =>
       current.includes(teamId)
         ? current.filter((id) => id !== teamId)
@@ -508,6 +570,7 @@ export const Sports = () => {
   };
 
   useEffect(() => {
+    if (!canShowSubscriptions) return;
     try {
       window.localStorage.setItem(
         LEAGUE_SUBSCRIPTIONS_STORAGE_KEY,
@@ -516,9 +579,10 @@ export const Sports = () => {
     } catch {
       // Keep the current selection in memory when local storage is unavailable.
     }
-  }, [selectedLeagueIds]);
+  }, [selectedLeagueIds, canShowSubscriptions]);
 
   useEffect(() => {
+    if (!canShowSubscriptions) return;
     try {
       window.localStorage.setItem(
         TEAM_SUBSCRIPTIONS_STORAGE_KEY,
@@ -527,7 +591,7 @@ export const Sports = () => {
     } catch {
       // Continue without persistence when local storage is unavailable.
     }
-  }, [selectedTeamIds]);
+  }, [selectedTeamIds, canShowSubscriptions]);
 
   const renderSchedule = () => {
     if (scheduleState.loading) {
@@ -570,6 +634,7 @@ export const Sports = () => {
                 quality: game.competitionName || game.competitionCode,
               }}
               scoresOn={scoresOn}
+              relatedVideos={scheduleMatchVideos[getMatchVideoKey(game)]}
               expanded={expandedGameIds.includes(game.gameId)}
               onToggle={() => toggleExpandedGame(game.gameId)}
             />
@@ -611,7 +676,8 @@ export const Sports = () => {
             type="button"
             className="sports-outline-button"
             aria-expanded={isSettingsModalOpen}
-            onClick={() => setIsSettingsModalOpen(true)}
+            disabled={authLoading}
+            onClick={openSettingsModal}
           >
             전체보기
           </button>
@@ -622,7 +688,8 @@ export const Sports = () => {
             className="sports-league-add"
             aria-label="관심 리그 선택"
             aria-expanded={isSettingsModalOpen}
-            onClick={() => setIsSettingsModalOpen(true)}
+            disabled={authLoading}
+            onClick={openSettingsModal}
           >
             +
           </button>
@@ -639,7 +706,7 @@ export const Sports = () => {
             onDragStart={leagueListDrag.onDragStart}
           >
             {visibleLeagues.map((league) => {
-              const selected = selectedLeagueIds.includes(league.id);
+              const selected = canShowSubscriptions && selectedLeagueIds.includes(league.id);
               return (
                 <Link
                   key={league.id}
@@ -894,12 +961,12 @@ export const Sports = () => {
       <SportsSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        selectedLeagueIds={selectedLeagueIds}
+        selectedLeagueIds={canShowSubscriptions ? selectedLeagueIds : []}
         onToggleLeague={toggleLeague}
-        onReorderLeagues={setSelectedLeagueIds}
-        selectedTeamIds={selectedTeamIds}
+        onReorderLeagues={(ids) => { if (canShowSubscriptions) setSelectedLeagueIds(ids); }}
+        selectedTeamIds={canShowSubscriptions ? selectedTeamIds : []}
         onToggleTeam={toggleTeam}
-        onReorderTeams={setSelectedTeamIds}
+        onReorderTeams={(ids) => { if (canShowSubscriptions) setSelectedTeamIds(ids); }}
       />
     </main>
   );

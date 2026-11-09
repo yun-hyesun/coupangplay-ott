@@ -1,4 +1,6 @@
 import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
+import { Link, useLocation } from "react-router-dom";
+import { getSportsVideoId } from "../data/sportsVideoPlayback";
 import { formatBroadcastDate, getBroadcastStatus } from "../data/leagueBroadcasts";
 import "./content/scss/ContentCard.scss";
 
@@ -78,9 +80,9 @@ export function EmptyMessage({ children }) {
   return <p className="league-detail__empty" role="status">{children}</p>;
 }
 
-function LiveBadge({ label }) {
+export function LiveBadge({ label, className = "" }) {
   return (
-    <span className="contentCard-badge live league-detail__live-badge" aria-label={label}>
+    <span className={"contentCard-badge live league-detail__live-badge" + (className ? " " + className : "")} aria-label={label}>
       <i aria-hidden="true"><span /></i>LIVE
     </span>
   );
@@ -162,9 +164,12 @@ export function BroadcastCard({ game, leagueId }) {
   );
 }
 
-function HighlightBadge({ kind = "highlight" }) {
+function HighlightBadge({ kind = "highlight", fixture = false }) {
   const assets = "/images/sports/league-detail/popular/";
   const feedAssets = "/images/sports/league-detail/videos/";
+  const fixtureAssets = "/images/sports/league-detail/schedule/related-";
+  const highlightAssets = fixture ? fixtureAssets : assets;
+  const recommendAssets = fixture ? fixtureAssets : feedAssets;
   if (kind === "replay") return (
     <span className="league-detail__replay-badge" aria-label="다시보기">
       <span className="league-detail__replay-symbol" aria-hidden="true">
@@ -177,42 +182,47 @@ function HighlightBadge({ kind = "highlight" }) {
   const recommend = kind === "recommend";
   return (
     <span className={"league-detail__highlight-badge" + (recommend ? " league-detail__highlight-badge--recommend" : "")} aria-label={recommend ? "추천 영상" : "하이라이트"}>
-      <img className="league-detail__highlight-bg" src={recommend ? feedAssets + "recommend-bg.svg" : assets + "highlight-bg.svg"} alt="" />
-      <span className="league-detail__highlight-symbol" aria-hidden="true"><img src={assets + "highlight-symbol.svg"} alt="" /></span>
+      <img className="league-detail__highlight-bg" src={recommend ? recommendAssets + "recommend-bg.svg" : highlightAssets + "highlight-bg.svg"} alt="" />
+      <span className="league-detail__highlight-symbol" aria-hidden="true"><img src={highlightAssets + "highlight-symbol.svg"} alt="" /></span>
       <span className="league-detail__highlight-symbol-overlay" aria-hidden="true">
-        <img src={assets + "highlight-symbol-overlay.svg"} alt="" />
-        <img src={assets + "highlight-symbol-overlay.svg"} alt="" />
+        <img src={highlightAssets + "highlight-symbol-overlay.svg"} alt="" />
+        <img src={highlightAssets + "highlight-symbol-overlay.svg"} alt="" />
       </span>
-      <img className="league-detail__highlight-label" src={recommend ? feedAssets + "recommend-label.svg" : assets + "highlight-label.svg"} alt="" />
+      <img className="league-detail__highlight-label" src={recommend ? recommendAssets + "recommend-label.svg" : highlightAssets + "highlight-label.svg"} alt="" />
     </span>
   );
 }
 
 export function VideoCard({ video, rank, badge = "하이라이트", variant }) {
+  const location = useLocation();
   const ranked = rank != null;
-  const feed = variant === "feed";
-  const VideoMain = video.url ? "a" : "div";
+  const fixture = variant === "fixture";
+  const feed = variant === "feed" || fixture;
+  const videoId = getSportsVideoId(video);
+  const VideoMain = videoId ? Link : video.url ? "a" : "div";
+  const playbackProps = videoId ? {
+    to: `/watch/sports/${encodeURIComponent(videoId)}`,
+    state: { title: video.title, returnTo: location.pathname + location.search, returnTab: variant === "feed" ? "videos" : "home" },
+  } : video.url ? { href: video.url, target: "_blank", rel: "noopener noreferrer" } : {};
   const views = video.viewCount == null ? "" : `조회수 ${new Intl.NumberFormat("ko-KR").format(video.viewCount)}회`;
   const videoTooltip = views ? `${video.title}\n${views}` : video.title;
   return (
-    <article className={"league-detail__video-card" + (ranked ? " league-detail__video-card--ranked" : "") + (feed ? " league-detail__video-card--feed" : "") + (rank >= 10 ? " league-detail__video-card--double" : "")}>
+    <article className={"league-detail__video-card" + (ranked ? " league-detail__video-card--ranked" : "") + (feed ? " league-detail__video-card--feed" : "") + (fixture ? " league-detail__video-card--fixture" : "") + (rank >= 10 ? " league-detail__video-card--double" : "")}>
       {ranked && <span className="league-detail__video-rank" aria-label={rank + "위"}>{rank}</span>}
       <VideoMain
         className="league-detail__video-main"
-        href={video.url || undefined}
-        target={video.url ? "_blank" : undefined}
-        rel={video.url ? "noopener noreferrer" : undefined}
-        aria-label={video.url ? `${video.title} · ${views} · YouTube에서 새 탭으로 보기` : undefined}
-        title={video.url ? videoTooltip : undefined}
+        {...playbackProps}
+        aria-label={videoId ? `${video.title} 재생${views ? " · " + views : ""}` : video.url ? `${video.title} · 외부 영상 보기` : undefined}
+        title={videoId || video.url ? videoTooltip : undefined}
       >
         <div className="league-detail__video-media">
           <img src={video.image} alt="" loading="lazy" />
           {!ranked && !feed && <span className="league-detail__video-badge"><span aria-hidden="true">▶</span> {badge}</span>}
-          {ranked || feed ? <span className={feed ? "league-detail__feed-play" : "league-detail__popular-play"} aria-hidden="true"><span><img src={feed ? "/images/sports/league-detail/videos/video-play.svg" : "/images/sports/league-detail/popular/video-play.svg"} alt="" /></span></span> : <span className="league-detail__play" aria-hidden="true"><span /></span>}
+          {ranked || feed ? <span className={feed ? "league-detail__feed-play" : "league-detail__popular-play"} aria-hidden="true"><span><img src={fixture ? "/images/sports/league-detail/schedule/related-video-play.svg" : feed ? "/images/sports/league-detail/videos/video-play.svg" : "/images/sports/league-detail/popular/video-play.svg"} alt="" /></span></span> : <span className="league-detail__play" aria-hidden="true"><span /></span>}
           {ranked && video.quality && <span className="league-detail__video-quality">{video.quality}</span>}
           {video.duration && <span className="league-detail__duration">{video.duration}</span>}
         </div>
-        {(ranked || feed) && <HighlightBadge kind={feed ? video.kind : "highlight"} />}
+        {(ranked || feed) && <HighlightBadge kind={feed ? video.kind : "highlight"} fixture={fixture} />}
         <h3 title={videoTooltip}>{video.title}</h3>
         {!ranked && video.meta && <p>{video.meta}</p>}
       </VideoMain>

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import "./scss/LeagueDetail.scss";
 
 import { LeagueHeader } from "../../components/LeagueHeader";
 import { LeagueHome } from "../../components/LeagueHome";
 import { LeagueSchedule } from "../../components/LeagueSchedule";
+import { LeagueSchedulePage } from "../../components/LeagueSchedulePage";
 import { LeagueStandings } from "../../components/LeagueStandings";
 import { LeagueVideos } from "../../components/LeagueVideos";
 import { LeagueVideoFeed } from "../../components/LeagueVideoFeed";
@@ -32,9 +33,11 @@ import {
   supportsFootballStandings,
 } from "../../service/sportsService";
 import { getF1RacesForDate } from "../../service/f1Service";
+import { getLeagueSeasonSchedule } from "../../service/leagueScheduleService";
+import { getScheduleSeason } from "../../data/leagueScheduleView";
 import { useAuthStore } from "../../store/useAuthStore";
 import { loadLeagueBroadcasts } from "../../data/leagueBroadcasts";
-import { getScheduleRange, loadScheduleDates, selectScheduleMatches } from "../../data/leagueScheduleRange";
+import { getScheduleGameDate, getScheduleRange, loadScheduleDates, selectScheduleMatches } from "../../data/leagueScheduleRange";
 
 const LEAGUE_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-leagues";
 const MAX_LEAGUE_SUBSCRIPTIONS = 10;
@@ -42,6 +45,7 @@ const TEAM_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-teams";
 const SEOUL_TIME_ZONE = "Asia/Seoul";
 const EMPTY_SCHEDULE = { games: [], loading: true, errors: [] };
 const EMPTY_STANDINGS = { rows: [], loading: true, error: "" };
+const SEASON_FIXTURE_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC"]);
 function getCompactHeaderScrollThreshold() {
   if (window.innerWidth <= 600) return 174;
   if (window.innerWidth <= 850) return 184;
@@ -68,6 +72,10 @@ function getSeoulDateKey(date = new Date()) {
 }
 
 async function loadLeagueSchedule(league, dateKey) {
+  if (SEASON_FIXTURE_LEAGUES.has(league.id)) {
+    const data = await getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, dateKey));
+    return { ...data, games: data.games.filter(game => getScheduleGameDate(game) === dateKey) };
+  }
   if (league.id === "f1") return { games: await getF1RacesForDate(dateKey), errors: [] };
   if (league.id === "nba") return { games: await getNbaGamesForSeoulDate(dateKey), errors: [] };
 
@@ -169,10 +177,11 @@ function getLeagueTheme(league) {
 export const LeagueDetail = () => {
   const { leagueId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const league = SPORTS_LEAGUE_BY_ID[leagueId];
   const [today, setToday] = useState(() => getSeoulDateKey());
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState(() => ["home", "videos", "schedule", "standings"].includes(location.state?.leagueTab) ? location.state.leagueTab : "home");
   const [activeFixtureTab, setActiveFixtureTab] = useState("upcoming");
   const [isCompactHeader, setIsCompactHeader] = useState(false);
   const [scoresOn, setScoresOn] = useState(true);
@@ -223,12 +232,15 @@ export const LeagueDetail = () => {
   }, [subscribedTeamIds]);
 
   useEffect(() => {
-    if (!league) return undefined;
+    if (!league || ["videos", "schedule"].includes(activeTab)) return undefined;
     const controller = new AbortController();
     const { from, to } = scheduleRange;
-    const request = league.id === "f1" || league.id.startsWith("kleague-")
-      ? loadScheduleDates({ from, to, signal: controller.signal, loadSchedule: (date) => loadLeagueSchedule(league, date) })
-      : getMatchesForRange(league.id, from, to, { signal: controller.signal });
+    const sameSeason = getScheduleSeason(league.id, from) === getScheduleSeason(league.id, to);
+    const request = SEASON_FIXTURE_LEAGUES.has(league.id) && sameSeason
+      ? getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, from), { signal: controller.signal })
+      : league.id === "f1" || league.id.startsWith("kleague-")
+        ? loadScheduleDates({ from, to, signal: controller.signal, loadSchedule: (date) => loadLeagueSchedule(league, date) })
+        : getMatchesForRange(league.id, from, to, { signal: controller.signal });
     request
       .then((result) => {
         if (!controller.signal.aborted) {
@@ -247,10 +259,10 @@ export const LeagueDetail = () => {
       });
 
     return () => controller.abort();
-  }, [league, scheduleRange, scheduleKey]);
+  }, [league, scheduleRange, scheduleKey, activeTab]);
 
   useEffect(() => {
-    if (!league) return undefined;
+    if (!league || ["videos", "schedule"].includes(activeTab)) return undefined;
     let isCurrent = true;
 
     const loadStandings = async () => {
@@ -270,10 +282,10 @@ export const LeagueDetail = () => {
 
     loadStandings();
     return () => { isCurrent = false; };
-  }, [league]);
+  }, [league, activeTab]);
 
   useEffect(() => {
-    if (!league) return undefined;
+    if (!league || ["videos", "schedule"].includes(activeTab)) return undefined;
     const controller = new AbortController();
     loadLeagueBroadcasts({
       dateKey: today,
@@ -283,7 +295,7 @@ export const LeagueDetail = () => {
       if (!controller.signal.aborted) setBroadcastState({ ...result, leagueId: league.id });
     });
     return () => controller.abort();
-  }, [league, today]);
+  }, [league, today, activeTab]);
 
   const allLeagueVideos = useMemo(() => league ? getLeagueVideos(league) : [], [league]);
   const leagueTeams = useMemo(() => SPORTS_TEAMS_BY_LEAGUE[leagueId] || [], [leagueId]);
@@ -403,13 +415,20 @@ export const LeagueDetail = () => {
           onTabChange={(tabId, targetId) => {
             setActiveTab(tabId);
             window.requestAnimationFrame(() => {
-              if (tabId !== "videos" && targetId) document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+              if (!["videos", "schedule"].includes(tabId) && targetId) document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
               else window.scrollTo({ top: 0, behavior: "smooth" });
             });
           }}
         />
       </div>
-      {activeTab === "videos" ? <LeagueVideoFeed key={league.id} league={league} scoresOn={scoresOn} /> : <>
+      {activeTab === "videos" ? <LeagueVideoFeed key={league.id} league={league} scoresOn={scoresOn} subscribedTeamIds={user ? subscribedTeamIds : []} /> : activeTab === "schedule" ? <LeagueSchedulePage
+        key={league.id}
+        league={league}
+        scoresOn={scoresOn}
+        today={today}
+        selectedTeams={selectedTeams}
+        onViewVideos={() => { setActiveTab("videos"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+      /> : <>
       <LeagueHome league={league} scheduleState={broadcastState.leagueId === league.id ? broadcastState : { games: [], loading: true, errors: [] }} />
       <LeagueSchedule
         league={league}

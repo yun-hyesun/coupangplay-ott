@@ -3,6 +3,7 @@ import espnTeamNames from "../data/espnTeamNames.json";
 import { SPORTS_LEAGUE_BY_ID } from "../data/sportsLeagues";
 import { findSportsTeam } from "../data/sportsTeams";
 import { listScheduleDates, loadScheduleDates } from "../data/leagueScheduleRange.js";
+import { getFootballDataSeason } from "./footballDataSeasonService";
 
 const ESPN_BASE = "/espn";
 const ESPN_CORE_BASE = "/espn-core";
@@ -713,6 +714,31 @@ export async function getEspnScheduleForRange(leagueId, from, to, { signal } = {
     games: uniqueGames(results.flatMap((result) => result.games)),
     errors: [...new Set(results.flatMap((result) => result.errors))],
   };
+}
+
+// The dedicated schedule tab needs the whole season, including postponed fixtures.
+// Fetch one competition range instead of issuing a request for every calendar day.
+export async function getEspnSeasonSchedule(leagueId, season, from, to, { signal } = {}) {
+  if (FOOTBALL_DATA_COMPETITIONS.includes(leagueId)) {
+    try {
+      const data = await getFootballDataSeason(leagueId, season, { signal });
+      const games = data.matches.filter(match => !match.competition?.code || match.competition.code === leagueId)
+        .map(match => normalizeFootballDataMatch(leagueId, match)).filter(Boolean);
+      return { games: uniqueGames(games), errors: [] };
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      // Use the existing translated team catalogue for both providers.
+    }
+  }
+  const path = ESPN_LEAGUE_PATHS[leagueId];
+  if (!path) return { games: [], errors: [] };
+  const start = new Date(`${from}T00:00:00Z`);
+  start.setUTCDate(start.getUTCDate() - 1);
+  const dates = `${start.toISOString().slice(0, 10).replaceAll("-", "")}-${to.replaceAll("-", "")}`;
+  const data = await espnFetch(`${path}/scoreboard`, { dates, limit: "1000" }, "events");
+  const games = data.events.map(event => normalizeEspnEvent(leagueId, event)).filter(Boolean)
+    .filter(game => { const date = getSeoulDateKey(game.utcDate); return date >= from && date <= to; });
+  return { games: uniqueGames(games), errors: [] };
 }
 
 export async function getEspnFootballScheduleForDate(seoulDate) {
