@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useId} from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import "./scss/Sports.scss";
 
@@ -440,7 +441,13 @@ export const Sports = () => {
   const user = useAuthStore((state) => state.user);
   const authLoading = useAuthStore((state) => state.loading);
   const canShowSubscriptions = Boolean(user && !authLoading);
-  const leagueListDrag = useHorizontalDragScroll();
+  const {
+  scrollRef: leagueScrollRef,
+  isDragging: isLeagueDragging,
+  onPointerDown: onLeaguePointerDown,
+  onClickCapture: onLeagueClickCapture,
+  onDragStart: onLeagueDragStart,
+} = useHorizontalDragScroll();
   const featuredRailRef = useRef(null);
   const calendarRailRef = useRef(null);
   const scrollRail = (ref, direction) => {
@@ -576,11 +583,15 @@ export const Sports = () => {
   useEffect(() => {
     let isCurrent = true;
     let isLoading = false;
-    setScheduleState({ games: [], loading: true, errors: [] });
 
     async function loadSchedule() {
       if (isLoading) return;
       isLoading = true;
+      setScheduleState((prev) => ({
+      ...prev,
+      loading: true,
+      errors: [],
+      }));
       const results = await Promise.allSettled([
         getFootballScheduleForDate(selectedDate),
         getNbaGamesForSeoulDate(selectedDate),
@@ -821,14 +832,14 @@ export const Sports = () => {
           <div
             className={
               "sports-league-list" +
-              (leagueListDrag.isDragging ? " is-dragging" : "")
+              (isLeagueDragging ? " is-dragging" : "")
             }
-            ref={leagueListDrag.scrollRef}
+            ref={leagueScrollRef}
             tabIndex={0}
             aria-label="리그 목록"
-            onPointerDown={leagueListDrag.onPointerDown}
-            onClickCapture={leagueListDrag.onClickCapture}
-            onDragStart={leagueListDrag.onDragStart}
+            onPointerDown={onLeaguePointerDown}
+            onClickCapture={onLeagueClickCapture}
+            onDragStart={onLeagueDragStart}
           >
             {visibleLeagues.map((league) => {
               const selected = canShowSubscriptions && selectedLeagueIds.includes(league.id);
