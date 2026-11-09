@@ -9,15 +9,20 @@ import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-rou
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const events = new EventTarget();
 globalThis.window = { addEventListener: (...args) => events.addEventListener(...args), removeEventListener: (...args) => events.removeEventListener(...args), setTimeout, clearTimeout, scrollTo() {} };
+globalThis.IntersectionObserver = class {
+  observe() {}
+  disconnect() {}
+};
 globalThis.localStorage = { getItem: () => null };
 globalThis.__wowUiService = { subscribe: (_options, onData) => { queueMicrotask(() => onData([])); return () => {}; }, saveClip: async () => {}, subscribeDetails: () => () => {} };
 const { useAuthStore } = await import('../../src/store/useAuthStore.js');
 const { FullVideoClipButton } = await import('../../src/page/wowclip/components/FullVideoClipButton.jsx');
 const { ClipEditor } = await import('../../src/page/wowclip/components/ClipEditor.jsx');
 const { ClipComments } = await import('../../src/page/wowclip/components/ClipComments.jsx');
+const { ClipFeed } = await import('../../src/page/wowclip/components/ClipFeed.jsx');
 const { useWowClipLibrary } = await import('../../src/page/wowclip/hooks/useWowClipLibrary.js');
 const roots = [];
-const mount = async (element) => { let root; await act(async () => { root = renderer.create(element); }); roots.push(root); return root; };
+const mount = async (element, options) => { let root; await act(async () => { root = renderer.create(element, options); }); roots.push(root); return root; };
 const h = React.createElement;
 const owner = { id: 'alice:default', name: 'alice', avatar: '/images/profile.svg' };
 const source = { fullVideo: true, content: { id: 78648, media_type: 'tv', name: '검수 작품' }, videoKey: 'apJOlU1WB94', duration: 20, currentTime: 6 };
@@ -99,6 +104,36 @@ test('댓글 중복 전송을 막고 실패하면 입력을 보존하며 답글 
   await act(async () => { resolveAdd(); await pending; });
   assert.equal(root.root.findByType('textarea').props.value, '');
   assert.equal(root.root.findByType('label').children[0], '댓글 남기기');
+});
+
+test('댓글 공감 수는 서버 집계를 우선하고 예전 댓글은 공감 목록으로 표시한다', async () => {
+  const clip = { id: 'qa', comments: [
+    { id: 'cloud', text: '서버 댓글', author: 'bob', likeCount: 3, likes: [] },
+    { id: 'legacy', text: '예전 댓글', author: 'bob', likes: ['alice', 'carol'] },
+  ] };
+  const root = await mount(h(ClipComments, { clip, owner, panel: true }));
+  for (const count of [3, 2]) {
+    const button = root.root.findByProps({ 'aria-label': `댓글 공감 ${count}` });
+    assert.equal(button.findByProps({ className: 'wowclip-comment-like-count' }).children[0], String(count));
+  }
+});
+
+test('감상 댓글 패널에 조회 상태를 전달하고 다시 불러올 수 있다', async () => {
+  const clip = { id: 'qa', title: '검수 클립', content: source.content, comments: [], likes: [] };
+  let refreshes = 0;
+  const props = { clips: [clip], selectedId: clip.id, owner, revealed: [], onRefresh: () => { refreshes++; } };
+  const renderFeed = (state) => withRoutes(h(ClipFeed, { ...props, ...state }));
+  const root = await mount(renderFeed({ commentsLoading: true }), { createNodeMock: () => ({ children: [] }) });
+
+  await act(async () => root.root.findByProps({ 'aria-label': '댓글 0' }).props.onClick());
+  assert.equal(root.root.findByProps({ role: 'status' }).children[0], '댓글을 불러오고 있어요.');
+
+  const error = '댓글을 불러오지 못했어요.';
+  await act(async () => root.update(renderFeed({ commentsError: error })));
+  assert.equal(root.root.findByProps({ role: 'alert' }).children[0], error);
+  assert.equal(root.root.findAllByProps({ className: 'wowclip-comments-empty' }).length, 0);
+  await act(async () => root.root.findByProps({ 'aria-label': '댓글 새로고침' }).props.onClick());
+  assert.equal(refreshes, 1);
 });
 
 test('클립 이동 오류와 로그아웃 뒤 이전 댓글·계정 데이터가 다음 화면에 섞이지 않는다', async () => {
