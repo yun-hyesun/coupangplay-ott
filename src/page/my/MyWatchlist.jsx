@@ -5,6 +5,7 @@ import { auth } from '../../firebase/firebase'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
 import { useWatchlistStore } from '../../store/useWatchlistStore'
+import './scss/MyPageHeader.scss'
 import './scss/MyWatchlist.scss'
 
 // 상단 콘텐츠 탭
@@ -18,7 +19,7 @@ const contentTabs = [
 
 // 장르 필터
 const genres = [
-    '전체', '스포츠', '드라마', '예능',
+    '전체', '시리즈', '스포츠', '드라마', '예능',
     '영화', '스토어', '키즈'
 ];
 const mobileGenres = ['전체', '시리즈', '영화'];
@@ -156,7 +157,39 @@ export const MyWatchlist = () => {
         <main className="my-watchlist">
             <div className="my-watchlist-inner">
 
-                {/* 상단 콘텐츠 탭 */}
+                {/* 모바일: 공통 MyPageHeader 스타일 적용 */}
+                <div className="my-watchlist-mobile-header">
+                    <div className="my-page-header">
+                        <Link
+                            to="/my"
+                            className="my-page-header__back"
+                            aria-label="마이페이지로 돌아가기"
+                        >
+                            <img src="/images/icon/icon-arrow_back_gray.svg" alt="" />
+                        </Link>
+                        <h2>찜 내역</h2>
+                    </div>
+                    <div className="my-watchlist-mobile-actions">
+                        {isEditing ? (
+                            <button
+                                type="button"
+                                onClick={handleComplete}
+                                disabled={isDeleting}
+                            >
+                                완료
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleEdit}
+                            >
+                                편집
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* 상단 콘텐츠 탭 (PC / 태블릿) */}
                 <nav
                     className="my-watchlist-tabs"
                     aria-label="마이페이지 콘텐츠 메뉴"
@@ -187,30 +220,6 @@ export const MyWatchlist = () => {
                         </Link>
                     ))}
 
-                    {/* 모바일 전용 제목 */}
-                    <h1 className="my-watchlist-mobile-title">
-                        찜 내역
-                    </h1>
-
-                    {/* 모바일 전용 편집 버튼 */}
-                    <div className="my-watchlist-mobile-actions">
-                        {isEditing ? (
-                            <button
-                                type="button"
-                                onClick={handleComplete}
-                                disabled={isDeleting}
-                            >
-                                완료
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleEdit}
-                            >
-                                편집
-                            </button>
-                        )}
-                    </div>
                 </nav>
 
                 {/* 장르 필터 + 편집 메뉴 */}
@@ -226,7 +235,7 @@ export const MyWatchlist = () => {
                                 key={genre}
                                 type="button"
                                 className={
-                                    `${activeGenre === genre ? 'active' : ''} ${mobileGenres.includes(genre) ? '' : 'desktop-only'
+                                    `${activeGenre === genre ? 'active' : ''} ${genre === '시리즈' ? 'mobile-only' : mobileGenres.includes(genre) ? '' : 'desktop-only'
                                     }`
                                 }
                                 onClick={() => {

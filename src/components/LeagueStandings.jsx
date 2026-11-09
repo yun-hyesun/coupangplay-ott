@@ -11,8 +11,8 @@ export function LeagueStandings({ league, standingsState, tableRows, tableNote, 
         <EmptyMessage>순위 정보를 불러오는 중입니다.</EmptyMessage>
       ) : tableRows.length ? (
         <div className="league-detail__table-wrap">
-          <table>
-            <thead><tr>{tableColumns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
+          <table aria-label={`${league.name} 리그 순위 상위 10팀`}>
+            <thead><tr>{tableColumns.map((column) => <th scope="col" key={column}>{column}</th>)}</tr></thead>
             <tbody>
               {tableRows.slice(0, 10).map((row, index) => (
                 <tr key={row.teamId || row.teamName || index}>
