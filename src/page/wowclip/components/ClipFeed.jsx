@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import { ClipPlayer } from './ClipPlayer';
 import { ClipComments } from './ClipComments';
 import { ClipIcon } from './WowClipUi';
-import { clipImage, contentTitle, relativeTime } from '../utils/wowClipData';
+import { clipPreview, contentTitle, relativeTime } from '../utils/wowClipData';
 import { clipEpisodeLabel, clipWatchState } from '../utils/clipSource';
 import { clipLikeCount, clipIsLiked } from '../utils/cloudClipData';
 import '../scss/ClipFeed.scss';
 
 const FeedIcon = ({ name }) => <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{({ up: <path d="m6 15 6-6 6 6" />, down: <path d="m6 9 6 6 6-6" />, comment: <path d="M4 4h16v13H8l-4 4V4Z" />, share: <><path d="m15 3 6 6-6 6V3Z" /><path d="M15 7C7 7 4 11 3 18c3-4 6-5 12-5" /></>, more: <><circle cx="12" cy="5" r="1" fill="currentColor" /><circle cx="12" cy="12" r="1" fill="currentColor" /><circle cx="12" cy="19" r="1" fill="currentColor" /></> })[name]}</svg>;
 
-export const ClipFeed = ({ clips, selectedId, owner, revealed, onSelect, onBack, onLike, onCopy, onDelete, onAdd, onCommentLike, onRefresh, onView, notify, commentsError, commentsLoading, userUid }) => {
+export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBack, onLike, onCopy, onDelete, onAdd, onCommentLike, onRefresh, onView, notify, commentsError, commentsLoading, userUid }) => {
   const [order] = useState(() => clips.map((clip) => clip.id));
   const ordered = useMemo(() => {
     const byId = new Map(clips.map((clip) => [clip.id, clip]));
@@ -46,7 +46,15 @@ export const ClipFeed = ({ clips, selectedId, owner, revealed, onSelect, onBack,
     const target = root.children[Math.max(0, Math.min(ordered.length - 1, next))];
     if (target) root.scrollTo({ top: target.offsetTop, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   };
-  const perform = async (action) => { try { await action(); } catch (failure) { notify(failure.message); } };
+  const perform = async (action) => {
+    try {
+      await action();
+      return true;
+    } catch (failure) {
+      notify(failure.message);
+      return false;
+    }
+  };
   return <div className={'wowclip-shortfeed' + (commentsOpen ? ' has-comments' : '')}>
     <div className="wowclip-feed-toolbar"><button type="button" className="wowclip-back" onClick={onBack}><ClipIcon name="back" />와우 클립</button></div>
     <div className="wowclip-feed-body"><div className="wowclip-feed-column">
@@ -57,17 +65,18 @@ export const ClipFeed = ({ clips, selectedId, owner, revealed, onSelect, onBack,
       }}>
         {ordered.map((clip) => {
           const active = clip.id === selectedId;
-          const protectedClip = clip.spoiler && !revealed.includes(clip.id);
+          const protectedClip = isProtected(clip);
+          const { image, title } = clipPreview(clip, protectedClip);
           const episodeLabel = clipEpisodeLabel(clip);
           return <article className="wowclip-feed-item" data-clip-id={clip.id} key={clip.id} aria-label={protectedClip ? '스포일러 보호된 클립' : clip.title}>
             <div className="wowclip-feed-stage">
-              {active && !protectedClip ? <ClipPlayer key={clip.id} clip={clip} autoPlay loop compact muted={muted} onMutedChange={setMuted} onFirstPlay={() => perform(() => onView(clip.id))} /> : <div className="wowclip-feed-poster">{clipImage(clip, protectedClip) && <img src={clipImage(clip, protectedClip)} alt="" />}{protectedClip && <span><ClipIcon name="spoiler" />스포일러가 있어요</span>}</div>}
+              {active && !protectedClip ? <ClipPlayer key={clip.id} clip={clip} autoPlay loop compact muted={muted} onMutedChange={setMuted} onFirstPlay={() => perform(() => onView(clip.id))} /> : <div className="wowclip-feed-poster">{image && <img src={image} alt="" />}{protectedClip && <span><ClipIcon name="spoiler" />스포일러가 있어요</span>}</div>}
               <div className="wowclip-feed-info">
                 <div className="wowclip-feed-author"><img src={clip.avatar || '/images/profile.svg'} alt="" width="32" height="32" /><strong>{clip.author}</strong>{clip.ownerId === owner.id && <span>내 클립</span>}</div>
-                <h2>{protectedClip ? contentTitle(clip.content) + '에서 오린 장면' : clip.title}</h2>
+                <h2>{title}</h2>
                 <p>{relativeTime(clip.createdAt)}</p>
                 <div className="wowclip-feed-source-row">
-                  <Link className="wowclip-feed-source" to={'/watch/' + clip.content.media_type + '/' + clip.content.id} state={clipWatchState(clip)}><ClipIcon name="play" size={16} />풀영상 보러가기</Link>
+                  {!protectedClip && <Link className="wowclip-feed-source" to={'/watch/' + clip.content.media_type + '/' + clip.content.id} state={clipWatchState(clip)}><ClipIcon name="play" size={16} />풀영상 보러가기</Link>}
                   <span className="wowclip-feed-category"><span className="wowclip-feed-source-title">{contentTitle(clip.content)}</span>{episodeLabel && <span className="wowclip-feed-episode">{episodeLabel}</span>}</span>
                 </div>
               </div>
@@ -83,7 +92,7 @@ export const ClipFeed = ({ clips, selectedId, owner, revealed, onSelect, onBack,
       </div>
       <div className="wowclip-feed-navigation"><button type="button" aria-label="이전 클립" disabled={index <= 0} onClick={() => goTo(index - 1)}><FeedIcon name="up" /></button><button type="button" aria-label="다음 클립" disabled={index >= ordered.length - 1} onClick={() => goTo(index + 1)}><FeedIcon name="down" /></button></div>
     </div>
-      {commentsOpen && selected && !(selected.spoiler && !revealed.includes(selected.id)) && (
+      {commentsOpen && selected && !isProtected(selected) && (
         <ClipComments
           key={selected.id}
           clip={selected}

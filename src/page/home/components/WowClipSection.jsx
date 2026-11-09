@@ -4,6 +4,7 @@ import { A11y, Navigation } from 'swiper/modules';
 import { ContentTitle } from '../../../components/content/ContentTitle';
 import { ClipCard } from '../../wowclip/components/ClipCard';
 import { useWowClipLibrary } from '../../wowclip/hooks/useWowClipLibrary';
+import { useSpoilerAccess } from '../../wowclip/hooks/useSpoilerAccess';
 import { clipLikeCount } from '../../wowclip/utils/cloudClipData';
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -11,12 +12,13 @@ import '../../../components/content/scss/ContentRail.scss';
 import '../../wowclip/scss/WowClip.scss';
 import '../scss/WowClipSection.scss';
 
-export const WowClipSection = () => {
+export const WowClipSection = ({ history }) => {
   const navigate = useNavigate();
   const { clips, error, reload, loading } = useWowClipLibrary();
   const publicClips = clips.filter((clip) => clip.visibility === 'public')
     .sort((a, b) => clipLikeCount(b) - clipLikeCount(a) || new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 8);
+  const { isProtected } = useSpoilerAccess(publicClips, history);
 
   return <section className="home-wowclip wowclip-section" aria-label="함께 나누는 와우 클립">
     <div className="home-wowclip-heading">
@@ -44,7 +46,7 @@ export const WowClipSection = () => {
             lastSlideMessage: '마지막 클립이에요.',
             slideLabelMessage: '{{index}} / {{slidesLength}}',
           }}
-        >{publicClips.map((clip) => <SwiperSlide key={clip.id}><ClipCard clip={clip} onOpen={(selected) => navigate(`/wowclip?clip=${encodeURIComponent(selected.id)}`)} /></SwiperSlide>)}</Swiper>
+        >{publicClips.map((clip) => <SwiperSlide key={clip.id}><ClipCard clip={clip} protectedClip={isProtected(clip)} onOpen={(selected) => navigate(`/wowclip?clip=${encodeURIComponent(selected.id)}`)} /></SwiperSlide>)}</Swiper>
         : <div className="home-wowclip-empty"><p>아직 공개된 클립이 없어요.</p><p>영상을 보다가 마음에 드는 장면을 클립으로 나눠보세요.</p></div>}
   </section>;
 };
