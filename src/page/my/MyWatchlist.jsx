@@ -65,15 +65,20 @@ export const MyWatchlist = () => {
 
     // 현재 저장된 데이터의 media_type으로 영화 분류
     // 다른 장르 필터는 추후 장르 데이터 연동 시 확장
-    const filteredWatchlist = currentWatchlist.filter((item) => {
-        if (activeGenre === '전체') return true;
 
-        if (activeGenre === '영화') {
-            return item.media_type === 'movie';
+    const filteredWatchlist = currentWatchlist.filter((item) => {
+        if (activeGenre === "전체") return true;
+
+        if (activeGenre === "영화") {
+            return item.media_type === "movie";
         }
 
-        if (activeGenre === '시리즈') {
-            return item.media_type === 'tv';
+        if (activeGenre === "시리즈") {
+            return item.media_type === "tv";
+        }
+
+        if (activeGenre === "스포츠") {
+            return item.media_type === "sports";
         }
 
         return false;
@@ -342,7 +347,21 @@ export const MyWatchlist = () => {
                                             isEditing ? isSelected : undefined
                                         }
                                     >
-                                        {imagePath ? (
+                                        {item.media_type === "sports" ? (
+                                            <div className="my-watchlist-placeholder">
+                                                <strong>{item.homeName || "스포츠 경기"}</strong>
+                                                <span>VS</span>
+                                                <strong>{item.awayName || ""}</strong>
+                                                {item.startTime && (
+                                                    <small>
+                                                        {new Date(item.startTime).toLocaleString(
+                                                            "ko-KR",
+                                                            { timeZone: "Asia/Seoul" }
+                                                        )}
+                                                    </small>
+                                                )}
+                                            </div>
+                                        ) : imagePath ? (
                                             <picture>
                                                 {item.poster_path && (
                                                     <source
@@ -375,8 +394,8 @@ export const MyWatchlist = () => {
                                                 <img
                                                     src={
                                                         isSelected
-                                                            ? '/images/mypage/checked-true.svg'
-                                                            : '/images/mypage/checked-false.svg'
+                                                            ? '/images/icon/DesignSystem_Icon02/icon-favorite_added.svg'
+                                                            : '/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg'
                                                     }
                                                     alt=""
                                                     className="my-watchlist-check"

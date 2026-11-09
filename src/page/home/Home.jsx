@@ -20,13 +20,15 @@ export const Home = () => {
   return (
     <main>
       <MainBanner type="all"/>
+
       <Channel />
 
       {continueWatching.length > 0 && (
         <ContentRail title="이어서 시청하기" items={continueWatching} showMore={false} />
       )}
 
-      <ContentRail railKey="home-ranking" showMore={false}/>
+      {/* layout= ranking vertical channel*/}
+      <ContentRail railKey="home-ranking" showMore={false} layout="ranking"/>
 
       <ContentRail railKey="home-latest" />
 
@@ -37,14 +39,13 @@ export const Home = () => {
 
       <ContentRail railKey="home-binge" />
 
-
       <ContentRail railKey="home-movie" />
 
       <WowClipSection history={history} />
 
       {/* 스포츠 패스 광고 */}
 
-      {error && <p role="alert">스포츠 영상을 불러오지 못했습니다.</p>}
+      {/* {error && <p role="alert">스포츠 영상을 불러오지 못했습니다.</p>} */}
       {highlights.length > 0 && (
         <ContentRail title="다시 보는 경기 하이라이트" items={highlights} showMore={false} />
       )}
@@ -66,7 +67,7 @@ export const Home = () => {
       <ContentRail railKey="home-fun" />
 
       {/* 오직 쿠팡플레이에서 */}
-      <ContentRail railKey="home-coupang-series" />
+      <ContentRail railKey="home-coupang-series" layout="vertical"/>
       
       {/* 광고 배너 */}
       <BannerHome />
@@ -74,6 +75,7 @@ export const Home = () => {
       {/* JPLUS */}
       <ContentRail
         railKey="home-jplus"
+        layout="channel"
         intro={{
           titleImage: '/images/channal11.svg',
           description: '다채로운 일본 드라마를 한곳에서 만나보세요',

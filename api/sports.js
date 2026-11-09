@@ -9,8 +9,20 @@ async function youtube(endpoint, params, { includePage = false } = {}) {
   url.search = new URLSearchParams({ ...params, key: process.env.YOUTUBE_API_KEY });
   const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
 
-  if (!response.ok) throw new Error(`YouTube ${endpoint}: ${response.status}`);
   const data = await response.json();
+
+  if (!response.ok) {
+    const reason = data.error?.errors?.[0]?.reason || 'unknown';
+    const message = data.error?.message || 'YouTube 요청 실패';
+
+    console.error(`[YouTube ${endpoint}]`, {
+      status: response.status,
+      reason,
+      message,
+    });
+
+    throw new Error(`YouTube ${endpoint}: ${response.status} (${reason})`);
+  }
   return includePage ? data : (data.items ?? []); 
 }
 
@@ -101,24 +113,98 @@ async function loadLive(liveChannelId = channelId) {
 }
 
 async function loadNewsLive() {
-  const results = await Promise.allSettled([
-    loadLive('UChlgI3UHCOnwUGzWzbJ3H5w'), // YTN
-    (async () => {
+  const newsChannels = [
+    { handle: '@YTN', name: 'YTN' },
+    { handle: '@yonhapnewstv23', name: '연합뉴스TV' },
+  ];
+
+  const results = await Promise.allSettled(
+    newsChannels.map(async ({ handle, name }) => {
+      // 1. 공식 채널의 업로드 목록 확인
       const channels = await youtube('channels', {
-        part: 'id',
-        forHandle: '@yonhapnewstv23',
+        part: 'contentDetails',
+        forHandle: handle,
       });
-      const yonhapId = channels[0]?.id;
-      return yonhapId ? loadLive(yonhapId) : [];
-    })(),
-  ]);
+
+      const playlistId =
+        channels[0]?.contentDetails?.relatedPlaylists?.uploads;
+
+      if (!playlistId) {
+        throw new Error(`${name}: 채널 업로드 목록이 없습니다.`);
+      }
+
+      // 2. 최근 영상에서 현재 라이브 상태 확인
+      const uploads = await youtube('playlistItems', {
+        part: 'snippet',
+        playlistId,
+        maxResults: 50,
+      });
+
+      const ids = [
+        ...new Set(
+          uploads
+            .map((item) => item.snippet?.resourceId?.videoId)
+            .filter(Boolean),
+        ),
+      ];
+
+      let liveVideos = [];
+
+      if (ids.length > 0) {
+        const videos = await youtube('videos', {
+          part: 'snippet,status',
+          id: ids.join(','),
+        });
+
+        liveVideos = videos
+          .filter(
+            (video) =>
+              video.snippet?.liveBroadcastContent === 'live' &&
+              video.status?.embeddable === true,
+          )
+          .map((video) => toCard(video.id, video.snippet, 'live'))
+          .filter(Boolean);
+      }
+
+      // 업로드 목록에 진행 중인 방송이 없으면 라이브 검색
+      if (liveVideos.length === 0) {
+        const searchResults = await youtube('search', {
+          part: 'snippet',
+          channelId: channels[0].id,
+          type: 'video',
+          eventType: 'live',
+          videoEmbeddable: 'true',
+          maxResults: 5,
+        });
+
+        liveVideos = searchResults
+          .map(({ id, snippet }) =>
+            toCard(id.videoId, snippet, 'live'),
+          )
+          .filter(Boolean);
+      }
+
+      return liveVideos.map((item) => ({
+        ...item,
+        hideTitle: true,
+        channelName: name,
+      }));
+    }),
+  );
+
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error(
+        `[뉴스 LIVE: ${newsChannels[index].name}]`,
+        result.reason?.message,
+      );
+    }
+  });
 
   return {
-    items: results
-      .flatMap((result) =>
-        result.status === 'fulfilled' ? result.value : [],
-      )
-      .map((item) => ({ ...item, hideTitle: true })),
+    items: results.flatMap((result) =>
+      result.status === 'fulfilled' ? result.value : [],
+    ),
     error: results.some((result) => result.status === 'rejected'),
   };
 }

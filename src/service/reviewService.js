@@ -1,4 +1,6 @@
-import { addDoc, collection, deleteDoc, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
+import {
+  addDoc, collection, collectionGroup, deleteDoc, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where
+} from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { contentKey, displayName, episodeKey, toDate } from '../data/communityData';
 
@@ -44,4 +46,56 @@ export const updateEpisodeReview = async ({ type = 'tv', contentId, season, epis
 export const deleteEpisodeReview = async ({ type = 'tv', contentId, season, episode, reviewId }) => {
   if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
   return deleteDoc(doc(reviewCollection(type, contentId, season, episode), reviewId));
+};
+
+
+/**
+ * 로그인한 사용자가 작성한 모든 회차 리뷰 조회
+ * Firestore collectionGroup을 이용해
+ * 여러 콘텐츠의 reviews 하위 컬렉션을 한 번에 검색
+ */
+export const subscribeMyReviews = (userId, onData, onError) => {
+  if (!userId) {
+    onData([]);
+    return () => { };
+  }
+
+  const q = query(
+    collectionGroup(db, 'reviews'),
+    where('authorId', '==', userId)
+  );
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const reviews = snapshot.docs.map((item) => {
+        const data = item.data();
+
+        // contents/{contentKey}/episodes/{episodeKey}/reviews/{reviewId}
+        const episodeRef = item.ref.parent.parent;
+        const contentRef = episodeRef?.parent.parent;
+
+        return {
+          ...data,
+          id: item.id,
+          author: data.authorName || '사용자',
+          content: data.text || '',
+          createdAt: toDate(data.createdAt),
+          updatedAt: toDate(data.updatedAt),
+          contentKey: contentRef?.id || '',
+          episodeKey: episodeRef?.id || '',
+          documentPath: item.ref.path
+        };
+      });
+
+      reviews.sort(
+        (a, b) =>
+          new Date(b.createdAt || 0) -
+          new Date(a.createdAt || 0)
+      );
+
+      onData(reviews);
+    },
+    onError
+  );
 };

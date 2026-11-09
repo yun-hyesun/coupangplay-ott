@@ -1,0 +1,58 @@
+.sports-match-videos {
+  min-width: 0;
+  padding: 28px 32px 32px;
+  border-radius: 0 0 12px 12px;
+  color: #fff;
+  background: #0a2032;
+
+  > h3 { margin: 0 0 20px; font-size: 18px; font-weight: 700; line-height: 27px; }
+  &__carousel.swiper { margin: 0; padding: 3px; margin-inline: -3px;
+    .swiper-slide { height: auto; }
+    .swiper-button-prev, .swiper-button-next { top: 30%; width: 40px; height: 40px; border-radius: 50%; background: rgba(8,9,10,.85); }
+    .swiper-button-disabled, .swiper-button-lock { display: none; }
+  }
+  .league-detail__video-card--fixture {
+    padding: 0;
+    .league-detail__video-media { border: 0; border-radius: 9px; }
+    .league-detail__video-main > h3 { height: auto; min-height: 27px; margin: 12px 0; padding: 0; font-size: 18px; font-weight: 700; line-height: 27px; }
+    .league-detail__video-main > p { color: #a3a3a3; font-size: 14px; line-height: 21px; }
+    .league-detail__duration { right: 8px; bottom: 10px; min-width: 0; height: auto; padding: 3px 6px; font-size: 13px; font-weight: 700; line-height: 18px; background: rgba(0,0,0,.8); }
+    .league-detail__feed-play { top: 50%; left: 50%; width: 50.065px; height: 50.065px; border-radius: 25.033px; backdrop-filter: blur(11.553px);
+      > span { width: 25.033px; height: 25.033px; }
+    }
+    .league-detail__highlight-badge { left: 0; }
+    .league-detail__highlight-symbol { mask-image: url('/images/sports/league-detail/schedule/related-highlight-mask.svg'), url('/images/sports/league-detail/schedule/related-highlight-mask-2.svg'), url('/images/sports/league-detail/schedule/related-highlight-mask-3.svg'), url('/images/sports/league-detail/schedule/related-highlight-mask-3.svg'); }
+    .league-detail__highlight-symbol-overlay { mask-image: url('/images/sports/league-detail/schedule/related-highlight-mask.svg'); }
+  }
+  &__loading { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 24px;
+    > div { aspect-ratio: 16 / 9; border-radius: 9px; background: #153247; }
+  }
+  &__message { margin: 0; padding: 36px 0; color: #bac4cd; font-size: 14px; line-height: 1.6; text-align: center;
+    p { margin: 0 0 16px; }
+  }
+  &__more { margin-top: 20px; text-align: center;
+    p { margin-bottom: 12px; color: #bac4cd; font-size: 14px; }
+  }
+  &__message button, &__more button { padding: 10px 20px; border: 0; border-radius: 8px; color: #fff; background: #31353c; font: inherit; cursor: pointer;
+    &:disabled { opacity: .6; cursor: default; }
+    &:focus-visible { outline: 2px solid #0084ff; outline-offset: 3px; }
+  }
+  &__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+.sports-page .sports-fixture-wrap--ended {
+  .sports-fixture__action { width: 56px; height: 56px; border: 0; background: #404040; }
+  .sports-fixture__expand-icon { width: 24px; height: 24px; transform: rotate(180deg); }
+  &.is-expanded {
+    .sports-fixture { background: #153247; }
+    .sports-fixture__expand-icon { transform: none; }
+  }
+}
+@media (max-width: 959px) {
+  .sports-match-videos__loading { grid-template-columns: repeat(2,minmax(0,1fr)); > div:nth-child(n+3) { display: none; } }
+}
+@media (max-width: 639px) {
+  .sports-match-videos { padding: 20px 16px 24px;
+    .league-detail__video-card--fixture .league-detail__video-main > h3 { font-size: 15px; line-height: 24px; }
+  }
+  .sports-page .sports-fixture-wrap--ended .sports-fixture__action { width: 40px; height: 40px; }
+}

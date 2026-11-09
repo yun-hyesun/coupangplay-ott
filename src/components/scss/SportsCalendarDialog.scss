@@ -1,0 +1,52 @@
+.sports-calendar {
+  position: fixed;
+  inset: 0;
+  width: 448px;
+  max-width: calc(100vw - 32px);
+  margin: auto;
+  padding: 24px;
+  border: 1px solid #454b54;
+  border-radius: 16px;
+  color: #fff;
+  background: #171b21;
+  font-family: 'Noto Sans KR', $font-main;
+  box-shadow: 0 20px 64px rgba(0,0,0,.5);
+  &::backdrop { background: rgba(0,0,0,.5); }
+  button, select { font: inherit; color: inherit; cursor: pointer; }
+  button { border: 0; background: transparent; }
+  button:disabled { opacity: .35; cursor: default; }
+  button:focus-visible, select:focus-visible { outline: 2px solid #0080ff; outline-offset: 2px; }
+  &__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  &__heading { display: flex; height: 48px; align-items: center; gap: 8px; margin-bottom: 16px; }
+  &__month { display: flex; min-width: 0; flex: 1; justify-content: center; }
+  .sports-calendar__month select { padding: 4px; border: 0; color-scheme: dark; background: #171b21; font-size: 18px; font-weight: 700; }
+  &__nav { display: flex; width: 48px; height: 48px; flex: 0 0 48px; align-items: center; justify-content: center; padding: 0; border-radius: 16px;
+    &:hover:not(:disabled) { background: rgba(255,255,255,.06); }
+    > img { display: block; max-width: none; }
+  }
+  &__previous { position: relative; display: block; width: 24px; height: 24px;
+    > img { position: absolute; top: 5px; left: 6px; display: block; max-width: none; transform: rotate(180deg); }
+  }
+  &__notice { margin: 0 0 12px; color: #a3a3a3; font-size: 12px; line-height: 20px;
+    button { margin-left: 6px; padding: 0; color: #fff; text-decoration: underline; }
+  }
+  &__grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 8px;
+    &--months { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    > .sports-calendar__weekday { height: 24px; color: #a3a3a3; font-size: 14px; line-height: 24px; text-align: center; }
+    > button { position: relative; height: 48px; padding: 0; border-radius: 8px; font-size: 16px;
+      &.is-outside { color: #666e7b; }
+      &[aria-current='date'] { box-shadow: inset 0 0 0 1px #0080ff; }
+      &[aria-pressed='true'] { color: #fff; background: #0080ff; }
+      &:hover:not(:disabled) { background: #31353c; }
+    }
+  }
+  .sports-calendar__grid > button:disabled { color: #666e7b; background: transparent; opacity: .4; cursor: not-allowed; }
+  &__close { width: 100%; height: 48px; margin-top: 16px; border-radius: 8px; background: #31353c !important; font-size: 18px !important; }
+}
+@media (max-width: 700px) {
+  .sports-calendar { padding: 16px;
+    &__grid { gap: 4px; > button { height: 40px; } }
+    .sports-calendar__month select { font-size: 15px; }
+    &__nav { width: 40px; height: 40px; flex-basis: 40px; }
+  }
+}
