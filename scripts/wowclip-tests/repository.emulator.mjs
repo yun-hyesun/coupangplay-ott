@@ -7,6 +7,7 @@ import { readFile } from 'node:fs/promises';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, getDocs, query, where } from 'firebase/firestore';
 import { createWowClipRepository } from '../../src/page/wowclip/data/wowClipRepository.js';
+import { createSeriesHistoryWriter } from '../../src/data/seriesHistoryWriter.js';
 import { makeClip } from '../../src/page/wowclip/utils/wowClipData.js';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.WOWCLIP_TEST_RUNTIME) throw new Error('이 검수는 에뮬레이터에서만 실행할 수 있습니다.');
@@ -39,15 +40,47 @@ before(async () => {
 });
 after(async () => { await Promise.all(apps.map(deleteApp)); await environment?.cleanup(); });
 
+test('오프라인 시청 회차를 재전송해도 더 최근 이어보기를 덮어쓰지 않는다', { timeout: 10000 }, async (t) => {
+  const { database } = client('history-viewer', true);
+  const ref = doc(database, 'users', 'history-viewer', 'profiles', 'default', 'watchHistory', 'tv_123');
+  const resumed = Promise.withResolvers();
+  const options = {
+    database,
+    currentUid: () => 'history-viewer',
+    onError: resumed.reject,
+    onRetrySaved: resumed.resolve,
+  };
+  const older = createSeriesHistoryWriter(options);
+  const newer = createSeriesHistoryWriter(options);
+  const entry = { media_type: 'tv', id: '123', seasonNumber: 1 };
+  await setDoc(ref, { ...entry, episodeNumber: 1, position: 10 });
+
+  let online = false;
+  Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => online });
+  t.after(() => { delete navigator.onLine; });
+  assert.equal(await older.save(ref, { ...entry, episodeNumber: 2, position: 45 }, 'history-viewer', 'default'), false);
+  assert.equal(await older.save(ref, { ...entry, episodeNumber: 3, position: 50 }, 'history-viewer', 'default'), false);
+
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  online = true;
+  assert.equal(await newer.save(ref, { ...entry, episodeNumber: 4, position: 5 }, 'history-viewer', 'default'), true);
+  older.retry();
+  await resumed.promise;
+  const saved = (await getDoc(ref)).data();
+  assert.equal(saved.episodeNumber, 4);
+  assert.equal(saved.position, 5);
+  assert.deepEqual(saved.watchedEpisodes.toSorted(), ['s1-e1', 's1-e2', 's1-e3', 's1-e4']);
+});
+
 test('비로그인은 저장·댓글·공감을 거부하고 로그인 사용자는 실제 메타데이터를 저장한다', async () => {
   const guest = client('').repo, alice = client('alice');
   await assert.rejects(guest.saveClip(newClip('forbidden')), /로그인/);
   await assert.rejects(guest.addComment('public', '댓글', { id: 'local:default' }), /로그인/);
   await assert.rejects(guest.toggleLike('public'), /로그인/);
-  await alice.repo.saveClip(newClip('public'));
+  await alice.repo.saveClip({ ...newClip('public'), spoiler: true });
   const saved = (await getDoc(doc(alice.database, 'wowClips', 'public'))).data();
   assert.equal(saved.authorUid, 'alice'); assert.equal(saved.seasonNumber, 2); assert.equal(saved.episodeNumber, 7);
-  assert.equal(saved.likeCount, 0); assert.equal(saved.commentCount, 0);
+  assert.equal(saved.likeCount, 0); assert.equal(saved.commentCount, 0); assert.equal(saved.spoiler, true);
 });
 
 test('서버 규칙은 비로그인 직접 쓰기·작성자 위조·임의 집계 변경·타인 삭제를 막는다', async () => {
@@ -97,10 +130,19 @@ test('링크 전용은 공개 목록에서 숨기고 직접 링크·본인 목�
 });
 
 test('재생 반복은 같은 계정 조회수를 중복 증가시키지 않고 삭제 후 반응·댓글 접근이 막힌다', async () => {
+  assert.equal(await client('alice').repo.hasRecordedView('public', 'alice'), false);
   await client('alice').repo.recordView('public');
   await client('alice').repo.recordView('public');
   await client('bob').repo.recordView('public');
-  assert.equal((await getDoc(doc(client('alice').database, 'wowClips', 'public'))).data().views, 2);
+  assert.equal(await client('alice').repo.hasRecordedView('public', 'alice'), true);
+  assert.equal(await client('bob').repo.hasRecordedView('public', 'bob'), true);
+  assert.equal(await client('carol').repo.hasRecordedView('public', 'carol'), false);
+  assert.equal(await client('carol').repo.hasRecordedView('public', 'alice'), false);
+  assert.equal(await client('').repo.hasRecordedView('public', 'alice'), false);
+  await assertFails(getDoc(doc(client('carol').database, 'wowClips', 'public', 'views', 'alice')));
+  const watched = (await getDoc(doc(client('alice').database, 'wowClips', 'public'))).data();
+  assert.equal(watched.views, 2);
+  assert.equal(watched.spoiler, true);
   await client('alice').repo.saveClip(newClip('delete-me'));
   await client('alice').repo.removeClip('delete-me');
   const publicDocs = await getDocs(query(collection(client('').database, 'wowClips'), where('visibility', '==', 'public'), where('deleted', '==', false)));

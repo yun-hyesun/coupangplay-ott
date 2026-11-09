@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useProfileStore } from '../../store/useProfileStore';
+import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
 import { ClipCard } from './components/ClipCard';
 import { ClipFeed } from './components/ClipFeed';
 import { ClipModal, ClipSort, IconButton } from './components/WowClipUi';
@@ -10,6 +11,7 @@ import { contentTitle, formatTime } from './utils/wowClipData';
 import { buildClipFeed } from './utils/clipPresentation';
 import { clipLikeCount } from './utils/cloudClipData';
 import { useWowClipLibrary } from './hooks/useWowClipLibrary';
+import { useSpoilerAccess } from './hooks/useSpoilerAccess';
 import './scss/WowClip.scss';
 import './scss/WowClipBrowse.scss';
 
@@ -33,7 +35,7 @@ export const WowClip = () => {
   const profile = useProfileStore((state) => state.currentProfile);
   const selectedId = params.get('clip');
   const library = useWowClipLibrary({ selectedId });
-  const [revealed, setRevealed] = useState(() => location.state?.createdClipId ? [location.state.createdClipId] : []);
+  const [revealed, setRevealed] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [notice, setNotice] = useState(location.state?.notice || '');
   const [busy, setBusy] = useState(false);
@@ -41,8 +43,7 @@ export const WowClip = () => {
   const mine = params.get('view') === 'mine';
   const sort = params.get('sort') === 'recent' ? 'recent' : 'popular';
   const selected = library.clips.find((clip) => clip.id === selectedId);
-  const protectedClip =
-    selected?.spoiler && !revealed.includes(selected.id);
+  const { history } = useProfileWatchHistory({ clipId: selectedId });
 
   useEffect(() => {
     if (!notice) return;
@@ -72,8 +73,14 @@ export const WowClip = () => {
   };
   const visible = library.clips.filter((clip) => mine ? clip.ownerId === owner.id : clip.visibility === 'public')
     .sort((a, b) => sort === 'recent' ? new Date(b.createdAt) - new Date(a.createdAt) : clipLikeCount(b) - clipLikeCount(a) || new Date(b.createdAt) - new Date(a.createdAt));
+  const feed = selected ? buildClipFeed(visible, selected) : visible;
+  const access = useSpoilerAccess(feed, history, selectedId);
+  const isProtected = (clip) => access.isProtected(clip) &&
+    !(revealed?.ownerId === owner.id && revealed.ids.includes(clip.id)) &&
+    !(user && clip.id === location.state?.createdClipId && clip.ownerId === owner.id);
+  const protectedClip = selected && isProtected(selected);
   return <main className="wowclip-page">
-    {selected ? <ClipFeed clips={buildClipFeed(visible, selected)} selectedId={selected.id} owner={owner} revealed={revealed}
+    {selected ? <ClipFeed clips={feed} selectedId={selected.id} owner={owner} isProtected={isProtected}
       onSelect={(id) => updateParams({ clip: id }, true)} onBack={backToList} onLike={library.toggleLike} onCopy={copyLink} onDelete={setDeleteId}
       onAdd={library.addComment} onCommentLike={library.toggleLike} onRefresh={library.reload} onView={library.recordView} notify={setNotice}
       commentsError={library.commentsError} commentsLoading={library.commentsLoading} userUid={user?.uid} />
@@ -123,10 +130,10 @@ export const WowClip = () => {
           <div className="wowclip-heading">{!mine && <h1>와우 클립</h1>}<div className="wowclip-heading-actions"><button className="wowclip-button" type="button" onClick={() => { if (!user) navigate('/login'); else updateParams({ view: mine ? null : 'mine' }); }}>{mine ? '전체 클립' : '내 클립'}</button></div></div>
           <div className="wowclip-browse-controls"><ClipSort value={sort} onChange={(value) => updateParams({ sort: value })} /></div>
           {library.loading ? <div className="wowclip-state" role="status">클립을 불러오고 있어요.</div> : library.error ? <div className="wowclip-state" role="alert"><h2>클립을 불러오지 못했어요.</h2><p>{library.error}</p><button className="wowclip-button" type="button" onClick={library.reload}>다시 불러오기</button></div>
-            : visible.length ? <div className="wowclip-grid">{visible.map((clip) => <ClipCard key={clip.id} clip={clip} onOpen={(clip) => updateParams({ clip: clip.id })} />)}</div>
+            : visible.length ? <div className="wowclip-grid">{visible.map((clip) => <ClipCard key={clip.id} clip={clip} protectedClip={isProtected(clip)} onOpen={(clip) => updateParams({ clip: clip.id })} />)}</div>
               : <div className="wowclip-state"><h2>{mine ? '아직 만든 클립이 없어요.' : '아직 공개된 클립이 없어요.'}</h2><p>원본 영상을 시청하다 마음에 드는 장면을 클립으로 만들어보세요.</p><Link className="wowclip-button wowclip-button--primary" to="/">작품 둘러보기</Link></div>}
         </>}
-    {protectedClip && <ClipModal title="스포일러가 있어요" icon="spoiler" onClose={backToList}><div className="wowclip-spoiler-info"><strong>{contentTitle(selected.content)}</strong><p>{formatTime(selected.end - selected.start)} · {selected.author}</p></div><p>장면·제목·댓글을 가려두었어요.</p><div className="wowclip-modal-actions"><button className="wowclip-button wowclip-button--primary" type="button" onClick={() => setRevealed((previous) => [...previous, selected.id])}>스포일러 열고 보기</button></div></ClipModal>}
+    {protectedClip && <ClipModal title="스포일러가 있어요" icon="spoiler" onClose={backToList}><div className="wowclip-spoiler-info"><strong>{contentTitle(selected.content)}</strong><p>{formatTime(selected.end - selected.start)} · {selected.author}</p></div><p>장면·제목·댓글을 가려두었어요.</p><div className="wowclip-modal-actions"><button className="wowclip-button wowclip-button--primary" type="button" onClick={() => setRevealed((previous) => ({ ownerId: owner.id, ids: [...(previous?.ownerId === owner.id ? previous.ids : []), selected.id] }))}>스포일러 열고 보기</button></div></ClipModal>}
     {deleteId && <ClipModal title="클립을 삭제할까요?" onClose={() => { if (!busy) setDeleteId(null); }}><p>삭제한 클립과 댓글은 다시 볼 수 없어요.</p><div className="wowclip-modal-actions"><button type="button" className="wowclip-button" disabled={busy} onClick={() => setDeleteId(null)}>취소</button><button type="button" className="wowclip-button wowclip-button--primary" disabled={busy} onClick={async () => { if (busy) return; setBusy(true); try { await library.removeClip(deleteId, owner.id); setDeleteId(null); backToList(); setNotice('클립을 삭제했어요.'); } catch (failure) { setNotice(failure.message); } finally { setBusy(false); } }}>{busy ? '삭제 중…' : '삭제'}</button></div></ClipModal>}
     {notice && <div className="wowclip-toast" role="status"><span>{notice}</span><IconButton icon="close" label="알림 닫기" onClick={() => setNotice('')} /></div>}
   </main>;

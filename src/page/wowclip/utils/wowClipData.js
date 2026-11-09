@@ -23,6 +23,11 @@ export const clipImage = (clip, protectedImage = false) =>
 
 export const contentTitle = (content) => content?.title || content?.name || '작품';
 
+export const clipPreview = (clip, protectedClip = clip.spoiler) => ({
+  image: clipImage(clip, protectedClip),
+  title: protectedClip ? `${contentTitle(clip.content)}에서 오린 장면` : clip.title,
+});
+
 export const makeClip = ({ content, video, title, start, end, visibility, spoiler, owner, seasonNumber, episodeNumber, layout = 'landscape', cropX = 50 }) => {
   const mediaType = content.media_type || (content.title ? 'movie' : 'tv');
   const episode = clipEpisodeDetails({ content: { ...content, media_type: mediaType }, seasonNumber, episodeNumber });

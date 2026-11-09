@@ -14,7 +14,7 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
   const playerRef = useRef(null);
   const aliveRef = useRef(true);
   const attemptRef = useRef(0);
-  const countedRef = useRef(false);
+  const viewStatusRef = useRef(null);
   const [mounted, setMounted] = useState(preview || autoPlay);
   const [ready, setReady] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -119,6 +119,16 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
     try { if (document.fullscreenElement) await document.exitFullscreen(); else await containerRef.current?.requestFullscreen(); }
     catch { setError('이 브라우저에서는 전체 화면을 사용할 수 없어요.'); }
   };
+  const recordFirstPlay = async () => {
+    if (!onFirstPlay || viewStatusRef.current) return;
+    viewStatusRef.current = 'pending';
+    try {
+      const recorded = await onFirstPlay();
+      viewStatusRef.current = recorded === false ? null : 'recorded';
+    } catch {
+      viewStatusRef.current = null;
+    }
+  };
   return <div className={'wowclip-player is-format-' + layout + (preview ? ' wowclip-player--preview' : '') + (compact ? ' wowclip-player--compact' : '') + (!controls ? ' wowclip-player--mirror' : '')} ref={containerRef} data-playing={playing} data-position={position.toFixed(2)}>
     <div className="wowclip-player-visual"><div className="wowclip-media-window"><div className="wowclip-media-source" style={layout === 'portrait' ? { width: '316.049383%', left: sourceLeftPercent(cropX) + '%' } : undefined}>
       {!mounted && <img className="wowclip-player-poster" src={clipImage(clip)} alt="" />}
@@ -130,7 +140,7 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
           if (preview && data === 1 && !desiredPlayingRef.current) { player.pauseVideo(); setPlaying(false); }
           else {
             setPlaying(data === 1);
-            if (data === 1 && !countedRef.current) { countedRef.current = true; onFirstPlay?.(); }
+            if (data === 1) void recordFirstPlay();
             if (data === 0 && loop && desiredPlayingRef.current) { player.seekTo(start, true); player.playVideo(); }
           }
           });

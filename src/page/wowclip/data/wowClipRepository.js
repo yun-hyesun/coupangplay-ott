@@ -1,4 +1,4 @@
-import { collection, doc, onSnapshot, query, where, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDocFromServer, onSnapshot, query, where, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { cloudClip, cloudComment, newCloudClip } from '../utils/cloudClipData.js';
 
 // 인증과 Firestore 인스턴스를 주입해 실제 앱과 에뮬레이터에서 같은 저장 코드를 검수합니다.
@@ -116,6 +116,11 @@ export const createWowClipRepository = ({ database, currentUser }) => {
     return comment.id;
   };
 
+  const hasRecordedView = async (id, uid) => {
+    if (!uid || currentUser()?.uid !== uid) return false;
+    return (await getDocFromServer(doc(clipRef(id), 'views', uid))).exists();
+  };
+
   const recordView = async (id) => {
     const user = currentUser();
     if (!user?.uid) return;
@@ -127,5 +132,5 @@ export const createWowClipRepository = ({ database, currentUser }) => {
       transaction.update(parent, { views: data.views + 1 });
     });
   };
-  return { subscribe, subscribeDetails, saveClip, removeClip, toggleLike, addComment, recordView };
+  return { subscribe, subscribeDetails, saveClip, removeClip, toggleLike, addComment, hasRecordedView, recordView };
 };
