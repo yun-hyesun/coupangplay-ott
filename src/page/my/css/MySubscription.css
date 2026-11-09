@@ -1,16 +1,15 @@
-@charset "UTF-8";
 /* size */
 /* size */
 /* size */
 .my-subscription {
   width: 100%;
   min-height: 70vh;
-  background: #101114;
+  background: #0f1114;
   color: #FFFFFF;
 }
 .my-subscription .my-subscription-inner {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1792px;
   margin: 0 auto;
   padding: 40px 24px 80px;
 }
@@ -40,7 +39,7 @@
   flex-shrink: 0;
   white-space: nowrap;
   padding: 12px 16px;
-  background: #3c3c3c;
+  background: #292d33;
   border: none;
   border-radius: 8px;
   color: #FFFFFF;
@@ -199,7 +198,7 @@
   cursor: pointer;
 }
 .my-subscription .subscription-dropdown button:hover {
-  background: #3c3c3c;
+  background: #292d33;
 }
 .my-subscription .subscription-empty {
   display: flex;
@@ -233,111 +232,6 @@
   cursor: pointer;
 }
 
-/* ========================================
-   구독 해지 확인 팝업
-======================================== */
-.subscription-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.subscription-cancel-modal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 430px;
-  padding: 36px 32px;
-  background: #21252B;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  text-align: center;
-  color: #FFFFFF;
-  font-family: "Pretendard", sans-serif;
-}
-.subscription-cancel-modal h3 {
-  margin-bottom: 24px;
-  font-size: 24px;
-  font-weight: 700;
-}
-.subscription-cancel-modal p {
-  font-size: 18px;
-  line-height: 1.6;
-  color: #D4D4D4;
-}
-.subscription-cancel-modal p strong {
-  color: #FFFFFF;
-  font-weight: 600;
-}
-.subscription-cancel-modal .cancel-modal-notice {
-  margin-top: 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #A3A3A3;
-}
-.subscription-cancel-modal .subscription-modal-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  width: 100%;
-  margin-top: 32px;
-}
-.subscription-cancel-modal .subscription-modal-buttons button {
-  width: 145px;
-  height: 50px;
-  border: none;
-  border-radius: 5px;
-  font-family: "Pretendard", sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.subscription-cancel-modal .subscription-modal-buttons button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.subscription-cancel-modal .subscription-modal-buttons .cancel-close-btn {
-  background: #3c3c3c;
-  color: #FFFFFF;
-}
-.subscription-cancel-modal .subscription-modal-buttons .cancel-close-btn:hover:not(:disabled) {
-  background: #505050;
-}
-.subscription-cancel-modal .subscription-modal-buttons .cancel-confirm-btn {
-  background: #0084FF;
-  color: #fff;
-}
-.subscription-cancel-modal .subscription-modal-buttons .cancel-confirm-btn:hover:not(:disabled) {
-  background: #006bd1;
-}
-
-@media (max-width: 767px) {
-  .subscription-cancel-modal {
-    padding: 28px 20px;
-  }
-  .subscription-cancel-modal h3 {
-    font-size: 22px;
-  }
-  .subscription-cancel-modal p {
-    font-size: 16px;
-  }
-  .subscription-cancel-modal .subscription-modal-buttons {
-    gap: 12px;
-  }
-  .subscription-cancel-modal .subscription-modal-buttons button {
-    flex: 1;
-    min-width: 0;
-    width: auto;
-    height: 46px;
-  }
-}
 @media (max-width: 767px) {
   .my-subscription .my-subscription-inner {
     padding: 24px 16px 60px;

@@ -170,8 +170,9 @@ export const CardHover = ({ item, type, isHover }) => {
             to={`/detail/${type}/${item.id}`}
             className="button icon-details"
             state={{ content: item }}
+            aria-label="상세정보"
           >
-            상세정보
+            <span className='details-text' aria-hidden="true">상세정보</span>
           </Link>
 
           {/* 찜하기 */}

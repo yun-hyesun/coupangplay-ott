@@ -166,6 +166,21 @@
   overflow-y: auto;
   overscroll-behavior-y: contain;
   align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+}
+.detail-episodes__list::-webkit-scrollbar {
+  width: 6px;
+}
+.detail-episodes__list::-webkit-scrollbar-track {
+  background: #101113;
+}
+.detail-episodes__list::-webkit-scrollbar-thumb {
+  background: #555b63;
+  border-radius: 10px;
+}
+.detail-episodes__list::-webkit-scrollbar-thumb:hover {
+  background: #777d85;
 }
 
 .detail-section-heading {
