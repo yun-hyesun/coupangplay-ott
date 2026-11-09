@@ -27,6 +27,7 @@ export const Detail = () => {
   const [popupEpisode, setPopupEpisode] = useState(null);
   const [reviewsByEpisode, setReviewsByEpisode] = useState({});
   const [reviewError, setReviewError] = useState('');
+  const [movieReviews, setMovieReviews] = useState([]);
 
   // 로그인 및 프로필 정보
   const user = useAuthStore(s => s.user);
@@ -107,7 +108,24 @@ export const Detail = () => {
     return () => unsubscribers.forEach(unsubscribe => unsubscribe());
   }, [type, id, season, episodes]);
 
-  const reviewArgs = ep => ({ type: 'tv', contentId: id, season: Number(season), episode: ep.episode_number });
+  // 영화는 회차가 없으므로 작품당 하나의 리뷰 공간(s0-e0)을 사용합니다.
+  useEffect(() => {
+    setMovieReviews([]);
+    setReviewError('');
+    if (type !== 'movie' || !id) return;
+    let active = true;
+    const unsubscribe = subscribeEpisodeReviews('movie', id, 0, 0,
+      items => { if (active) setMovieReviews(items); },
+      err => { if (active) setReviewError(communityError(err)); });
+    return () => { active = false; unsubscribe(); };
+  }, [type, id]);
+
+  const reviewArgs = ep => ({
+    type,
+    contentId: id,
+    season: type === 'movie' ? 0 : Number(season),
+    episode: type === 'movie' ? 0 : ep.episode_number,
+  });
   const saveReview = async (ep, text, rating, spoiler) => {
     try { setReviewError(''); await createEpisodeReview({ ...reviewArgs(ep), text, rating, spoiler }); return true; }
     catch (err) { setReviewError(communityError(err)); return false; }
@@ -342,6 +360,22 @@ export const Detail = () => {
                   </span>
                 )}
 
+              {type === 'movie' && (
+                <button
+                  type="button"
+                  className="episode-item__review-toggle detail-info__review-toggle"
+                  aria-haspopup="dialog"
+                  onClick={() => setPopupEpisode({
+                    id: `movie-${id}`,
+                    episode_number: 0,
+                    reviewTitle: '영화 리뷰',
+                    reviewPlaceholder: '이 영화에 대한 감상을 남겨주세요.',
+                  })}
+                >
+                  리뷰 {movieReviews.length}
+                </button>
+              )}
+
               {content.videoQuality && (
                 <span className="detail-info__quality">
                   {content.videoQuality}
@@ -554,7 +588,7 @@ export const Detail = () => {
           </section>
         )}
       </div>
-      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
+      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
     </main>
   );
 };
