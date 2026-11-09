@@ -15,7 +15,9 @@
         padding: 40px 24px 80px;
     }
 
+    // ========================================
     // 페이지 제목
+    // ========================================
     .news-header {
         display: flex;
         align-items: center;
@@ -32,6 +34,7 @@
         }
     }
 
+    // 페이지 설명
     &-description {
         margin-top: 24px;
         margin-bottom: 24px;
@@ -39,6 +42,9 @@
         color: $color-text-sec1;
     }
 
+    // ========================================
+    // 카테고리
+    // ========================================
     .news-categories {
         @include flex(null, center, 12px);
         margin-bottom: 36px;
@@ -66,16 +72,24 @@
         }
     }
 
+    // ========================================
+    // 공지사항 목록
+    // ========================================
     .news-list {
         border-top: 1px solid $color-border-light;
 
+        // 공지사항 한 줄 + 상세 내용
+        .news-list-row {
+            border-bottom: 1px solid $color-border-light;
+        }
+
+        // 공지사항 제목 버튼
         .news-item {
             @include flex-between(center);
             width: 100%;
             min-height: 100px;
             padding: 22px 12px;
             border: none;
-            border-bottom: 1px solid $color-border-light;
             background: transparent;
             color: $color-text-pri;
             text-align: left;
@@ -87,6 +101,8 @@
 
             &-info {
                 @include flexCol(8px);
+                flex: 1;
+                min-width: 0;
             }
 
             &-category {
@@ -104,69 +120,86 @@
                 color: $color-text-sec2;
             }
 
+            // 오른쪽 화살표
             &-arrow {
-                font-size: 26px;
-                color: $color-text-sec2;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
+                flex-shrink: 0;
+                margin-left: 16px;
+
+                img {
+                    display: block;
+                    width: 24px;
+                    height: 24px;
+                    object-fit: contain;
+
+                    // 기본 상태: 오른쪽
+                    transform: rotate(-90deg);
+                    transition: transform 0.35s ease;
+                }
+            }
+
+            // 공지사항 열렸을 때: 아래쪽
+            &[aria-expanded="true"] {
+                .news-item-arrow img {
+                    transform: rotate(90deg);
+                }
             }
         }
-    }
 
-    .news-detail {
-        margin-top: 36px;
-        padding: 32px;
-        border-radius: 8px;
-        background: $color-bg2;
+        // ====================================
+        // 상세 내용 아코디언
+        // ====================================
+        .news-answer-wrap {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
 
-        &-header {
-            padding-bottom: 24px;
-            border-bottom: 1px solid $color-border-light;
+            transition:
+                grid-template-rows 0.35s ease,
+                opacity 0.3s ease;
 
-            span {
-                font-size: 14px;
-                color: $color-pri;
+            .news-answer-inner {
+                min-height: 0;
+                overflow: hidden;
             }
 
-            h3 {
-                margin: 12px 0;
-                font-size: 22px;
-                font-weight: $font-w-SB-600;
+            // 열렸을 때
+            &.open {
+                grid-template-rows: 1fr;
+                opacity: 1;
             }
+        }
+
+        // 펼쳐지는 상세 내용
+        .news-answer {
+            padding: 0 12px;
+            background: $color-bg2;
 
             p {
-                font-size: 14px;
-                color: $color-text-sec2;
+                margin: 0;
+                font-family: $font-main;
+                font-size: 16px;
+                line-height: 1.8;
+                color: $color-text-sec1;
             }
         }
 
-        &-content {
-            padding: 28px 0;
-            font-size: 16px;
-            line-height: 1.8;
-            color: $color-text-sec1;
-        }
-
-        &-close {
-            display: block;
-            width: 145px;
-            height: 50px;
-            margin: 0 auto;
-            border: none;
-            border-radius: 5px;
-            background: #424242;
-            color: $color-text-pri;
-            font-family: $font-main;
-            font-size: 16px;
-            font-weight: $font-w-M-500;
-            cursor: pointer;
-
-            &:hover {
-                background: #505050;
+        // 열렸을 때 내부 여백
+        .news-answer-wrap.open {
+            .news-answer {
+                padding: 24px 12px;
             }
         }
     }
 }
 
+// ========================================
 // 태블릿
+// ========================================
 @media (min-width: 768px) and (max-width: 1279px) {
     .my-news {
         .my-news-inner {
@@ -175,7 +208,9 @@
     }
 }
 
+// ========================================
 // 모바일
+// ========================================
 @media (max-width: 767px) {
     .my-news {
         .my-news-inner {
@@ -192,6 +227,7 @@
             font-size: 14px;
         }
 
+        // 카테고리
         .news-categories {
             flex-wrap: wrap;
             gap: 8px;
@@ -202,25 +238,53 @@
             }
         }
 
-        .news-list .news-item {
-            min-height: 90px;
-            padding: 18px 8px;
+        // 공지사항 목록
+        .news-list {
+            .news-item {
+                min-height: 90px;
+                padding: 18px 8px;
 
-            strong {
-                font-size: 15px;
+                strong {
+                    font-size: 15px;
+                }
+
+                &-arrow {
+                    width: 24px;
+                    height: 24px;
+                    margin-left: 12px;
+
+                    img {
+                        width: 24px;
+                        height: 24px;
+                    }
+                }
+            }
+
+            // 모바일 상세 내용
+            .news-answer {
+                padding: 0 12px;
+
+                p {
+                    font-size: 14px;
+                    line-height: 1.7;
+                }
+            }
+
+            .news-answer-wrap.open {
+                .news-answer {
+                    padding: 20px 12px;
+                }
             }
         }
+    }
+}
 
-        .news-detail {
-            padding: 24px 20px;
-
-            &-header h3 {
-                font-size: 19px;
-            }
-
-            &-content {
-                font-size: 14px;
-            }
+// 모션 감소 설정
+@media (prefers-reduced-motion: reduce) {
+    .my-news {
+        .news-item-arrow img,
+        .news-answer-wrap {
+            transition: none;
         }
     }
 }

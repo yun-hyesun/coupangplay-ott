@@ -139,14 +139,19 @@ export const MySupport = () => {
                                         onClick={() => setOpenId(openId === faq.id ? null : faq.id)}
                                     >
                                         <span>{faq.question}</span>
-                                        <span className="support-arrow" aria-hidden="true">⌄</span>
+                                        <span className="support-arrow" aria-hidden="true"> <img
+                                            src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
+                                            alt=""
+                                        /></span>
                                     </button>
 
-                                    {openId === faq.id && (
-                                        <div className="support-answer">
-                                            {faq.answer}
+                                    <div className={`support-answer-wrap ${openId === faq.id ? 'open' : ''}`}>
+                                        <div className="support-answer-inner">
+                                            <div className="support-answer">
+                                                {faq.answer}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </li>
                             ))}
                         </ul>

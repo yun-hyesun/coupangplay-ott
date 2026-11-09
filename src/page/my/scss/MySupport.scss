@@ -135,6 +135,7 @@
             }
         }
 
+
         .support-question {
             @include flex-between(center);
             width: 100%;
@@ -149,23 +150,60 @@
             cursor: pointer;
 
             .support-arrow {
-                font-size: 24px;
-                color: $color-text-sec2;
-                transition: transform 0.2s;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
+                flex-shrink: 0;
+
+                img {
+                    display: block;
+                    width: 24px;
+                    height: 24px;
+                    object-fit: contain;
+                    transform: rotate(-90deg);
+                    transition: transform 0.3s ease;
+                }
+            }
+
+            // 질문이 열렸을 때
+            &[aria-expanded="true"] {
+                .support-arrow img {
+                    transform: rotate(90deg);
+                }
             }
         }
 
-        li.active .support-arrow {
-            transform: rotate(180deg);
-        }
-
         .support-answer {
-            padding: 20px 24px 28px;
+            padding: 24px 24px;
             background: $color-bg2;
             color: $color-text-sec1;
             font-size: 15px;
             line-height: 1.8;
         }
+
+
+        // 답변 펼침 / 접힘 애니메이션
+        .support-answer-wrap {
+            display: grid;
+            grid-template-rows: 0fr;
+            opacity: 0;
+            transition:
+                grid-template-rows 0.35s ease,
+                opacity 0.3s ease;
+
+            .support-answer-inner {
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            &.open {
+                grid-template-rows: 1fr;
+                opacity: 1;
+            }
+        }
+
 
         .support-empty {
             padding: 80px 20px;

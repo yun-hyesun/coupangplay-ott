@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* size */
 /* size */
 /* size */
@@ -82,6 +83,24 @@
   color: #D4D4D4;
   line-height: 1.5;
 }
+.my-review__write-button {
+  padding: 9px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: transparent;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.my-review__write-button:hover:not(:disabled) {
+  background: #383a3e;
+}
+.my-review__write-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 @media (min-width: 768px) and (max-width: 1279px) {
   .my-review__inner {
@@ -123,5 +142,558 @@
   }
   .my-review__empty p {
     font-size: 13px;
+  }
+}
+/* ========================================
+   내가 작성한 리뷰 목록
+======================================== */
+.my-review__written {
+  width: 100%;
+}
+.my-review__count {
+  margin: 24px 0 16px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  color: #D4D4D4;
+}
+.my-review__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.my-review__item {
+  width: 100%;
+  padding: 24px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.my-review__item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.my-review__item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.my-review__category {
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  color: #0084FF;
+}
+.my-review__date {
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  color: #A3A3A3;
+}
+.my-review__rating {
+  flex-shrink: 0;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  color: #FFFFFF;
+}
+.my-review__rating span {
+  color: #ffd13c;
+}
+.my-review__content {
+  margin: 0;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: #FFFFFF;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.my-review__spoiler, .my-review__edited {
+  display: inline-block;
+  margin-top: 12px;
+  margin-right: 12px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 13px;
+  color: #A3A3A3;
+}
+
+.my-review__group-list {
+  width: 100%;
+  margin-top: 24px;
+}
+.my-review__group {
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.my-review__group:first-child {
+  padding-top: 0;
+}
+.my-review__group-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+.my-review__poster {
+  width: 180px;
+  aspect-ratio: 2/3;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #222;
+}
+.my-review__poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.my-review__poster span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #888;
+  font-size: 12px;
+}
+.my-review__group-body {
+  flex: 1;
+  min-width: 0;
+}
+.my-review__group-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #FFFFFF;
+  text-align: left;
+  cursor: pointer;
+}
+.my-review__group-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.my-review__group-heading strong {
+  font-size: 22px;
+  font-weight: 700;
+}
+.my-review__group-heading small {
+  font-size: 14px;
+  color: #D4D4D4;
+}
+.my-review__group-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.my-review__group-arrow img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  transform: rotate(90deg);
+  transition: transform 0.3s ease;
+}
+.my-review__group-arrow.active img {
+  transform: rotate(-90deg);
+}
+.my-review__episode-list {
+  margin-top: 20px;
+}
+.my-review__episode {
+  padding: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+.my-review__episode-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.my-review__episode-badge {
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: #292c31;
+  color: #FFFFFF;
+  font-size: 13px;
+}
+.my-review__episode-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 600;
+}
+.my-review__episode-rating img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+}
+.my-review__episode-date {
+  display: block;
+  margin-bottom: 12px;
+  color: #D4D4D4;
+  font-size: 13px;
+}
+.my-review__episode-content {
+  color: #FFFFFF;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.my-review__group-more {
+  margin-top: 8px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: #D4D4D4;
+  font-size: 14px;
+  cursor: pointer;
+}
+.my-review__group-more:hover {
+  color: #FFFFFF;
+}
+
+.my-review__episode-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.my-review__more-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.my-review__more-button img {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+}
+
+/* 회차별 리뷰 펼치기 애니메이션 */
+.my-review__expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.4s ease, opacity 0.3s ease;
+}
+.my-review__expand.active {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.my-review__expand-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.my-review__menu-wrap {
+  position: relative;
+}
+.my-review__menu {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  z-index: 20;
+  width: 100px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: #252629;
+}
+.my-review__menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  background: transparent;
+  color: #FFFFFF;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.my-review__menu button:hover {
+  background: #383a3e;
+}
+.my-review__menu button.delete {
+  color: #ff7777;
+}
+.my-review__edit {
+  margin-top: 12px;
+}
+.my-review__edit textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  outline: none;
+  resize: vertical;
+  background: #1c1d20;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.my-review__edit textarea:focus {
+  border-color: #888;
+}
+.my-review__edit-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.my-review__edit-bottom > span {
+  color: #D4D4D4;
+  font-size: 13px;
+}
+.my-review__edit-actions {
+  display: flex;
+  gap: 8px;
+}
+.my-review__edit-actions button {
+  min-width: 64px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  background: transparent;
+  color: #FFFFFF;
+  cursor: pointer;
+}
+.my-review__edit-actions button.save {
+  border-color: #1687ff;
+  background: #1687ff;
+  color: #fff;
+}
+.my-review__edit-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review-delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.review-delete-modal {
+  position: relative;
+  width: 100%;
+  max-width: 495px;
+  padding: 36px 40px 30px;
+  background: #252525;
+  border-radius: 10px;
+  color: #FFFFFF;
+  text-align: center;
+}
+.review-delete-modal .review-delete-modal-header h3 {
+  margin-bottom: 14px;
+  font-family: "Pretendard", sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+}
+.review-delete-modal .review-delete-modal-header button {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #FFFFFF;
+  font-size: 26px;
+  cursor: pointer;
+}
+.review-delete-modal .review-delete-modal-content h4 {
+  margin-bottom: 14px;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+.review-delete-modal .review-delete-modal-content p {
+  margin-bottom: 26px;
+  color: #D4D4D4;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.review-delete-modal .review-delete-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+}
+.review-delete-modal .review-delete-modal-actions button {
+  width: 145px;
+  height: 50px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 5px;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.review-delete-modal .review-delete-modal-actions button.confirm {
+  background: #0084FF;
+}
+.review-delete-modal .review-delete-modal-actions button.cancel {
+  background: #424242;
+}
+.review-delete-modal .review-delete-modal-actions button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.review-delete-modal .review-delete-modal-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .review-delete-modal .review-delete-modal-header h3 {
+    font-size: 30px;
+  }
+}
+@media (max-width: 767px) {
+  .review-delete-modal {
+    max-width: 380px;
+    padding: 32px 20px 24px;
+  }
+  .review-delete-modal .review-delete-modal-header h3 {
+    font-size: 26px;
+  }
+  .review-delete-modal .review-delete-modal-content p {
+    font-size: 16px;
+  }
+  .review-delete-modal .review-delete-modal-actions {
+    gap: 12px;
+  }
+  .review-delete-modal .review-delete-modal-actions button {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    font-size: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .review-delete-modal {
+    padding: 24px;
+    min-height: 300px;
+  }
+  .review-delete-modal .review-delete-modal-content h4 {
+    font-size: 16px;
+  }
+}
+@media (max-width: 767px) {
+  .my-review__menu {
+    width: 92px;
+  }
+  .my-review__edit textarea {
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .my-review__expand {
+    transition: none;
+  }
+}
+@media (min-width: 768px) and (max-width: 1279px) {
+  .my-review__poster {
+    width: 140px;
+  }
+  .my-review__group-layout {
+    gap: 20px;
+  }
+}
+@media (max-width: 767px) {
+  .my-review__group-layout {
+    gap: 14px;
+  }
+  .my-review__poster {
+    width: 92px;
+  }
+  .my-review__group-heading strong {
+    font-size: 17px;
+  }
+  .my-review__group-heading small {
+    font-size: 12px;
+  }
+  .my-review__episode-content {
+    font-size: 14px;
+  }
+  .my-review__episode-badge, .my-review__episode-date {
+    font-size: 12px;
+  }
+}
+/* ========================================
+   태블릿
+======================================== */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .my-review__item {
+    padding: 22px 12px;
+  }
+  .my-review__content {
+    font-size: 15px;
+  }
+}
+/* ========================================
+   모바일
+======================================== */
+@media (max-width: 767px) {
+  .my-review__count {
+    margin: 20px 0 12px;
+    font-size: 14px;
+  }
+  .my-review__item {
+    padding: 20px 8px;
+  }
+  .my-review__item-top {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .my-review__category, .my-review__date {
+    font-size: 12px;
+  }
+  .my-review__rating {
+    font-size: 14px;
+  }
+  .my-review__content {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .my-review__spoiler, .my-review__edited {
+    font-size: 12px;
   }
 }
