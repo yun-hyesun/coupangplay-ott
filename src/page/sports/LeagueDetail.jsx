@@ -185,7 +185,6 @@ export const LeagueDetail = () => {
   }, [location.hash, leagueId]);
 
   const navigate = useNavigate();
-  const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const league = SPORTS_LEAGUE_BY_ID[leagueId];
   const [today, setToday] = useState(() => getSeoulDateKey());
