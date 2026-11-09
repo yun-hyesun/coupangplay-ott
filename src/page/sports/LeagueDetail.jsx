@@ -7,7 +7,8 @@ import { LeagueHome } from "../../components/LeagueHome";
 import { LeagueSchedule } from "../../components/LeagueSchedule";
 import { LeagueStandings } from "../../components/LeagueStandings";
 import { LeagueVideos } from "../../components/LeagueVideos";
-import { EmptyMessage, findLeagueTeam, getGameStatus, normalizeSportsText } from "../../components/LeagueDetailShared";
+import { LeagueVideoFeed } from "../../components/LeagueVideoFeed";
+import { findLeagueTeam, normalizeSportsText } from "../../components/LeagueDetailShared";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
 import { SPORTS_LEAGUE_BY_ID } from "../../data/sportsLeagues";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
@@ -26,14 +27,21 @@ import {
   getKleagueStandings,
   getNbaGamesForSeoulDate,
   getNbaStandings,
+  getMatchesForRange,
+  getFootballStandings,
+  supportsFootballStandings,
 } from "../../service/sportsService";
 import { getF1RacesForDate } from "../../service/f1Service";
 import { useAuthStore } from "../../store/useAuthStore";
+import { loadLeagueBroadcasts } from "../../data/leagueBroadcasts";
+import { getScheduleRange, loadScheduleDates, selectScheduleMatches } from "../../data/leagueScheduleRange";
 
 const LEAGUE_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-leagues";
 const MAX_LEAGUE_SUBSCRIPTIONS = 10;
 const TEAM_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-teams";
 const SEOUL_TIME_ZONE = "Asia/Seoul";
+const EMPTY_SCHEDULE = { games: [], loading: true, errors: [] };
+const EMPTY_STANDINGS = { rows: [], loading: true, error: "" };
 function getCompactHeaderScrollThreshold() {
   if (window.innerWidth <= 600) return 174;
   if (window.innerWidth <= 850) return 184;
@@ -163,16 +171,26 @@ export const LeagueDetail = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const league = SPORTS_LEAGUE_BY_ID[leagueId];
-  const [today] = useState(() => getSeoulDateKey());
+  const [today, setToday] = useState(() => getSeoulDateKey());
   const [activeTab, setActiveTab] = useState("home");
   const [activeFixtureTab, setActiveFixtureTab] = useState("upcoming");
   const [isCompactHeader, setIsCompactHeader] = useState(false);
   const [scoresOn, setScoresOn] = useState(true);
   const [isTeamSettingsOpen, setIsTeamSettingsOpen] = useState(false);
-  const [scheduleState, setScheduleState] = useState({ games: [], loading: true, errors: [] });
-  const [standingsState, setStandingsState] = useState({ rows: [], loading: true, error: "" });
+  const [scheduleResult, setScheduleResult] = useState(null);
+  const [broadcastState, setBroadcastState] = useState({ games: [], loading: true, errors: [] });
+  const [standingsResult, setStandingsResult] = useState(null);
   const [subscribedTeamIds, setSubscribedTeamIds] = useState(readSubscribedTeamIds);
   const [subscribedLeagueIds, setSubscribedLeagueIds] = useState(readSubscribedLeagueIds);
+  const scheduleRange = useMemo(() => getScheduleRange(today, activeFixtureTab), [today, activeFixtureTab]);
+  const scheduleKey = `${leagueId}:${activeFixtureTab}:${scheduleRange.from}:${scheduleRange.to}`;
+  const scheduleState = scheduleResult?.key === scheduleKey ? scheduleResult : EMPTY_SCHEDULE;
+  const standingsState = standingsResult?.leagueId === leagueId ? standingsResult : EMPTY_STANDINGS;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setToday(getSeoulDateKey()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const updateCompactHeader = () => {
@@ -206,21 +224,21 @@ export const LeagueDetail = () => {
 
   useEffect(() => {
     if (!league) return undefined;
-    let isCurrent = true;
-    setScheduleState({ games: [], loading: true, errors: [] });
-
-    loadLeagueSchedule(league, today)
+    const controller = new AbortController();
+    const { from, to } = scheduleRange;
+    const request = league.id === "f1" || league.id.startsWith("kleague-")
+      ? loadScheduleDates({ from, to, signal: controller.signal, loadSchedule: (date) => loadLeagueSchedule(league, date) })
+      : getMatchesForRange(league.id, from, to, { signal: controller.signal });
+    request
       .then((result) => {
-        if (isCurrent) {
-          const games = [...(result.games || [])].sort((first, second) =>
-            new Date(first.utcDate || first.startTime || 0) - new Date(second.utcDate || second.startTime || 0),
-          );
-          setScheduleState({ games, loading: false, errors: result.errors || [] });
+        if (!controller.signal.aborted) {
+          setScheduleResult({ ...result, key: scheduleKey, loading: false });
         }
       })
       .catch((error) => {
-        if (isCurrent) {
-          setScheduleState({
+        if (!controller.signal.aborted) {
+          setScheduleResult({
+            key: scheduleKey,
             games: [],
             loading: false,
             errors: [error?.message || "경기 일정을 불러오지 못했습니다."],
@@ -228,13 +246,12 @@ export const LeagueDetail = () => {
         }
       });
 
-    return () => { isCurrent = false; };
-  }, [league, today]);
+    return () => controller.abort();
+  }, [league, scheduleRange, scheduleKey]);
 
   useEffect(() => {
     if (!league) return undefined;
     let isCurrent = true;
-    setStandingsState({ rows: [], loading: true, error: "" });
 
     const loadStandings = async () => {
       try {
@@ -242,10 +259,11 @@ export const LeagueDetail = () => {
         if (league.id === "nba") rows = await getNbaStandings();
         else if (league.id === "kleague-1") rows = await getKleagueStandings("1");
         else if (league.id === "kleague-2") rows = await getKleagueStandings("2");
-        if (isCurrent) setStandingsState({ rows, loading: false, error: "" });
+        else if (supportsFootballStandings(league.id)) rows = await getFootballStandings(league.id);
+        if (isCurrent) setStandingsResult({ leagueId: league.id, rows, loading: false, error: "" });
       } catch (error) {
         if (isCurrent) {
-          setStandingsState({ rows: [], loading: false, error: error?.message || "순위 정보를 불러오지 못했습니다." });
+          setStandingsResult({ leagueId: league.id, rows: [], loading: false, error: error?.message || "순위 정보를 불러오지 못했습니다." });
         }
       }
     };
@@ -254,16 +272,26 @@ export const LeagueDetail = () => {
     return () => { isCurrent = false; };
   }, [league]);
 
+  useEffect(() => {
+    if (!league) return undefined;
+    const controller = new AbortController();
+    loadLeagueBroadcasts({
+      dateKey: today,
+      loadSchedule: (dateKey) => loadLeagueSchedule(league, dateKey),
+      signal: controller.signal,
+    }).then((result) => {
+      if (!controller.signal.aborted) setBroadcastState({ ...result, leagueId: league.id });
+    });
+    return () => controller.abort();
+  }, [league, today]);
+
   const allLeagueVideos = useMemo(() => league ? getLeagueVideos(league) : [], [league]);
   const leagueTeams = useMemo(() => SPORTS_TEAMS_BY_LEAGUE[leagueId] || [], [leagueId]);
   const selectedTeams = useMemo(
     () => leagueTeams.filter((team) => subscribedTeamIds.includes(team.id)),
     [leagueTeams, subscribedTeamIds],
   );
-  const visibleMatches = useMemo(() => scheduleState.games.filter((game) => {
-    const status = getGameStatus(game.status).type;
-    return activeFixtureTab === "ended" ? status === "ended" : status !== "ended";
-  }), [activeFixtureTab, scheduleState.games]);
+  const visibleMatches = useMemo(() => selectScheduleMatches(scheduleState.games, scheduleRange, activeFixtureTab), [activeFixtureTab, scheduleState.games, scheduleRange]);
   const videoGroups = useMemo(() => selectedTeams.map((team) => ({
     team,
     videos: allLeagueVideos.filter((video) => normalizeSportsText(video.title).includes(normalizeSportsText(team.name))).slice(0, 4),
@@ -334,7 +362,8 @@ export const LeagueDetail = () => {
       logoPath: row.crest || row.logoPath || team?.logoPath,
     };
   });
-  const fallbackTeams = standingsRows.length ? [] : leagueTeams.slice(0, 10).map((team) => ({
+  const hasStandingsApi = supportsFootballStandings(league.id) || ["nba", "kleague-1", "kleague-2"].includes(league.id);
+  const fallbackTeams = standingsRows.length || hasStandingsApi ? [] : leagueTeams.slice(0, 10).map((team) => ({
     teamName: team.name,
     logoPath: team.logoPath,
     rank: null,
@@ -350,9 +379,9 @@ export const LeagueDetail = () => {
     gamesBehind: null,
   }));
   const tableRows = standingsRows.length ? standingsRows : fallbackTeams;
-  const tableNote = standingsRows.length || !fallbackTeams.length
-    ? ""
-    : "순위 통계가 연결되기 전까지 프로젝트에 저장된 팀 목록을 표시합니다.";
+  const tableNote = standingsRows.length && supportsFootballStandings(league.id)
+    ? `${standingsRows[0].sourceProvider === "espn" ? "ESPN" : "Football-Data"} 기준 현재 시즌 종합 순위 · 상위 10개 팀`
+    : (fallbackTeams.length ? "순위 통계가 연결되기 전까지 프로젝트에 저장된 팀 목록을 표시합니다." : "");
   const tableColumns = isBasketball
     ? ["순위", "팀", "승률", "경기", "승", "패", "승차"]
     : ["순위", "팀", "승점", "경기", "승", "무", "패", "득점", "실점", "득실차"];
@@ -373,15 +402,18 @@ export const LeagueDetail = () => {
           activeTab={activeTab}
           onTabChange={(tabId, targetId) => {
             setActiveTab(tabId);
-            if (targetId) document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-            else window.scrollTo({ top: 0, behavior: "smooth" });
+            window.requestAnimationFrame(() => {
+              if (tabId !== "videos" && targetId) document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+              else window.scrollTo({ top: 0, behavior: "smooth" });
+            });
           }}
         />
       </div>
-      <LeagueHome league={league} scheduleState={scheduleState} />
+      {activeTab === "videos" ? <LeagueVideoFeed key={league.id} league={league} scoresOn={scoresOn} /> : <>
+      <LeagueHome league={league} scheduleState={broadcastState.leagueId === league.id ? broadcastState : { games: [], loading: true, errors: [] }} />
       <LeagueSchedule
         league={league}
-        today={today}
+        dateRange={scheduleRange}
         scoresOn={scoresOn}
         scheduleState={scheduleState}
         visibleMatches={visibleMatches}
@@ -402,6 +434,7 @@ export const LeagueDetail = () => {
         tableColumns={tableColumns}
         isBasketball={isBasketball}
       />
+      </>}
       <SportsSettingsModal
         isOpen={isTeamSettingsOpen}
         initialTab="teams"

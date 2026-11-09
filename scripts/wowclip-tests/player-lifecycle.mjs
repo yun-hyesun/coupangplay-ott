@@ -2,6 +2,8 @@ import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import React, { act } from 'react';
 import renderer from 'react-test-renderer';
+import { MemoryRouter } from 'react-router-dom';
+import { ClipFeed } from '../../src/page/wowclip/components/ClipFeed.jsx';
 import { ClipPlayer } from '../../src/page/wowclip/components/ClipPlayer.jsx';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -64,6 +66,38 @@ test('이전 플레이어의 늦은 ready·재생 이벤트는 새 플레이어�
   assert.equal(firstPlays, 0);
   await act(async () => root.root.findByProps({ 'aria-label': '선택 구간 미리보기' }).props.onClick());
   assert.equal(current.calls.play, 1); assert.equal(old.calls.play, 0);
+});
+
+test('재생기록 저장 실패 후 다시 재생하면 재시도하고 저장 중이나 성공 후에는 중복 요청하지 않는다', async () => {
+  globalThis.IntersectionObserver = class { observe() {} disconnect() {} };
+  const current = player();
+  const feedClip = { ...clip, id: 'qa', content: { id: 1, media_type: 'movie' }, comments: [] };
+  const messages = [];
+  let requests = 0;
+  let rejectFirst;
+  const onView = async () => {
+    if (++requests === 1) await new Promise((_resolve, reject) => { rejectFirst = reject; });
+  };
+  let root;
+  await act(async () => {
+    root = renderer.create(React.createElement(MemoryRouter, null, React.createElement(ClipFeed, {
+      clips: [feedClip], selectedId: feedClip.id, owner: { id: 'viewer:default' },
+      isProtected: () => false, onView, notify: (message) => messages.push(message),
+    })), { createNodeMock: () => ({ children: [] }) });
+  });
+  roots.push(root);
+
+  await act(async () => globalThis.__wowPlayerProps.onReady({ target: current.target }));
+  const play = () => globalThis.__wowPlayerProps.onStateChange({ target: current.target, data: 1 });
+  const pause = () => globalThis.__wowPlayerProps.onStateChange({ target: current.target, data: 2 });
+  await act(async () => { play(); pause(); play(); });
+  assert.equal(requests, 1);
+  await act(async () => rejectFirst(new Error('기록 저장 실패')));
+  assert.deepEqual(messages, ['기록 저장 실패']);
+  await act(async () => { pause(); play(); });
+  assert.equal(requests, 2);
+  await act(async () => { pause(); play(); });
+  assert.equal(requests, 2);
 });
 
 test('StrictMode에서도 준비 전에 누른 미리보기 요청을 보관해 ready 이후 재생한다', async () => {

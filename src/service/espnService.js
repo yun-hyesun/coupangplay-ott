@@ -2,6 +2,7 @@ import { ESPN_LEAGUE_PATHS } from "../data/espnLeagues";
 import espnTeamNames from "../data/espnTeamNames.json";
 import { SPORTS_LEAGUE_BY_ID } from "../data/sportsLeagues";
 import { findSportsTeam } from "../data/sportsTeams";
+import { listScheduleDates, loadScheduleDates } from "../data/leagueScheduleRange.js";
 
 const ESPN_BASE = "/espn";
 const ESPN_CORE_BASE = "/espn-core";
@@ -310,8 +311,13 @@ async function getNbaScheduleSegment(game) {
   return "";
 }
 
-async function getFootballDataMatches(seoulDate) {
-  const [dateFrom, dateTo] = getQueryDates(seoulDate);
+async function getFootballDataMatches(seoulDate, lastSeoulDate = seoulDate) {
+  const [dateFrom] = getQueryDates(seoulDate);
+  // dateTo는 해당 날짜의 시작 시각까지이므로 다음 날을 경계로 조회합니다.
+  // 한국 시간 하루에 걸치는 UTC 날짜를 모두 받은 뒤 아래에서 다시 좁힙니다.
+  const endDate = parseDateKey(lastSeoulDate);
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+  const dateTo = endDate.toISOString().slice(0, 10);
   const query = new URLSearchParams({
     competitions: FOOTBALL_DATA_COMPETITIONS.join(","),
     dateFrom,
@@ -335,9 +341,11 @@ async function getFootballDataMatches(seoulDate) {
       if (!Array.isArray(data.matches)) {
         throw new Error("Football-Data 경기 응답 형식이 올바르지 않습니다.");
       }
-      const matches = data.matches.filter((match) =>
-        match.utcDate && getSeoulDateKey(match.utcDate) === seoulDate,
-      );
+      const matches = data.matches.filter((match) => {
+        if (!match.utcDate) return false;
+        const date = getSeoulDateKey(match.utcDate);
+        return date >= seoulDate && date <= lastSeoulDate;
+      });
       footballDataCache.set(key, {
         matches,
         expiresAt: Date.now() + FOOTBALL_DATA_CACHE_MS,
@@ -418,12 +426,12 @@ function normalizeFootballDataMatch(competitionCode, match) {
   };
 }
 
-async function getFootballDataSchedule(competitionCode, seoulDate) {
-  const matches = await getFootballDataMatches(seoulDate);
+async function getFootballDataSchedule(competitionCode, seoulDate, lastSeoulDate = seoulDate) {
+  const matches = await getFootballDataMatches(seoulDate, lastSeoulDate);
   const games = matches
     .filter((match) => match.competition?.code === competitionCode)
     .map((match) => normalizeFootballDataMatch(competitionCode, match))
-    .filter(Boolean);
+    .filter((game) => game && getSeoulDateKey(game.utcDate) >= seoulDate && getSeoulDateKey(game.utcDate) <= lastSeoulDate);
   return { games: uniqueGames(games), errors: [] };
 }
 
@@ -459,11 +467,13 @@ function getCrest(local, remote) {
   return local.logoPath || remote.logo || remote.logos?.[0]?.href || "";
 }
 
-function getCupRoundLabel(value) {
+export function getScheduleStageLabel(value) {
   const slug = String(value || "").trim().toLowerCase().replace(/[ _]+/g, "-");
   const labels = {
     "first-round": "1라운드",
+    "round-one": "1라운드",
     "second-round": "2라운드",
+    "round-two": "2라운드",
     "third-round": "3라운드",
     "fourth-round": "4라운드",
     "fifth-round": "5라운드",
@@ -484,9 +494,22 @@ function getCupRoundLabel(value) {
     "semifinal": "4강",
     "semifinals": "4강",
     final: "결승",
+    "regular-season": "정규시즌",
+    "pre-season": "프리시즌",
+    preseason: "프리시즌",
+    "post-season": "플레이오프",
+    postseason: "플레이오프",
+    "play-offs": "플레이오프",
+    playoffs: "플레이오프",
+    "league-stage": "리그 스테이지",
+    "group-stage": "조별리그",
+    "wild-card": "와일드카드",
+    "wild-card-round": "와일드카드",
+    "conference-semifinals": "컨퍼런스 준결승",
+    "conference-finals": "컨퍼런스 결승",
   };
   if (labels[slug]) return labels[slug];
-  const roundOf = slug.match(/round-of-(\d+)/);
+  const roundOf = slug.match(/(?:round|rd)-of-(\d+)/);
   return roundOf ? `${roundOf[1]}강` : "";
 }
 
@@ -511,6 +534,27 @@ function getAfcMatchday(event, competition, status) {
   return matchesPlayed > 0 ? matchesPlayed : "";
 }
 
+export function getEspnScheduleUnitFields(leagueId, event) {
+  const competition = event.competitions?.[0] || {};
+  const status = getStatus(competition.status || event.status || {});
+  const afcMatchday = ["acle", "acl2"].includes(leagueId) ? getAfcMatchday(event, competition, status) : "";
+  const week = event.week?.number ?? competition.week?.number ?? "";
+  const phase = event.season?.slug || "";
+  let segment = getScheduleStageLabel(phase);
+  if (leagueId === "mls" && segment && !/regular|pre.?season/.test(phase)) segment = `플레이오프 ${segment}`;
+  return {
+    competitionCode: leagueId,
+    matchday: event.week?.number ?? competition.week?.number ?? event.week?.text ?? competition.week?.text ?? afcMatchday,
+    scheduleSegment: leagueId === "nfl" && week ? `${week}주차` : afcMatchday ? `${afcMatchday}라운드` : segment,
+    stage: leagueId === "nfl" && week ? `${week}주차` : competition.type?.text || segment,
+    seasonYear: event.season?.year ?? null,
+    seasonType: event.season?.type?.id ?? event.season?.type ?? "",
+    seasonPhase: phase,
+    status,
+    utcDate: event.date || competition.date,
+  };
+}
+
 export function normalizeEspnEvent(leagueId, event) {
   const league = SPORTS_LEAGUE_BY_ID[leagueId];
   if (!league || !ESPN_LEAGUE_PATHS[leagueId]) return null;
@@ -525,15 +569,6 @@ export function normalizeEspnEvent(leagueId, event) {
   if (!Number.isFinite(date.getTime())) return null;
   const eventStatus = competition.status || event.status || {};
   const status = getStatus(eventStatus);
-  const afcMatchday = ["acle", "acl2"].includes(leagueId)
-    ? getAfcMatchday(event, competition, status)
-    : "";
-  const nflWeek = leagueId === "nfl"
-    ? event.week?.number ?? competition.week?.number ?? ""
-    : "";
-  const cupRound = ["dfb", "carabao", "copa-del-rey", "coupe-de-france"].includes(leagueId)
-    ? getCupRoundLabel(event.season?.slug)
-    : "";
   const normalizeCompetitor = (local, remote) => ({
     id: local.id,
     teamId: local.teamId,
@@ -552,16 +587,7 @@ export function normalizeEspnEvent(leagueId, event) {
     competitionName: league.name,
     // ESPN 응답에 포함된 경기 주차를 그대로 전달합니다. 주차가 없으면
     // 화면에서 임의의 회차를 만들지 않고 표시하지 않습니다.
-    matchday: event.week?.number ?? competition.week?.number ?? event.week?.text ?? competition.week?.text ?? afcMatchday,
-    stage: nflWeek ? `${nflWeek}주차` : competition.type?.text || cupRound,
-    scheduleSegment: nflWeek
-      ? `${nflWeek}주차`
-      : afcMatchday ? `${afcMatchday}라운드` : cupRound,
-    seasonYear: leagueId === "nba" ? event.season?.year ?? null : null,
-    seasonType: leagueId === "nba" ? event.season?.type?.id ?? event.season?.type ?? "" : "",
-    seasonPhase: leagueId === "nba"
-      ? event.season?.slug ?? event.season?.type?.name ?? event.season?.type ?? ""
-      : "",
+    ...getEspnScheduleUnitFields(leagueId, event),
     status,
     statusDetail: eventStatus.type?.detail || "",
     utcDate: date.toISOString(),
@@ -634,7 +660,7 @@ async function getEspnLeagueSchedule(leagueId, seoulDate) {
 
   const gamesWithScheduleSegments = await Promise.all(unique.map(async (game) => ({
     ...game,
-    scheduleSegment: await getNbaScheduleSegment(game),
+    scheduleSegment: await getNbaScheduleSegment(game) || game.scheduleSegment,
   })));
   return { games: gamesWithScheduleSegments, errors };
 }
@@ -658,6 +684,35 @@ async function getLeagueSchedule(leagueId, seoulDate) {
     }
   }
   return getEspnLeagueSchedule(leagueId, seoulDate);
+}
+
+export async function getEspnScheduleForRange(leagueId, from, to, { signal } = {}) {
+  const dates = listScheduleDates(from, to);
+  if (!ESPN_LEAGUE_PATHS[leagueId] || signal?.aborted) return { games: [], errors: [] };
+  const loadEspnRange = (rangeFrom, rangeTo) => loadScheduleDates({
+    from: rangeFrom, to: rangeTo, signal,
+    loadSchedule: (date) => getEspnLeagueSchedule(leagueId, date),
+  });
+  if (!FOOTBALL_DATA_COMPETITIONS.includes(leagueId)) return loadEspnRange(from, to);
+
+  // Football-Data는 UTC 조회 기간을 10일로 제한하므로 한국 날짜 9일씩 나눕니다.
+  const chunks = [];
+  for (let index = 0; index < dates.length; index += 9) {
+    chunks.push({ from: dates[index], to: dates[Math.min(index + 8, dates.length - 1)] });
+  }
+  const results = await Promise.all(chunks.map(async (range) => {
+    if (signal?.aborted) return { games: [], errors: [] };
+    try {
+      return await getFootballDataSchedule(leagueId, range.from, range.to);
+    } catch {
+      if (signal?.aborted) return { games: [], errors: [] };
+      return loadEspnRange(range.from, range.to);
+    }
+  }));
+  return {
+    games: uniqueGames(results.flatMap((result) => result.games)),
+    errors: [...new Set(results.flatMap((result) => result.errors))],
+  };
 }
 
 export async function getEspnFootballScheduleForDate(seoulDate) {
