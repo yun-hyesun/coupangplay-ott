@@ -62,6 +62,9 @@ import { SportsWatch } from './page/home/components/SportsWatch';
 
 import { WowClip } from './page/wowclip/WowClip';
 
+// 채널
+import { ChannelPage } from './page/channel/ChannelPage';
+
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
 
@@ -130,6 +133,10 @@ function App() {
         <Route path="/search" element={<Search />} />
         {/* 카테고리 */}
         <Route path="/category/:section/:categoryId" element={<Category />} />
+
+
+        {/* 체널 */}
+        <Route path="/channel/:channelId" element={<ChannelPage />} />
 
       </Route>
 

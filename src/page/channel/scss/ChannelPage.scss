@@ -1,0 +1,68 @@
+.channel-page {
+  padding-bottom: 80px;
+
+  &__heading {
+    padding: 32px $padding-main 24px;
+
+    h1 {
+      margin: 24px 0 12px;
+
+      img {
+        display: block;
+        width: 180px;
+        height: 64px;
+        object-fit: contain;
+        object-position: left center;
+      }
+    }
+
+    p {
+      margin: 0;
+      color: #b4bbc5;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+  }
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    color: #b4bbc5;
+    font-size: 14px;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  &__empty {
+    padding: 64px $padding-main;
+    color: #b4bbc5;
+    text-align: center;
+  }
+
+  &--empty {
+    padding: 80px $padding-main;
+
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      color: #0095ff;
+    }
+  }
+
+  @media (max-width: 767px) {
+    &__heading {
+      padding-top: 20px;
+
+      h1 img {
+        width: 140px;
+        height: 48px;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+  }
+}
