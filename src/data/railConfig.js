@@ -263,7 +263,7 @@ export const railConfig = {
 
 'adult-ranking': {
   ...adultBase,
-  title: '인기 성인 관람 영화 TOP20',
+  title: 'Adult TOP20',
   variant: 'ranking',
   imageType: '세로',
   gridImageType: '세로',

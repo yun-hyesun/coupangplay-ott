@@ -24,7 +24,7 @@ export const SportsBanner = ({ slides = SPORTS_BANNERS }) => {
   if (!slides?.length) return null;
   return (
     <section className="sports-banner" aria-label="스포츠 추천 배너">
-      <Swiper modules={[Navigation, Pagination, A11y]} className="sports-banner__swiper" slidesPerView={1} spaceBetween={20} loop={slides.length > 1} navigation pagination={{ clickable: true }} a11y={{ prevSlideMessage: "이전 스포츠 배너", nextSlideMessage: "다음 스포츠 배너", paginationBulletMessage: "{{index}}번째 스포츠 배너로 이동" }}>
+      <Swiper modules={[Navigation, Pagination, A11y]} className="sports-banner__swiper" slidesPerView={1} spaceBetween={20} loop={false} rewind={false} navigation pagination={{ clickable: true }} a11y={{ prevSlideMessage: "이전 스포츠 배너", nextSlideMessage: "다음 스포츠 배너", paginationBulletMessage: "{{index}}번째 스포츠 배너로 이동" }}>
         {slides.map((slide, index) => {
           const detail = BANNER_DETAILS[slide.id] || { eyebrow: "COUPANG PLAY SPORTS", title: slide.alt, description: "스포츠의 모든 순간을 만나보세요", date: "경기 일정 및 하이라이트" };
           return (

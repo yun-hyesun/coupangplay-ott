@@ -244,6 +244,11 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
   const currentProfile = useProfileStore((state) => state.currentProfile);
 
   const [saving, setSaving] = useState(false);
+  const [favoriteToast, setFavoriteToast] = useState("");
+  const [favoriteToastId, setFavoriteToastId] = useState(0);
+  const favoriteToastTimer = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(favoriteToastTimer.current), []);
 
   const matchId = game.gameId ?? game.id;
 
@@ -299,6 +304,11 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
 
       if (!success) {
         alert("찜하기 처리에 실패했습니다.");
+      } else {
+        setFavoriteToast(isFavorite ? "찜하기가 해제되었습니다." : "찜하기가 완료되었습니다.");
+        setFavoriteToastId((id) => id + 1);
+        window.clearTimeout(favoriteToastTimer.current);
+        favoriteToastTimer.current = window.setTimeout(() => setFavoriteToast(""), 2200);
       }
     } finally {
       setSaving(false);
@@ -366,6 +376,9 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           <TeamCrest team={game.away} />
           <span>{game.away.name}</span>
         </div>
+        {favoriteToast && (
+          <div key={favoriteToastId} className="sports-fixture__favorite-toast" role="status" aria-live="polite">{favoriteToast}</div>
+        )}
         {isScheduled && (
           <button
             type="button"

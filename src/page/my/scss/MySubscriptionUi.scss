@@ -90,7 +90,7 @@ $my-control: #292d33;
     border: 0;
     padding: 0;
     text-align: left;
-    min-height: 44px;
+    min-height: 45px;
     cursor: pointer;
     font-size: 16px;
 }
@@ -132,11 +132,11 @@ $my-control: #292d33;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 44px;
-    min-width: 96px;
-    padding: 10px 16px;
+    min-height: 45px;
+    min-width: 145px;
+    padding: 0 16px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 5px;
     background: $color-pri;
     color: $color-text-pri;
     font: 600 16px/24px $font-main;
@@ -217,18 +217,53 @@ $my-control: #292d33;
     font-weight: 600;
 }
 
+
+
 .my-pass-agreement {
-    @include flex(null, center, 12px);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
     font-size: 16px;
     line-height: 24px;
     cursor: pointer;
 
     input {
-        accent-color: $color-pri;
-        width: 24px;
-        height: 24px;
-        margin: 10px;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        opacity: 0;
+
+        &:focus-visible+.my-pass-agreement-check {
+            outline: 2px solid $color-pri;
+            outline-offset: 3px;
+        }
+    }
+
+    .my-pass-agreement-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 22px;
+        height: 22px;
         flex-shrink: 0;
+
+        border: 2px solid #777;
+        border-radius: 50%;
+
+        &.active {
+            border-color: $color-pri;
+        }
+
+        span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: $color-pri;
+        }
     }
 
     a {
@@ -236,60 +271,141 @@ $my-control: #292d33;
     }
 }
 
+
+
+// ========================================
+// 구독 해지 확인 / 완료 모달 공통
+// ========================================
 .my-pass-modal {
     position: fixed;
     inset: 0;
+    box-sizing: border-box;
+    width: calc(100% - 40px);
+    max-width: 495px;
+    max-height: calc(100dvh - 40px);
     margin: auto;
-    border: 0;
-    border-radius: 16px;
-    width: min(560px, calc(100% - 32px));
-    max-height: calc(100dvh - 48px);
-    padding: 32px;
-    background: $color-bg2;
-    overflow: auto;
+    padding: 36px 40px 30px;
+    border: none;
+    border-radius: 10px;
+    background: #252525;
+    color: $color-text-pri;
+    text-align: center;
+    overflow-y: auto;
 
     &::backdrop {
-        background: rgba(0, 0, 0, .65);
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .my-pass-modal-heading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 14px;
+
+        h2 {
+            width: 100%;
+            margin: 0;
+            font-family: $font-main;
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: $color-text-pri;
+            text-align: center;
+            word-break: keep-all;
+        }
+
+        .my-pass-close {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: none;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            color: $color-text-pri;
+            font-size: 28px;
+            line-height: 1;
+            cursor: pointer;
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
     }
 
     p {
-        margin: 24px 0;
+        width: 100%;
+        min-width: 0;
+        margin: 0 0 26px;
         color: $color-text-sec1;
+        font-family: $font-main;
+        font-size: 16px;
+        line-height: 1.6;
+        text-align: center;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: keep-all;
+
+        strong {
+            color: $color-text-pri;
+            font-weight: 600;
+        }
     }
 
     .my-pass-modal-actions {
-        @include flex(null, center, 16px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        margin-top: 24px;
 
-        button {
-            flex: 1;
+        .my-pass-button {
+            flex: 0 0 145px;
+            width: 145px;
+            min-width: 145px;
+            height: 45px;
+            min-height: 45px;
+            padding: 0 16px;
+
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+
+            &.is-secondary {
+                background: #424242;
+            }
         }
     }
 }
 
-.my-pass-modal-heading {
-    @include flex-between(flex-start, 16px);
-
-    h2 {
-        font-size: 24px;
-        line-height: 32px;
+@media (min-width: 768px) and (max-width: 1279px) {
+    .my-pass-modal .my-pass-modal-heading h2 {
+        font-size: 30px;
     }
 }
 
-.my-pass-close {
-    flex: 0 0 44px;
-    width: 44px;
-    height: 44px;
-    display: grid;
-    place-items: center;
-    border: 0;
-    background: transparent;
-    color: $color-text-pri;
-    font: 32px/1 $font-main;
-    cursor: pointer;
-    border-radius: 8px;
+@media (max-width: 767px) {
+    .my-pass-modal {
+        width: calc(100% - 32px);
+        max-width: 380px;
+        padding: 32px 20px 24px;
 
-    &:hover {
-        background: $my-control;
+        .my-pass-modal-heading h2 {
+            font-size: 26px;
+        }
+
+        .my-pass-modal-actions {
+            gap: 12px;
+            flex-wrap: wrap;
+        }
     }
 }
 
@@ -395,6 +511,8 @@ $my-control: #292d33;
         padding-top: 16px;
         color: $color-text-sec1;
     }
+
+
 }
 
 @media(max-width:1279px) {
@@ -432,10 +550,6 @@ $my-control: #292d33;
         padding: 24px;
     }
 
-    .my-pass-modal {
-        padding: 24px;
-    }
-
     .my-membership {
         gap: 40px;
     }
@@ -453,9 +567,6 @@ $my-control: #292d33;
         font-size: 18px;
     }
 
-    .my-pass-modal-actions {
-        flex-wrap: wrap;
-    }
 }
 
 .my-pass-cancel-banner {
