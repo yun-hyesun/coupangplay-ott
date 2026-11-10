@@ -23,7 +23,6 @@ const { MyWowClip } = await import('../../src/page/my/MyWowClip.jsx');
 const { FullVideoClipButton } = await import('../../src/page/wowclip/components/FullVideoClipButton.jsx');
 const { ClipEditor } = await import('../../src/page/wowclip/components/ClipEditor.jsx');
 const { ClipComments } = await import('../../src/page/wowclip/components/ClipComments.jsx');
-const { ClipFeed } = await import('../../src/page/wowclip/components/ClipFeed.jsx');
 const { ClipPlayer } = await import('../../src/page/wowclip/components/ClipPlayer.jsx');
 const { useWowClipLibrary } = await import('../../src/page/wowclip/hooks/useWowClipLibrary.js');
 const roots = [];
@@ -180,22 +179,46 @@ test('댓글 공감 수는 서버 집계를 우선하고 예전 댓글은 공감
   }
 });
 
-test('감상 댓글 패널에 조회 상태를 전달하고 다시 불러올 수 있다', async () => {
-  const clip = { id: 'qa', title: '검수 클립', content: source.content, comments: [], likes: [] };
-  let refreshes = 0;
-  const props = { clips: [clip], selectedId: clip.id, owner, isProtected: () => false, onRefresh: () => { refreshes++; } };
-  const renderFeed = (state) => withRoutes(h(ClipFeed, { ...props, ...state }));
-  const root = await mount(renderFeed({ commentsLoading: true }), { createNodeMock: () => ({ children: [] }) });
+test('감상 중 댓글만 다시 불러오고 재생기와 댓글 초안을 유지한다', async () => {
+  useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
+  useProfileStore.setState({ currentProfile: null });
+  const clip = { id: 'qa', title: '검수 클립', content: source.content, visibility: 'public', comments: [], likes: [] };
+  let listLoads = 0;
+  const details = [];
+  globalThis.__wowUiService.subscribe = (_options, data) => {
+    listLoads++;
+    queueMicrotask(() => data([clip]));
+    return () => {};
+  };
+  globalThis.__wowUiService.subscribeDetails = (id, _uid, data, error) => {
+    const subscription = { data, error, stopped: false };
+    assert.equal(id, clip.id);
+    details.push(subscription);
+    return () => { subscription.stopped = true; };
+  };
+  const root = await mount(h(MemoryRouter, { initialEntries: ['/wowclip?clip=qa'] }, h(WowClip)), { createNodeMock: () => ({ children: [] }) });
+  const player = root.root.findByType(ClipPlayer);
+  const comment = { id: 'old', text: '기존 댓글', author: 'bob' };
+  const snapshot = (comments) => ({ id: clip.id, liked: false, comments });
+  const readComments = () => root.root.findAllByProps({ className: 'wowclip-comment-text' }).map((node) => node.children[0]);
 
   await act(async () => root.root.findByProps({ 'aria-label': '댓글 0' }).props.onClick());
   assert.equal(root.root.findByProps({ role: 'status' }).children[0], '댓글을 불러오고 있어요.');
-
-  const error = '댓글을 불러오지 못했어요.';
-  await act(async () => root.update(renderFeed({ commentsError: error })));
-  assert.equal(root.root.findByProps({ role: 'alert' }).children[0], error);
-  assert.equal(root.root.findAllByProps({ className: 'wowclip-comments-empty' }).length, 0);
+  await act(async () => details[0].data(snapshot([comment])));
+  await act(async () => root.root.findByType('textarea').props.onChange({ target: { value: '작성 중' } }));
+  await act(async () => details[0].error(new Error('댓글 조회 실패')));
+  assert.ok(root.root.findByProps({ role: 'alert' }));
   await act(async () => root.root.findByProps({ 'aria-label': '댓글 새로고침' }).props.onClick());
-  assert.equal(refreshes, 1);
+  assert.equal(listLoads, 1);
+  assert.equal(details.length, 2);
+  assert.equal(details[0].stopped, true);
+  assert.equal(root.root.findByType(ClipPlayer), player);
+  assert.equal(root.root.findByProps({ role: 'status' }).children[0], '댓글을 불러오고 있어요.');
+  await act(async () => details[0].data(snapshot([{ ...comment, text: '늦게 도착한 댓글' }])));
+  assert.deepEqual(readComments(), ['기존 댓글']);
+  await act(async () => details[1].data(snapshot([{ ...comment, text: '갱신된 댓글' }])));
+  assert.deepEqual(readComments(), ['갱신된 댓글']);
+  assert.equal(root.root.findByType('textarea').props.value, '작성 중');
 });
 
 const protectedFixture = {
@@ -214,9 +237,9 @@ const seedSpoilerLibrary = (clip) => {
 const withClipRoute = () => h(MemoryRouter, { initialEntries: ['/wowclip?clip=protected'] }, h(WowClip));
 const feedNodes = { createNodeMock: () => ({ children: [] }) };
 const revealButton = (root) => root.root.findAllByType('button').find((button) => button.children[0] === '스포일러 열고 보기');
-const fullVideoLinks = (root) => root.root.findAllByType('a').filter((link) => link.props.className === 'wowclip-feed-source');
+const sourceLink = (root, className) => root.root.findAllByType('a').find((link) => link.props.className === className);
 
-test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 보호 중 영상·제목·댓글·풀영상 링크를 가린다', async () => {
+test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 보호 중 영상·제목·댓글·원본 링크를 가린다', async () => {
   useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
   useProfileStore.setState({ currentProfile: { id: 'default' } });
   const priorHistory = useWatchHistoryStore.getState();
@@ -228,14 +251,18 @@ test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 
     assert.ok(revealButton(root));
     assert.equal(root.root.findByType('h2').children[0], '검수 작품에서 오린 장면');
     assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
-    assert.equal(fullVideoLinks(root).length, 0);
+    assert.equal(sourceLink(root, 'wowclip-feed-source'), undefined);
+    assert.equal(sourceLink(root, 'wowclip-feed-category'), undefined);
     await act(async () => root.root.findByProps({ 'aria-label': '댓글 1' }).props.onClick());
     assert.equal(root.root.findAllByType(ClipComments).length, 0);
 
     await act(async () => useWatchHistoryStore.setState({ history: [record] }));
     assert.equal(revealButton(root), undefined);
     assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
-    assert.equal(fullVideoLinks(root).length, 1);
+    const sceneLink = sourceLink(root, 'wowclip-feed-source');
+    assert.equal(sceneLink.props.href, '/watch/tv/78648');
+    assert.ok(sceneLink.children.includes('원본에서 이 장면 보기'));
+    assert.equal(sourceLink(root, 'wowclip-feed-category').props.href, '/detail/tv/78648');
     assert.equal(root.root.findAllByType(ClipComments).length, 1);
     assert.ok(JSON.stringify(root.toJSON()).includes(protectedFixture.title));
 
