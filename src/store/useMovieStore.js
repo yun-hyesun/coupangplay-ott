@@ -375,6 +375,10 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
 
   if (!morePageRequests[key]) {
     morePageRequests[key] = (async () => {
+      if (query.channelTitles) {
+        return fetchChannelTitlePage(type, query, page);
+      }
+      if (query.sourceCheck) await validateChannelSource(query.sourceCheck);
       // 영화 + TV 통합
       if (type === 'all') {
         const [movies, tvs] = await Promise.all([
@@ -401,7 +405,14 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
       }
 
       // 티빙 제공 업체 ID 찾기
-      const { kidsOnly, requiredImage, excludeOriginCountry, useTving: useTvingOption, ...tmdbQuery } = query;
+      const {
+        kidsOnly,
+        adultOnly,
+        requiredImage,
+        excludeOriginCountry,
+        useTving: useTvingOption,
+        ...tmdbQuery
+      } = query;
 
       const useTving =
         !query.with_networks &&
@@ -459,6 +470,13 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
         watch_region: 'KR',
         ...(providerId ? { with_watch_providers: String(providerId) } : {}),
         include_adult: 'false',
+        ...(adultOnly && type === 'movie'
+          ? {
+              region: 'KR',
+              certification_country: 'KR',
+              certification: '19',
+            }
+          : {}),
         [dateKey]: today,
         ...tmdbQuery,
         sort_by: normalizedSort,
@@ -479,9 +497,11 @@ const fetchMorePage = async (type, query = {}, page = 1) => {
             if (!countries.length || countries.includes(excludeOriginCountry)) return null;
           }
 
-          const allowed = kidsOnly
-            ? await checkKidsRating(type, item.id)
-            : await checkUnder19(type, item.id);
+          const allowed = adultOnly
+            ? (await getContentRating(type, item.id)) === 19
+            : kidsOnly
+              ? await checkKidsRating(type, item.id)
+              : await checkUnder19(type, item.id);
 
           if (!allowed) return null;
 
@@ -763,16 +783,18 @@ export const useMovieStore = create((set, get) => ({
       } else
 
         if (
+          params.adultOnly ||
           params.with_networks ||
+          params.with_networks ||
+          params.useTving === false ||
           params.with_watch_monetization_types === 'buy' ||
           (params.kidsOnly && (params.with_companies || params.useTving === false))
         ) {
-          params.useTving === false
           const works = new Map();
           let page = 1;
           let hasNext = true;
 
-          while (works.size < 20 && hasNext) {
+          while (works.size < 20 && hasNext && page <= 6) {
             const result = await fetchMorePage(type, params, page);
 
             for (const item of result.results) {
@@ -1349,3 +1371,150 @@ export const fetchCuratedCategoryItem = async (type, id, purchase = false) => {
   };
 };
 
+
+
+// 채널 소속 확인: ID만 믿고 다른 방송사 작품을 표시하지 않는다.
+const channelSourceChecks = new Map();
+const validateChannelSource = (checks) => {
+  if (!channelSourceChecks.has(checks)) {
+    const request = Promise.all(checks.split(',').map(async (entry) => {
+      const [kind, id, expected] = entry.split(':');
+      const source = await requestTmdb(`/${kind}/${id}`);
+      if (!source.name?.toLowerCase().includes(expected.toLowerCase())) {
+        throw new Error(`${expected} 채널 정보를 확인하지 못했습니다.`);
+      }
+    })).catch(error => {
+      channelSourceChecks.delete(checks);
+      throw error;
+    });
+    channelSourceChecks.set(checks, request);
+  }
+  return channelSourceChecks.get(checks);
+};
+
+// MOA 공식 시리즈 목록을 기반으로 한 기획용 편성 목록.
+// 쿠팡플레이의 MOA 패스 목록을 실시간 동기화하는 데이터는 아니다.
+const moaChannelTitles = [
+  ['长乐曲', 2024, 'romance|historical'],
+  ['沉香如屑', 2022, 'romance|historical'],
+  ['长月烬明', 2023, 'romance|historical'],
+  ['墨雨云间', 2024, 'romance|historical'],
+  ['雁回时', 2025, 'romance|historical'],
+  ['花间令', 2024, 'romance|historical'],
+  ['掌心', 2025, 'historical'],
+  ['锦衣之下', 2019, 'romance|historical'],
+  ['有翡', 2020, 'historical'],
+  ['听雪楼', 2019, 'historical'],
+  ['神隐', 2023, 'romance|historical'],
+  ['星落凝成糖', 2023, 'romance|historical'],
+  ['三生三世枕上书', 2020, 'romance|historical'],
+  ['延禧攻略', 2018, 'historical'],
+  ['如懿传', 2018, 'historical'],
+  ['鹤唳华亭', 2019, 'historical'],
+  ['玫瑰的故事', 2024, 'romance'],
+  ['你也有今天', 2024, 'romance'],
+  ['向风而行', 2022, 'romance'],
+  ['追光者', 2022, 'romance'],
+];
+
+let moaChannelRequest;
+const loadMoaChannelTitles = () => {
+  if (!moaChannelRequest) {
+    moaChannelRequest = (async () => {
+      let next = 0;
+      const items = [];
+      const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date());
+      await Promise.all(Array.from({ length: 4 }, async () => {
+        while (next < moaChannelTitles.length) {
+          const [title, year, tags] = moaChannelTitles[next++];
+          const data = await requestTmdb('/search/tv', {
+            query: title, first_air_date_year: String(year), include_adult: 'false',
+          });
+          const match = (data.results ?? []).find(item =>
+            item.original_name === title && item.first_air_date?.startsWith(String(year))
+          );
+          if (!match) continue;
+          const detail = await requestTmdb(`/tv/${match.id}`);
+          if (detail.adult || !detail.origin_country?.includes('CN') ||
+              !detail.first_air_date || detail.first_air_date > today) continue;
+          if (!(await checkUnder19('tv', detail.id))) continue;
+          items.push({ ...detail, media_type: 'tv', channelTags: tags.split('|') });
+        }
+      }));
+      return [...new Map(items.map(item => [item.id, item])).values()];
+    })().catch(error => { moaChannelRequest = null; throw error; });
+  }
+  return moaChannelRequest;
+};
+
+const fetchChannelTitlePage = async (type, query, page) => {
+  if (type !== 'tv' || query.channelTitles !== 'moa') {
+    throw new Error('채널 작품 목록을 찾지 못했습니다.');
+  }
+  const all = await loadMoaChannelTitles();
+  const items = all.filter(item =>
+    (!query.requiredImage || item[query.requiredImage]) &&
+    (!query.channelTag || item.channelTags.includes(query.channelTag)) &&
+    (query.with_status !== '3' || item.status === 'Ended')
+  );
+  items.sort((a, b) => query.sort_by === 'first_air_date.desc'
+    ? (b.first_air_date || '').localeCompare(a.first_air_date || '')
+    : (b.popularity || 0) - (a.popularity || 0));
+  return { results: items.slice((page - 1) * 20, page * 20), hasNext: page * 20 < items.length };
+};
+
+// Adult 페이지 전용: 한국 관람등급 19세 영화
+const adultMovieRequests = new Map();
+
+export const fetchAdultMovies = (sort = 'popularity.desc') => {
+  if (!adultMovieRequests.has(sort)) {
+    const request = (async () => {
+      const today = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Asia/Seoul',
+      }).format(new Date());
+
+      const works = new Map();
+
+      for (let page = 1; page <= 3 && works.size < 20; page++) {
+        const data = await requestTmdb('/discover/movie', {
+          region: 'KR',
+          certification_country: 'KR',
+          certification: '19',
+          include_adult: 'false',
+          'primary_release_date.lte': today,
+          sort_by: sort,
+          page: String(page),
+        });
+
+        const checked = await Promise.all(
+          (data.results ?? []).map(async (item) => {
+            if (!item.backdrop_path || !item.poster_path) {
+              return null;
+            }
+
+            const rating = await getContentRating('movie', item.id);
+
+            return rating === 19
+              ? { ...item, media_type: 'movie' }
+              : null;
+          })
+        );
+
+        checked.filter(Boolean).forEach((item) => {
+          works.set(item.id, item);
+        });
+
+        if (page >= (data.total_pages || 0)) break;
+      }
+
+      return [...works.values()].slice(0, 20);
+    })().catch((error) => {
+      adultMovieRequests.delete(sort);
+      throw error;
+    });
+
+    adultMovieRequests.set(sort, request);
+  }
+
+  return adultMovieRequests.get(sort);
+};
