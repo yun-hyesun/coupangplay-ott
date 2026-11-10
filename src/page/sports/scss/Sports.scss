@@ -3329,3 +3329,36 @@
     filter: none;
   }
 }
+
+
+/* Favorite feedback is portaled to document.body, independent of fixture overflow/transform. */
+.sports-fixture__favorite-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 8.44em;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  max-width: calc(100vw - 32px);
+  padding: 24px 36px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: sports-favorite-toast-lifecycle 2.2s both;
+}
+
+@keyframes sports-favorite-toast-lifecycle {
+  0% { opacity: 0; transform: translate(-50%, 24px); }
+  14% { opacity: 1; transform: translate(-50%, 0); }
+  82% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sports-fixture__favorite-toast { animation: none; }
+}

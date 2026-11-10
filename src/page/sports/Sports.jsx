@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useId} from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import "./scss/Sports.scss";
 
@@ -376,9 +377,6 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           <TeamCrest team={game.away} />
           <span>{game.away.name}</span>
         </div>
-        {favoriteToast && (
-          <div key={favoriteToastId} className="sports-fixture__favorite-toast" role="status" aria-live="polite">{favoriteToast}</div>
-        )}
         {isScheduled && (
           <button
             type="button"
@@ -437,6 +435,12 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           <span>한국 시간 {formatGameTime(game.utcDate || game.startTime)}</span>
         </div>
       ))}
+      {favoriteToast && createPortal(
+        <div key={favoriteToastId} className="sports-fixture__favorite-toast" role="status" aria-live="polite">
+          {favoriteToast}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
