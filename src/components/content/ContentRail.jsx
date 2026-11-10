@@ -110,6 +110,10 @@ export const ContentRail = ({
       )}
       {error && <p role="alert">{error}</p>}
 
+      {railKey && railKey.includes('-') && config.useTving === false &&
+        savedItems && !loading && !error && !visibleItems.length && (
+          <p className="channel-page__empty">표시할 작품이 없습니다.</p>
+      )}
       <Swiper
         modules={[Navigation, A11y]}
         navigation
@@ -143,3 +147,4 @@ export const ContentRail = ({
     </section>
   );
 };
+

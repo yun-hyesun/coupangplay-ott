@@ -736,10 +736,83 @@ html:has(.wowclip-page):not(:has(.wowclip-shortfeed)),
   min-width: 0;
 }
 
+.wowclip-comment > .wowclip-comment-more {
+  flex: 0 0 auto;
+}
+
+.wowclip-comment-more-button {
+  width: 32px;
+  height: 32px;
+}
+
+.wowclip-comment-menu {
+  min-width: 112px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  background: #292d33;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+}
+
+.wowclip-comment-menu button {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.wowclip-comment-menu button:enabled:hover,
+.wowclip-comment-menu button:focus-visible {
+  background: #414954;
+}
+
+.wowclip-comment-menu button:disabled {
+  opacity: .55;
+}
+
+@supports (position-area: block-end span-inline-start) {
+  .wowclip-comment-menu {
+    inset: auto;
+    margin: 4px 0;
+    position-area: block-end span-inline-start;
+    justify-self: end;
+    position-try-fallbacks: flip-block;
+    position-visibility: anchors-visible;
+  }
+}
+
+@supports not selector(:popover-open) {
+  .wowclip-comment-more-button {
+    display: none;
+  }
+
+  .wowclip-comment-menu {
+    min-width: 0;
+    padding: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .wowclip-comment-more-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .wowclip-comment-menu button {
+    min-height: 44px;
+  }
+}
+
 .wowclip-comment-author {
   color: var(--wow-muted);
   font-size: 12px;
   line-height: 16px;
+  overflow-wrap: anywhere;
 }
 
 .wowclip-comment-text {
@@ -752,6 +825,7 @@ html:has(.wowclip-page):not(:has(.wowclip-shortfeed)),
 
 .wowclip-comment-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 4px;
 }
@@ -785,6 +859,22 @@ html:has(.wowclip-page):not(:has(.wowclip-shortfeed)),
 .wowclip-comment-actions button:hover,
 .wowclip-comment-actions button[aria-pressed='true'] {
   color: #fff;
+}
+
+.wowclip-comment-actions button:disabled,
+.wowclip-replies-toggle:disabled {
+  opacity: .55;
+  cursor: default;
+}
+
+@media (pointer: coarse) {
+  .wowclip-comment-actions button {
+    min-height: 44px;
+  }
+}
+
+.wowclip-comment-deleted {
+  color: var(--wow-secondary);
 }
 
 .wowclip-comment--reply {
@@ -837,6 +927,28 @@ html:has(.wowclip-page):not(:has(.wowclip-shortfeed)),
 
 .wowclip-comment-form-heading button:hover {
   color: #fff;
+}
+
+.wowclip-comment-length {
+  flex-shrink: 0;
+  color: var(--wow-secondary);
+  font-size: 12px;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wowclip-comment-length.is-over-limit {
+  color: #ff9a9a;
+}
+
+.wowclip-comment-form--edit {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.wowclip-comment-edit-actions {
+  justify-content: flex-end;
 }
 
 .wowclip-comment-input {

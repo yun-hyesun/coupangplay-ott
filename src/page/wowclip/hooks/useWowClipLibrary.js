@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useProfileStore } from '../../../store/useProfileStore';
 import { wowClipService } from '../../../service/wowClipService';
 import { clipCloudError } from '../utils/cloudClipData';
 
@@ -45,10 +46,15 @@ export const useWowClipLibrary = ({ selectedId = null } = {}) => {
   const removeClip = (id) => run(() => wowClipService.removeClip(id));
   const toggleLike = (id, _ownerId, commentId) => run(() => wowClipService.toggleLike(id, commentId));
   const addComment = (id, text, owner, parentId = null) => run(() => wowClipService.addComment(id, text, owner, parentId));
-  const recordView = (id) => run(() => wowClipService.recordView(id));
+  const editComment = (id, commentId, text) => run(() => wowClipService.editComment(id, commentId, text));
+  const removeComment = (id, commentId) => run(() => wowClipService.removeComment(id, commentId));
+  const recordView = (id, profileId) => {
+    if (useProfileStore.getState().currentProfile?.id !== profileId) return false;
+    return run(() => wowClipService.recordView(id, uid, profileId));
+  };
   const reload = useCallback(() => { setRevision((value) => value + 1); }, []);
   return { clips, loading, error: remote.scope === scope ? remote.error : '',
     commentsError: details.scope === detailsScope ? details.error : '',
     commentsLoading: !!selectedId && selectedRemote && details.scope !== detailsScope,
-    saveClip, removeClip, toggleLike, addComment, recordView, reload };
+    saveClip, removeClip, toggleLike, addComment, editComment, removeComment, recordView, reload };
 };
