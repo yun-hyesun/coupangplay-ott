@@ -1,3 +1,4 @@
+import { toFivePointRating } from '../../utils/rating';
 import { LoginNoticePopup } from '../../components/common/LoginNoticePopup';
 import { SharePopup } from '../../components/common/SharePopup';
 import CommonIcon from '../../components/common/CommonIcon';
@@ -236,10 +237,9 @@ export const Detail = () => {
     ''
   ).slice(0, 4);
 
-  const rating =
-    typeof content.vote_average === 'number'
-      ? content.vote_average.toFixed(1)
-      : null;
+  // TMDB 평균은 10점 기준이므로 표시할 때만 5점 기준으로 환산합니다.
+  const fivePointRating = toFivePointRating(content.vote_average, 10);
+  const rating = fivePointRating === null ? null : fivePointRating.toFixed(1);
 
   // 현재 계정 + 프로필의 찜 목록인지 확인
   const expectedOwnerKey =
@@ -391,7 +391,7 @@ export const Detail = () => {
             <div className="detail-info__badges">
               {rating && (
                 <span className="detail-info__score">
-                  <StarIcon size={24} /> {rating}
+                  <StarIcon size={24} /> {rating} / 5
                 </span>
               )}
 
