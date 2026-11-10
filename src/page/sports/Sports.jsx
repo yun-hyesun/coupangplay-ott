@@ -18,6 +18,7 @@ import {
   SPORTS_TOGETHER,
 } from "../../data/sportsPageContent";
 import { SportsBanner } from "./components/SportsBanner";
+import { SportsPromo } from "./components/SportsPromo";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
 import { MatchRelatedVideos } from "../../components/MatchRelatedVideos";
 import { LiveBadge } from "../../components/LeagueDetailShared";
@@ -429,15 +430,15 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
 
 export const Sports = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const currentProfile = useProfileStore((state) => state.currentProfile);
   const onLoadWatchlist = useWatchlistStore((state) => state.onLoadWatchlist);
 
   useEffect(() => {
-    if (auth.currentUser && currentProfile?.id) {
+    if (user?.uid && auth.currentUser && currentProfile?.id) {
       onLoadWatchlist();
     }
-  }, [currentProfile?.id, onLoadWatchlist]);
-  const user = useAuthStore((state) => state.user);
+  }, [user?.uid, currentProfile?.id, onLoadWatchlist]);
   const authLoading = useAuthStore((state) => state.loading);
   const canShowSubscriptions = Boolean(user && !authLoading);
   const {
@@ -477,7 +478,7 @@ export const Sports = () => {
   const [showAllSchedule, setShowAllSchedule] = useState(false);
   const SCHEDULE_PREVIEW_COUNT = 10;
   const [expandedGameIds, setExpandedGameIds] = useState([]);
-  const [liveState, setLiveState] = useState({
+  const [, setLiveState] = useState({
     games: [],
     loading: true,
     error: "",
@@ -1082,13 +1083,7 @@ export const Sports = () => {
         badge="추천 영상"
       />
 
-      <aside className="sports-promo" aria-label="엘클라시코 경기 안내">
-        <img
-          src="/images/sports/campaign/el-clasico.png"
-          alt="라리가 엘클라시코 바르셀로나와 레알 마드리드 경기 안내"
-          loading="lazy"
-        />
-      </aside>
+      <SportsPromo />
 
       <VideoSection
         id="sports-moments-title"

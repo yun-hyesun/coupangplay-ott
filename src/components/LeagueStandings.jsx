@@ -2,14 +2,14 @@ import { EmptyMessage } from "./LeagueDetailShared";
 import { selectLeagueStandings } from "../data/leagueStandingsView";
 
 export function LeagueStandings({ league, standingsState, tableRows, tableNote, tableColumns, isBasketball, fullPage = false, onShowAll }) {
-  const limit = fullPage ? 20 : 10;
+  const limit = 20;
   const visibleRows = selectLeagueStandings(tableRows, limit, { allowUnranked: !fullPage });
   return (
-    <section className={"league-detail__section league-detail__standings" + (fullPage ? " league-detail__standings--page" : "")} aria-labelledby="league-detail-standings-title" aria-busy={standingsState.loading}>
-      <div className="league-detail__section-heading">
+    <section className={"league-detail__section league-detail__standings" + (fullPage ? " league-detail__standings--page" : "")} aria-label={fullPage ? `${league.name} 순위` : undefined} aria-labelledby={fullPage ? undefined : "league-detail-standings-title"} aria-busy={standingsState.loading}>
+      {!fullPage && <div className="league-detail__section-heading">
         <h2 id="league-detail-standings-title">리그 순위</h2>
-        {!fullPage && onShowAll && <button type="button" className="league-detail__standings-more" onClick={onShowAll}>전체보기 <span aria-hidden="true">›</span></button>}
-      </div>
+        {onShowAll && <button type="button" className="league-detail__standings-more" onClick={onShowAll}>전체보기 <span aria-hidden="true">›</span></button>}
+      </div>}
       {tableNote && <p className="league-detail__table-note">{tableNote}</p>}
       {standingsState.loading ? (
         <EmptyMessage>순위 정보를 불러오는 중입니다.</EmptyMessage>

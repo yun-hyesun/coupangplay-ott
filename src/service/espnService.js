@@ -486,6 +486,7 @@ function normalizeFootballDataMatch(competitionCode, match) {
     stage: match.stage || "",
     status,
     statusDetail: match.status || "",
+    kickoffTimeConfirmed: String(match.status).toUpperCase() === "TIMED" || ["IN_PLAY", "FINISHED"].includes(status),
     utcDate: date.toISOString(),
     startTime: date.toISOString(),
     home: {
@@ -671,6 +672,7 @@ export function normalizeEspnEvent(leagueId, event) {
     ...getEspnScheduleUnitFields(leagueId, event),
     status,
     statusDetail: eventStatus.type?.detail || "",
+    kickoffTimeConfirmed: competition.timeValid === true && !/\bTBD\b/i.test(eventStatus.type?.detail || ""),
     utcDate: date.toISOString(),
     startTime: date.toISOString(),
     home: normalizeCompetitor(homeTeam, home),

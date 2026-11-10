@@ -378,7 +378,7 @@ export const LeagueDetail = () => {
     };
   });
   const hasStandingsApi = supportsFootballStandings(league.id) || ["nba", "kleague-1", "kleague-2"].includes(league.id);
-  const fallbackTeams = standingsRows.length || hasStandingsApi ? [] : leagueTeams.slice(0, 10).map((team) => ({
+  const fallbackTeams = standingsRows.length || hasStandingsApi ? [] : leagueTeams.slice(0, 20).map((team) => ({
     teamName: team.name,
     logoPath: team.logoPath,
     rank: null,
@@ -428,7 +428,7 @@ export const LeagueDetail = () => {
         league={league}
         scoresOn={scoresOn}
         today={today}
-        selectedTeams={selectedTeams}
+        selectedTeams={user ? selectedTeams : []}
       /> : activeTab === "standings" ? <LeagueStandings
         {...standingsProps}
         fullPage

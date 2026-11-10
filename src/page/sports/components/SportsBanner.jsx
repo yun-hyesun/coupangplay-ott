@@ -48,7 +48,12 @@ export const SportsBanner = ({ slides = SPORTS_BANNERS }) => {
                   </div>
                   <p className="sports-banner__description">{detail.description}</p>
                   <p className="sports-banner__date">{detail.date}</p>
-                  <Link className="sports-banner__button" to={detail.leagueId ? `/sports/league/${detail.leagueId}#league-detail-schedule-title` : "#sports-schedule-title"}>경기 일정 보러가기 <span aria-hidden="true">→</span></Link>
+                  <Link
+                    className="sports-banner__button"
+                    to={detail.leagueId ? `/sports/league/${detail.leagueId}` : "#sports-schedule-title"}
+                    state={detail.leagueId ? { leagueTab: "schedule" } : undefined}
+                    aria-label={`${slide.alt} 경기 일정 보러가기`}
+                  >경기 일정 보러가기 <span aria-hidden="true">→</span></Link>
                 </div>
               </div>
             </SwiperSlide>
