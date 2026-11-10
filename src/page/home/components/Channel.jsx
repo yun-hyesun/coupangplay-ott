@@ -50,6 +50,8 @@ export const Channel = () => {
           slidesPerView="auto"
           observer={true}
           observeParents={true}
+          preventClicks={false}
+          preventClicksPropagation={false}
           className="channel-swiper"
         >
           {channelList.map((channel, id) => (
