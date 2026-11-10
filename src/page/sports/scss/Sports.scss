@@ -3335,7 +3335,7 @@
 .sports-fixture__favorite-toast {
   position: fixed;
   left: 50%;
-  bottom: 8.44em;
+  bottom: 100px;
   z-index: 2147483000;
   box-sizing: border-box;
   max-width: calc(100vw - 32px);
@@ -3361,4 +3361,19 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sports-fixture__favorite-toast { animation: none; }
+}
+
+/* MY 리그: empty state spans the rail and centers its message. */
+.sports-page .sports-rail-shell--featured .sports-featured-leagues__empty {
+  box-sizing: border-box;
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 160px;
 }
