@@ -37,12 +37,21 @@ const footballTeamLogos = {
 };
 
 const nbaTeamLogos = {
+  "nba-atl": "atlanta-hawks", "nba-bkn": "brooklyn-nets",
+  "nba-bos": "boston-celtics", "nba-cha": "charlotte-hornets",
+  "nba-chi": "chicago-bulls", "nba-cle": "cleveland-cavaliers",
   "nba-dal": "dallas-mavericks", "nba-den": "denver-nuggets",
+  "nba-det": "detroit-pistons", "nba-ind": "indiana-pacers",
   "nba-gsw": "golden-state-warriors", "nba-hou": "houston-rockets",
+  "nba-lac": "los-angeles-clippers", "nba-mem": "memphis-grizzlies",
   "nba-lal": "los-angeles-lakers", "nba-mia": "miami-heat",
+  "nba-mil": "milwaukee-bucks", "nba-nop": "new-orleans-pelicans",
   "nba-min": "minnesota-timberwolves", "nba-nyk": "new-york-knicks",
+  "nba-okc": "oklahoma-city-thunder", "nba-orl": "orlando-magic",
   "nba-phi": "philadelphia-76ers", "nba-por": "portland-trail-blazers",
-  "nba-tor": "toronto-raptors",
+  "nba-phx": "phoenix-suns", "nba-sac": "sacramento-kings",
+  "nba-sas": "san-antonio-spurs", "nba-uta": "utah-jazz",
+  "nba-tor": "toronto-raptors", "nba-was": "washington-wizards",
 };
 
 const kleagueTeamLogos = {

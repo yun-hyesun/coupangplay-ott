@@ -100,7 +100,8 @@ async function loadWeeks(leagueId, now) {
   if (!week?.startDate && week?.number) week = await requestJson(`${typePath}/weeks/${week.number}`);
   if (week?.startDate && Date.parse(week.startDate) > now && Number(week.number) > 1) week = await requestJson(`${typePath}/weeks/${Number(week.number) - 1}`);
   if (!Number.isInteger(Number(week?.number)) || Number(week.number) < 1 || Number(week.number) > 60 || !week.startDate) throw new Error("현재 주차 정보를 확인할 수 없습니다.");
-  return { week, source: "ESPN", field: "season.year / season.type / week.number / week.startDate", seasonYear: year, matches: [] };
+  const preseason = leagueId === "nba" ? await requestJson(`/espn-core/sports/${sport}/leagues/${league}/seasons/${year}/types/1`).catch(() => null) : null;
+  return { week, preseason, source: "ESPN", field: "season.year / season.type / week.number / week.startDate", seasonYear: year, matches: [] };
 }
 
 async function loadKleague(leagueId, now) {
@@ -209,5 +210,9 @@ export async function getLeagueRoundOptions(leagueId, now = Date.now(), { force 
     const number = Date.parse(data.week.startDate) <= now ? Number(data.week.number) : 0;
     units = { options: Array.from({ length: number }, (_, index) => ({ value: `week:${index + 1}`, label: `${index + 1}주차`, kind: "week", number: index + 1 })), currentLabel: number ? `${number}주차` : "" };
   } else units = buildScheduleUnitOptions(data.matches, now);
+  if (leagueId === "nba" && data.week) {
+    units.options.reverse();
+    if (Date.parse(data.preseason?.startDate) <= now) units.options.unshift({ value: "stage:프리시즌", label: "프리시즌", kind: "stage" });
+  }
   return { ...units, source: data.source, field: data.field, seasonYear: data.seasonYear, checkedAt: new Date(saved.at).toISOString(), unavailable: !units.options.length, stale: Boolean(warning), warning };
 }
