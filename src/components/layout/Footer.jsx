@@ -13,7 +13,7 @@ export const Footer = () => {
   const footerInquiry = [
     { label: "광고 문의", path: "/ad-inquiry" },
     { label: "제휴 문의", path: "/partnership" },
-    { label: "자주 묻는 질문", path: "/faq" },
+    { label: "자주 묻는 질문", path: "/my/support?category=FAQ" },
   ]
 
   const footerSns = [
