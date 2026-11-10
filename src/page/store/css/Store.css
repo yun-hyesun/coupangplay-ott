@@ -2,31 +2,30 @@
 /* size */
 /* size */
 .store-page .store-marvel {
-  box-sizing: border-box;
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
   margin: 0 auto;
-  padding: 0 64px 20px;
-  color: #FFFFFF;
-  font-family: "Pretendard", sans-serif;
-}
-.store-page .store-marvel *,
-.store-page .store-marvel *::before,
-.store-page .store-marvel *::after {
-  box-sizing: border-box;
+  padding: 0 clamp(20px, 4vw, 80px) 20px;
+  --marvel-panel-width: calc(100vw - (clamp(20px, 4vw, 80px) * 2));
+  --marvel-card-width: max(216px,
+          calc(var(--marvel-panel-width) * 0.1205357));
+  --marvel-card-height: calc(var(--marvel-card-width) * 1.5);
 }
 .store-page .store-marvel__panel {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 20px;
-  height: 360px;
+  height: calc(var(--marvel-card-height) + 36px);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   background: #08090a;
 }
 .store-page .store-marvel__intro {
-  flex: 0 0 282px;
-  height: 100%;
+  flex: 0 0 15.7366%;
+  min-width: 230px;
+  height: auto;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -66,36 +65,34 @@
 }
 .store-page .store-marvel__slider {
   position: relative;
-  flex: 1;
+  flex: 1 1 0%;
   min-width: 0;
   height: 100%;
+  overflow: hidden;
 }
-.store-page .store-marvel__viewport {
+.store-page .store-marvel__viewport.swiper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-}
-.store-page .store-marvel__viewport::-webkit-scrollbar {
-  display: none;
-}
-.store-page .store-marvel__track {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  width: max-content;
+  overflow: hidden;
   padding: 17px 0;
+}
+.store-page .store-marvel__viewport.swiper .swiper-wrapper {
+  height: var(--marvel-card-height);
+}
+.store-page .store-marvel__viewport.swiper .swiper-slide {
+  width: var(--marvel-card-width);
+  height: var(--marvel-card-height);
+  flex-shrink: 0;
 }
 .store-page .store-marvel__card {
   display: block;
   position: relative;
-  flex: 0 0 216px;
-  width: 216px;
-  height: 324px;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   border-radius: 8px;
-  scroll-snap-align: start;
   text-decoration: none;
 }
 .store-page .store-marvel__art {
@@ -167,9 +164,6 @@
   outline-offset: -3px;
 }
 @media (max-width: 900px) {
-  .store-page .store-marvel {
-    padding-inline: 32px;
-  }
   .store-page .store-marvel__intro {
     flex-basis: 230px;
     padding: 20px;
@@ -177,7 +171,8 @@
 }
 @media (max-width: 600px) {
   .store-page .store-marvel {
-    padding-inline: 20px;
+    --marvel-card-width: 216px;
+    --marvel-card-height: 324px;
   }
   .store-page .store-marvel__panel {
     height: auto;
@@ -186,18 +181,15 @@
   }
   .store-page .store-marvel__intro {
     flex-basis: auto;
-    height: auto;
-    width: 100%;
-    padding: 24px;
+    min-width: 0;
   }
   .store-page .store-marvel__slider {
     flex: none;
     width: 100%;
     height: 360px;
   }
-  .store-page .store-marvel__track {
-    padding-left: 24px;
-    padding-right: 24px;
+  .store-page .store-marvel__viewport.swiper {
+    padding-inline: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {
