@@ -1,7 +1,10 @@
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './scss/MyPurchases.scss'
+import { useAuthStore } from '../../store/useAuthStore';
+import { subscribeMyPurchases } from '../../service/purchaseService';
+import { updatePurchaseHidden } from '../../service/purchaseService';
 
 // 상단 콘텐츠 탭
 const contentTabs = [
@@ -23,13 +26,22 @@ const genres = [
     '키즈'
 ];
 
-// 임시 구매 데이터
-// 실제 구매 기능 연동 후 교체
-const initialPurchases = [];
-
 export const MyPurchases = () => {
-    // 전체 구매 기록
-    const [purchases, setPurchases] = useState(initialPurchases);
+    const user = useAuthStore((state) => state.user);
+    const [purchases, setPurchases] = useState([]);
+    const [purchaseError, setPurchaseError] = useState('');
+
+    useEffect(() => {
+        setPurchases([]);
+        setPurchaseError('');
+        if (!user?.uid) return;
+
+        return subscribeMyPurchases(
+            user.uid,
+            setPurchases,
+            () => setPurchaseError('구매내역을 불러오지 못했습니다.')
+        );
+    }, [user?.uid]);
 
     // 선택한 장르
     const [activeGenre, setActiveGenre] = useState('전체');
@@ -40,13 +52,13 @@ export const MyPurchases = () => {
     // 선택된 콘텐츠 ID
     const [selectedIds, setSelectedIds] = useState([]);
 
-    // 숨긴 콘텐츠 ID
-    // 현재는 화면에서만 유지됨
-    const [hiddenIds, setHiddenIds] = useState([]);
+    // 숨기기 확인 모달
+    const [showHideModal, setShowHideModal] = useState(false);
 
-    // 숨기지 않은 구매 기록만 표시
+    // 일반 모드에서는 숨긴 콘텐츠 제외
+    // 편집 모드에서는 숨긴 콘텐츠까지 표시
     const visiblePurchases = purchases.filter(
-        (item) => !hiddenIds.includes(item.id)
+        (item) => isEditing || !item.hidden
     );
 
     // 장르 필터링
@@ -102,24 +114,77 @@ export const MyPurchases = () => {
         }
     };
 
-    // 선택한 구매 기록 숨기기
+
+    // 선택 숨기기 모달 열기
     const handleHide = () => {
         if (selectedIds.length === 0) return;
+        setShowHideModal(true);
+    };
 
-        const confirmed = window.confirm(
-            '선택한 구매내역을 목록에서 숨기시겠습니까?\n실제 구매 기록은 삭제되지 않습니다.'
+
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // 선택한 콘텐츠 숨기기
+    const handleConfirmHide = async () => {
+        if (!user?.uid || selectedIds.length === 0 || isUpdating) return;
+
+        setIsUpdating(true);
+        setPurchaseError('');
+
+        try {
+            await Promise.all(
+                purchases
+                    .filter((item) =>
+                        selectedIds.includes(item.id) && !item.hidden
+                    )
+                    .map((item) =>
+                        updatePurchaseHidden(user.uid, item.id, true)
+                    )
+            );
+
+            setSelectedIds([]);
+            setIsEditing(false);
+            setShowHideModal(false);
+        } catch (err) {
+            console.error('구매내역 숨기기 오류:', err);
+            setPurchaseError('구매내역을 숨기지 못했습니다.');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+
+    // 숨긴 콘텐츠 다시 표시
+    const handleRestore = async () => {
+        if (!user?.uid || selectedIds.length === 0 || isUpdating) return;
+
+        const hiddenItems = purchases.filter(
+            (item) => selectedIds.includes(item.id) && item.hidden
         );
 
-        if (!confirmed) return;
+        if (hiddenItems.length === 0) return;
 
-        // 선택한 ID를 숨김 목록에 추가
-        setHiddenIds((prev) => [
-            ...new Set([...prev, ...selectedIds])
-        ]);
+        setIsUpdating(true);
+        setPurchaseError('');
 
-        setSelectedIds([]);
-        setIsEditing(false);
+        try {
+            await Promise.all(
+                hiddenItems.map((item) =>
+                    updatePurchaseHidden(user.uid, item.id, false)
+                )
+            );
+
+            setSelectedIds([]);
+        } catch (err) {
+            console.error('구매내역 복원 오류:', err);
+            setPurchaseError('구매내역을 복원하지 못했습니다.');
+        } finally {
+            setIsUpdating(false);
+        }
     };
+
+
+
 
     return (
         <main className="my-purchases">
@@ -225,10 +290,31 @@ export const MyPurchases = () => {
                                     className="hide"
                                     onClick={handleHide}
                                     disabled={
-                                        selectedIds.length === 0
+                                        isUpdating ||
+                                        !selectedIds.some((id) =>
+                                            purchases.some(
+                                                (item) => item.id === id && !item.hidden
+                                            )
+                                        )
                                     }
                                 >
                                     선택 숨기기 ({selectedIds.length})
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="restore"
+                                    onClick={handleRestore}
+                                    disabled={
+                                        isUpdating ||
+                                        !selectedIds.some((id) =>
+                                            purchases.some(
+                                                (item) => item.id === id && item.hidden
+                                            )
+                                        )
+                                    }
+                                >
+                                    선택 복원
                                 </button>
 
                                 <button
@@ -256,6 +342,8 @@ export const MyPurchases = () => {
                     </div>
                 </div>
 
+                {purchaseError && <p role="alert">{purchaseError}</p>}
+
                 {/* 구매 콘텐츠 목록 */}
                 {filteredPurchases.length === 0 ? (
                     <p className="my-purchases-empty">
@@ -269,7 +357,8 @@ export const MyPurchases = () => {
 
                             return (
                                 <div
-                                    className="my-purchases-item"
+                                    className={`my-purchases-item ${item.hidden ? 'is-hidden' : ''
+                                        }`}
                                     key={item.id}
                                 >
                                     <button
@@ -302,6 +391,12 @@ export const MyPurchases = () => {
                                         ) : (
                                             <span className="my-purchases-placeholder">
                                                 {item.title}
+                                            </span>
+                                        )}
+
+                                        {isEditing && item.hidden && (
+                                            <span className="my-purchases-hidden-label">
+                                                숨김
                                             </span>
                                         )}
 
@@ -338,6 +433,52 @@ export const MyPurchases = () => {
                     </div>
                 )}
             </div>
+
+
+            {showHideModal && (
+                <div className="my-purchases-modal">
+                    <div
+                        className="my-purchases-modal__content"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="hide-modal-title"
+                    >
+                        <div className="my-purchases-modal__icon">
+                            <span>!</span>
+                        </div>
+
+                        <h2 id="hide-modal-title">
+                            구매내역을 숨기시겠습니까?
+                        </h2>
+
+                        <p>
+                            선택한 {selectedIds.length}개의 콘텐츠를
+                            목록에서 숨깁니다.
+                            <br />
+                            실제 구매 기록은 삭제되지 않습니다.
+                        </p>
+
+                        <div className="my-purchases-modal__actions">
+                            <button
+                                type="button"
+                                className="my-purchases-modal__button my-purchases-modal__button--secondary"
+                                onClick={() => setShowHideModal(false)}
+                            >
+                                취소
+                            </button>
+
+                            <button
+                                type="button"
+                                className="my-purchases-modal__button"
+                                onClick={handleConfirmHide}
+                            >
+                                숨기기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </main>
     );
 };

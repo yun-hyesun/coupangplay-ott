@@ -1,9 +1,12 @@
 
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import process from "node:process";
 import babel from "@rolldown/plugin-babel";
 import { defineConfig, loadEnv } from "vite";
 import sportsHandler from "./api/sports.js";
 import { createLeagueVideosHandler } from "./api/league-videos.js";
+import { createMyTeamVideosHandler } from "./api/my-team-videos.js";
+import { createYouTubeCatalog } from "./api/youtube-catalog.js";
 
 const env = loadEnv("development", process.cwd(), "");
 
@@ -18,14 +21,19 @@ const sportsApi = {
       ""
     );
 
-    if (YOUTUBE_API_KEY) {
-      process.env.YOUTUBE_API_KEY ??= YOUTUBE_API_KEY;
+    const youtubeApiKey = YOUTUBE_API_KEY || VITE_YOUTUBE_API_KEY;
+    if (youtubeApiKey) {
+      process.env.YOUTUBE_API_KEY ??= youtubeApiKey;
     }
-    const leagueVideosHandler = createLeagueVideosHandler({ apiKey: YOUTUBE_API_KEY || VITE_YOUTUBE_API_KEY });
+    const leagueVideosHandler = createLeagueVideosHandler({ apiKey: youtubeApiKey });
+    const catalog = createYouTubeCatalog({ apiKey: youtubeApiKey });
+    const myTeamVideosHandler = createMyTeamVideosHandler({ catalog });
+    const stopCatalog = catalog.start();
+    server.httpServer?.once("close", stopCatalog);
 
     server.middlewares.use((req, res, next) => {
       const path = req.url?.split("?")[0];
-      if (path !== "/api/sports" && path !== "/api/league-videos") {
+      if (path !== "/api/sports" && path !== "/api/league-videos" && path !== "/api/my-team-videos") {
         return next();
       }
 
@@ -43,6 +51,7 @@ const sportsApi = {
         return res.end(JSON.stringify(data));
       };
 
+      if (path === "/api/my-team-videos") return myTeamVideosHandler(req, res);
       return path === "/api/league-videos" ? leagueVideosHandler(req, res) : sportsHandler(req, res);
     });
   },

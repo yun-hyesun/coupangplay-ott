@@ -99,21 +99,22 @@
 
             // 등록된 이용권 로고 목록
             .my-pass-icons {
-                display: flex;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 align-items: center;
-                flex-wrap: wrap;
                 flex: 1;
-                gap: 10px;
+                gap: 5px;
                 min-width: 0;
             }
 
             // 이용권 로고
             .my-pass-icon {
                 display: block;
-                width: auto;
+                width: 100%;
                 max-width: 95px;
                 height: 28px;
                 object-fit: contain;
+                object-position: left center;
             }
 
             // 오른쪽 화살표

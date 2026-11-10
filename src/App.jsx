@@ -17,10 +17,14 @@ import { Kids } from './page/kids/Kids';
 
 // 약관 및 정책
 import { Policy } from './page/policy/Policy';
+import { Partnership } from './page/partnership/Partnership';
 
 // 상세페이지
 import { Detail } from './page/detail/Detail';
 import { Watch } from './page/watch/Watch';
+
+// 개별 결제창
+import { PurchaseCheckout } from './page/purchase/PurchaseCheckout';
 
 // 로그인, 회원가입
 import { Signup } from './page/login/SignUp';
@@ -58,7 +62,6 @@ import { Category } from './page/category/Category';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
-import { SportsWatch } from './page/home/components/SportsWatch';
 
 import { WowClip } from './page/wowclip/WowClip';
 
@@ -96,6 +99,9 @@ function App() {
         <Route path="/store" element={<Store />} />
         <Route path="/kids" element={<Kids />} />
 
+        {/* 제휴 문의: 푸터의 /partnership 링크 연결 */}
+        <Route path="/partnership" element={<Partnership />} />
+
         {/* 약관 및 정책 */}
         <Route path="/privacy" element={<Policy />} />
         <Route path="/terms" element={<Policy />} />
@@ -106,6 +112,9 @@ function App() {
         {/* 상세페이지 */}
         <Route path="/detail/:type/:id" element={<Detail />} />
         <Route path="/watch/:type/:id" element={<Watch />} />
+
+        {/* 개별 결제창 */}
+        <Route path="/purchase/checkout/:type/:id" element={<PurchaseCheckout />} />
 
         {/* 로그인, 회원가입 */}
         <Route path="/login" element={<Login />} />
@@ -134,8 +143,6 @@ function App() {
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
         <Route path="/wowclip" element={<WowClip />} />
-        {/* 메인스포츠 하이라이트 */}
-        <Route path="/watch/sports/:id" element={<SportsWatch />} />
         {/* 검색 */}
         <Route path="/search" element={<Search />} />
         {/* 카테고리 */}

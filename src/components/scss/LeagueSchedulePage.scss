@@ -53,9 +53,9 @@
   }
   &__match { position: relative; display: grid; min-height: 120px; grid-template-columns: 144px minmax(0, 1fr) 144px; align-items: center; padding: 0 32px; overflow: hidden; border-radius: 16px; background: var(--schedule-surface); transition: background-color .18s;
     &:hover, &[data-match-status='ended'], &[data-match-status='live'] { background: var(--schedule-surface-hover); }
-    &[data-my-team='true']::before, &[data-my-team='true']::after { position: absolute; top: 0; bottom: 0; width: 16px; background: var(--schedule-blue); content: ''; }
-    &[data-my-team='true']::before { left: 0; }
-    &[data-my-team='true']::after { right: 0; }
+    &[data-my-team-home='true']::before, &[data-my-team-away='true']::after { position: absolute; top: 0; bottom: 0; width: 16px; background: var(--schedule-blue); content: ''; }
+    &[data-my-team-home='true']::before { left: 0; }
+    &[data-my-team-away='true']::after { right: 0; }
   }
   &__match-wrap { min-width: 0; overflow: hidden; border-radius: 16px;
     &[data-expanded='true'] > .league-schedule__match { border-bottom-right-radius: 0; border-bottom-left-radius: 0; }
@@ -140,7 +140,7 @@
     &__timezone { font-size: 13px; line-height: 20px; height: 20px; }
     &__date-group > h3 { font-size: 16px; line-height: 24px; }
     &__match { min-height: 144px; grid-template-columns: minmax(0,1fr) 40px; gap: 8px; padding: 38px 16px 12px; border-radius: 12px;
-      &[data-my-team='true']::before, &[data-my-team='true']::after { width: 6px; }
+      &[data-my-team-home='true']::before, &[data-my-team-away='true']::after { width: 6px; }
     }
     &__badges { position: absolute; top: 12px; left: 16px; gap: 6px; }
     &__matchup { grid-template-columns: minmax(0,1fr) 108px minmax(0,1fr); }

@@ -13,6 +13,44 @@
         padding: 40px 24px 80px;
     }
 
+    // 공통 버튼: 이용권 등록 / 해지 신청 취소
+    .voucher-open-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-shrink: 0;
+        box-sizing: border-box;
+        width: fit-content;
+        height: 45px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 8px;
+        background: #292d33;
+        color: $color-text-pri;
+        font-family: $font-main;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background 0.2s ease;
+
+        span {
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        &:hover:not(:disabled) {
+            background: #505050;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
     // 페이지 제목
     .subscription-header {
         display: flex;
@@ -36,39 +74,7 @@
             font-weight: 700;
         }
 
-        .voucher-open-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-            white-space: nowrap;
 
-            padding: 12px 16px;
-
-            background: #292d33;
-            border: none;
-            border-radius: 8px;
-
-            color: $color-text-pri;
-            font-family: $font-main;
-            font-size: 16px;
-
-            cursor: pointer;
-
-            span {
-                font-size: 22px;
-                line-height: 1;
-            }
-
-            &:hover {
-                background: #505050;
-            }
-
-            &:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-        }
     }
 
     // 구독 내역 목록
@@ -81,9 +87,7 @@
 
     // 구독 카드
     .subscription-card {
-        display: flex;
-        align-items: center;
-        gap: 24px;
+        display: block;
 
         width: 100%;
         padding: 20px 24px;
@@ -293,6 +297,142 @@
 }
 
 
+/* ========================================
+   구독 해지 신청 - 고객센터 FAQ 스타일
+======================================== */
+
+.my-subscription {
+
+    // 구독 카드 전체는 기존 배경 유지
+    .subscription-card {
+        &.cancel-pending {
+            padding: 0;
+            border-radius: 0;
+        }
+    }
+
+    // 로고 + 구독 정보 + 더보기
+    .subscription-card-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 24px;
+        width: 100%;
+        padding: 24px 0;
+
+    }
+
+    // 해지 신청 아코디언
+    .my-pass-cancel-accordion {
+        width: 100%;
+        margin-top: 0;
+    }
+
+    // 고객센터 질문과 동일한 스타일
+    .my-pass-cancel-question {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        width: 100%;
+        min-height: 70px;
+        padding: 20px 16px;
+
+        border: none;
+        border-bottom: 1px solid #303135;
+        border-radius: 0;
+        background: transparent;
+
+        color: #fff;
+        font-size: 16px;
+        text-align: left;
+        cursor: pointer;
+
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .my-pass-cancel-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-left: 16px;
+
+            img {
+                display: block;
+                width: 24px;
+                height: 24px;
+                object-fit: contain;
+                transform: rotate(-90deg);
+                transition: transform 0.3s ease;
+            }
+        }
+
+        &[aria-expanded="true"] {
+            .my-pass-cancel-arrow img {
+                transform: rotate(90deg);
+            }
+        }
+    }
+
+    // FAQ와 동일한 펼침 애니메이션
+    .my-pass-cancel-answer-wrap {
+        display: grid;
+        grid-template-rows: 0fr;
+        opacity: 0;
+
+        transition:
+            grid-template-rows 0.35s ease,
+            opacity 0.3s ease;
+
+        .my-pass-cancel-answer-inner {
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        &.open {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+    }
+
+    // 펼쳐지는 회색 답변 영역
+    .my-pass-cancel-answer {
+        padding: 20px 16px;
+        background: #202123;
+        border-radius: 0 0 6px 6px;
+
+        color: #aaa;
+        font-size: 16px;
+        line-height: 1.8;
+
+        p {
+            margin: 0;
+        }
+    }
+
+    // 종료일 + 해지 신청 취소 버튼
+    .my-pass-cancel-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+
+        margin-top: 10px;
+
+        span {
+            font-size: 14px;
+            color: #aaa;
+        }
+    }
+}
+
+
 // ========================================
 // 반응형
 // ========================================
@@ -300,6 +440,28 @@
 // 모바일
 @media (max-width: 767px) {
     .my-subscription {
+        .subscription-card-top {
+            gap: 12px;
+            padding: 20px 0;
+        }
+
+        .my-pass-cancel-question {
+            min-height: 56px;
+            padding: 18px 8px;
+            font-size: 14px;
+        }
+
+        .my-pass-cancel-answer {
+            padding: 20px 12px;
+            font-size: 14px;
+        }
+
+        .my-pass-cancel-bottom {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
         .my-subscription-inner {
             padding: 24px 16px 60px;
         }
@@ -311,14 +473,7 @@
                 font-size: 22px;
             }
 
-            .voucher-open-btn {
-                padding: 10px 12px;
-                font-size: 14px;
 
-                span {
-                    font-size: 20px;
-                }
-            }
         }
 
         .subscription-list {
@@ -327,7 +482,6 @@
         }
 
         .subscription-card {
-            gap: 14px;
             padding: 16px;
         }
 
