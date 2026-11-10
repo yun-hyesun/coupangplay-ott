@@ -1106,13 +1106,23 @@ export const Sports = () => {
         badge="추천 영상"
       />
 
-      <aside className="sports-nba-banner" aria-label="NBA 정규 시즌 안내">
+      <Link
+        className="sports-nba-banner"
+        to="/sports/league/nba"
+        state={{ leagueTab: "home" }}
+        aria-label="NBA 리그 페이지로 이동"
+        onClick={event => {
+          if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+            window.scrollTo({ top: 0, behavior: "instant" });
+          }
+        }}
+      >
         <img
           src="/images/sports/campaign/nba-season.png"
           alt="8년 연속 바뀐 왕좌, 새 시즌의 시작. NBA 정규 시즌 시청하기"
           loading="lazy"
         />
-      </aside>
+      </Link>
 
       <VideoSection
         id="sports-replays-title"

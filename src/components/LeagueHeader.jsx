@@ -19,7 +19,7 @@ const LEAGUE_ICON_PATHS = {
   "tour-de-france": "/images/icon/DesignSystem_Icon08/icon-sport_racing.svg",
 };
 
-export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTabChange, isMyLeague, selectedLeagueCount = 0, selectedTeams = [], onToggleMyLeague, onOpenTeamSettings, isCompact }) {
+export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle = true, activeTab, onTabChange, isMyLeague, selectedLeagueCount = 0, selectedTeams = [], onToggleMyLeague, onOpenTeamSettings, isCompact }) {
   const [isLeagueMenuOpen, setLeagueMenuOpen] = useState(false);
   const leagueMenuTriggerRef = useRef(null);
   const leagueMenuId = useId();
@@ -59,6 +59,7 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTa
                 ref={leagueMenuTriggerRef}
                 type="button"
                 className="league-detail__league-select"
+                title="다른 리그 선택"
                 aria-label={`${league.name}, 다른 리그 선택`}
                 aria-haspopup="dialog"
                 aria-expanded={isLeagueMenuOpen}
@@ -69,15 +70,14 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTa
                 <span className="league-detail__league-arrow" aria-hidden="true">
                   <img src="/images/sports/league-detail/shortcut-arrow.svg" alt="" />
                 </span>
-                <span className="league-detail__league-select-tooltip" aria-hidden="true">다른 리그 선택</span>
               </button>
             </h1>
-            <button
+            {showScoreToggle && <button
               type="button"
               className={"league-detail__score-toggle" + (scoresOn ? " is-on" : "")}
               aria-pressed={scoresOn}
               onClick={onToggleScores}
-            >점수 {scoresOn ? "ON" : "OFF"}</button>
+            >점수 {scoresOn ? "ON" : "OFF"}</button>}
           </div>
         </div>
         <div className="league-detail__hero-actions">

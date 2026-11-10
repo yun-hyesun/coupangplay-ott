@@ -284,8 +284,8 @@ export const Watch = () => {
 
   const goBack = async () => {
     if (isSports) {
-      const { path, leagueTab } = getWatchReturnDestination(state);
-      navigate(path, { replace: true, state: { leagueTab } });
+      const { path, ...returnState } = getWatchReturnDestination(state);
+      navigate(path, { replace: true, state: returnState });
       return;
     }
     const video = videoRef.current;

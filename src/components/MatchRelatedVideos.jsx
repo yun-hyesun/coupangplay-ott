@@ -48,7 +48,7 @@ export function MatchRelatedVideos({ game, id, initialVideos = [], returnTab }) 
         a11y={{ prevSlideMessage: "이전 관련 영상", nextSlideMessage: "다음 관련 영상", slideLabelMessage: "관련 영상 {{index}} / {{slidesLength}}" }}
       >
         {result.videos.map(video => <SwiperSlide key={video.id}>
-          <VideoCard video={{ ...video, meta }} variant="fixture" returnTab={returnTab} />
+          <VideoCard video={{ ...video, meta }} variant="fixture" returnTab={returnTab} returnMatch={game} />
         </SwiperSlide>)}
       </Swiper>}
       {result.loading && result.videos.length === 0 && <div className="sports-match-videos__loading" role="status">
