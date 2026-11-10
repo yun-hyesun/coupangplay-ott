@@ -9,10 +9,10 @@ import 'swiper/css/pagination';
 
 const channelList = [
   { img: "/images/channal01.svg", art: "EBS ON", path: "/channel/ebs" },
-  { img: "/images/channal02.svg", art: "스포츠패스", path: "/channel/sports" },
-  { img: "/images/channal03.svg", art: "키즈+", path: "/channel/kids" },
+  { img: "/images/channal02.svg", art: "스포츠패스", path: "/sports" },
+  { img: "/images/channal03.svg", art: "키즈+", path: "/kids" },
   { img: "/images/channal04.svg", art: "Adult", path: "/channel/adult" },
-  { img: "/images/channal05.svg", art: "K LEAGUE 1", path: "/channel/kleague" },
+  { img: "/images/channal05.svg", art: "K LEAGUE 1", path: "/sports/league/kleague-1" },
   { img: "/images/channal07.svg", art: "JTBC", path: "/channel/jtbc" },
   { img: "/images/channal08.svg", art: "Paramount", path: "/channel/paramount" },
   { img: "/images/channal09.svg", art: "SONY PICTURES", path: "/channel/sony" },

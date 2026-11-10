@@ -1,68 +1,22 @@
 .channel-page {
-  padding-bottom: 80px;
+  
+  .channel-page-banner {
+      .inner {width: 100%; height: 100%; border-radius: 30px; border: 2px solid rgba(255,255,255,.1); overflow: hidden; position: relative;
+      
+        .banner-image {width: 100%; height: 100%; object-fit: cover; object-position: center top;}
 
-  &__heading {
-    padding: 32px $padding-main 24px;
+        .channel-info {@include pos-abs-centerY($l:5%); @include flexCol($gap: 20px); align-items: flex-start;
+        
+          .channel-title {height: clamp(30px, 5.55vw, 80px);
+          
+            img {height: 100%;}
+          }
 
-    h1 {
-      margin: 24px 0 12px;
+          > p {color: $color-text-sec1; font-size: clamp(14px, 1.25vw,18px);}
 
-      img {
-        display: block;
-        width: 180px;
-        height: 64px;
-        object-fit: contain;
-        object-position: left center;
+          .channel-sign {line-height: 2; padding: 0.3em 1.2em;}
+        }
       }
     }
-
-    p {
-      margin: 0;
-      color: #b4bbc5;
-      font-size: 16px;
-      line-height: 1.6;
-    }
-  }
-
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    color: #b4bbc5;
-    font-size: 14px;
-
-    &:hover {
-      color: #fff;
-    }
-  }
-
-  &__empty {
-    padding: 64px $padding-main;
-    color: #b4bbc5;
-    text-align: center;
-  }
-
-  &--empty {
-    padding: 80px $padding-main;
-
-    a {
-      display: inline-block;
-      margin-top: 20px;
-      color: #0095ff;
-    }
-  }
-
-  @media (max-width: 767px) {
-    &__heading {
-      padding-top: 20px;
-
-      h1 img {
-        width: 140px;
-        height: 48px;
-      }
-
-      p {
-        font-size: 14px;
-      }
-    }
-  }
+  
 }

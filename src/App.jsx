@@ -63,7 +63,14 @@ import { SportsWatch } from './page/home/components/SportsWatch';
 import { WowClip } from './page/wowclip/WowClip';
 
 // 채널
-import { ChannelPage } from './page/channel/ChannelPage';
+import { Ebs } from './page/channel/Ebs';
+import { Paramount } from './page/channel/Paramount';
+import { Moa } from './page/channel/Moa';
+import { Jtbc } from './page/channel/Jtbc';
+import { Sony } from './page/channel/Sony';
+import { Jplus } from './page/channel/Jplus';
+import { Hbo } from './page/channel/Hbo';
+import { Adult } from './page/channel/Adult';
 
 function App() {
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
@@ -136,7 +143,14 @@ function App() {
 
 
         {/* 체널 */}
-        <Route path="/channel/:channelId" element={<ChannelPage />} />
+        <Route path="/channel/ebs" element={<Ebs />} />
+        <Route path="/channel/paramount" element={<Paramount />} />
+        <Route path="/channel/moa" element={<Moa />} />
+        <Route path="/channel/jtbc" element={<Jtbc />} />
+        <Route path="/channel/sony" element={<Sony />} />
+        <Route path="/channel/jplus" element={<Jplus />} />
+        <Route path="/channel/hbo" element={<Hbo />} />
+        <Route path="/channel/adult" element={<Adult />} />
 
       </Route>
 
