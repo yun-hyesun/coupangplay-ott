@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import CommonIcon from '../../../components/common/CommonIcon';
 import { ClipPlayer } from './ClipPlayer';
 import { ClipComments } from './ClipComments';
 import { ClipIcon } from './WowClipUi';
@@ -8,9 +9,7 @@ import { clipEpisodeLabel, clipWatchState } from '../utils/clipSource';
 import { clipLikeCount, clipIsLiked } from '../utils/cloudClipData';
 import '../scss/ClipFeed.scss';
 
-const FeedIcon = ({ name }) => <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{({ up: <path d="m6 15 6-6 6 6" />, down: <path d="m6 9 6 6 6-6" />, comment: <path d="M4 4h16v13H8l-4 4V4Z" />, share: <><path d="m15 3 6 6-6 6V3Z" /><path d="M15 7C7 7 4 11 3 18c3-4 6-5 12-5" /></>, more: <><circle cx="12" cy="5" r="1" fill="currentColor" /><circle cx="12" cy="12" r="1" fill="currentColor" /><circle cx="12" cy="19" r="1" fill="currentColor" /></> })[name]}</svg>;
-
-export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBack, onLike, onCopy, onDelete, onAdd, onCommentLike, onRefresh, onView, notify, commentsError, commentsLoading, userUid }) => {
+export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBack, onLike, onCopy, onDelete, onAdd, onCommentLike, onCommentEdit, onCommentRemove, onRefresh, onView, notify, commentsError, commentsLoading, userUid }) => {
   const [order] = useState(() => clips.map((clip) => clip.id));
   const ordered = useMemo(() => {
     const byId = new Map(clips.map((clip) => [clip.id, clip]));
@@ -48,8 +47,7 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
   };
   const perform = async (action) => {
     try {
-      await action();
-      return true;
+      return (await action()) !== false;
     } catch (failure) {
       notify(failure.message);
       return false;
@@ -68,9 +66,10 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
           const protectedClip = isProtected(clip);
           const { image, title } = clipPreview(clip, protectedClip);
           const episodeLabel = clipEpisodeLabel(clip);
+          const commentCount = clip.commentCount ?? clip.comments.filter((comment) => !comment.deleted).length;
           return <article className="wowclip-feed-item" data-clip-id={clip.id} key={clip.id} aria-label={protectedClip ? '스포일러 보호된 클립' : clip.title}>
             <div className="wowclip-feed-stage">
-              {active && !protectedClip ? <ClipPlayer key={clip.id} clip={clip} autoPlay loop compact muted={muted} onMutedChange={setMuted} onFirstPlay={() => perform(() => onView(clip.id))} /> : <div className="wowclip-feed-poster">{image && <img src={image} alt="" />}{protectedClip && <span><ClipIcon name="spoiler" />스포일러가 있어요</span>}</div>}
+              {active && !protectedClip ? <ClipPlayer key={owner.id} clip={clip} autoPlay loop compact muted={muted} onMutedChange={setMuted} onFirstPlay={() => perform(() => onView(clip.id))} /> : <div className="wowclip-feed-poster">{image && <img src={image} alt="" />}{protectedClip && <span><ClipIcon name="spoiler" />스포일러가 있어요</span>}</div>}
               <div className="wowclip-feed-info">
                 <div className="wowclip-feed-author"><img src={clip.avatar || '/images/profile.svg'} alt="" width="32" height="32" /><strong>{clip.author}</strong>{clip.ownerId === owner.id && <span>내 클립</span>}</div>
                 <h2>{title}</h2>
@@ -83,22 +82,28 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
             </div>
             <div className="wowclip-feed-actions">
               <button type="button" aria-label={'클립 공감 ' + clipLikeCount(clip)} aria-pressed={clipIsLiked(clip, owner.id)} onClick={() => perform(() => onLike(clip.id, owner.id))}><span><ClipIcon name="heart" filled={clipIsLiked(clip, owner.id)} /></span><small>{clipLikeCount(clip)}</small></button>
-              <button type="button" aria-label={'댓글 ' + (clip.commentCount ?? clip.comments.length)} aria-expanded={active && commentsOpen} onClick={() => { if (!active) onSelect(clip.id); setCommentsOpen((open) => !open); }}><span><FeedIcon name="comment" /></span><small>{(clip.commentCount ?? clip.comments.length) || '댓글'}</small></button>
-              <button type="button" aria-label="공유" onClick={() => onCopy(clip)}><span><FeedIcon name="share" /></span><small>공유</small></button>
-              <div className="wowclip-feed-more"><button type="button" aria-label="더보기" aria-expanded={menuId === clip.id} onClick={() => setMenuId(menuId === clip.id ? null : clip.id)}><span><FeedIcon name="more" /></span></button>{menuId === clip.id && <div className="wowclip-feed-menu"><button type="button" onClick={() => { onCopy(clip); setMenuId(null); }}>링크 복사</button>{clip.authorUid === userUid && <button type="button" onClick={() => { onDelete(clip.id); setMenuId(null); }}>클립 삭제</button>}</div>}</div>
+              <button type="button" aria-label={'댓글 ' + commentCount} aria-expanded={active && commentsOpen} onClick={() => { if (!active) onSelect(clip.id); setCommentsOpen((open) => !open); }}><span><CommonIcon name="chat" /></span><small>{commentCount || '댓글'}</small></button>
+              <button type="button" aria-label="공유" onClick={() => onCopy(clip)}><span><CommonIcon name="share" /></span><small>공유</small></button>
+              <div className="wowclip-feed-more"><button type="button" aria-label="더보기" aria-expanded={menuId === clip.id} onClick={() => setMenuId(menuId === clip.id ? null : clip.id)}><span><CommonIcon name="more-vertical" /></span></button>{menuId === clip.id && <div className="wowclip-feed-menu"><button type="button" onClick={() => { onCopy(clip); setMenuId(null); }}>링크 복사</button>{clip.authorUid === userUid && <button type="button" onClick={() => { onDelete(clip.id); setMenuId(null); }}>클립 삭제</button>}</div>}</div>
             </div>
           </article>;
         })}
       </div>
-      <div className="wowclip-feed-navigation"><button type="button" aria-label="이전 클립" disabled={index <= 0} onClick={() => goTo(index - 1)}><FeedIcon name="up" /></button><button type="button" aria-label="다음 클립" disabled={index >= ordered.length - 1} onClick={() => goTo(index + 1)}><FeedIcon name="down" /></button></div>
+      <div className="wowclip-feed-navigation">
+        <button type="button" aria-label="이전 클립" disabled={index <= 0} onClick={() => goTo(index - 1)}><CommonIcon name="chevron-up" /></button>
+        <button type="button" aria-label="다음 클립" disabled={index >= ordered.length - 1} onClick={() => goTo(index + 1)}><CommonIcon name="chevron-down" /></button>
+      </div>
     </div>
       {commentsOpen && selected && !isProtected(selected) && (
         <ClipComments
-          key={selected.id}
+          key={`${selected.id}:${owner.id}`}
           clip={selected}
           owner={owner}
+          userUid={userUid}
           onAdd={onAdd}
           onLike={onCommentLike}
+          onEdit={onCommentEdit}
+          onRemove={onCommentRemove}
           notify={notify}
           panel
           loading={commentsLoading}

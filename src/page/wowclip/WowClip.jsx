@@ -82,7 +82,8 @@ export const WowClip = () => {
   return <main className="wowclip-page">
     {selected ? <ClipFeed clips={feed} selectedId={selected.id} owner={owner} isProtected={isProtected}
       onSelect={(id) => updateParams({ clip: id }, true)} onBack={backToList} onLike={library.toggleLike} onCopy={copyLink} onDelete={setDeleteId}
-      onAdd={library.addComment} onCommentLike={library.toggleLike} onRefresh={library.reload} onView={library.recordView} notify={setNotice}
+      onAdd={library.addComment} onCommentLike={library.toggleLike} onRefresh={library.reload} onView={(id) => library.recordView(id, profile?.id)} notify={setNotice}
+      onCommentEdit={library.editComment} onCommentRemove={library.removeComment}
       commentsError={library.commentsError} commentsLoading={library.commentsLoading} userUid={user?.uid} />
       : selectedId ? <div className="wowclip-state">{library.loading ? <p role="status">클립을 불러오고 있어요.</p> : library.error ? <><h1>클립을 불러오지 못했어요.</h1><p role="alert">{library.error}</p><button className="wowclip-button" type="button" onClick={library.reload}>다시 불러오기</button></> : <><h1>클립을 찾을 수 없어요.</h1><p>삭제되었거나 열 수 없는 클립이에요.</p></>}<button className="wowclip-button" type="button" onClick={backToList}>와우 클립으로 돌아가기</button></div>
         : <>

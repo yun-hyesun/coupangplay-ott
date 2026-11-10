@@ -6,6 +6,12 @@ service cloud.firestore {
     match /wowClips/{clipId} {
       function signedIn() { return request.auth != null; }
       function clipPath() { return /databases/$(database)/documents/wowClips/$(clipId); }
+      function commentPath(id) { return /databases/$(database)/documents/wowClips/$(clipId)/comments/$(id); }
+      function activeComment(data) { return data.get('deleted', false) == false; }
+      function validCommentText(text) {
+        return text is string && text.matches('(?s).{1,300}')
+          && text.matches('(?s).*[^\\s\\x0B\\p{Z}\\x{FEFF}].*');
+      }
       function readable() { return get(clipPath()).data.deleted == false; }
       function live() { return resource.data.deleted == false; }
       function reactionPath() { return /databases/$(database)/documents/wowClips/$(clipId)/likes/$(request.auth.uid); }
@@ -55,8 +61,15 @@ service cloud.firestore {
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount','lastCommentId'])
           && request.resource.data.commentCount == resource.data.commentCount + 1
           && request.resource.data.lastCommentId is string
-          && !exists(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(request.resource.data.lastCommentId))
-          && getAfter(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(request.resource.data.lastCommentId)).data.authorUid == request.auth.uid)
+          && !exists(commentPath(request.resource.data.lastCommentId))
+          && getAfter(commentPath(request.resource.data.lastCommentId)).data.authorUid == request.auth.uid)
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount','lastCommentId'])
+          && resource.data.commentCount > 0
+          && request.resource.data.commentCount == resource.data.commentCount - 1
+          && request.resource.data.lastCommentId is string
+          && get(commentPath(request.resource.data.lastCommentId)).data.authorUid == request.auth.uid
+          && activeComment(get(commentPath(request.resource.data.lastCommentId)).data)
+          && getAfter(commentPath(request.resource.data.lastCommentId)).data.deleted == true)
       );
       allow delete: if false;
 
@@ -79,6 +92,17 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time
           && getAfter(clipPath()).data.views == get(clipPath()).data.views + 1;
         allow update, delete: if false;
+
+        match /profiles/{profileId} {
+          allow get: if signedIn() && request.auth.uid == uid && readable();
+          allow list: if false;
+          allow create: if signedIn() && request.auth.uid == uid && readable()
+            && exists(/databases/$(database)/documents/users/$(uid)/profiles/$(profileId))
+            && existsAfter(viewPath())
+            && request.resource.data.keys().hasOnly(['createdAt'])
+            && request.resource.data.createdAt == request.time;
+          allow update, delete: if false;
+        }
       }
       match /comments/{commentId} {
         function commentReaction() { return /databases/$(database)/documents/wowClips/$(clipId)/commentLikes/$(commentId + '_' + request.auth.uid); }
@@ -86,15 +110,25 @@ service cloud.firestore {
         allow create: if signedIn() && readable()
           && request.resource.data.keys().hasOnly(['text','parentId','authorUid','profileId','ownerId','author','avatar','createdAt','likeCount'])
           && validOwner(request.resource.data)
-          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000
+          && validCommentText(request.resource.data.text)
           && (request.resource.data.parentId == null || (request.resource.data.parentId is string
-            && get(/databases/$(database)/documents/wowClips/$(clipId)/comments/$(request.resource.data.parentId)).data.parentId == null))
+            && get(commentPath(request.resource.data.parentId)).data.parentId == null
+            && activeComment(get(commentPath(request.resource.data.parentId)).data)))
           && request.resource.data.createdAt == request.time && request.resource.data.likeCount == 0
           && getAfter(clipPath()).data.commentCount == get(clipPath()).data.commentCount + 1
           && getAfter(clipPath()).data.lastCommentId == commentId;
-        allow update: if signedIn() && readable()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
-          && likeDelta(commentReaction(), resource.data.likeCount, request.resource.data.likeCount);
+        allow update: if signedIn() && readable() && activeComment(resource.data) && (
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount'])
+            && likeDelta(commentReaction(), resource.data.likeCount, request.resource.data.likeCount))
+          || (resource.data.authorUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','editedAt'])
+            && validCommentText(request.resource.data.text) && request.resource.data.editedAt == request.time)
+          || (resource.data.authorUid == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','deleted'])
+            && request.resource.data.deleted == true && request.resource.data.text == ''
+            && getAfter(clipPath()).data.commentCount == get(clipPath()).data.commentCount - 1
+            && getAfter(clipPath()).data.lastCommentId == commentId)
+        );
         allow delete: if false;
       }
       match /commentLikes/{reactionId} {
