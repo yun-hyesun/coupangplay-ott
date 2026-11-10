@@ -3,6 +3,7 @@
 const iconPaths = {
   "back": "/images/icon/DesignSystem_Icon01/icon-arrow_back.svg",
   "play": "/images/icon/DesignSystem_Icon03/icon-play_filled.svg",
+  "play-outline": "/images/icon/DesignSystem_Icon02/icon-play_arrow.svg",
   "pause": "/images/icon/DesignSystem_Icon03/icon-pause.svg",
   "replay": "/images/icon/DesignSystem_Icon03/icon-replay_10.svg",
   "forward": "/images/icon/DesignSystem_Icon03/icon-forward_10.svg",
@@ -23,6 +24,8 @@ const iconPaths = {
   "star-outline": "/images/icon/DesignSystem_Icon02/icon-star_border.svg",
   "chevron-down": "/images/icon/DesignSystem_Icon01/icon-expand_more.svg",
   "chevron-up": "/images/icon/DesignSystem_Icon01/icon-expand_less.svg",
+  "more-vertical": "/images/icon/DesignSystem_Icon04/icon-more_vert.svg",
+  "refresh": "/images/icon/DesignSystem_Icon04/icon-refresh.svg",
   "external": "/images/icon/DesignSystem_Icon01/icon-open_in_new.svg",
   "check": "/images/icon/DesignSystem_Icon02/icon-check.svg",
 };

@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { getFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, getDocs, query, where } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { createWowClipRepository } from '../../src/page/wowclip/data/wowClipRepository.js';
 import { createSeriesHistoryWriter } from '../../src/data/seriesHistoryWriter.js';
 import { makeClip } from '../../src/page/wowclip/utils/wowClipData.js';
@@ -117,6 +117,53 @@ test('엄격한 규칙 아래 반복 답글·댓글 공감을 별도 문서와 �
   assert.equal((await getDoc(doc(client('alice').database, 'wowClips', 'public', 'comments', root))).data().likeCount, 1);
   const detail = await once((data, error) => client('carol').repo.subscribeDetails('public', 'carol', data, error), (data) => data.comments.length === 4 && data.comments.some((item) => item.id === root && item.liked));
   assert.equal(detail.comments.find((item) => item.id === root).liked, true);
+});
+
+test('댓글과 답글은 300자까지 저장되며 다른 계정은 수정·삭제할 수 없다', async () => {
+  const alice = client('alice'), bob = client('bob');
+  const aliceOwner = { id: 'alice:default', name: 'alice' }, bobOwner = { id: 'bob:default', name: 'bob' };
+  const clipId = 'comment-management';
+  await alice.repo.saveClip(newClip(clipId));
+  await assert.rejects(alice.repo.addComment(clipId, '한'.repeat(301), aliceOwner), /300자/);
+  const root = await alice.repo.addComment(clipId, '한'.repeat(300), aliceOwner);
+  const reply = await bob.repo.addComment(clipId, '답글', bobOwner, root);
+  const aliceClip = doc(alice.database, 'wowClips', clipId);
+  const aliceRoot = doc(aliceClip, 'comments', root);
+  const bobClip = doc(bob.database, 'wowClips', clipId);
+  const bobRoot = doc(bobClip, 'comments', root);
+
+  await assert.rejects(bob.repo.editComment(clipId, root, '다른 사람 수정'), /내가 작성한/);
+  await assert.rejects(bob.repo.removeComment(clipId, root), /내가 작성한/);
+  await assertFails(updateDoc(bobRoot, { text: '권한 우회', editedAt: serverTimestamp() }));
+  await assertFails(updateDoc(aliceRoot, { text: '한'.repeat(301), editedAt: serverTimestamp() }));
+  await assertFails(updateDoc(aliceRoot, { text: ' \n\u00a0', editedAt: serverTimestamp() }));
+  await assertFails(updateDoc(aliceRoot, { deleted: true, text: '' }));
+  const forgedDeletion = writeBatch(bob.database);
+  forgedDeletion.update(bobRoot, { deleted: true, text: '' });
+  forgedDeletion.update(bobClip, { commentCount: 1, lastCommentId: root });
+  await assertFails(forgedDeletion.commit());
+
+  await alice.repo.editComment(clipId, root, '😀'.repeat(300));
+  await assert.rejects(alice.repo.editComment(clipId, root, '😀'.repeat(301)), /300자/);
+  const updated = (await getDoc(aliceRoot)).data();
+  assert.equal(updated.text, '😀'.repeat(300));
+  assert.equal(updated.authorUid, 'alice');
+  assert.ok(updated.editedAt);
+  await bob.repo.editComment(clipId, reply, '수정한 답글');
+  await bob.repo.toggleLike(clipId, root);
+  assert.equal((await getDoc(aliceRoot)).data().likeCount, 1);
+
+  await alice.repo.removeComment(clipId, root);
+  await alice.repo.removeComment(clipId, root);
+  const deleted = (await getDoc(aliceRoot)).data();
+  assert.equal(deleted.deleted, true);
+  assert.equal(deleted.text, '');
+  assert.equal((await getDoc(doc(aliceClip, 'comments', reply))).data().text, '수정한 답글');
+  assert.equal((await getDoc(aliceClip)).data().commentCount, 1);
+  await assert.rejects(bob.repo.toggleLike(clipId, root), /댓글을 찾을 수 없어요/);
+  await assert.rejects(bob.repo.addComment(clipId, '삭제된 댓글에 답글', bobOwner, root), /원댓글/);
+  await bob.repo.removeComment(clipId, reply);
+  assert.equal((await getDoc(aliceClip)).data().commentCount, 0);
 });
 
 test('링크 전용은 공개 목록에서 숨기고 직접 링크·본인 목록에서 읽힌다', async () => {

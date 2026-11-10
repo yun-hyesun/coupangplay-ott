@@ -36,6 +36,60 @@ const withRoutes = (element) => h(MemoryRouter, { initialEntries: ['/watch/tv/78
   h(Route, { path: '/watch/tv/78648', element }), h(Route, { path: '/login', element: h('h1', null, '로그인') }), h(Route, { path: '/wowclip', element: h('h1', null, '감상') })));
 afterEach(async () => { for (const root of roots.splice(0)) await act(async () => root.unmount()); });
 
+test('댓글 작성·수정에 300자 제한을 적용하고 작성자만 수정·삭제할 수 있다', async () => {
+  const own = { id: 'mine', authorUid: 'alice', author: 'alice', text: `내 댓글 ${'한'.repeat(300)}`, likeCount: 1 };
+  const reply = { id: 'reply', parentId: own.id, authorUid: 'bob', author: 'bob', text: '남겨진 답글' };
+  let clip = { id: 'test', comments: [own, reply], commentCount: 2 };
+  const calls = [];
+  const view = () => h(ClipComments, {
+    clip, owner, userUid: 'alice', panel: true,
+    onAdd: async (_id, text) => { calls.push(['add', text]); },
+    onEdit: async (id, commentId, text) => { calls.push(['edit', id, commentId, text]); },
+    onRemove: async (id, commentId) => { calls.push(['remove', id, commentId]); },
+  });
+  const root = await mount(view());
+  const button = (label) => root.root.findAllByType('button').find((node) => node.children[0] === label);
+  const enter = { preventDefault() {} };
+  const type = async (field, value) => act(async () => field.props.onChange({ target: { value } }));
+  await type(root.root.findByType('textarea'), '한'.repeat(301));
+  assert.equal(root.root.findByType('textarea').props['aria-invalid'], true);
+  await act(async () => root.root.findByType('form').props.onSubmit(enter));
+  assert.deepEqual(calls, []);
+  const limit = '😀'.repeat(300);
+  await type(root.root.findByType('textarea'), limit);
+  await act(async () => root.root.findByType('form').props.onSubmit(enter));
+  assert.deepEqual(calls, [['add', limit]]);
+
+  await act(async () => root.root.findAllByType('button').find((node) => node.props.className === 'wowclip-replies-toggle').props.onClick());
+  const ownMenu = () => {
+    const trigger = root.root.findByProps({ 'aria-label': '댓글 더보기' });
+    const menu = root.root.findByProps({ id: trigger.props.popoverTarget });
+    assert.equal(menu.props.popover, 'auto');
+    assert.equal(root.root.findAllByProps({ 'aria-label': '답글 더보기' }).length, 0);
+    return menu;
+  };
+  const menuAction = (label) => ownMenu().findAllByType('button').find((node) => node.children[0] === label);
+  await act(async () => menuAction('수정').props.onClick());
+  const edit = root.root.findByProps({ className: 'wowclip-comment-form wowclip-comment-form--edit' });
+  assert.equal(edit.findByType('textarea').props.value, own.text);
+  assert.equal(edit.findByType('textarea').props['aria-invalid'], true);
+  await type(edit.findByType('textarea'), '새 내용');
+  await act(async () => edit.props.onSubmit(enter));
+  assert.deepEqual(calls.at(-1), ['edit', clip.id, own.id, '새 내용']);
+
+  await act(async () => menuAction('삭제').props.onClick());
+  const modal = root.root.findByProps({ 'aria-label': '댓글을 삭제할까요?' });
+  await act(async () => modal.findAllByType('button').find((node) => node.children[0] === '삭제').props.onClick());
+  assert.deepEqual(calls.at(-1), ['remove', clip.id, own.id]);
+  clip = { ...clip, comments: [{ ...own, text: '', deleted: true }, reply], commentCount: 1 };
+  await act(async () => root.update(view()));
+  const body = JSON.stringify(root.toJSON());
+  assert.match(body, /삭제된 댓글이에요/);
+  assert.match(body, /남겨진 답글/);
+  assert.doesNotMatch(body, /내 댓글/);
+  assert.equal(button('삭제'), undefined);
+});
+
 test('비로그인 제작 클릭은 원본/편집을 열지 않고 로그인으로 이동한다', async () => {
   useAuthStore.setState({ user: null, loading: false });
   let reads = 0;
