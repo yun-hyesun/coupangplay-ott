@@ -92,6 +92,17 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time
           && getAfter(clipPath()).data.views == get(clipPath()).data.views + 1;
         allow update, delete: if false;
+
+        match /profiles/{profileId} {
+          allow get: if signedIn() && request.auth.uid == uid && readable();
+          allow list: if false;
+          allow create: if signedIn() && request.auth.uid == uid && readable()
+            && exists(/databases/$(database)/documents/users/$(uid)/profiles/$(profileId))
+            && existsAfter(viewPath())
+            && request.resource.data.keys().hasOnly(['createdAt'])
+            && request.resource.data.createdAt == request.time;
+          allow update, delete: if false;
+        }
       }
       match /comments/{commentId} {
         function commentReaction() { return /databases/$(database)/documents/wowClips/$(clipId)/commentLikes/$(commentId + '_' + request.auth.uid); }

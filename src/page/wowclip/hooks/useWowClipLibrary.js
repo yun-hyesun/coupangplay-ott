@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { useProfileStore } from '../../../store/useProfileStore';
 import { wowClipService } from '../../../service/wowClipService';
 import { clipCloudError } from '../utils/cloudClipData';
 
@@ -47,7 +48,10 @@ export const useWowClipLibrary = ({ selectedId = null } = {}) => {
   const addComment = (id, text, owner, parentId = null) => run(() => wowClipService.addComment(id, text, owner, parentId));
   const editComment = (id, commentId, text) => run(() => wowClipService.editComment(id, commentId, text));
   const removeComment = (id, commentId) => run(() => wowClipService.removeComment(id, commentId));
-  const recordView = (id) => run(() => wowClipService.recordView(id));
+  const recordView = (id, profileId) => {
+    if (useProfileStore.getState().currentProfile?.id !== profileId) return false;
+    return run(() => wowClipService.recordView(id, uid, profileId));
+  };
   const reload = useCallback(() => { setRevision((value) => value + 1); }, []);
   return { clips, loading, error: remote.scope === scope ? remote.error : '',
     commentsError: details.scope === detailsScope ? details.error : '',

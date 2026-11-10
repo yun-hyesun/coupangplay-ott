@@ -13,12 +13,15 @@ wowClips/{clipId}                         제목·작품·구간·시즌/회차�
 wowClips/{clipId}/comments/{commentId}    댓글과 답글
 wowClips/{clipId}/likes/{uid}            계정별 클립 공감
 wowClips/{clipId}/commentLikes/{id}      계정별 댓글 공감
-wowClips/{clipId}/views/{uid}            계정별 최초 재생 기록
+wowClips/{clipId}/views/{uid}            계정별 재생 수 집계 기록
+wowClips/{clipId}/views/{uid}/profiles/{profileId}  스포일러 보호 해제용 프로필별 재생 기록
 ```
 
 목록은 `visibility == public`과 `deleted == false`, 내 목록은 `authorUid == uid`와 `deleted == false`, 댓글 공감은 `uid == uid`로 조회합니다. 정렬은 조회된 클립에서 처리하며 기존 팀의 인덱스를 변경하지 않았습니다. 링크 전용은 URL을 아는 사람이 읽을 수 있는 공유 방식이며 개인 비공개 문서가 아닙니다.
 
 작성·댓글·공감은 로그인 필수입니다. 작성자 UID는 현재 Auth를 기준으로 저장하며 프로필은 작성 표시와 내 클립 구분에 사용합니다. 공감은 계정별 1개, 재생 수는 현재 구현에서 로그인 계정별 최초 재생 수입니다. 익명 조회나 반복 재생은 증가시키지 않습니다.
+
+클립을 재생하면 현재 프로필의 시청 기록을 별도로 저장합니다. 이전의 계정별 기록은 프로필을 식별할 수 없어 재생 수에만 사용합니다. 프로필별 저장과 조회를 사용하려면 위 절차에 따라 갱신된 와우클립 규칙을 먼저 배포해야 합니다.
 
 공감·댓글·재생 집계는 관련 문서와 한 트랜잭션에서 갱신합니다. 삭제는 작성자만 `deleted=true`로 바꾸며 감상·댓글·반응 접근을 함께 차단합니다. 하위 문서를 클라이언트에서 일괄 제거하지 않습니다. 완전 삭제/보존 기간 정책은 별도 서버 관리 범위입니다.
 
@@ -34,6 +37,6 @@ Firebase 연결 전 브라우저 클립을 위한 ‘기존 클립’ 메뉴와 
 ./scripts/wowclip-tests/run.ps1 -RuntimeRoot 'C:/Users/EZEN/Desktop/팀작업/output/wowclip-firebase-2026-11-06/test-runtime'
 ```
 
-데모 프로젝트 `demo-wowclip-test`와 로컬 8089 포트만 사용합니다. 저장/규칙 검사 7개, 컴포넌트 상태/비동기 검사 6개, 구간·회차 계산 검사 13개, 플레이어 준비·교체·조작 회귀 검사 7개로 총 33개를 실행합니다. CLI 설정도 검수 런타임 안에 분리해 기존 Firebase CLI 로그인 설정을 읽거나 바꾸지 않습니다. 컴포넌트 검수는 영상/모달/네트워크를 대체한 React 테스트로 실제 브라우저 재생이나 화면 외형 검수가 아닙니다. 별도의 실제 브라우저 검수 결과는 작업 폴더의 `output/wowclip-firebase-2026-11-06/적용결과와_검수.md`를 참고합니다.
+데모 프로젝트 `demo-wowclip-test`와 로컬 8089 포트만 사용합니다. 저장·규칙, 컴포넌트 상태·비동기, 구간·회차 계산, 플레이어 준비·교체·조작을 검수합니다. CLI 설정도 검수 런타임 안에 분리해 기존 Firebase CLI 로그인 설정을 읽거나 바꾸지 않습니다. 컴포넌트 검수는 영상/모달/네트워크를 대체한 React 테스트로 실제 브라우저 재생이나 화면 외형 검수가 아닙니다. 별도의 실제 브라우저 검수 결과는 작업 폴더의 `output/wowclip-firebase-2026-11-06/적용결과와_검수.md`를 참고합니다.
 
 Firestore 에뮬레이터의 [동시 쓰기 규칙 조회 잠금 이슈](https://github.com/firebase/firebase-tools/issues/10518)가 재현돼 엄격한 규칙 검사는 순차 요청으로 하고, 실제 저장 트랜잭션의 동시 재시도 검사는 에뮬레이터 관리 토큰으로 별도 실행합니다. 해당 우회는 검수 코드에만 있으며 앱 서비스에는 넣지 않았습니다.

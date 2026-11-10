@@ -176,27 +176,46 @@ test('링크 전용은 공개 목록에서 숨기고 직접 링크·본인 목�
   assert.equal(mine.some((clip) => clip.id === 'link-only'), true);
 });
 
-test('재생 반복은 같은 계정 조회수를 중복 증가시키지 않고 삭제 후 반응·댓글 접근이 막힌다', async () => {
-  assert.equal(await client('alice').repo.hasRecordedView('public', 'alice'), false);
-  await client('alice').repo.recordView('public');
-  await client('alice').repo.recordView('public');
-  await client('bob').repo.recordView('public');
-  assert.equal(await client('alice').repo.hasRecordedView('public', 'alice'), true);
-  assert.equal(await client('bob').repo.hasRecordedView('public', 'bob'), true);
-  assert.equal(await client('carol').repo.hasRecordedView('public', 'carol'), false);
-  assert.equal(await client('carol').repo.hasRecordedView('public', 'alice'), false);
-  assert.equal(await client('').repo.hasRecordedView('public', 'alice'), false);
+test('클립 시청 기록을 프로필별로 저장하고 기존 계정 조회 수는 중복 집계하지 않는다', async () => {
+  const alice = client('alice'), bob = client('bob');
+  const admin = client('alice', true).database;
+  await Promise.all([['alice', 'first'], ['alice', 'second'], ['bob', 'first']].map(([uid, profileId]) =>
+    setDoc(doc(admin, 'users', uid, 'profiles', profileId), { name: profileId })));
+  const watch = (repo, uid, profileId, predicate = () => true) => once((data, error) =>
+    repo.subscribeRecordedView('public', uid, profileId, data, error), predicate);
+  await alice.repo.recordView('public', 'alice');
+  assert.equal(await watch(alice.repo, 'alice', 'first'), false);
+  assert.equal(await watch(alice.repo, 'alice', 'second'), false);
+
+  const first = watch(alice.repo, 'alice', 'first', Boolean);
+  await alice.repo.recordView('public', 'alice', 'first');
+  await alice.repo.recordView('public', 'alice', 'first');
+  assert.equal(await first, true);
+  assert.equal(await watch(alice.repo, 'alice', 'second'), false);
+  await alice.repo.recordView('public', 'alice', 'second');
+  assert.equal(await watch(alice.repo, 'alice', 'second'), true);
+  await bob.repo.recordView('public', 'bob', 'first');
+  assert.equal(await watch(bob.repo, 'bob', 'first'), true);
+  await assertFails(alice.repo.recordView('public', 'alice', 'nonexistent'));
+  assert.equal(await bob.repo.recordView('public', 'alice', 'first'), false);
+  await assertFails(getDoc(doc(bob.database, 'wowClips', 'public', 'views', 'alice', 'profiles', 'first')));
+  await assertFails(setDoc(doc(bob.database, 'wowClips', 'public', 'views', 'alice', 'profiles', 'second'), { createdAt: serverTimestamp() }));
   await assertFails(getDoc(doc(client('carol').database, 'wowClips', 'public', 'views', 'alice')));
   const watched = (await getDoc(doc(client('alice').database, 'wowClips', 'public'))).data();
   assert.equal(watched.views, 2);
   assert.equal(watched.spoiler, true);
+});
+
+test('클립 삭제 후 시청 기록과 반응·댓글 접근이 막힌다', async () => {
   await client('alice').repo.saveClip(newClip('delete-me'));
+  await client('alice').repo.recordView('delete-me', 'alice', 'first');
   await client('alice').repo.removeClip('delete-me');
   const publicDocs = await getDocs(query(collection(client('').database, 'wowClips'), where('visibility', '==', 'public'), where('deleted', '==', false)));
   assert.equal(publicDocs.docs.some((item) => item.id === 'delete-me'), false);
   await assertFails(getDocs(query(collection(client('').database, 'wowClips'), where('visibility', '==', 'public'))));
   await assertFails(getDoc(doc(client('bob').database, 'wowClips', 'delete-me')));
   await assertFails(getDocs(collection(client('bob').database, 'wowClips', 'delete-me', 'comments')));
+  await assertFails(getDoc(doc(client('alice').database, 'wowClips', 'delete-me', 'views', 'alice', 'profiles', 'first')));
   await assert.rejects(client('bob').repo.toggleLike('delete-me'));
 });
 
@@ -206,7 +225,10 @@ test('동시성 검수: 에뮬레이터 규칙 엔진 잠금 이슈와 분리해
   await client('alice', true).repo.saveClip(newClip('concurrent'));
   await Promise.all(['alice','bob','carol'].map((uid) => client(uid, true).repo.toggleLike('concurrent')));
   await Promise.all(['alice','bob','carol'].map((uid) => client(uid, true).repo.addComment('concurrent', '동시 댓글', { id: uid + ':default', name: uid })));
-  await Promise.all([client('alice', true).repo.recordView('concurrent'), client('alice', true).repo.recordView('concurrent'), client('bob', true).repo.recordView('concurrent')]);
+  await Promise.all([client('alice', true).repo.recordView('concurrent', 'alice', 'first'), client('alice', true).repo.recordView('concurrent', 'alice', 'second'), client('bob', true).repo.recordView('concurrent', 'bob', 'first')]);
   const saved = (await getDoc(doc(client('alice', true).database, 'wowClips', 'concurrent'))).data();
   assert.equal(saved.likeCount, 3); assert.equal(saved.commentCount, 3); assert.equal(saved.views, 2);
+  const aliceView = doc(client('alice').database, 'wowClips', 'concurrent', 'views', 'alice');
+  assert.ok((await getDoc(doc(aliceView, 'profiles', 'first'))).exists());
+  assert.ok((await getDoc(doc(aliceView, 'profiles', 'second'))).exists());
 });

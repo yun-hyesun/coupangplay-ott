@@ -250,59 +250,82 @@ test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 
   } finally { await act(async () => useWatchHistoryStore.setState(priorHistory)); }
 });
 
-test('해당 클립 재생 기록이 확인되면 바로 열고 타 계정에는 늦은 조회 결과나 다른 사람의 재생을 적용하지 않는다', async () => {
+test('클립 재생 기록은 현재 프로필에만 적용하고 이전 프로필의 늦은 재생·조회는 무시한다', async () => {
   useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
-  useProfileStore.setState({ currentProfile: null });
+  useProfileStore.setState({ currentProfile: { id: 'first' } });
   seedSpoilerLibrary({ ...protectedFixture, views: 3 });
-  let resolveAlice;
-  const checks = [];
-  globalThis.__wowUiService.hasRecordedView = (id, uid) => {
-    checks.push([id, uid]);
-    return uid === 'alice' ? new Promise((resolve) => { resolveAlice = resolve; })
-      : uid === 'carol' ? Promise.resolve(true) : Promise.reject(new Error('기록 조회 실패'));
+  const subscriptions = [], plays = [];
+  globalThis.__wowUiService.subscribeRecordedView = (id, uid, profileId, data) => {
+    const item = { id, uid, profileId, data, stopped: false };
+    subscriptions.push(item);
+    return () => { item.stopped = true; };
   };
+  globalThis.__wowUiService.recordView = async (...args) => { plays.push(args); };
   const root = await mount(withClipRoute(), feedNodes);
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
   assert.ok(revealButton(root));
-  await act(async () => revealButton(root).props.onClick());
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
-  await act(async () => useAuthStore.setState({ user: { uid: 'bob' } }));
-  await act(async () => resolveAlice(true));
-  assert.ok(revealButton(root));
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
-  await act(async () => useAuthStore.setState({ user: { uid: 'carol' } }));
+
+  const first = subscriptions.at(-1);
+  assert.deepEqual([first.id, first.uid, first.profileId], ['protected', 'alice', 'first']);
+  await act(async () => first.data(true));
   assert.equal(revealButton(root), undefined);
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
+  const firstPlay = root.root.findByType(ClipPlayer).props.onFirstPlay;
+  await act(async () => firstPlay());
+  assert.deepEqual(plays, [['protected', 'alice', 'first']]);
+
+  await act(async () => useProfileStore.setState({ currentProfile: { id: 'second' } }));
+  assert.ok(first.stopped);
+  await act(async () => first.data(true));
+  await act(async () => { assert.equal(await firstPlay(), false); });
+  assert.equal(plays.length, 1);
+  assert.ok(revealButton(root));
+  assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
+
+  const second = subscriptions.at(-1);
+  assert.deepEqual([second.id, second.uid, second.profileId], ['protected', 'alice', 'second']);
+  await act(async () => second.data(true));
+  assert.equal(revealButton(root), undefined);
+  await act(async () => root.root.findByType(ClipPlayer).props.onFirstPlay());
+  assert.deepEqual(plays.at(-1), ['protected', 'alice', 'second']);
+
+  await act(async () => useAuthStore.setState({ user: { uid: 'bob' } }));
+  await act(async () => second.data(true));
+  assert.ok(revealButton(root));
   await act(async () => useAuthStore.setState({ user: null }));
   assert.ok(revealButton(root));
   assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
-  assert.deepEqual(checks, [['protected', 'alice'], ['protected', 'bob'], ['protected', 'carol']]);
+  assert.ok(subscriptions.every((item) => item.stopped));
 });
 
 test('일시적으로 실패한 클립 기록 조회는 같은 화면에서 다시 열거나 연결이 돌아오면 재시도한다', async () => {
   useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
-  useProfileStore.setState({ currentProfile: null });
+  useProfileStore.setState({ currentProfile: { id: 'default' } });
   seedSpoilerLibrary({ ...protectedFixture, views: 3 });
   let requests = 0;
   let rejectRetry;
-  globalThis.__wowUiService.hasRecordedView = async () => {
-    if (++requests === 1) throw new Error('일시적 연결 실패');
-    if (requests === 2) return new Promise((_resolve, reject) => { rejectRetry = reject; });
-    return true;
+  let reconnected = false;
+  globalThis.__wowUiService.subscribeRecordedView = (_id, _uid, _profileId, data, error) => {
+    requests++;
+    if (requests === 1) queueMicrotask(() => error(new Error('일시적 연결 실패')));
+    else if (reconnected) queueMicrotask(() => data(true));
+    else rejectRetry = error;
+    return () => {};
   };
 
   const root = await mount(withClipRoute(), feedNodes);
   assert.equal(requests, 1);
   assert.ok(revealButton(root));
   await act(async () => root.root.findByProps({ className: 'wowclip-back' }).props.onClick());
+  const beforeOpen = requests;
   await act(async () => root.root.findAllByType('button').find((button) =>
     button.props.className?.includes('wowclip-card--short')).props.onClick());
-  assert.equal(requests, 2);
+  assert.equal(requests, beforeOpen + 1);
   assert.ok(revealButton(root));
 
+  const beforeReconnect = requests;
+  reconnected = true;
   await act(async () => events.dispatchEvent(new Event('online')));
   await act(async () => rejectRetry(new Error('이전 요청의 늦은 실패')));
-  assert.equal(requests, 3);
+  assert.equal(requests, beforeReconnect + 1);
   assert.equal(revealButton(root), undefined);
   assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
 });

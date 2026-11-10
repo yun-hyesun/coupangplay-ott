@@ -1,4 +1,4 @@
-import { collection, doc, getDocFromServer, onSnapshot, query, where, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { cloudClip, cloudComment, newCloudClip } from '../utils/cloudClipData.js';
 import { normalizeClipComment } from '../utils/clipCommentText.js';
 
@@ -144,21 +144,29 @@ export const createWowClipRepository = ({ database, currentUser }) => {
     transaction.update(parent, { commentCount: clip.commentCount - 1, lastCommentId: commentId });
   });
 
-  const hasRecordedView = async (id, uid) => {
-    if (!uid || currentUser()?.uid !== uid) return false;
-    return (await getDocFromServer(doc(clipRef(id), 'views', uid))).exists();
+  const subscribeRecordedView = (id, uid, profileId, onData, onError) => {
+    if (!uid || !profileId || currentUser()?.uid !== uid) return () => {};
+    const view = doc(clipRef(id), 'views', uid, 'profiles', profileId);
+    return onSnapshot(view, { includeMetadataChanges: true }, (snapshot) => {
+      if (!snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites) onData(snapshot.exists());
+    }, onError);
   };
 
-  const recordView = async (id) => {
-    const user = currentUser();
-    if (!user?.uid) return;
-    const parent = clipRef(id), view = doc(parent, 'views', user.uid);
+  const recordView = async (id, uid, profileId) => {
+    if (!uid) return;
+    if (currentUser()?.uid !== uid) return false;
+    const parent = clipRef(id), view = doc(parent, 'views', uid);
+    const profileView = profileId ? doc(view, 'profiles', profileId) : null;
     await runTransaction(database, async (transaction) => {
       const data = requireClip(await transaction.get(parent));
-      if ((await transaction.get(view)).exists()) return;
-      transaction.set(view, { uid: user.uid, createdAt: serverTimestamp() });
-      transaction.update(parent, { views: data.views + 1 });
+      const counted = (await transaction.get(view)).exists();
+      const watched = profileView && (await transaction.get(profileView)).exists();
+      if (!counted) {
+        transaction.set(view, { uid, createdAt: serverTimestamp() });
+        transaction.update(parent, { views: data.views + 1 });
+      }
+      if (profileView && !watched) transaction.set(profileView, { createdAt: serverTimestamp() });
     });
   };
-  return { subscribe, subscribeDetails, saveClip, removeClip, toggleLike, addComment, editComment, removeComment, hasRecordedView, recordView };
+  return { subscribe, subscribeDetails, saveClip, removeClip, toggleLike, addComment, editComment, removeComment, subscribeRecordedView, recordView };
 };

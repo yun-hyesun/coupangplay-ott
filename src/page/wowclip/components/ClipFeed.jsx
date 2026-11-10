@@ -47,8 +47,7 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
   };
   const perform = async (action) => {
     try {
-      await action();
-      return true;
+      return (await action()) !== false;
     } catch (failure) {
       notify(failure.message);
       return false;
@@ -70,7 +69,7 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
           const commentCount = clip.commentCount ?? clip.comments.filter((comment) => !comment.deleted).length;
           return <article className="wowclip-feed-item" data-clip-id={clip.id} key={clip.id} aria-label={protectedClip ? '스포일러 보호된 클립' : clip.title}>
             <div className="wowclip-feed-stage">
-              {active && !protectedClip ? <ClipPlayer key={clip.id} clip={clip} autoPlay loop compact muted={muted} onMutedChange={setMuted} onFirstPlay={() => perform(() => onView(clip.id))} /> : <div className="wowclip-feed-poster">{image && <img src={image} alt="" />}{protectedClip && <span><ClipIcon name="spoiler" />스포일러가 있어요</span>}</div>}
+              {active && !protectedClip ? <ClipPlayer key={owner.id} clip={clip} autoPlay loop compact muted={muted} onMutedChange={setMuted} onFirstPlay={() => perform(() => onView(clip.id))} /> : <div className="wowclip-feed-poster">{image && <img src={image} alt="" />}{protectedClip && <span><ClipIcon name="spoiler" />스포일러가 있어요</span>}</div>}
               <div className="wowclip-feed-info">
                 <div className="wowclip-feed-author"><img src={clip.avatar || '/images/profile.svg'} alt="" width="32" height="32" /><strong>{clip.author}</strong>{clip.ownerId === owner.id && <span>내 클립</span>}</div>
                 <h2>{title}</h2>
