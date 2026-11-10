@@ -341,7 +341,7 @@ body:has(.wowclip-shortfeed) {
   line-height: 24px;
 }
 
-.wowclip-comments.is-panel .wowclip-comment-form {
+.wowclip-comments.is-panel > .wowclip-comment-form {
   margin-top: 0;
   padding-top: 0;
   border-top: 0;
