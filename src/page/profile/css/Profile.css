@@ -83,7 +83,7 @@
 }
 .profile-page .profile-edit-btn {
   width: 145px;
-  height: 50px;
+  height: 45px;
   margin-top: 48px;
   padding: 0 16px;
   border: none;
@@ -155,7 +155,7 @@
 }
 .profile-page .profile-edit .profile-delete-button {
   width: 145px;
-  height: 50px;
+  height: 45px;
   margin-top: 24px;
   padding: 0 16px;
   border: 1px solid #666;
@@ -234,7 +234,7 @@
 }
 .profile-page .genre-buttons button {
   width: 145px;
-  height: 50px;
+  height: 45px;
   padding: 0 16px;
   flex-shrink: 0;
   border: none;
@@ -366,7 +366,7 @@
 }
 .profile-page .content-buttons button {
   width: 145px;
-  height: 50px;
+  height: 45px;
   padding: 0 16px;
   flex-shrink: 0;
   border: none;

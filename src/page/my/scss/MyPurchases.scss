@@ -496,3 +496,147 @@
         }
     }
 }
+
+
+// 구매내역 숨기기 확인 모달
+.my-purchases-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.75);
+
+    &__content {
+        width: 100%;
+        max-width: 440px;
+        padding: 40px 32px;
+        border-radius: 12px;
+        background: $color-bg2;
+        color: $color-text-pri;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        text-align: center;
+
+        h2 {
+            font-size: 22px;
+            font-weight: $font-w-B-700;
+        }
+
+        p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: $color-text-sec1;
+        }
+    }
+
+    &__icon {
+        width: 64px;
+        height: 64px;
+        border: 2px solid $color-pri;
+        border-radius: 50%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        color: $color-pri;
+        font-size: 32px;
+        font-weight: $font-w-B-700;
+    }
+
+    &__actions {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+        margin-top: 12px;
+    }
+
+    &__button {
+        flex: 1;
+        min-width: 0;
+        height: 45px;
+        padding: 0 16px;
+
+        border: none;
+        border-radius: 5px;
+        background: $color-pri;
+        color: $color-text-pri;
+
+        font-family: $font-main;
+        font-size: 16px;
+        font-weight: $font-w-M-500;
+
+        cursor: pointer;
+        transition: filter 0.2s ease;
+
+        &:hover {
+            filter: brightness(1.1);
+        }
+
+        &--secondary {
+            background: #424242;
+        }
+    }
+}
+
+
+.my-purchases {
+    .my-purchases-item.is-hidden {
+        .my-purchases-image {
+            opacity: 0.35;
+        }
+
+        .my-purchases-info {
+            opacity: 0.5;
+        }
+    }
+
+    .my-purchases-thumbnail {
+        position: relative;
+    }
+
+    .my-purchases-hidden-label {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 3;
+
+        padding: 5px 10px;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.75);
+
+        color: #fff;
+        font-size: 13px;
+        font-weight: 500;
+        pointer-events: none;
+    }
+}
+
+
+@media (max-width: 767px) {
+    .my-purchases-modal {
+        &__content {
+            padding: 32px 20px;
+
+            h2 {
+                font-size: 20px;
+            }
+        }
+
+        &__actions {
+            flex-direction: column;
+        }
+
+        &__button {
+            width: 100%;
+        }
+    }
+}

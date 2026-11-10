@@ -946,36 +946,49 @@
     >img {
       object-fit: cover;
       object-position: center 40%;
+      clip-path: inset(0 0 0 36%);
     }
 
     &__shade {
       background:
-        linear-gradient(90deg, rgba(3, 8, 15, .97) 0%, rgba(3, 8, 15, .83) 34%, rgba(3, 8, 15, .25) 72%, rgba(3, 8, 15, .08) 100%),
+        linear-gradient(90deg, #080b10 0%, #080b10 36%, rgba(8, 11, 16, .94) 43%, rgba(8, 11, 16, .3) 62%, transparent 100%),
         linear-gradient(0deg, rgba(1, 7, 15, .38), transparent 60%);
     }
 
     &__copy {
-      width: min(720px, 58%);
-      padding: 34px 58px;
+      box-sizing: border-box;
+      width: min(760px, 61%);
+      padding: 28px 48px;
     }
 
     &__tags {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     &__tags span {
-      padding: 5px 9px;
-      border-radius: 5px;
+      display: inline-flex;
+      height: 32px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border-radius: 6px;
       color: #fff;
-      font-size: 12px;
-      font-weight: $font-w-SB-600;
+      font-size: 16px;
+      font-weight: $font-w-B-700;
       background: #168fee;
 
       &:last-child {
-        background: #59636d;
+        background: #31353c;
       }
+    }
+
+    &__tags .sports-promo__pass {
+      min-width: 58px;
+      background: linear-gradient(100deg, #00a3ff 45%, #24d9dd);
+      font-style: italic;
+      text-underline-offset: 3px;
     }
 
     &__eyebrow {
@@ -989,7 +1002,7 @@
     h2 {
       margin: 0 0 8px;
       color: #fff;
-      font-size: 34px;
+      font-size: clamp(24px, 2.4vw, 38px);
       font-weight: $font-w-B-700;
       line-height: 1.3;
     }
@@ -997,18 +1010,30 @@
     &__date {
       margin: 0 0 24px;
       color: rgba(255, 255, 255, .88);
-      font-size: 18px;
+      font-size: clamp(16px, 1.5vw, 22px);
+      line-height: 1.5;
     }
 
     button {
-      min-width: 300px;
-      padding: 15px 24px;
-      border-radius: 10px;
+      width: min(420px, 100%);
+      min-height: 60px;
+      padding: 12px 24px;
+      border: 0;
+      border-radius: 12px;
       color: #fff;
-      font-size: 18px;
-      font-weight: $font-w-SB-600;
-      background: $color-pri;
+      font-size: 24px;
+      font-weight: $font-w-B-700;
+      background: #0080ff;
+      cursor: pointer;
+
+      &:hover:not(:disabled) { background: #2794ff; }
+      &:disabled { opacity: .5; cursor: default; }
+      &:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+      &[aria-pressed='true'] { background: #1663ae; }
     }
+
+    button.sports-promo__retry { width: auto; min-height: 0; margin-left: 12px; padding: 8px; background: transparent; font-size: 14px; text-decoration: underline; }
+    &__message { margin: 10px 0 0; color: #d4d4d4; font-size: 13px; line-height: 20px; }
   }
 
   .sports-nba-banner {
@@ -1904,11 +1929,11 @@
     border-radius: 10px;
 
     >img {
-      object-position: center;
+      object-position: right center;
     }
 
     &__copy {
-      display: none;
+      display: block;
     }
   }
 
@@ -2074,6 +2099,19 @@
     .sports-nba-banner {
       height: 220px;
       margin: 46px 20px 0;
+    }
+
+    .sports-promo {
+      height: auto;
+      min-height: 280px;
+
+      &__copy { width: 100%; padding: 24px; }
+      &__shade { background: linear-gradient(90deg, #080b10 0%, #080b10 36%, rgba(8, 11, 16, .9) 62%, rgba(8, 11, 16, .45)); }
+      h2 { max-width: 520px; font-size: 26px; }
+      &__date { margin-bottom: 20px; font-size: 16px; }
+      &__favorite { min-height: 50px; font-size: 20px; }
+      &__tags { margin-bottom: 12px; }
+      &__tags span { height: 28px; font-size: 14px; }
     }
   }
 }
@@ -3290,37 +3328,4 @@
     box-shadow: none;
     filter: none;
   }
-}
-// Scheduled-match favorite confirmation toast
-.sports-fixture__favorite-toast {
-  position: fixed;
-  z-index: 9999;
-  bottom: 120px;
-  left: 50%;
-  transform: translate(-50%, 24px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: min(332px, calc(100vw - 32px));
-  min-height: 80px;
-  padding: 12px 20px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-  pointer-events: none;
-  animation: sports-favorite-toast-motion 2.2s ease-in-out both;
-}
-
-@keyframes sports-favorite-toast-motion {
-  0% { opacity: 0; transform: translate(-50%, 24px); }
-  16% { opacity: 1; transform: translate(-50%, 0); }
-  82% { opacity: 1; transform: translate(-50%, 0); }
-  100% { opacity: 0; transform: translate(-50%, 24px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sports-fixture__favorite-toast { animation: none; transform: translate(-50%, 0); }
 }

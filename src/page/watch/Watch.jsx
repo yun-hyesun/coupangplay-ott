@@ -15,6 +15,7 @@ import { auth } from '../../firebase/firebase';
 import { createWatchSession, joinWatchSession } from '../../service/sessionService';
 import { subscribeSessionMessages, sendSessionMessage } from '../../service/chatService';
 import { communityError } from '../../data/communityData';
+import { getWatchReturnDestination, resolveWatchMedia } from './watchMedia';
 
 const EMPTY = [];
 const formatTime = (seconds) => {
@@ -26,6 +27,7 @@ const formatTime = (seconds) => {
 
 export const Watch = () => {
   const { type, id } = useParams();
+  const isSports = type === 'sports';
   const navigate = useNavigate();
   const location = useLocation();
   const uid = useAuthStore((value) => value.user?.uid);
@@ -35,6 +37,8 @@ export const Watch = () => {
     ? location.state
     : null;
   const content = state?.content ?? {};
+  const resumeAt = Number(state?.resumeAt ?? 0);
+  const startAt = Number.isFinite(resumeAt) ? Math.max(0, resumeAt) : 0;
   const clipTvDetails = useMovieStore(s => type === 'tv' ? s.tvDetails[id] : null);
   const seasonNumber = state?.seasonNumber ?? 1;
   const episodeNumber = state?.episodeNumber || 1;
@@ -87,10 +91,9 @@ export const Watch = () => {
   }, [id, type, seasonNumber, episodeNumber, onFetchVideo, onFetchTvVideo, onFetchSeason, onFetchEpisode, onFetchEpisodeVideo]);
   const availableVideos = type === 'tv' ? [...episodeVideos, ...tvVideos] : movieVideos;
   const selectedVideo = availableVideos.find(v => v.site === 'YouTube' && v.key && v.type === 'Trailer') || availableVideos.find(v => v.site === 'YouTube' && v.key);
-  const youtubeKey = state?.youtubeKey || selectedVideo?.key;
+  const { youtubeKey, videoSrc, title } = resolveWatchMedia({ type, id, state, selectedVideo });
   // videoSrc는 사용 가능한 직접 재생 영상 파일(mp4/webm)의 URL입니다.
   // TMDB 유튜브 예고편 키는 HTML video src로 직접 사용할 수 없습니다.
-  const videoSrc = state?.videoSrc ?? '';
   const videoRef = useRef(null);
   const lastSaved = useRef({ route: '', at: 0 });
   const youtubePlayer = useRef(null);
@@ -115,6 +118,11 @@ export const Watch = () => {
   const [quality, setQuality] = useState('1080');
   const [subtitle, setSubtitle] = useState('한국어');
   const [audio, setAudio] = useState('한국어');
+  const [failedSource, setFailedSource] = useState(null);
+  const [playbackAttempt, setPlaybackAttempt] = useState(0);
+  const sourceKey = videoSrc || youtubeKey;
+  const hasPlaybackError = Boolean(sourceKey) && failedSource === sourceKey;
+  const controlsDisabled = (!videoSrc && !youtubeKey) || hasPlaybackError;
 
   // 같은 URL의 다음 회차로 이동해도 location.key 변경으로 알림을 갱신합니다.
   // 타이머는 페이지 전환/언마운트 시 정리해 이전 알림이 남지 않도록 합니다.
@@ -132,13 +140,15 @@ export const Watch = () => {
   // 자동 재생은 브라우저 정책에 따라 차단될 수 있으므로 실패를 처리합니다.
   useEffect(() => {
     autoPlayAttemptedRef.current = false;
+    youtubePlayer.current = null;
     setCurrentTime(0);
     setDuration(0);
     setPlaying(false);
-  }, [videoSrc, episodeNumber]);
+    setYoutubePlaying(false);
+  }, [videoSrc, youtubeKey, episodeNumber]);
 
   const handleVideoReady = async (event) => {
-    if (!state?.autoPlayNext || autoPlayAttemptedRef.current) return;
+    if ((!state?.autoPlayNext && !isSports) || autoPlayAttemptedRef.current) return;
     autoPlayAttemptedRef.current = true;
     try {
       await event.currentTarget.play();
@@ -155,7 +165,6 @@ export const Watch = () => {
       else youtubePlayer.current.unMute();
     }
   };
-  const title = content.title || content.name || '콘텐츠 제목';
   // 같이 보기 해제 시 시청 세션 연결을 종료합니다.
   // URL의 ?session=... 을 공유하면 같은 시청 세션에 참여할 수 있습니다.
   useEffect(() => {
@@ -223,6 +232,7 @@ export const Watch = () => {
   };
 
   const savePlayback = (position, total, completed = false, periodic = false) => {
+    if (isSports) return;
     if (!ownerKey || !id || !['movie', 'tv'].includes(type)) {
       console.warn('[시청내역] 저장 건너뜀', {
         hasOwner: Boolean(ownerKey),
@@ -275,6 +285,11 @@ export const Watch = () => {
   });
 
   const goBack = async () => {
+    if (isSports) {
+      const { path, leagueTab } = getWatchReturnDestination(state);
+      navigate(path, { replace: true, state: { leagueTab } });
+      return;
+    }
     const video = videoRef.current;
     const player = youtubePlayer.current;
     if (video && !video.ended) await savePlayback(video.currentTime, video.duration);
@@ -284,12 +299,28 @@ export const Watch = () => {
     navigate(-1);
   };
 
+  const handlePlaybackError = () => {
+    setFailedSource(sourceKey);
+    setPlaying(false);
+    setYoutubePlaying(false);
+    youtubePlayer.current = null;
+  };
+  const retryPlayback = () => {
+    setFailedSource(null);
+    setPlaybackAttempt(value => value + 1);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+
   return (
-    <main className="watch-page">
+    <main className="watch-page" aria-label={title} data-player="shared">
       <div className="watch-player">
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
-        {videoSrc ? (
-          <video ref={videoRef} className="watch-player__video" src={videoSrc} key={`${id}-${seasonNumber}-${episodeNumber}-${videoSrc}`}
+        {hasPlaybackError ? <div className="watch-player__placeholder watch-player__error" role="status">
+          <p>영상을 재생하지 못했습니다. 다시 시도해 주세요.</p>
+          <button type="button" onClick={retryPlayback}>다시 시도</button>
+        </div> : videoSrc ? (
+          <video ref={videoRef} className="watch-player__video" src={videoSrc} key={`${id}-${seasonNumber}-${episodeNumber}-${videoSrc}-${playbackAttempt}`}
             playsInline muted={muted}
             onPlay={() => setPlaying(true)}
             onPause={(event) => {
@@ -306,11 +337,12 @@ export const Watch = () => {
             onLoadedMetadata={(event) => {
               const video = event.currentTarget;
               setDuration(video.duration);
-              if (state?.resumeAt > 0 && state.resumeAt < video.duration) {
-                video.currentTime = state.resumeAt;
+              if (startAt > 0 && startAt < video.duration) {
+                video.currentTime = startAt;
               }
             }}
             onCanPlay={handleVideoReady}
+            onError={handlePlaybackError}
             onEnded={(event) => {
               savePlayback(event.currentTarget.duration, event.currentTarget.duration, true);
               goToNextEpisode();
@@ -318,15 +350,23 @@ export const Watch = () => {
           />
         ) : youtubeKey ? (
           <YouTube
-            key={`${youtubeKey}-${episodeNumber}`}
+            key={`${youtubeKey}-${episodeNumber}-${playbackAttempt}`}
             videoId={youtubeKey}
+            title={title}
             className="watch-player__youtube"
             iframeClassName="watch-player__youtube-frame"
             onReady={({ target }) => {
               youtubePlayer.current = target;
-              setDuration(target.getDuration()); setCurrentTime(target.getCurrentTime());
+              const length = target.getDuration();
+              setDuration(length);
               target.setVolume(volume);
               if (muted) target.mute();
+              if (startAt > 0 && (length === 0 || startAt < length)) {
+                target.seekTo(startAt, true);
+                setCurrentTime(startAt);
+              } else {
+                setCurrentTime(target.getCurrentTime());
+              }
             }}
             onPlay={(event) => {
               youtubePlayer.current = event.target;
@@ -338,12 +378,14 @@ export const Watch = () => {
               setPlaying(false);
               savePlayback(event.target.getCurrentTime(), event.target.getDuration());
             }}
+            onError={handlePlaybackError}
             opts={{
               width: '100%',
               height: '100%',
               playerVars: {
                 autoplay: 1,
                 controls: 0,
+                rel: 0,
                 start: Math.max(0, Math.floor(state?.resumeAt || 0)),
                 playsinline: 1,
               },
@@ -356,7 +398,7 @@ export const Watch = () => {
               goToNextEpisode();
             }}
           />
-        ) : <div className="watch-player__placeholder">재생 가능한 예고편·클립이 없습니다.</div>}
+        ) : <div className="watch-player__placeholder" role="status">{isSports ? '재생할 영상을 찾을 수 없습니다.' : '재생 가능한 예고편·클립이 없습니다.'}</div>}
 
         {nextEpisodeNotice && (
           <div className="watch-next-episode-notice" role="status" aria-live="polite">
@@ -368,28 +410,28 @@ export const Watch = () => {
         <header className="watch-player__header">
           <button className="watch-icon-button" type="button" onClick={goBack} aria-label="뒤로 가기"><WatchIcon name="back" /></button>
           <h1>{title}{type === 'tv' ? ` · ${episodeNumber}화` : ''}</h1>
-          <button className={`watch-together-toggle ${togetherMode ? 'is-active' : ''}`} type="button" onClick={toggleTogetherMode} aria-pressed={togetherMode}>
+          {!isSports && <button className={`watch-together-toggle ${togetherMode ? 'is-active' : ''}`} type="button" onClick={toggleTogetherMode} aria-pressed={togetherMode}>
             <WatchIcon name="together" /> 같이 보기 {togetherMode ? 'ON' : ''}
-          </button>
+          </button>}
         </header>
 
         <div className="watch-player__bottom">
           <label className="watch-player__progress-label">
             <span className="sr-only">영상 재생 위치</span>
             <input className="watch-player__progress" type="range" min="0" max={duration || 1} step="0.1" value={currentTime}
-              onChange={changeProgress} disabled={(!videoSrc && !youtubeKey) || !duration}
+              onChange={changeProgress} disabled={controlsDisabled || !duration}
               style={{ '--progress': `${duration ? currentTime / duration * 100 : 0}%` }} />
           </label>
           <div className="watch-controls">
             <div className="watch-controls__left">
-              <button type="button" disabled={!videoSrc && !youtubeKey} onClick={togglePlay} aria-label={playing ? '일시 정지' : '재생'}><WatchIcon name={playing ? 'pause' : 'play'} /></button>
-              <button type="button" disabled={!videoSrc && !youtubeKey} onClick={() => seek(-10)} aria-label="10초 뒤로"><WatchIcon name="replay" /></button>
-              <button type="button" disabled={!videoSrc && !youtubeKey} onClick={() => seek(10)} aria-label="10초 앞으로"><WatchIcon name="forward" /></button>
+              <button type="button" disabled={controlsDisabled} onClick={togglePlay} aria-label={playing ? '일시 정지' : '재생'}><WatchIcon name={playing ? 'pause' : 'play'} /></button>
+              <button type="button" disabled={controlsDisabled} onClick={() => seek(-10)} aria-label="10초 뒤로"><WatchIcon name="replay" /></button>
+              <button type="button" disabled={controlsDisabled} onClick={() => seek(10)} aria-label="10초 앞으로"><WatchIcon name="forward" /></button>
               <div className="watch-volume"><button type="button" onClick={() => setVolumeOpen(open => !open)} aria-expanded={volumeOpen} aria-label="볼륨 조절"><WatchIcon name={muted || volume === 0 ? 'mute' : 'volume'} /></button>{volumeOpen && <div className="watch-volume__levels" aria-label="볼륨 조절"><input type="range" min="0" max="100" value={volume} onChange={e => setVideoVolume(Number(e.target.value))} aria-label="볼륨" style={{ '--volume-progress': `${volume}%` }} /><span>{volume}%</span></div>}</div>
               <span className="watch-controls__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
             <div className="watch-controls__right">
-              <FullVideoClipButton disabled={!youtubeKey || !!videoSrc} getSource={() => {
+              {!isSports && <FullVideoClipButton disabled={!youtubeKey || !!videoSrc || hasPlaybackError} getSource={() => {
                 const player = youtubePlayer.current;
                 const source = {
                   content: { ...clipTvDetails, ...content, id, media_type: type, number_of_seasons: clipTvDetails?.number_of_seasons ?? content.number_of_seasons ?? null },
@@ -399,9 +441,9 @@ export const Watch = () => {
                   ...captureClipPlayback(player, { currentTime, duration }),
                 };
                 return source;
-              }} />
-              <button type="button" aria-label="회차 목록" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}><WatchIcon name="episodes" /></button>
-              <button type="button" aria-label="실시간 채팅" aria-expanded={panel === 'chat'} onClick={toggleCommunityPanel}><WatchIcon name="chat" /></button>
+              }} />}
+              {!isSports && <button type="button" aria-label="회차 목록" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}><WatchIcon name="episodes" /></button>}
+              {!isSports && <button type="button" aria-label="실시간 채팅" aria-expanded={panel === 'chat'} onClick={toggleCommunityPanel}><WatchIcon name="chat" /></button>}
               <button type="button" aria-label="설정" onClick={() => { setPanel(panel === 'settings' ? null : 'settings'); setSettingsTab('main'); }}><WatchIcon name="settings" /></button>
               <button type="button" aria-label="전체 화면" onClick={toggleFullscreen}><WatchIcon name="fullscreen" /></button>
             </div>

@@ -49,7 +49,7 @@ export function createLeagueVideosHandler({ apiKey, fetchImpl = (...args) => fet
     return data;
   }
 
-  function result(collected, pageToken, unknownCount, rateLimited) {
+  function result(collected, pageToken, unknownCount, rateLimited, order = "date") {
     const videos = [...collected.values()].map(item => {
       const { title, publishedAt, thumbnails } = item.snippet;
       return {
@@ -59,7 +59,7 @@ export function createLeagueVideosHandler({ apiKey, fetchImpl = (...args) => fet
         viewCount: item.statistics?.viewCount == null ? null : Number(item.statistics.viewCount),
         kind: /풀경기|풀영상|다시보기|full\s*match/i.test(title) ? "replay" : /하이라이트|highlights?|\bHL\b/i.test(title) ? "highlight" : "recommend",
       };
-    }).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+    }).sort((a, b) => (order === "viewCount" ? (b.viewCount ?? -1) - (a.viewCount ?? -1) : 0) || b.publishedAt.localeCompare(a.publishedAt));
     return { videos, nextPageToken: pageToken, channelId: COUPANG_SPORTS_CHANNEL_ID, fetchedAt: new Date(now()).toISOString(),
       shortsExcluded: true, classificationIncomplete: unknownCount > 0,
       notice: rateLimited ? "유튜브 영상 확인이 잠시 제한되어 확인된 일반 영상부터 표시합니다. 잠시 후 다시 조회해 주세요."
@@ -124,7 +124,11 @@ export function createLeagueVideosHandler({ apiKey, fetchImpl = (...args) => fet
       if (!pageToken || visited.has(pageToken) || collected.size >= PAGE_SIZE || unknownCount > 0) break;
     }
     const next = pageToken && !visited.has(pageToken) ? UPLOAD_CURSOR + pageToken : "";
-    return { ...result(collected, next, unknownCount, rateLimited), source: "youtube-uploads" };
+    const value = result(collected, next, unknownCount, rateLimited, query.order);
+    return { ...value, source: "youtube-uploads", ...(query.order === "viewCount" ? {
+      rankingScope: "recent-uploads",
+      notice: [value.notice, "유튜브 조회 한도로 최근 업로드에서 확인된 영상의 조회수 순으로 표시합니다."].filter(Boolean).join(" "),
+    } : {}) };
   }
 
   async function loadSearch(query, key) {
@@ -137,7 +141,7 @@ export function createLeagueVideosHandler({ apiKey, fetchImpl = (...args) => fet
     for (let page = 0; page < MAX_SEARCH_PAGES; page += 1) {
       visited.add(pageToken);
       const search = await youtube("search", {
-        part: "snippet", channelId: COUPANG_SPORTS_CHANNEL_ID, type: "video", order: "date", maxResults: String(PAGE_SIZE),
+        part: "snippet", channelId: COUPANG_SPORTS_CHANNEL_ID, type: "video", order: query.order, maxResults: String(PAGE_SIZE),
         q: [LEAGUE_VIDEO_QUERIES[query.league], getVideoTeamQuery(query.team)].filter(Boolean).join(" "),
         ...(range ? { publishedAfter: range.from, publishedBefore: range.to } : {}), ...(pageToken ? { pageToken } : {}),
       }, key);
@@ -159,7 +163,7 @@ export function createLeagueVideosHandler({ apiKey, fetchImpl = (...args) => fet
       if (!pageToken || collected.size >= PAGE_SIZE || visited.has(pageToken) || unknownCount > 0) break;
     }
     // Keep the entire last page: slicing here would skip videos when the next token is used.
-    return result(collected, pageToken && !visited.has(pageToken) ? pageToken : "", unknownCount, rateLimited);
+    return result(collected, pageToken && !visited.has(pageToken) ? pageToken : "", unknownCount, rateLimited, query.order);
   }
 
   async function load(query, key) {
@@ -178,9 +182,9 @@ export function createLeagueVideosHandler({ apiKey, fetchImpl = (...args) => fet
     if (req.method !== "GET") { res.setHeader("Allow", "GET"); return res.status(405).json({ error: "GET 요청만 지원합니다." }); }
     try {
       const params = new URL(req.url, "http://localhost").searchParams;
-      const query = { league: params.get("league") || "PL", scope: params.get("scope") || "month", month: params.get("month") || "", team: params.get("team") || "", pageToken: params.get("pageToken") || "" };
+      const query = { league: params.get("league") || "PL", scope: params.get("scope") || "month", month: params.get("month") || "", team: params.get("team") || "", pageToken: params.get("pageToken") || "", order: params.get("order") || "date" };
       if (!Object.hasOwn(LEAGUE_VIDEO_QUERIES, query.league) || query.team.length > 60 || /[^\p{L}\p{N}\s.'-]/u.test(query.team)
-        || !["month", "team"].includes(query.scope) || !/^(?:[\w=-]{0,512}|uploads:[\w=-]{1,504})$/.test(query.pageToken)) throw apiError("영상 조회 조건이 올바르지 않습니다.", 400);
+        || !["month", "team"].includes(query.scope) || !["date", "viewCount"].includes(query.order) || !/^(?:[\w=-]{0,512}|uploads:[\w=-]{1,504})$/.test(query.pageToken)) throw apiError("영상 조회 조건이 올바르지 않습니다.", 400);
       if (query.scope === "month") {
         try { getVideoMonthRange(query.month); } catch { throw apiError("조회할 월이 올바르지 않습니다.", 400); }
       }

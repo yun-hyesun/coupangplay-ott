@@ -34,10 +34,22 @@ export const Adult = () => {
         />
 
         {/* 랭킹 */}
+        {/* <ContentRail
+          railKey="adult-ranking"
+          layout="vertical"
+          showMore={false}
+        /> */}
+
         <ContentRail
           railKey="adult-ranking"
           layout="vertical"
           showMore={false}
+          title={
+            <span className="channel-rail-title">
+              <img src="/images/channal04.svg" alt="adult" />
+              <span>TOP 20</span>
+            </span>
+          }
         />
 
         {/* 일반 레일 7개 */}

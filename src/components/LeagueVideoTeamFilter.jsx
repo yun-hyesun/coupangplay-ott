@@ -1,10 +1,14 @@
 import { TeamImage } from "./LeagueDetailShared";
+import { useHorizontalDragScroll } from "../hooks/useHorizontalDragScroll";
 
 const ASSETS = "/images/sports/league-detail/videos/";
 
 export function LeagueVideoTeamFilter({ league, teams, selectedTeamId, subscribedTeamIds = [], onSelectTeam }) {
+  const { scrollRef, isDragging, onPointerDown, onClickCapture, onDragStart } = useHorizontalDragScroll();
   return (
-    <div className="league-video-feed__teams" role="group" aria-label={`${league.name} 영상 팀 선택`}>
+    <div className={"league-video-feed__teams" + (isDragging ? " is-dragging" : "")}
+      ref={scrollRef} tabIndex={0} role="group" aria-label={`${league.name} 영상 팀 선택`}
+      onPointerDown={onPointerDown} onClickCapture={onClickCapture} onDragStart={onDragStart}>
       <button type="button" className="league-video-feed__team-card league-video-feed__team-card--all"
         aria-label="팀 전체 영상 조회" aria-pressed={!selectedTeamId} onClick={() => onSelectTeam("")}>
         <span className="league-video-feed__team-picture">

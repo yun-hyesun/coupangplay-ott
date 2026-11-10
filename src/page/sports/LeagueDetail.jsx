@@ -239,7 +239,7 @@ export const LeagueDetail = () => {
   }, [subscribedTeamIds]);
 
   useEffect(() => {
-    if (!league || ["videos", "schedule"].includes(activeTab)) return undefined;
+    if (!league || activeTab !== "home") return undefined;
     const controller = new AbortController();
     const { from, to } = scheduleRange;
     const sameSeason = getScheduleSeason(league.id, from) === getScheduleSeason(league.id, to);
@@ -292,7 +292,7 @@ export const LeagueDetail = () => {
   }, [league, activeTab]);
 
   useEffect(() => {
-    if (!league || ["videos", "schedule"].includes(activeTab)) return undefined;
+    if (!league || activeTab !== "home") return undefined;
     const controller = new AbortController();
     loadLeagueBroadcasts({
       dateKey: today,
@@ -311,10 +311,6 @@ export const LeagueDetail = () => {
     [leagueTeams, subscribedTeamIds],
   );
   const visibleMatches = useMemo(() => selectScheduleMatches(scheduleState.games, scheduleRange, activeFixtureTab), [activeFixtureTab, scheduleState.games, scheduleRange]);
-  const videoGroups = useMemo(() => selectedTeams.map((team) => ({
-    team,
-    videos: allLeagueVideos.filter((video) => normalizeSportsText(video.title).includes(normalizeSportsText(team.name))).slice(0, 4),
-  })).filter((group) => group.videos.length > 0), [allLeagueVideos, selectedTeams]);
 
   if (!league) {
     return (
@@ -382,7 +378,7 @@ export const LeagueDetail = () => {
     };
   });
   const hasStandingsApi = supportsFootballStandings(league.id) || ["nba", "kleague-1", "kleague-2"].includes(league.id);
-  const fallbackTeams = standingsRows.length || hasStandingsApi ? [] : leagueTeams.slice(0, 10).map((team) => ({
+  const fallbackTeams = standingsRows.length || hasStandingsApi ? [] : leagueTeams.slice(0, 20).map((team) => ({
     teamName: team.name,
     logoPath: team.logoPath,
     rank: null,
@@ -399,11 +395,16 @@ export const LeagueDetail = () => {
   }));
   const tableRows = standingsRows.length ? standingsRows : fallbackTeams;
   const tableNote = standingsRows.length && supportsFootballStandings(league.id)
-    ? `${standingsRows[0].sourceProvider === "espn" ? "ESPN" : "Football-Data"} 기준 현재 시즌 종합 순위 · 상위 10개 팀`
+    ? `${standingsRows[0].sourceProvider === "espn" ? "ESPN" : "Football-Data"} 기준 현재 시즌 종합 순위`
     : (fallbackTeams.length ? "순위 통계가 연결되기 전까지 프로젝트에 저장된 팀 목록을 표시합니다." : "");
   const tableColumns = isBasketball
     ? ["순위", "팀", "승률", "경기", "승", "패", "승차"]
     : ["순위", "팀", "승점", "경기", "승", "무", "패", "득점", "실점", "득실차"];
+  const standingsProps = { league, standingsState, tableRows, tableNote, tableColumns, isBasketball };
+  const changeTab = tabId => {
+    setActiveTab(tabId);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+  };
 
   return (
     <main className={"league-detail" + (isCompactHeader ? " has-compact-header" : "")} data-sport={league.sport} data-league={league.id} style={{ "--league-accent": accent, "--league-header-color": accent }}>
@@ -419,13 +420,7 @@ export const LeagueDetail = () => {
           selectedTeams={user ? selectedTeams : []}
           isCompact={isCompactHeader}
           activeTab={activeTab}
-          onTabChange={(tabId, targetId) => {
-            setActiveTab(tabId);
-            window.requestAnimationFrame(() => {
-              if (!["videos", "schedule"].includes(tabId) && targetId) document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-              else window.scrollTo({ top: 0, behavior: "smooth" });
-            });
-          }}
+          onTabChange={changeTab}
         />
       </div>
       {activeTab === "videos" ? <LeagueVideoFeed key={league.id} league={league} scoresOn={scoresOn} subscribedTeamIds={user ? subscribedTeamIds : []} /> : activeTab === "schedule" ? <LeagueSchedulePage
@@ -433,7 +428,12 @@ export const LeagueDetail = () => {
         league={league}
         scoresOn={scoresOn}
         today={today}
-        selectedTeams={selectedTeams}
+        selectedTeams={user ? selectedTeams : []}
+      /> : activeTab === "standings" ? <LeagueStandings
+        {...standingsProps}
+        fullPage
+        tableRows={standingsRows}
+        tableNote={standingsRows.length ? tableNote : ""}
       /> : <>
       <LeagueHome league={league} scheduleState={broadcastState.leagueId === league.id ? broadcastState : { games: [], loading: true, errors: [] }} />
       <LeagueSchedule
@@ -448,16 +448,12 @@ export const LeagueDetail = () => {
       <LeagueVideos
         league={league}
         allLeagueVideos={allLeagueVideos}
-        videoGroups={videoGroups}
-        selectedTeams={selectedTeams}
+        selectedTeams={user ? selectedTeams : []}
+        onOpenTeamSettings={handleOpenTeamSettings}
       />
       <LeagueStandings
-        league={league}
-        standingsState={standingsState}
-        tableRows={tableRows}
-        tableNote={tableNote}
-        tableColumns={tableColumns}
-        isBasketball={isBasketball}
+        {...standingsProps}
+        onShowAll={standingsRows.length > 10 ? () => changeTab("standings") : undefined}
       />
       </>}
       <SportsSettingsModal

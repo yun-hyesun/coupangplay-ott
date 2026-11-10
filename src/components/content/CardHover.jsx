@@ -106,9 +106,8 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
         {/* 영상이 준비되기 전까지 포스터 표시 */}
         <img
           className={`preview-poster ${isVideoReady ? 'hide' : ''}`}
-          src={`https://image.tmdb.org/t/p/w780${
-            item.backdrop_path || item.poster_path
-          }`}
+          src={`https://image.tmdb.org/t/p/w780${item.backdrop_path || item.poster_path
+            }`}
           alt={name}
         />
 
@@ -145,20 +144,24 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
         <div className="button-box">
           {/* 영상 재생 페이지 이동 */}
           <Link
-            to={`/watch/${type}/${item.id}`}
+            to={
+              fromStore
+                ? `/purchase/checkout/${type}/${item.id}`
+                : `/watch/${type}/${item.id}`
+            }
             className="button main-btn icon-play"
             state={
               item.resume
                 ? {
-                    content: item,
-                    ownerKey: item.ownerKey,
-                    resumeAt: item.position ?? 0,
-                    seasonNumber: item.seasonNumber ?? 1,
-                    episodeNumber: item.episodeNumber ?? 1,
-                    videoSrc: item.videoSrc || '',
-                    youtubeKey: item.youtubeKey || '',
-                    autoPlayNext: true,
-                  }
+                  content: item,
+                  ownerKey: item.ownerKey,
+                  resumeAt: item.position ?? 0,
+                  seasonNumber: item.seasonNumber ?? 1,
+                  episodeNumber: item.episodeNumber ?? 1,
+                  videoSrc: item.videoSrc || '',
+                  youtubeKey: item.youtubeKey || '',
+                  autoPlayNext: true,
+                }
                 : { content: item }
             }
           >

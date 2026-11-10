@@ -1,0 +1,83 @@
+@use '../../../scss/variables' as *;
+
+.partnership {
+  --partnership-page: #0f1114;
+  --partnership-control: #292d33;
+  background: var(--partnership-page);
+  color: $color-text-pri;
+  font-family: $font-main;
+  padding: 64px 24px 80px;
+  font-size: 16px;
+  line-height: 1.5;
+  & *, & *::before, & *::after { box-sizing: border-box; }
+  &__inner { max-width: 960px; margin: 0 auto; }
+  &__intro { display: flex; flex-direction: column; gap: 16px; margin-bottom: 48px; }
+  &__eyebrow { font-size: 14px; line-height: 20px; font-weight: $font-w-SB-600; color: $color-pri; }
+  h1 { font-size: 40px; line-height: 48px; font-weight: $font-w-B-700; word-break: keep-all; }
+  h2, legend { font-size: 24px; line-height: 32px; font-weight: $font-w-SB-600; word-break: keep-all; }
+  &__lead { color: $color-text-sec1; font-size: 18px; line-height: 28px; }
+  &__notice { display: flex; flex-wrap: wrap; gap: 8px; padding: 20px; background: $color-bg2; font-size: 14px; color: $color-text-sec1; }
+  &__notice a, &__policy { color: $color-pri; font-weight: $font-w-SB-600; }
+  &__notice a:hover, &__policy:hover { text-decoration: underline; }
+  &__section { border: 0; min-width: 0; padding: 0 0 48px; margin: 0 0 48px; border-bottom: 1px solid $color-border-light; display: flex; flex-direction: column; gap: 24px; }
+  &__types { display: block; }
+  legend { padding: 0; margin-bottom: 20px; }
+  &__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  &__card { background: $color-bg2; padding: 24px; border: 1px solid transparent; border-radius: 8px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: border-color .15s, background .15s; }
+  &__card strong { font-size: 20px; line-height: 28px; font-weight: $font-w-SB-600; }
+  &__card > span { font-size: 14px; line-height: 20px; color: $color-text-sec1; }
+  &__card:hover, &__card:focus-within, &__card.is-selected { border-color: $color-pri; }
+  &__card.is-selected { background: rgba($color-pri, .1); }
+  &__card input[type='radio'] { appearance: auto; width: 20px; height: 20px; accent-color: $color-pri; margin: 6px 0; }
+  &__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  &__field { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  &__field > label { font-weight: $font-w-SB-600; }
+  &__field input:not([type='file']), textarea { width: 100%; min-width: 0; min-height: 56px; padding: 15px 16px; background: var(--partnership-control); border: 1px solid $color-border-light; border-radius: 8px; font: inherit; color: inherit; }
+  textarea { min-height: 220px; padding: 20px; resize: vertical; }
+  &__field input::placeholder, textarea::placeholder { color: $color-text-sec2; opacity: 1; }
+  &__field [aria-invalid='true'] { border-color: $color-badgeR; }
+  input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible, label:focus-within { outline: 2px solid $color-text-blue; outline-offset: 4px; }
+  &__hint { font-size: 14px; line-height: 20px; color: $color-text-sec2; }
+  &__hint > span { float: right; }
+  &__section > h2 + &__hint { margin-top: -16px; }
+  &__upload { display: flex; align-items: center; gap: 16px; padding: 24px; background: $color-bg2; border-radius: 8px; color: $color-text-sec2; }
+  &__file-button { position: relative; min-width: 120px; min-height: 56px; color: $color-text-pri; border-radius: 8px; overflow: hidden; }
+  &__file-button input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  &__files { list-style: none; margin: 0; padding: 0; }
+  &__files li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid $color-border-light; }
+  &__files span { min-width: 0; overflow-wrap: anywhere; }
+  &__files button { flex-shrink: 0; padding: 8px; color: $color-text-sec1; }
+  &__error { color: #ff8585; font-size: 14px; line-height: 20px; }
+  &__error:empty { display: none; }
+  &__types > &__error { margin-top: 12px; }
+  &__privacy { border-bottom: 0; margin-bottom: 48px; padding-bottom: 0; gap: 20px; font-size: 14px; color: $color-text-sec1; }
+  &__privacy h2 { color: $color-text-pri; }
+  &__privacy-table { display: flex; flex-direction: column; gap: 16px; background: $color-bg2; padding: 24px; border-radius: 8px; }
+  &__privacy-table > div { display: grid; grid-template-columns: 152px minmax(0, 1fr); gap: 16px; }
+  &__privacy-table dt { color: $color-text-pri; font-weight: $font-w-SB-600; }
+  &__privacy-table dd { margin: 0; }
+  &__check { display: flex; align-items: flex-start; gap: 10px; font-size: 16px; font-weight: $font-w-SB-600; color: $color-text-pri; cursor: pointer; }
+  &__check input { appearance: auto; flex-shrink: 0; width: 20px; height: 20px; margin-top: 2px; accent-color: $color-pri; }
+  &__actions { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+  &__submit { width: 320px; max-width: 100%; min-height: 56px; padding: 16px; border-radius: 8px; font-size: 16px; font-weight: $font-w-SB-600; }
+  &__submit:hover { background: $color-sec; }
+  &__submit:disabled { opacity: .6; cursor: wait; }
+  &__complete { max-width: 960px; margin: 56px auto; min-height: 360px; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center; }
+  &__complete p { max-width: 800px; color: $color-text-sec1; }
+  @media (max-width: 767px) {
+    padding: 40px 20px 56px;
+    h1 { font-size: 30px; line-height: 40px; }
+    h2, legend { font-size: 20px; line-height: 28px; }
+    &__lead { font-size: 16px; line-height: 24px; }
+    &__intro { margin-bottom: 32px; }
+    &__section { padding-bottom: 32px; margin-bottom: 32px; }
+    &__cards, &__grid { grid-template-columns: 1fr; }
+    &__card { padding: 20px; }
+    &__upload { padding: 16px; flex-wrap: wrap; }
+    &__privacy { padding-bottom: 0; }
+    &__privacy-table > div { grid-template-columns: 1fr; gap: 6px; }
+    &__hint > span { float: none; display: block; margin-top: 4px; }
+    &__complete { margin: 24px auto; }
+  }
+  @media (prefers-reduced-motion: reduce) { &__card { transition: none; } }
+}

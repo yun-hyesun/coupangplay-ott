@@ -98,6 +98,7 @@ export function createYouTubeVideoTypeFilter({ fetchImpl = (...args) => fetch(..
     try { await typeStore?.save([...cache].map(([key, value]) => ({ key, ...value }))); } catch { /* Read-only hosts continue using the in-memory cache. */ }
     return {
       videos: items.filter((_, index) => types[index] === false),
+      classifications: items.map((item, index) => ({ id: item.id, isShort: types[index] })),
       shortsCount: types.filter(value => value === true).length,
       unknownCount: types.filter(value => value === null).length,
       rateLimited: now() < retryAt,

@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /* size */
 /* size */
 /* size */
@@ -12,6 +13,39 @@
   max-width: 1792px;
   margin: 0 auto;
   padding: 40px 24px 80px;
+}
+.my-subscription .voucher-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: fit-content;
+  height: 45px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: #292d33;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.my-subscription .voucher-open-btn span {
+  font-size: 22px;
+  line-height: 1;
+}
+.my-subscription .voucher-open-btn:hover:not(:disabled) {
+  background: #505050;
+}
+.my-subscription .voucher-open-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .my-subscription .subscription-header {
   display: flex;
@@ -32,32 +66,6 @@
   font-size: 28px;
   font-weight: 700;
 }
-.my-subscription .subscription-header .voucher-open-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  white-space: nowrap;
-  padding: 12px 16px;
-  background: #292d33;
-  border: none;
-  border-radius: 8px;
-  color: #FFFFFF;
-  font-family: "Pretendard", sans-serif;
-  font-size: 16px;
-  cursor: pointer;
-}
-.my-subscription .subscription-header .voucher-open-btn span {
-  font-size: 22px;
-  line-height: 1;
-}
-.my-subscription .subscription-header .voucher-open-btn:hover {
-  background: #505050;
-}
-.my-subscription .subscription-header .voucher-open-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 .my-subscription .subscription-list {
   display: flex;
   flex-direction: column;
@@ -65,9 +73,7 @@
   padding-top: 32px;
 }
 .my-subscription .subscription-card {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  display: block;
   width: 100%;
   padding: 20px 24px;
   background: transparent;
@@ -232,7 +238,121 @@
   cursor: pointer;
 }
 
+/* ========================================
+   구독 해지 신청 - 고객센터 FAQ 스타일
+======================================== */
+.my-subscription .subscription-card.cancel-pending {
+  padding: 0;
+  border-radius: 0;
+}
+.my-subscription .subscription-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  padding: 24px 0;
+}
+.my-subscription .my-pass-cancel-accordion {
+  width: 100%;
+  margin-top: 0;
+}
+.my-subscription .my-pass-cancel-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 20px 16px;
+  border: none;
+  border-bottom: 1px solid #303135;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.my-subscription .my-pass-cancel-question:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.my-subscription .my-pass-cancel-question .my-pass-cancel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+.my-subscription .my-pass-cancel-question .my-pass-cancel-arrow img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  transform: rotate(-90deg);
+  transition: transform 0.3s ease;
+}
+.my-subscription .my-pass-cancel-question[aria-expanded=true] .my-pass-cancel-arrow img {
+  transform: rotate(90deg);
+}
+.my-subscription .my-pass-cancel-answer-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s ease, opacity 0.3s ease;
+}
+.my-subscription .my-pass-cancel-answer-wrap .my-pass-cancel-answer-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.my-subscription .my-pass-cancel-answer-wrap.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.my-subscription .my-pass-cancel-answer {
+  padding: 20px 16px;
+  background: #202123;
+  border-radius: 0 0 6px 6px;
+  color: #aaa;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.my-subscription .my-pass-cancel-answer p {
+  margin: 0;
+}
+.my-subscription .my-pass-cancel-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 10px;
+}
+.my-subscription .my-pass-cancel-bottom span {
+  font-size: 14px;
+  color: #aaa;
+}
+
 @media (max-width: 767px) {
+  .my-subscription .subscription-card-top {
+    gap: 12px;
+    padding: 20px 0;
+  }
+  .my-subscription .my-pass-cancel-question {
+    min-height: 56px;
+    padding: 18px 8px;
+    font-size: 14px;
+  }
+  .my-subscription .my-pass-cancel-answer {
+    padding: 20px 12px;
+    font-size: 14px;
+  }
+  .my-subscription .my-pass-cancel-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
   .my-subscription .my-subscription-inner {
     padding: 24px 16px 60px;
   }
@@ -242,19 +362,11 @@
   .my-subscription .subscription-header h2 {
     font-size: 22px;
   }
-  .my-subscription .subscription-header .voucher-open-btn {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-  .my-subscription .subscription-header .voucher-open-btn span {
-    font-size: 20px;
-  }
   .my-subscription .subscription-list {
     gap: 16px;
     padding-top: 24px;
   }
   .my-subscription .subscription-card {
-    gap: 14px;
     padding: 16px;
   }
   .my-subscription .subscription-thumbnail {
