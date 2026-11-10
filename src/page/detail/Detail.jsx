@@ -21,8 +21,8 @@ export const Detail = () => {
 
   const { state, search } = useLocation();
   const isStoreDetail =
-  state?.fromStore === true ||
-  new URLSearchParams(search).get('from') === 'store';
+    state?.fromStore === true ||
+    new URLSearchParams(search).get('from') === 'store';
 
   // 마이페이지에서 전달받은 리뷰 작성 대상
   const reviewRequest = new URLSearchParams(search);
@@ -357,7 +357,7 @@ export const Detail = () => {
                   (!isCurrentList || watchlistLoading)
                 }
               >
-                <ActionIcon name="like" />
+                <ActionIcon name={liked ? 'liked' : 'like'} />
                 {liked ? '찜 완료' : '찜하기'}
               </button>
 
@@ -647,7 +647,13 @@ export const Detail = () => {
           </section>
         )}
       </div>
-      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
+      {popupEpisode && <ReviewPopup episode={popupEpisode} 
+      reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} 
+      onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} 
+      onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} 
+      onDelete={reviewId => removeReview(popupEpisode, reviewId)} 
+      error={reviewError} 
+      onClose={() => setPopupEpisode(null)} />}
     </main>
   );
 };
