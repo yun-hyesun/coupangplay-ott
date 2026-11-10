@@ -35,6 +35,8 @@ export const Watch = () => {
     ? location.state
     : null;
   const content = state?.content ?? {};
+  const resumeAt = Number(state?.resumeAt ?? 0);
+  const startAt = Number.isFinite(resumeAt) ? Math.max(0, resumeAt) : 0;
   const clipTvDetails = useMovieStore(s => type === 'tv' ? s.tvDetails[id] : null);
   const seasonNumber = state?.seasonNumber ?? 1;
   const episodeNumber = state?.episodeNumber || 1;
@@ -306,8 +308,8 @@ export const Watch = () => {
             onLoadedMetadata={(event) => {
               const video = event.currentTarget;
               setDuration(video.duration);
-              if (state?.resumeAt > 0 && state.resumeAt < video.duration) {
-                video.currentTime = state.resumeAt;
+              if (startAt > 0 && startAt < video.duration) {
+                video.currentTime = startAt;
               }
             }}
             onCanPlay={handleVideoReady}
@@ -324,9 +326,16 @@ export const Watch = () => {
             iframeClassName="watch-player__youtube-frame"
             onReady={({ target }) => {
               youtubePlayer.current = target;
-              setDuration(target.getDuration()); setCurrentTime(target.getCurrentTime());
+              const length = target.getDuration();
+              setDuration(length);
               target.setVolume(volume);
               if (muted) target.mute();
+              if (startAt > 0 && (length === 0 || startAt < length)) {
+                target.seekTo(startAt, true);
+                setCurrentTime(startAt);
+              } else {
+                setCurrentTime(target.getCurrentTime());
+              }
             }}
             onPlay={(event) => {
               youtubePlayer.current = event.target;
@@ -344,7 +353,7 @@ export const Watch = () => {
               playerVars: {
                 autoplay: 1,
                 controls: 0,
-                start: Math.max(0, Math.floor(state?.resumeAt || 0)),
+                start: Math.floor(startAt),
                 playsinline: 1,
               },
             }}

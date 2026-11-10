@@ -204,6 +204,11 @@ body:has(.wowclip-shortfeed) {
   gap: 8px;
 }
 
+.wowclip-feed-source:hover,
+a.wowclip-feed-category:hover {
+  background: rgba(85, 85, 85, .9);
+}
+
 .wowclip-feed-source-title {
   overflow: hidden;
   text-overflow: ellipsis;

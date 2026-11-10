@@ -237,9 +237,9 @@ const seedSpoilerLibrary = (clip) => {
 const withClipRoute = () => h(MemoryRouter, { initialEntries: ['/wowclip?clip=protected'] }, h(WowClip));
 const feedNodes = { createNodeMock: () => ({ children: [] }) };
 const revealButton = (root) => root.root.findAllByType('button').find((button) => button.children[0] === '스포일러 열고 보기');
-const fullVideoLinks = (root) => root.root.findAllByType('a').filter((link) => link.props.className === 'wowclip-feed-source');
+const sourceLink = (root, className) => root.root.findAllByType('a').find((link) => link.props.className === className);
 
-test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 보호 중 영상·제목·댓글·풀영상 링크를 가린다', async () => {
+test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 보호 중 영상·제목·댓글·원본 링크를 가린다', async () => {
   useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
   useProfileStore.setState({ currentProfile: { id: 'default' } });
   const priorHistory = useWatchHistoryStore.getState();
@@ -251,14 +251,18 @@ test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 
     assert.ok(revealButton(root));
     assert.equal(root.root.findByType('h2').children[0], '검수 작품에서 오린 장면');
     assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
-    assert.equal(fullVideoLinks(root).length, 0);
+    assert.equal(sourceLink(root, 'wowclip-feed-source'), undefined);
+    assert.equal(sourceLink(root, 'wowclip-feed-category'), undefined);
     await act(async () => root.root.findByProps({ 'aria-label': '댓글 1' }).props.onClick());
     assert.equal(root.root.findAllByType(ClipComments).length, 0);
 
     await act(async () => useWatchHistoryStore.setState({ history: [record] }));
     assert.equal(revealButton(root), undefined);
     assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
-    assert.equal(fullVideoLinks(root).length, 1);
+    const sceneLink = sourceLink(root, 'wowclip-feed-source');
+    assert.equal(sceneLink.props.href, '/watch/tv/78648');
+    assert.ok(sceneLink.children.includes('원본에서 이 장면 보기'));
+    assert.equal(sourceLink(root, 'wowclip-feed-category').props.href, '/detail/tv/78648');
     assert.equal(root.root.findAllByType(ClipComments).length, 1);
     assert.ok(JSON.stringify(root.toJSON()).includes(protectedFixture.title));
 

@@ -66,7 +66,13 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
           const protectedClip = isProtected(clip);
           const canDelete = !!userUid && clip.authorUid === userUid;
           const { image, title } = clipPreview(clip, protectedClip);
+          const sourcePath = `${clip.content.media_type}/${clip.content.id}`;
+          const sourceTitle = contentTitle(clip.content);
           const episodeLabel = clipEpisodeLabel(clip);
+          const sourceInfo = <>
+            <span className="wowclip-feed-source-title">{sourceTitle}</span>
+            {episodeLabel && <span className="wowclip-feed-episode">{episodeLabel}</span>}
+          </>;
           const commentCount = clip.commentCount ?? clip.comments.filter((comment) => !comment.deleted).length;
           return <article className="wowclip-feed-item" data-clip-id={clip.id} key={clip.id} aria-label={protectedClip ? '스포일러 보호된 클립' : clip.title}>
             <div className="wowclip-feed-stage">
@@ -76,8 +82,14 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
                 <h2>{title}</h2>
                 <p>{relativeTime(clip.createdAt)}</p>
                 <div className="wowclip-feed-source-row">
-                  {!protectedClip && <Link className="wowclip-feed-source" to={'/watch/' + clip.content.media_type + '/' + clip.content.id} state={clipWatchState(clip)}><ClipIcon name="play" size={16} />풀영상 보러가기</Link>}
-                  <span className="wowclip-feed-category"><span className="wowclip-feed-source-title">{contentTitle(clip.content)}</span>{episodeLabel && <span className="wowclip-feed-episode">{episodeLabel}</span>}</span>
+                  {protectedClip ? <span className="wowclip-feed-category">{sourceInfo}</span> : <>
+                    <Link className="wowclip-feed-source" to={`/watch/${sourcePath}`} state={clipWatchState(clip)}>
+                      <ClipIcon name="play" size={16} />원본에서 이 장면 보기
+                    </Link>
+                    <Link className="wowclip-feed-category" to={`/detail/${sourcePath}`} aria-label={`${sourceTitle} 작품 상세 보기`}>
+                      {sourceInfo}<CommonIcon name="chevron-right" size={12} />
+                    </Link>
+                  </>}
                 </div>
               </div>
             </div>
@@ -93,7 +105,7 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
               </button>
               {canDelete && <div className="wowclip-feed-more">
                 <button type="button" className="wowclip-feed-action" aria-label="더보기" aria-expanded={menuId === clip.id} onClick={() => setMenuId(menuId === clip.id ? null : clip.id)}>
-                  <span className="wowclip-feed-action-circle"><CommonIcon name="more-vertical" /></span>
+                  <span className="wowclip-feed-action-circle"><CommonIcon name="more-horizontal" /></span>
                 </button>
                 {menuId === clip.id && <div className="wowclip-feed-menu">
                   <button type="button" onClick={() => { onDelete(clip.id); setMenuId(null); }}>클립 삭제</button>
