@@ -40,3 +40,9 @@
     .swiper-slide { border-radius: 18px; }
   }
 }
+
+/* Hide navigation arrows at the beginning and end of the banner list. */
+.sports-banner .swiper-button-prev.swiper-button-disabled,
+.sports-banner .swiper-button-next.swiper-button-disabled {
+  display: none;
+}
