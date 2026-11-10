@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useCallback, useId, useRef, useState } from "react";
+import { LeagueShortcutPopup } from "./LeagueShortcutPopup";
 
 const LEAGUE_TABS = [
   ["home", "홈", null],
@@ -19,6 +20,10 @@ const LEAGUE_ICON_PATHS = {
 };
 
 export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTabChange, isMyLeague, selectedLeagueCount = 0, selectedTeams = [], onToggleMyLeague, onOpenTeamSettings, isCompact }) {
+  const [isLeagueMenuOpen, setLeagueMenuOpen] = useState(false);
+  const leagueMenuTriggerRef = useRef(null);
+  const leagueMenuId = useId();
+  const closeLeagueMenu = useCallback(() => setLeagueMenuOpen(false), []);
   const logoPath = league.whiteLogoPath || league.logoPath;
   const sportIconPath = LEAGUE_ICON_PATHS[league.id] || SPORT_ICON_PATHS[league.sport] || SPORT_ICON_PATHS.축구;
   const selectedTeam = selectedTeams[0];
@@ -49,10 +54,24 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTa
             )}
           </div>
           <div className="league-detail__league-copy">
-            <Link className="league-detail__league-select" to="/sports" aria-label="스포츠 리그 목록으로 이동">
-              <h1>{league.name}</h1>
-              <img src="/images/sports/icon/sports-accordion-arrow.svg" alt="" aria-hidden="true" />
-            </Link>
+            <h1 className="league-detail__league-select-heading">
+              <button
+                ref={leagueMenuTriggerRef}
+                type="button"
+                className="league-detail__league-select"
+                aria-label={`${league.name}, 다른 리그 선택`}
+                aria-haspopup="dialog"
+                aria-expanded={isLeagueMenuOpen}
+                aria-controls={isLeagueMenuOpen ? leagueMenuId : undefined}
+                onClick={() => setLeagueMenuOpen((open) => !open)}
+              >
+                <span className="league-detail__league-name">{league.name}</span>
+                <span className="league-detail__league-arrow" aria-hidden="true">
+                  <img src="/images/sports/league-detail/shortcut-arrow.svg" alt="" />
+                </span>
+                <span className="league-detail__league-select-tooltip" aria-hidden="true">다른 리그 선택</span>
+              </button>
+            </h1>
             <button
               type="button"
               className={"league-detail__score-toggle" + (scoresOn ? " is-on" : "")}
@@ -113,6 +132,13 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, activeTab, onTa
           >{label}</button>
         ))}
       </nav>
+      {isLeagueMenuOpen && <LeagueShortcutPopup
+        id={leagueMenuId}
+        currentLeagueId={league.id}
+        activeTab={activeTab}
+        triggerRef={leagueMenuTriggerRef}
+        onClose={closeLeagueMenu}
+      />}
     </section>
   );
 }

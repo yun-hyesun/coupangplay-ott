@@ -109,7 +109,7 @@ export async function getFootballStandings(leagueId) {
 
   const request = (async () => {
     const allRows = await loadStandings(leagueId);
-    const rows = allRows.filter((row) => row.rank <= 10).sort((first, second) => first.rank - second.rank);
+    const rows = allRows.filter((row) => row.rank <= 20).sort((first, second) => first.rank - second.rank);
     cache.set(leagueId, { rows, expiresAt: Date.now() + CACHE_MS });
     return rows;
   })();

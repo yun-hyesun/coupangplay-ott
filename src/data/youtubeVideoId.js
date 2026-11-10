@@ -1,6 +1,6 @@
 const VIDEO_ID = /^[\w-]{11}$/;
 
-export function getSportsVideoId(video = {}) {
+export function getYouTubeVideoId(video = {}) {
   for (const id of [video.videoId, video.id]) {
     if (typeof id === "string" && VIDEO_ID.test(id)) return id;
   }

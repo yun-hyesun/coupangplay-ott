@@ -25,6 +25,10 @@
     button { padding: 0 4px; color: #f0f1f3; background: transparent; text-decoration: underline; }
   }
   &__teams { display: flex; gap: 12px; height: 136px; margin-top: 24px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+    cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-x pan-y; overscroll-behavior-x: contain;
+    &.is-dragging { cursor: grabbing; }
+    button { cursor: inherit; }
+    img { -webkit-user-drag: none; }
     &::-webkit-scrollbar { display: none; }
   }
   &__team-card { position: relative; display: flex; flex: 0 0 104px; width: 104px; height: 136px; flex-direction: column; align-items: center; gap: 12px; padding: 0; background: transparent; text-align: center;
