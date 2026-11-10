@@ -23,6 +23,9 @@ import { Partnership } from './page/partnership/Partnership';
 import { Detail } from './page/detail/Detail';
 import { Watch } from './page/watch/Watch';
 
+// 개별 결제창
+import { PurchaseCheckout } from './page/purchase/PurchaseCheckout';
+
 // 로그인, 회원가입
 import { Signup } from './page/login/SignUp';
 import { Login } from './page/login/Login';
@@ -59,7 +62,6 @@ import { Category } from './page/category/Category';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
-import { SportsWatch } from './page/home/components/SportsWatch';
 
 import { WowClip } from './page/wowclip/WowClip';
 
@@ -111,6 +113,9 @@ function App() {
         <Route path="/detail/:type/:id" element={<Detail />} />
         <Route path="/watch/:type/:id" element={<Watch />} />
 
+        {/* 개별 결제창 */}
+        <Route path="/purchase/checkout/:type/:id" element={<PurchaseCheckout />} />
+
         {/* 로그인, 회원가입 */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -138,8 +143,6 @@ function App() {
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
         <Route path="/wowclip" element={<WowClip />} />
-        {/* 메인스포츠 하이라이트 */}
-        <Route path="/watch/sports/:id" element={<SportsWatch />} />
         {/* 검색 */}
         <Route path="/search" element={<Search />} />
         {/* 카테고리 */}

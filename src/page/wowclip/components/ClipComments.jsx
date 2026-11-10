@@ -72,7 +72,7 @@ const CommentOptions = ({ reply, onEdit, onRemove, editDisabled }) => {
   return <div className="wowclip-comment-more">
     <button type="button" className="wowclip-icon-button wowclip-comment-more-button"
       aria-label={reply ? '답글 더보기' : '댓글 더보기'} popoverTarget={menuId}>
-      <CommonIcon name="more-vertical" size={20} />
+      <CommonIcon name="more-horizontal" size={20} />
     </button>
     <div ref={menuRef} id={menuId} popover="auto" className="wowclip-comment-menu" role="group" aria-label={reply ? '답글 관리' : '댓글 관리'}>
       {onEdit && <button type="button" disabled={editDisabled} onClick={() => select(onEdit)}>수정</button>}

@@ -8,6 +8,7 @@ import { getScheduleUnit } from "../data/leagueScheduleUnits";
 import { getMatchVideoKey } from "../data/matchRelatedVideos";
 import { useScheduleMatchVideos } from "../hooks/useScheduleMatchVideos";
 import { getLeagueSeasonSchedule } from "../service/leagueScheduleService";
+import { findSportsTeam } from "../data/sportsTeams";
 import "./scss/LeagueSchedulePage.scss";
 
 const ASSETS = "/images/sports/league-detail/schedule/";
@@ -97,7 +98,13 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
   const hasRelatedVideos = status.type === "ended" && Boolean(relatedVideos?.length);
   const detailsExpanded = hasRelatedVideos && expanded;
   const unit = getScheduleUnit(game);
-  const personal = [game.home, game.away].some(team => team && selectedTeamIds.includes(findLeagueTeam(league.id, team)?.id || team.id));
+  const isMyTeam = (team) => {
+    if (!team) return false;
+    const localTeam = findSportsTeam(league.id, team) || findLeagueTeam(league.id, team);
+    return selectedTeamIds.includes(team.id) || selectedTeamIds.includes(localTeam?.id);
+  };
+  const homeIsMyTeam = isMyTeam(game.home);
+  const awayIsMyTeam = isMyTeam(game.away);
   const hasScores = scoresOn && ["live", "ended"].includes(status.type) && game.home?.score != null && game.away?.score != null;
   const quality = ["4K", "HDR"].includes(game.broadcastQuality) ? game.broadcastQuality : "";
   const homeName = game.raceName || game.home?.name || "홈 팀";
@@ -106,7 +113,7 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
   const liveUrl = game.broadcastUrl || "https://www.coupangplay.com/";
   return (
     <div className="league-schedule__match-wrap" data-expanded={detailsExpanded || undefined}>
-    <article className="league-schedule__match" data-match-status={status.type} data-my-team={personal || undefined} aria-label={`${title}, ${status.label}`}>
+    <article className="league-schedule__match" data-match-status={status.type} data-my-team-home={homeIsMyTeam || undefined} data-my-team-away={awayIsMyTeam || undefined} aria-label={`${title}, ${status.label}`}>
       <div className="league-schedule__badges">
         <span className={`league-schedule__badge league-schedule__badge--${status.type}`}>
           {status.type === "live" && <img src={ASSETS + "live.svg"} alt="" />} {status.label}

@@ -99,41 +99,78 @@
     gap: 14px;
   }
 
+  &__league-select-heading {
+    min-width: 0;
+    margin: 0;
+    font: inherit;
+  }
+
   &__league-select {
+    position: relative;
     display: flex;
     width: 259px;
     height: 48px;
     align-items: center;
     justify-content: flex-start;
-    gap: 13px;
+    gap: 20px;
     padding: 0 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: #fff;
-    text-decoration: none;
+    font-family: inherit;
+    cursor: pointer;
 
-    h1 {
+    .league-detail__league-name {
       min-width: 0;
       flex: 0 1 auto;
       margin: 0;
       overflow: hidden;
       font-size: 36px;
       font-weight: $font-w-B-700;
-      letter-spacing: -.045em;
+      letter-spacing: 0;
       line-height: 48px;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    >img {
+    .league-detail__league-arrow {
       display: block;
       width: 24px;
       height: 24px;
       flex: 0 0 24px;
-      object-fit: contain;
+      transition: transform .15s ease;
     }
 
     &:hover {
+      background: rgba(255, 255, 255, .08);
       color: #fff;
     }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: -2px;
+    }
+
+    &[aria-expanded="true"] .league-detail__league-arrow { transform: rotate(180deg); }
+
+    &:hover:not([aria-expanded="true"]) .league-detail__league-select-tooltip { opacity: 1; }
+  }
+
+  &__league-select-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    padding: 6px 16px;
+    border-radius: 8px;
+    background: #31353c;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
   }
 
   &__score-toggle {
@@ -256,7 +293,7 @@
       align-items: center;
       justify-content: center;
       padding: 0 5px;
-      border: 2px solid #fff;
+      border: 0;
       border-radius: 14px;
       color: #fff;
       font-size: 12px;
@@ -266,6 +303,7 @@
       white-space: nowrap;
       pointer-events: none;
     }
+
   }
 
   &__tabs {
@@ -388,15 +426,9 @@
       padding: 0;
     }
 
-    .league-detail__league-select h1 {
+    .league-detail__league-select .league-detail__league-name {
       font-size: 30px;
       line-height: 40px;
-    }
-
-    .league-detail__league-select>img {
-      width: 20px;
-      height: 20px;
-      flex-basis: 20px;
     }
 
     .league-detail__score-toggle,
@@ -448,6 +480,7 @@
       display: block;
       width: 40px;
       height: 40px;
+      flex-basis: 40px;
       object-fit: contain;
     }
 
@@ -1436,6 +1469,56 @@
     gap: 14px;
   }
 
+  &__my-team-settings { padding: 0; border: 0; color: #aab6c3; background: transparent; font-size: 14px; cursor: pointer; }
+  &__my-team-skeleton { aspect-ratio: 16 / 9; border-radius: 8px; background: #202832; }
+  &__my-team-notice { margin: 12px 0 0; color: #aeb3be; font-size: 13px; line-height: 1.6;
+    button { padding: 0 4px; border: 0; color: #fff; background: transparent; text-decoration: underline; cursor: pointer; }
+  }
+
+  &__my-team {
+    margin-top: 0;
+    padding-block: 32px 40px;
+    font-family: 'Noto Sans KR', $font-main;
+    .league-detail__section-heading { min-height: 36px; margin-bottom: 16px;
+      h2 { color: #f5f8fc; font-size: 28px; line-height: 36px; letter-spacing: 0; }
+    }
+    .league-detail__team-video-groups { gap: 40px; }
+    .league-detail__team-video-group { padding: 0; border: 0; border-radius: 0; background: transparent; }
+    .league-detail__team-heading { height: 40px; gap: 12px; margin-bottom: 16px;
+      img { width: 40px; height: 40px; }
+      h3 { color: #f5f8fc; font-size: 20px; font-weight: 700; line-height: 26px; }
+    }
+    .league-detail__team-video-grid { gap: 24px; }
+    .league-detail__video-media { border: .667px solid rgba(0,0,0,.15); border-radius: 9px; }
+    .league-detail__duration { right: 12px; bottom: 12px; height: 28px; padding: 4px 6px; border-radius: 5px; font-family: inherit; font-size: 14px; font-weight: 700; line-height: 20px; background: rgba(0,0,0,.55); }
+    .league-detail__video-badge { display: flex; min-width: 81px; height: 28px; align-items: center; justify-content: center; padding: 4px 8px; border-radius: 0 0 5px 0; font-size: 14px; font-weight: 700; line-height: 20px; background: rgba(0,0,0,.45);
+      > span { display: none; }
+    }
+    .league-detail__video-card h3 { display: block; height: 28px; min-height: 28px; margin: 12px 0 0; overflow: hidden; color: #f0f1f3; font-size: 20px; font-weight: 500; line-height: 28px; text-overflow: ellipsis; white-space: nowrap; -webkit-line-clamp: unset; }
+    @media (max-width: 600px) {
+      .league-detail__section-heading h2 { font-size: 22px; line-height: 30px; }
+      .league-detail__team-video-grid { gap: 16px 12px; }
+      .league-detail__team-heading h3 { font-size: 18px; }
+      .league-detail__video-card h3 { font-size: 14px; line-height: 24px; }
+      .league-detail__video-badge { min-width: 0; height: 22px; padding: 2px 6px; font-size: 11px; line-height: 18px; }
+      .league-detail__duration { right: 6px; bottom: 6px; height: 22px; padding: 2px 4px; font-size: 11px; line-height: 18px; }
+    }
+  }
+
+  &__standings-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: #c5cdd4;
+    font-size: 14px;
+    cursor: pointer;
+    &:hover { color: #fff; }
+    &:focus-visible { outline: 2px solid #0084ff; outline-offset: 4px; }
+  }
+
   &__table-note {
     margin: -5px 0 14px;
     color: #8996a2;
@@ -1497,6 +1580,22 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+  }
+
+  &__standings--page {
+    min-height: 620px;
+    margin-top: 0;
+    padding-block: 32px 64px;
+    .league-detail__table-wrap { border-radius: 8px; background: #121418; }
+    thead { background: #1d2026; }
+    th { height: 54px; font-size: 14px; }
+    th:nth-child(2) { padding-left: 10px; text-align: left; }
+    td { height: 62px; font-size: 14px; }
+    td:first-child { width: 76px; color: #f0f1f3; font-weight: 700; }
+    @media (max-width: 600px) {
+      padding-block: 24px 40px;
+      th, td { font-size: 12px; }
     }
   }
 
@@ -1569,7 +1668,7 @@
     &__league-select {
       width: min(259px, 34vw);
 
-      h1 {
+      .league-detail__league-name {
         font-size: 30px;
       }
     }
@@ -1694,15 +1793,9 @@
       gap: 8px;
       padding-inline: 0;
 
-      h1 {
+      .league-detail__league-name {
         font-size: 24px;
         line-height: 36px;
-      }
-
-      >img {
-        width: 18px;
-        height: 18px;
-        flex-basis: 18px;
       }
     }
 
@@ -1731,6 +1824,9 @@
         padding-inline: 7px;
         font-size: 12px;
       }
+
+      .league-detail__selected-team-logo { width: 24px; height: 28px; flex-basis: 24px; }
+      .league-detail__count-badge { top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 4px; font-size: 10px; line-height: 16px; }
     }
 
     &__tabs {
@@ -1781,16 +1877,10 @@
         gap: 5px;
       }
 
-      .league-detail__league-select h1 {
+      .league-detail__league-select .league-detail__league-name {
         max-width: 190px;
         font-size: 20px;
         line-height: 28px;
-      }
-
-      .league-detail__league-select>img {
-        width: 16px;
-        height: 16px;
-        flex-basis: 16px;
       }
 
       .league-detail__score-toggle,
@@ -1824,6 +1914,9 @@
         width: 22px;
         height: 22px;
       }
+
+      .league-detail__hero-actions .league-detail__selected-team-logo { width: 28px; height: 28px; flex-basis: 28px; }
+      .league-detail__hero-actions .league-detail__count-badge { top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 4px; font-size: 10px; line-height: 16px; }
 
       .league-detail__tabs {
         right: 14px;

@@ -18,13 +18,14 @@ import {
   SPORTS_TOGETHER,
 } from "../../data/sportsPageContent";
 import { SportsBanner } from "./components/SportsBanner";
+import { SportsPromo } from "./components/SportsPromo";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
 import { MatchRelatedVideos } from "../../components/MatchRelatedVideos";
 import { LiveBadge } from "../../components/LeagueDetailShared";
 import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
 import { useScheduleMatchVideos } from "../../hooks/useScheduleMatchVideos";
 import { getScheduleUnitLabel } from "../../data/leagueScheduleUnits";
-import { getSportsVideoId } from "../../data/sportsVideoPlayback";
+import { getYouTubeVideoId } from "../../data/youtubeVideoId";
 import { getMatchVideoKey } from "../../data/matchRelatedVideos";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -157,7 +158,7 @@ function TeamCrest({ team }) {
 function SportsVideoCard({ card, badge, live = false }) {
   const league = card.competitionCode ? getLeague(card.competitionCode) : null;
   const category = card.category || league?.name || card.competitionName || "스포츠";
-  const videoId = getSportsVideoId(card);
+  const videoId = getYouTubeVideoId(card);
   const Card = videoId ? Link : "article";
   const playbackProps = videoId ? {
     to: `/watch/sports/${encodeURIComponent(videoId)}`,
@@ -243,6 +244,11 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
   const currentProfile = useProfileStore((state) => state.currentProfile);
 
   const [saving, setSaving] = useState(false);
+  const [favoriteToast, setFavoriteToast] = useState("");
+  const [favoriteToastId, setFavoriteToastId] = useState(0);
+  const favoriteToastTimer = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(favoriteToastTimer.current), []);
 
   const matchId = game.gameId ?? game.id;
 
@@ -298,13 +304,18 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
 
       if (!success) {
         alert("찜하기 처리에 실패했습니다.");
+      } else {
+        setFavoriteToast(isFavorite ? "찜하기가 해제되었습니다." : "찜하기가 완료되었습니다.");
+        setFavoriteToastId((id) => id + 1);
+        window.clearTimeout(favoriteToastTimer.current);
+        favoriteToastTimer.current = window.setTimeout(() => setFavoriteToast(""), 2200);
       }
     } finally {
       setSaving(false);
     }
   };
   const detailsExpanded = !playAction && expanded && (!isEnded || hasRelatedVideos);
-  const liveVideoId = playAction ? getSportsVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
+  const liveVideoId = playAction ? getYouTubeVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
   const scheduleSubLabel = getScheduleSubLabel(game);
   const hasScore =
     scoresOn &&
@@ -365,6 +376,9 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           <TeamCrest team={game.away} />
           <span>{game.away.name}</span>
         </div>
+        {favoriteToast && (
+          <div key={favoriteToastId} className="sports-fixture__favorite-toast" role="status" aria-live="polite">{favoriteToast}</div>
+        )}
         {isScheduled && (
           <button
             type="button"
@@ -429,15 +443,15 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
 
 export const Sports = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
   const currentProfile = useProfileStore((state) => state.currentProfile);
   const onLoadWatchlist = useWatchlistStore((state) => state.onLoadWatchlist);
 
   useEffect(() => {
-    if (auth.currentUser && currentProfile?.id) {
+    if (user?.uid && auth.currentUser && currentProfile?.id) {
       onLoadWatchlist();
     }
-  }, [currentProfile?.id, onLoadWatchlist]);
-  const user = useAuthStore((state) => state.user);
+  }, [user?.uid, currentProfile?.id, onLoadWatchlist]);
   const authLoading = useAuthStore((state) => state.loading);
   const canShowSubscriptions = Boolean(user && !authLoading);
   const {
@@ -477,7 +491,7 @@ export const Sports = () => {
   const [showAllSchedule, setShowAllSchedule] = useState(false);
   const SCHEDULE_PREVIEW_COUNT = 10;
   const [expandedGameIds, setExpandedGameIds] = useState([]);
-  const [liveState, setLiveState] = useState({
+  const [, setLiveState] = useState({
     games: [],
     loading: true,
     error: "",
@@ -954,8 +968,8 @@ export const Sports = () => {
               </Link>
               <div className="sports-featured-league__content">
                 <h3>{league.name}</h3>
-                <p className="sports-featured-league__type">{league.sport} · {league.scope}<br/> 경기 일정 · 하이라이트</p>
-                {/* <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p> */}
+                <p className="sports-featured-league__type">{league.sport} · {league.scope}</p>
+                <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p>
                 <Link
                   className="sports-featured-league__link"
                   to={`/sports/league/${encodeURIComponent(league.id)}`}
@@ -1082,13 +1096,7 @@ export const Sports = () => {
         badge="추천 영상"
       />
 
-      <aside className="sports-promo" aria-label="엘클라시코 경기 안내">
-        <img
-          src="/images/sports/campaign/el-clasico.png"
-          alt="라리가 엘클라시코 바르셀로나와 레알 마드리드 경기 안내"
-          loading="lazy"
-        />
-      </aside>
+      <SportsPromo />
 
       <VideoSection
         id="sports-moments-title"

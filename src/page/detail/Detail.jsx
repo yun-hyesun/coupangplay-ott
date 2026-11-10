@@ -331,13 +331,12 @@ export const Detail = () => {
 
             <div className="detail-hero__actions">
               {isStoreDetail ? (
-                <button
+                <Link
                   className="detail-button detail-button--primary"
-                  type="button"
-                  onClick={() => alert('구매 기능은 아직 연결되지 않았습니다.')}
+                  to={`/purchase/checkout/${type}/${id}`}
                 >
                   구매하기
-                </button>
+                </Link>
               ) : (
                 <Link
                   className="detail-button detail-button--primary"
