@@ -1,3 +1,4 @@
+import { LoginNoticePopup } from '../../components/common/LoginNoticePopup';
 import { SharePopup } from '../../components/common/SharePopup';
 import CommonIcon from '../../components/common/CommonIcon';
 
@@ -18,6 +19,7 @@ const IMG = 'https://image.tmdb.org/t/p/original';
 const imageUrl = (path) => path ? `${IMG}${path}` : '';
 
 export const Detail = () => {
+  const [loginNoticeOpen, setLoginNoticeOpen] = useState(false);
   const { type, id } = useParams();
   const [shareOpen, setShareOpen] = useState(false);
   useEffect(() => setShareOpen(false), [type, id]);
@@ -259,7 +261,7 @@ export const Detail = () => {
   // 찜하기 / 찜 해제
   const handleToggleWatchlist = async () => {
     if (!user || !currentProfile) {
-      alert('로그인 후 프로필을 선택해 주세요.');
+      setLoginNoticeOpen(true);
       return;
     }
 
@@ -331,12 +333,13 @@ export const Detail = () => {
 
             <div className="detail-hero__actions">
               {isStoreDetail ? (
-                <Link
+                <button
                   className="detail-button detail-button--primary"
-                  to={`/purchase/checkout/${type}/${id}`}
+                  type="button"
+                  onClick={() => alert('구매 기능은 아직 연결되지 않았습니다.')}
                 >
                   구매하기
-                </Link>
+                </button>
               ) : (
                 <Link
                   className="detail-button detail-button--primary"
@@ -635,6 +638,7 @@ export const Detail = () => {
           </section>
         )}
       </div>
+      {loginNoticeOpen && <LoginNoticePopup onClose={() => setLoginNoticeOpen(false)} />}
       {shareOpen && <SharePopup title={title} type={type}
         url={new URL(`/detail/${type}/${id}`, window.location.origin).href}
         onClose={() => setShareOpen(false)} />}
