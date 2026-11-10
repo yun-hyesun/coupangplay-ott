@@ -3291,3 +3291,36 @@
     filter: none;
   }
 }
+// Scheduled-match favorite confirmation toast
+.sports-fixture__favorite-toast {
+  position: fixed;
+  z-index: 9999;
+  bottom: 100px;
+  left: 50%;
+  transform: translate(-50%, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(332px, calc(100vw - 32px));
+  min-height: 80px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+  animation: sports-favorite-toast-motion 2.2s ease-in-out both;
+}
+
+@keyframes sports-favorite-toast-motion {
+  0% { opacity: 0; transform: translate(-50%, 24px); }
+  16% { opacity: 1; transform: translate(-50%, 0); }
+  82% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sports-fixture__favorite-toast { animation: none; transform: translate(-50%, 0); }
+}
