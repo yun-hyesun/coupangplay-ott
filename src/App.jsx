@@ -22,6 +22,9 @@ import { Policy } from './page/policy/Policy';
 import { Detail } from './page/detail/Detail';
 import { Watch } from './page/watch/Watch';
 
+// 개별 결제창
+import { PurchaseCheckout } from './page/purchase/PurchaseCheckout';
+
 // 로그인, 회원가입
 import { Signup } from './page/login/SignUp';
 import { Login } from './page/login/Login';
@@ -96,6 +99,9 @@ function App() {
         {/* 상세페이지 */}
         <Route path="/detail/:type/:id" element={<Detail />} />
         <Route path="/watch/:type/:id" element={<Watch />} />
+
+        {/* 개별 결제창 */}
+        <Route path="/purchase/checkout/:type/:id" element={<PurchaseCheckout />} />
 
         {/* 로그인, 회원가입 */}
         <Route path="/login" element={<Login />} />

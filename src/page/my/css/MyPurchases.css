@@ -365,3 +365,112 @@
     text-align: center;
   }
 }
+.my-purchases-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.75);
+}
+.my-purchases-modal__content {
+  width: 100%;
+  max-width: 440px;
+  padding: 40px 32px;
+  border-radius: 12px;
+  background: #21252B;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+.my-purchases-modal__content h2 {
+  font-size: 22px;
+  font-weight: 700;
+}
+.my-purchases-modal__content p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #D4D4D4;
+}
+.my-purchases-modal__icon {
+  width: 64px;
+  height: 64px;
+  border: 2px solid #0084FF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0084FF;
+  font-size: 32px;
+  font-weight: 700;
+}
+.my-purchases-modal__actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 12px;
+}
+.my-purchases-modal__button {
+  flex: 1;
+  min-width: 0;
+  height: 45px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 5px;
+  background: #0084FF;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+.my-purchases-modal__button:hover {
+  filter: brightness(1.1);
+}
+.my-purchases-modal__button--secondary {
+  background: #424242;
+}
+
+.my-purchases .my-purchases-item.is-hidden .my-purchases-image {
+  opacity: 0.35;
+}
+.my-purchases .my-purchases-item.is-hidden .my-purchases-info {
+  opacity: 0.5;
+}
+.my-purchases .my-purchases-thumbnail {
+  position: relative;
+}
+.my-purchases .my-purchases-hidden-label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+  padding: 5px 10px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .my-purchases-modal__content {
+    padding: 32px 20px;
+  }
+  .my-purchases-modal__content h2 {
+    font-size: 20px;
+  }
+  .my-purchases-modal__actions {
+    flex-direction: column;
+  }
+  .my-purchases-modal__button {
+    width: 100%;
+  }
+}
