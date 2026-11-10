@@ -9,6 +9,7 @@ export const Hbo = () => (
       contentId={1399}
       logo="/images/channal12.svg"
       name="HBO"
+      buttonImg="/images/channal12_bk.svg"
       description="깊이 있는 이야기, 몰입하는 시리즈"
     />
 
