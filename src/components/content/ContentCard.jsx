@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CardHover } from './CardHover';
 import { useMovieStore } from '../../store/useMovieStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { subscribeMyPurchases } from '../../service/purchaseService';
 import "./scss/ContentCard.scss"
 
 // Swiper와 Grid가 공통으로 쓰는 카드 (기존 hover 및 class 유지)
@@ -119,6 +121,48 @@ const TmdbContentCard = ({ item, type, imageType, variant, index, fromStore }) =
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);
   const id = item?.id;
+  const uid = useAuthStore((state) => state.user?.uid);
+
+const [purchaseState, setPurchaseState] = useState({
+  uid: null,
+  items: [],
+});
+
+useEffect(() => {
+  if (!uid) return;
+
+  let active = true;
+
+  const unsubscribe = subscribeMyPurchases(
+    uid,
+    (items) => {
+      if (active) {
+        setPurchaseState({ uid, items });
+      }
+    },
+    (error) => {
+      if (active) {
+        console.error('구매 여부 확인 실패:', error);
+        setPurchaseState({ uid, items: [] });
+      }
+    }
+  );
+
+  return () => {
+    active = false;
+    unsubscribe();
+  };
+}, [uid]);
+
+const isPurchased =
+  Boolean(uid) &&
+  purchaseState.uid === uid &&
+  purchaseState.items.some(
+    (purchase) =>
+      purchase.mediaType === mediaType &&
+      String(purchase.contentId) === String(id) &&
+      purchase.status === 'mock_paid'
+  );
   const name = item?.title || item?.name;
   const imagePath =
     imageType === '세로' ? item?.poster_path : item?.backdrop_path;
@@ -153,7 +197,12 @@ const TmdbContentCard = ({ item, type, imageType, variant, index, fromStore }) =
         </span>
       )}
       <div className="contentRail-info">
-        <Link to={`/detail/${mediaType}/${id}${fromStore ? "?from=store" : ""}`} state={fromStore ? { fromStore: true } : undefined} className="contentRail-visual" aria-label={`${name} 상세보기${item.isCoupangSeries ? ', 쿠팡플레이' : ''}${isPurchase ? ', 개별구매' : ''}`}>
+        <Link to={`/detail/${mediaType}/${id}${fromStore ? "?from=store" : ""}`} state={fromStore ? { fromStore: true } : undefined} className="contentRail-visual" 
+        aria-label={`${name} 상세보기${
+          item.isCoupangSeries ? ', 쿠팡플레이' : ''
+        }${
+          isPurchased ? ', 구매완료' : isPurchase ? ', 개별구매' : ''
+        }`}>
           <img src={`https://image.tmdb.org/t/p/w780${imagePath}`} alt={imageType === '가로' ? '' : name} loading="lazy" />
           {imageType === '가로' && (
             <div className="contentRail-titleArea">
@@ -162,14 +211,22 @@ const TmdbContentCard = ({ item, type, imageType, variant, index, fromStore }) =
               ) : <h4 className="contentRail-tit">{name}</h4>}
             </div>
           )}
-          {(item.isCoupangSeries || isPurchase) && (
+          {(item.isCoupangSeries || isPurchase || isPurchased) && (
             <div className="contentRail-badges" aria-hidden="true">
               {item.isCoupangSeries && (
-                <span className="contentCard-badge coupang">시리즈</span>
+                <span className="contentCard-badge coupang">
+                  시리즈
+                </span>
               )}
 
-              {isPurchase && (
-                <span className="contentCard-badge purchase">개별구매</span>
+              {(isPurchase || isPurchased) && (
+                <span
+                  className={`contentCard-badge ${
+                    isPurchased ? 'purchased' : 'purchase'
+                  }`}
+                >
+                  {isPurchased ? '구매완료' : '개별구매'}
+                </span>
               )}
             </div>
           )}

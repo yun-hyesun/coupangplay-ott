@@ -39,7 +39,10 @@
   &[class*="icon"]::before {content: ''; width: 20px; aspect-ratio: 1/1; display: inline-block; background: no-repeat center/ contain;}
   &.icon-play::before {background-image: url(/public/images/card-hover/play.svg); width: clamp(15px, 1.38vw, 20px);}
   &.icon-details::before {background-image: url(/public/images/card-hover/info.svg); width:25px;}
-
+  &.icon-purchase {background: #FF6E00;
+    
+    &::before {background-image: url(/public/images/card-hover/icon-lock.svg); width:25px;}
+  }
   &.icon-dibs::before {background-image: url(/public/images/card-hover/plus.svg); width:25px;}
 
 }
