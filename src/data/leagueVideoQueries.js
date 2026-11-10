@@ -13,12 +13,16 @@ const leagueNames = new Map(Object.entries(LEAGUE_VIDEO_QUERIES).flatMap(([id, n
   [normalizeLeague(id), id], [normalizeLeague(name), id],
 ]));
 
-export function matchesVideoLeague(leagueId, title = "") {
+export function getExplicitVideoLeague(title = "") {
   // Descriptions advertise several leagues, so search hits alone do not identify the competition.
   // Read only explicit title labels; unlabeled match previews are resolved by their teams later.
   const labels = [...title.matchAll(/\[([^\]]+)\]/g)].map(match => match[1]);
   labels.push(...title.split(/\s+[lI|ㅣ]\s+/));
-  const explicit = labels.map(label => leagueNames.get(normalizeLeague(label))).find(Boolean);
+  return labels.map(label => leagueNames.get(normalizeLeague(label))).find(Boolean);
+}
+
+export function matchesVideoLeague(leagueId, title = "") {
+  const explicit = getExplicitVideoLeague(title);
   return !explicit || explicit === leagueId;
 }
 

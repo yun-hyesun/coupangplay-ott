@@ -11,9 +11,10 @@ export const useWowClipLibrary = ({ selectedId = null } = {}) => {
   const [remote, setRemote] = useState({ scope: '', clips: [], error: '' });
   const [details, setDetails] = useState({ scope: '', comments: [], liked: false, error: '' });
   const [revision, setRevision] = useState(0);
+  const [detailsRevision, setDetailsRevision] = useState(0);
   const uid = user?.uid || '';
   const scope = [uid, selectedId || '', revision].join('|');
-  const detailsScope = scope;
+  const detailsReady = details.scope === scope && details.revision === detailsRevision;
   const loading = authLoading || remote.scope !== scope;
 
   useEffect(() => {
@@ -35,13 +36,16 @@ export const useWowClipLibrary = ({ selectedId = null } = {}) => {
     if (!selectedId || !selectedRemote) return;
     let alive = true;
     const stop = wowClipService.subscribeDetails(selectedId, uid,
-      (data) => { if (alive) setDetails({ ...data, scope: detailsScope, error: '' }); },
-      (failure) => { if (alive) setDetails((previous) => ({ ...(previous.scope === detailsScope ? previous : { comments: [], liked: false }), scope: detailsScope, error: clipCloudError(failure) })); });
+      (data) => { if (alive) setDetails({ ...data, scope, revision: detailsRevision, error: '' }); },
+      (failure) => { if (alive) setDetails((previous) => ({
+        ...(previous.scope === scope ? previous : { comments: [], liked: false }),
+        scope, revision: detailsRevision, error: clipCloudError(failure),
+      })); });
     return () => { alive = false; stop(); };
-  }, [selectedId, selectedRemote, uid, detailsScope]);
+  }, [selectedId, selectedRemote, uid, scope, detailsRevision]);
 
   const run = async (action) => { try { return await action(); } catch (failure) { throw new Error(clipCloudError(failure), { cause: failure }); } };
-  const clips = remoteClips.map((clip) => clip.id === selectedId && details.scope === detailsScope ? { ...clip, comments: details.comments, liked: details.liked } : clip);
+  const clips = remoteClips.map((clip) => clip.id === selectedId && details.scope === scope ? { ...clip, comments: details.comments, liked: details.liked } : clip);
   const saveClip = (clip) => run(() => wowClipService.saveClip(clip));
   const removeClip = (id) => run(() => wowClipService.removeClip(id));
   const toggleLike = (id, _ownerId, commentId) => run(() => wowClipService.toggleLike(id, commentId));
@@ -53,8 +57,9 @@ export const useWowClipLibrary = ({ selectedId = null } = {}) => {
     return run(() => wowClipService.recordView(id, uid, profileId));
   };
   const reload = useCallback(() => { setRevision((value) => value + 1); }, []);
+  const reloadComments = useCallback(() => { setDetailsRevision((value) => value + 1); }, []);
   return { clips, loading, error: remote.scope === scope ? remote.error : '',
-    commentsError: details.scope === detailsScope ? details.error : '',
-    commentsLoading: !!selectedId && selectedRemote && details.scope !== detailsScope,
-    saveClip, removeClip, toggleLike, addComment, editComment, removeComment, recordView, reload };
+    commentsError: detailsReady ? details.error : '',
+    commentsLoading: !!selectedId && selectedRemote && !detailsReady,
+    saveClip, removeClip, toggleLike, addComment, editComment, removeComment, recordView, reload, reloadComments };
 };

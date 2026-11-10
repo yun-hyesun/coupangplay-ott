@@ -339,3 +339,46 @@
         }
     }
 }
+
+// 제공 전문의 문단·번호·긴 URL을 보존합니다. 기존 색상/폰트/간격은 유지합니다.
+.my-support .support-faq .support-answer {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+// 고객센터 목록: 기존 디자인 변수로 페이지 이동 버튼만 추가합니다.
+.my-support .support-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+
+    button {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 8px 12px;
+        border: 1px solid $color-border-light;
+        border-radius: 6px;
+        background: $color-bg2;
+        color: $color-text-pri;
+        font: inherit;
+        cursor: pointer;
+
+        &[aria-current='page'] {
+            background: $color-pri;
+            border-color: $color-pri;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $color-pri;
+            outline-offset: 2px;
+        }
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+    }
+}

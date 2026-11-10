@@ -12,7 +12,17 @@ export const Sony = () => (
       description="스크린을 채우는 다양한 영화"
     />
 
-    <ContentRail railKey="sony-popular" layout="vertical" showMore={false}/>
+    <ContentRail
+      railKey="sony-popular"
+      layout="vertical"
+      showMore={false}
+      title={
+        <span className="channel-rail-title">
+          <img src="/images/channal09_title.svg" alt="sony" />
+          <span>TOP 20</span>
+        </span>
+      }
+    />
     <ContentRail railKey="sony-latest" />
     <ContentRail railKey="sony-action" />
     <ContentRail railKey="sony-thriller" />

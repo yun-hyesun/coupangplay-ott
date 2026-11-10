@@ -9,7 +9,7 @@
   &--ver .card-hover-content {width: auto; min-height: 110%; aspect-ratio: 1 / 1;}
   
 }
-.card-hover-content {@include pos-abs-center-scale-s($s:.5); background: $color-bg2; color: #fff; width: 110%; border-radius: $card-radius; overflow: hidden; z-index: 100; opacity: 0; visibility: hidden;  box-shadow: 0 0 30px rgba(0, 0, 0, .2);
+.card-hover-content {@include pos-abs-center-scale-s($s:.5); background: $color-bg2; color: #fff; min-width: 110%; border-radius: $card-radius; overflow: hidden; z-index: 100; opacity: 0; visibility: hidden;  box-shadow: 0 0 30px rgba(0, 0, 0, .2);
 
   .preview-video-cover {width: 100%; overflow: hidden; aspect-ratio: 16/8; position: relative;
     

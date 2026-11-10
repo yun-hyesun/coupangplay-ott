@@ -1,6 +1,6 @@
 import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
 import { Link, useLocation } from "react-router-dom";
-import { getSportsVideoId } from "../data/sportsVideoPlayback";
+import { getYouTubeVideoId } from "../data/youtubeVideoId";
 import { formatBroadcastDate, getBroadcastStatus } from "../data/leagueBroadcasts";
 import { auth } from "../firebase/firebase";
 import { useEffect, useState } from "react";
@@ -386,7 +386,7 @@ export function VideoCard({ video, rank, badge = "하이라이트", variant, ret
   const ranked = rank != null;
   const fixture = variant === "fixture";
   const feed = variant === "feed" || fixture;
-  const videoId = getSportsVideoId(video);
+  const videoId = getYouTubeVideoId(video);
   const VideoMain = videoId ? Link : video.url ? "a" : "div";
   const playbackProps = videoId ? {
     to: `/watch/sports/${encodeURIComponent(videoId)}`,

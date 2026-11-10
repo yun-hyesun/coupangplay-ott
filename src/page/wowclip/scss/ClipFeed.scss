@@ -204,6 +204,11 @@ body:has(.wowclip-shortfeed) {
   gap: 8px;
 }
 
+.wowclip-feed-source:hover,
+a.wowclip-feed-category:hover {
+  background: rgba(85, 85, 85, .9);
+}
+
 .wowclip-feed-source-title {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -226,7 +231,7 @@ body:has(.wowclip-shortfeed) {
   padding-bottom: 24px;
 }
 
-.wowclip-feed-actions button {
+.wowclip-feed-action {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -235,7 +240,8 @@ body:has(.wowclip-shortfeed) {
   color: #fff;
 }
 
-.wowclip-feed-actions button>span {
+.wowclip-feed-action-circle,
+.wowclip-feed-navigation button {
   display: grid;
   place-items: center;
   width: 48px;
@@ -244,12 +250,21 @@ body:has(.wowclip-shortfeed) {
   background: #24262a;
 }
 
-.wowclip-feed-actions button:hover>span {
+.wowclip-feed-action:hover .wowclip-feed-action-circle {
   background: #3c3e43;
 }
 
-.wowclip-feed-actions button[aria-pressed='true'] {
+.wowclip-feed-action[aria-pressed='true'] {
   color: #ff5674;
+}
+
+.wowclip-feed-action-circle > .wowclip-icon,
+.wowclip-feed-comment-icon {
+  translate: 0 1px;
+}
+
+.wowclip-feed-share-icon {
+  translate: -1px 0;
 }
 
 .wowclip-feed-actions small {
@@ -288,20 +303,12 @@ body:has(.wowclip-shortfeed) {
 .wowclip-feed-navigation {
   position: absolute;
   z-index: 4;
-  top: 38%;
+  // Leave room for the four author actions, both arrows and a 12px gap.
+  top: min(38%, calc(100% - 468px));
   right: 8px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.wowclip-feed-navigation button {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #24262a;
 }
 
 .wowclip-feed-navigation button:disabled {
@@ -380,6 +387,18 @@ body:has(.wowclip-shortfeed) {
   }
 }
 
+@media (max-height: 630px) {
+  .wowclip-feed-actions {
+    gap: 12px;
+    padding-bottom: 12px;
+  }
+
+  .wowclip-feed-navigation {
+    top: -52px;
+    flex-direction: row;
+  }
+}
+
 @media (max-width: 760px) {
   .wowclip-feed-toolbar {
     padding-inline: 16px;
@@ -405,7 +424,7 @@ body:has(.wowclip-shortfeed) {
     padding: 0;
   }
 
-  .wowclip-feed-actions button>span {
+  .wowclip-feed-action-circle {
     background: rgba(40, 40, 40, .75);
   }
 
