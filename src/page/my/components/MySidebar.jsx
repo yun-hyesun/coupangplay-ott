@@ -25,6 +25,7 @@ const passIcons = {
     'kids-pass': '/images/mypage/pass/kids-logo.svg',
     'paramount-pass': '/images/mypage/pass/paramount-logo.svg',
     'sony-pass': '/images/mypage/pass/sony-logo.svg',
+    'crunchyroll-pass': '/images/mypage/pass/crunchyroll-logo.svg',
 };
 
 export const MySidebar = ({ onOpenLanguage, mode = "all" }) => {
@@ -62,9 +63,12 @@ export const MySidebar = ({ onOpenLanguage, mode = "all" }) => {
 
     // 등록된 이용권 ID
     const registeredPassIds = subscriptions
-        .filter((subscription) => subscription.status === 'active')
+        .filter((subscription) =>
+            ['active', 'cancel_pending'].includes(subscription.status)
+        )
         .map((subscription) => subscription.id)
-        .filter((passId) => passIcons[passId]);
+        .filter((passId) => passIcons[passId])
+        .slice(0, 2);
 
     // 프로필 전환
     const handleProfileChange = () => {

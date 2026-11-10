@@ -1,6 +1,8 @@
 import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import '../scss/MySubscriptionUi.scss';
+import '../scss/MySubscriptionModal.scss';
+
 // 네이티브 dialog: 포커스 트랩, Escape, 모달 뒤 영역 접근 차단 및 포커스 복원.
 export const MySubscriptionModal = ({title,onClose,children,busy=false}) => {
  const ref=useRef(null); const id=useId(); const closeRef=useRef(onClose); closeRef.current=onClose;

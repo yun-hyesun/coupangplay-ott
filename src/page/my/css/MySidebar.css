@@ -77,19 +77,20 @@
   object-fit: contain;
 }
 .my-sidebar .my-profile .my-premium .my-pass-icons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
-  flex-wrap: wrap;
   flex: 1;
-  gap: 10px;
+  gap: 5px;
   min-width: 0;
 }
 .my-sidebar .my-profile .my-premium .my-pass-icon {
   display: block;
-  width: auto;
+  width: 100%;
   max-width: 95px;
   height: 28px;
   object-fit: contain;
+  object-position: left center;
 }
 .my-sidebar .my-profile .my-premium > img:last-child {
   width: 20px;
