@@ -11,50 +11,66 @@ export const Footer = () => {
   ]
 
   const footerInquiry = [
-    { label: "광고 문의", path: "/ad-inquiry" },
+    {
+      label: "광고 문의",
+      path: "https://forms.cloud.microsoft/pages/responsepage.aspx?id=lo8J4xs2xkep9Kt7r8r_6XojZXEatm9OgglP0cXlG4dUOENVQVJHMTlSWTVBMFJRVkpNWE1FOFk1Ry4u&route=shorturl",
+      external: true,
+    },
     { label: "제휴 문의", path: "/partnership" },
     { label: "자주 묻는 질문", path: "/my/support?category=FAQ" },
   ]
 
   const footerSns = [
-    { 
-      label: 'youtube', 
-      img: '/images/header_footer/sns-youtube.svg', 
-      url: 'https://www.youtube.com/channel/UCjn-VbcIkAeXQKCmLJY8YwQ' 
+    {
+      label: 'youtube',
+      img: '/images/header_footer/sns-youtube.svg',
+      url: 'https://www.youtube.com/channel/UCjn-VbcIkAeXQKCmLJY8YwQ'
     },
-    { 
-      label: 'facebook', 
-      img: '/images/header_footer/sns-facebook.svg', 
-      url: 'https://www.facebook.com/CoupangPlay/' 
+    {
+      label: 'facebook',
+      img: '/images/header_footer/sns-facebook.svg',
+      url: 'https://www.facebook.com/CoupangPlay/'
     },
-    { 
-      label: 'instagram', 
-      img: '/images/header_footer/sns-Instagram.svg', 
-      url: 'https://www.instagram.com/coupangplay/' 
+    {
+      label: 'instagram',
+      img: '/images/header_footer/sns-Instagram.svg',
+      url: 'https://www.instagram.com/coupangplay/'
     },
-    { 
-      label: 'twitter', 
-      img: '/images/header_footer/sns-x.svg', 
-      url: 'https://www.twitter.com/coupangplay' 
+    {
+      label: 'twitter',
+      img: '/images/header_footer/sns-x.svg',
+      url: 'https://www.twitter.com/coupangplay'
     },
   ]
   return (
     <footer className='footer'>
-      
+
       <div className='inner'>
         <div className='footer-top'>
-          <p className='footer-logo'><img src="/images/header_footer/logo.svg" alt="쿠팡 로고"/></p>
+          <p className='footer-logo'><img src="/images/header_footer/logo.svg" alt="쿠팡 로고" /></p>
 
-          <ul className='footer-inquiry'>
-            {footerInquiry.map((inquiry, id)=> (
-              <li key={id}><Link to={inquiry.path}>{inquiry.label}</Link></li>
+          <ul className="footer-inquiry">
+            {footerInquiry.map((inquiry) => (
+              <li key={inquiry.label}>
+                {inquiry.external ? (
+                  <a
+                    href={inquiry.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {inquiry.label}
+                  </a>
+                ) : (
+                  <Link to={inquiry.path}>{inquiry.label}</Link>
+                )}
+              </li>
             ))}
           </ul>
         </div>
 
         <div className='footer-meddle'>
           <div className='footer-left'>
-  
+
             <address className='footer-address'>
               <p>쿠팡(주) · 대표이사: 로저스 해롤드 린 (Rogers Harold Lynn)</p>
               <p>사업자 등록번호: 120-88-00767 · 사업자정보 확인</p>
@@ -63,9 +79,9 @@ export const Footer = () => {
               <p>호스팅 서비스 사업자: AWS 코리아</p>
             </address>
           </div>
-          
+
           <div className='footer-right'>
-            
+
             <dl className='footer-info'>
               <div className='footer-info-list'>
                 <dt>고객센터</dt>
@@ -80,9 +96,9 @@ export const Footer = () => {
                 <dd>playrepresent@coupang.com</dd>
               </div>
             </dl>
-  
+
             <ul className='footer-sns'>
-              {footerSns.map((sns, id)=> (
+              {footerSns.map((sns, id) => (
                 <li key={id}>
                   <a href={sns.url} target='_blank' rel="noopener noreferrer" aria-label={sns.label}>
                     <img src={sns.img} alt="" />
@@ -92,15 +108,15 @@ export const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         <div className='footer-bottom'>
           <nav className='footer-nav'>
-              <ul className='footer-nav-menu'>
-                {footerMenus.map((menu, id)=> (
-                  <li key={id}><Link to={menu.path}>{menu.label}</Link></li>
-                ))}
-              </ul>
-            </nav>
+            <ul className='footer-nav-menu'>
+              {footerMenus.map((menu, id) => (
+                <li key={id}><Link to={menu.path}>{menu.label}</Link></li>
+              ))}
+            </ul>
+          </nav>
         </div>
       </div>
     </footer>
