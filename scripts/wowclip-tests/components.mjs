@@ -36,6 +36,60 @@ const withRoutes = (element) => h(MemoryRouter, { initialEntries: ['/watch/tv/78
   h(Route, { path: '/watch/tv/78648', element }), h(Route, { path: '/login', element: h('h1', null, '로그인') }), h(Route, { path: '/wowclip', element: h('h1', null, '감상') })));
 afterEach(async () => { for (const root of roots.splice(0)) await act(async () => root.unmount()); });
 
+test('댓글 작성·수정에 300자 제한을 적용하고 작성자만 수정·삭제할 수 있다', async () => {
+  const own = { id: 'mine', authorUid: 'alice', author: 'alice', text: `내 댓글 ${'한'.repeat(300)}`, likeCount: 1 };
+  const reply = { id: 'reply', parentId: own.id, authorUid: 'bob', author: 'bob', text: '남겨진 답글' };
+  let clip = { id: 'test', comments: [own, reply], commentCount: 2 };
+  const calls = [];
+  const view = () => h(ClipComments, {
+    clip, owner, userUid: 'alice', panel: true,
+    onAdd: async (_id, text) => { calls.push(['add', text]); },
+    onEdit: async (id, commentId, text) => { calls.push(['edit', id, commentId, text]); },
+    onRemove: async (id, commentId) => { calls.push(['remove', id, commentId]); },
+  });
+  const root = await mount(view());
+  const button = (label) => root.root.findAllByType('button').find((node) => node.children[0] === label);
+  const enter = { preventDefault() {} };
+  const type = async (field, value) => act(async () => field.props.onChange({ target: { value } }));
+  await type(root.root.findByType('textarea'), '한'.repeat(301));
+  assert.equal(root.root.findByType('textarea').props['aria-invalid'], true);
+  await act(async () => root.root.findByType('form').props.onSubmit(enter));
+  assert.deepEqual(calls, []);
+  const limit = '😀'.repeat(300);
+  await type(root.root.findByType('textarea'), limit);
+  await act(async () => root.root.findByType('form').props.onSubmit(enter));
+  assert.deepEqual(calls, [['add', limit]]);
+
+  await act(async () => root.root.findAllByType('button').find((node) => node.props.className === 'wowclip-replies-toggle').props.onClick());
+  const ownMenu = () => {
+    const trigger = root.root.findByProps({ 'aria-label': '댓글 더보기' });
+    const menu = root.root.findByProps({ id: trigger.props.popoverTarget });
+    assert.equal(menu.props.popover, 'auto');
+    assert.equal(root.root.findAllByProps({ 'aria-label': '답글 더보기' }).length, 0);
+    return menu;
+  };
+  const menuAction = (label) => ownMenu().findAllByType('button').find((node) => node.children[0] === label);
+  await act(async () => menuAction('수정').props.onClick());
+  const edit = root.root.findByProps({ className: 'wowclip-comment-form wowclip-comment-form--edit' });
+  assert.equal(edit.findByType('textarea').props.value, own.text);
+  assert.equal(edit.findByType('textarea').props['aria-invalid'], true);
+  await type(edit.findByType('textarea'), '새 내용');
+  await act(async () => edit.props.onSubmit(enter));
+  assert.deepEqual(calls.at(-1), ['edit', clip.id, own.id, '새 내용']);
+
+  await act(async () => menuAction('삭제').props.onClick());
+  const modal = root.root.findByProps({ 'aria-label': '댓글을 삭제할까요?' });
+  await act(async () => modal.findAllByType('button').find((node) => node.children[0] === '삭제').props.onClick());
+  assert.deepEqual(calls.at(-1), ['remove', clip.id, own.id]);
+  clip = { ...clip, comments: [{ ...own, text: '', deleted: true }, reply], commentCount: 1 };
+  await act(async () => root.update(view()));
+  const body = JSON.stringify(root.toJSON());
+  assert.match(body, /삭제된 댓글이에요/);
+  assert.match(body, /남겨진 답글/);
+  assert.doesNotMatch(body, /내 댓글/);
+  assert.equal(button('삭제'), undefined);
+});
+
 test('비로그인 제작 클릭은 원본/편집을 열지 않고 로그인으로 이동한다', async () => {
   useAuthStore.setState({ user: null, loading: false });
   let reads = 0;
@@ -196,59 +250,82 @@ test('와우 클립은 현재 프로필의 같은 회차 기록만 인정하고 
   } finally { await act(async () => useWatchHistoryStore.setState(priorHistory)); }
 });
 
-test('해당 클립 재생 기록이 확인되면 바로 열고 타 계정에는 늦은 조회 결과나 다른 사람의 재생을 적용하지 않는다', async () => {
+test('클립 재생 기록은 현재 프로필에만 적용하고 이전 프로필의 늦은 재생·조회는 무시한다', async () => {
   useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
-  useProfileStore.setState({ currentProfile: null });
+  useProfileStore.setState({ currentProfile: { id: 'first' } });
   seedSpoilerLibrary({ ...protectedFixture, views: 3 });
-  let resolveAlice;
-  const checks = [];
-  globalThis.__wowUiService.hasRecordedView = (id, uid) => {
-    checks.push([id, uid]);
-    return uid === 'alice' ? new Promise((resolve) => { resolveAlice = resolve; })
-      : uid === 'carol' ? Promise.resolve(true) : Promise.reject(new Error('기록 조회 실패'));
+  const subscriptions = [], plays = [];
+  globalThis.__wowUiService.subscribeRecordedView = (id, uid, profileId, data) => {
+    const item = { id, uid, profileId, data, stopped: false };
+    subscriptions.push(item);
+    return () => { item.stopped = true; };
   };
+  globalThis.__wowUiService.recordView = async (...args) => { plays.push(args); };
   const root = await mount(withClipRoute(), feedNodes);
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
   assert.ok(revealButton(root));
-  await act(async () => revealButton(root).props.onClick());
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
-  await act(async () => useAuthStore.setState({ user: { uid: 'bob' } }));
-  await act(async () => resolveAlice(true));
-  assert.ok(revealButton(root));
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
-  await act(async () => useAuthStore.setState({ user: { uid: 'carol' } }));
+
+  const first = subscriptions.at(-1);
+  assert.deepEqual([first.id, first.uid, first.profileId], ['protected', 'alice', 'first']);
+  await act(async () => first.data(true));
   assert.equal(revealButton(root), undefined);
-  assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
+  const firstPlay = root.root.findByType(ClipPlayer).props.onFirstPlay;
+  await act(async () => firstPlay());
+  assert.deepEqual(plays, [['protected', 'alice', 'first']]);
+
+  await act(async () => useProfileStore.setState({ currentProfile: { id: 'second' } }));
+  assert.ok(first.stopped);
+  await act(async () => first.data(true));
+  await act(async () => { assert.equal(await firstPlay(), false); });
+  assert.equal(plays.length, 1);
+  assert.ok(revealButton(root));
+  assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
+
+  const second = subscriptions.at(-1);
+  assert.deepEqual([second.id, second.uid, second.profileId], ['protected', 'alice', 'second']);
+  await act(async () => second.data(true));
+  assert.equal(revealButton(root), undefined);
+  await act(async () => root.root.findByType(ClipPlayer).props.onFirstPlay());
+  assert.deepEqual(plays.at(-1), ['protected', 'alice', 'second']);
+
+  await act(async () => useAuthStore.setState({ user: { uid: 'bob' } }));
+  await act(async () => second.data(true));
+  assert.ok(revealButton(root));
   await act(async () => useAuthStore.setState({ user: null }));
   assert.ok(revealButton(root));
   assert.equal(root.root.findAllByType(ClipPlayer).length, 0);
-  assert.deepEqual(checks, [['protected', 'alice'], ['protected', 'bob'], ['protected', 'carol']]);
+  assert.ok(subscriptions.every((item) => item.stopped));
 });
 
 test('일시적으로 실패한 클립 기록 조회는 같은 화면에서 다시 열거나 연결이 돌아오면 재시도한다', async () => {
   useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
-  useProfileStore.setState({ currentProfile: null });
+  useProfileStore.setState({ currentProfile: { id: 'default' } });
   seedSpoilerLibrary({ ...protectedFixture, views: 3 });
   let requests = 0;
   let rejectRetry;
-  globalThis.__wowUiService.hasRecordedView = async () => {
-    if (++requests === 1) throw new Error('일시적 연결 실패');
-    if (requests === 2) return new Promise((_resolve, reject) => { rejectRetry = reject; });
-    return true;
+  let reconnected = false;
+  globalThis.__wowUiService.subscribeRecordedView = (_id, _uid, _profileId, data, error) => {
+    requests++;
+    if (requests === 1) queueMicrotask(() => error(new Error('일시적 연결 실패')));
+    else if (reconnected) queueMicrotask(() => data(true));
+    else rejectRetry = error;
+    return () => {};
   };
 
   const root = await mount(withClipRoute(), feedNodes);
   assert.equal(requests, 1);
   assert.ok(revealButton(root));
   await act(async () => root.root.findByProps({ className: 'wowclip-back' }).props.onClick());
+  const beforeOpen = requests;
   await act(async () => root.root.findAllByType('button').find((button) =>
     button.props.className?.includes('wowclip-card--short')).props.onClick());
-  assert.equal(requests, 2);
+  assert.equal(requests, beforeOpen + 1);
   assert.ok(revealButton(root));
 
+  const beforeReconnect = requests;
+  reconnected = true;
   await act(async () => events.dispatchEvent(new Event('online')));
   await act(async () => rejectRetry(new Error('이전 요청의 늦은 실패')));
-  assert.equal(requests, 3);
+  assert.equal(requests, beforeReconnect + 1);
   assert.equal(revealButton(root), undefined);
   assert.equal(root.root.findAllByType(ClipPlayer).length, 1);
 });
