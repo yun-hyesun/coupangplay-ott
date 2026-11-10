@@ -1,5 +1,18 @@
+import { channelRailConfig } from './channelRailConfig';
+const adultBase = {
+  type: 'movie',
+  adultOnly: true,
+  useTving: false,
+  sort: 'popularity.desc',
+  imageType: '가로',
+  gridImageType: '가로',
+  limit: 20,
+  fullList: true,
+};
+
 // 홈·상세 추천·더보기가 공유하는 콘텐츠 설정
 export const railConfig = {
+  ...channelRailConfig,
   // 스토어 마블 기획전: 세로 포스터 공용 카드. 티빙 기본 필터를 사용하지 않습니다.
   'store-marvel': {
     title: '마블 히어로즈 정주행하기',
@@ -240,4 +253,65 @@ export const railConfig = {
     limit: 20,
     fullList: true,
   },
+
+ // ################## adult
+
+  'adult-banner': {
+  ...adultBase,
+  title: 'Adult 추천 영화',
+},
+
+'adult-ranking': {
+  ...adultBase,
+  title: '인기 성인 관람 영화 TOP20',
+  variant: 'ranking',
+  imageType: '세로',
+  gridImageType: '세로',
+},
+
+'adult-latest': {
+  ...adultBase,
+  title: '최근 개봉한 영화',
+  sort: 'primary_release_date.desc',
+},
+
+'adult-korean': {
+  ...adultBase,
+  title: '한국 영화',
+  country: 'KR',
+},
+
+'adult-overseas': {
+  ...adultBase,
+  title: '해외 영화',
+  excludeOriginCountry: 'KR',
+},
+
+'adult-action-crime': {
+  ...adultBase,
+  title: '액션·범죄 영화',
+  genre: '28|80',
+},
+
+'adult-thriller-mystery': {
+  ...adultBase,
+  title: '스릴러·미스터리 영화',
+  genre: '53|9648',
+},
+
+'adult-horror': {
+  ...adultBase,
+  title: '공포 영화',
+  genre: '27',
+},
+
+'adult-classics': {
+  ...adultBase,
+  title: '다시 보는 명작',
+  untilYear: 2020,
+  minVotes: 300,
+  sort: 'vote_average.desc',
+},
+
 };
+
