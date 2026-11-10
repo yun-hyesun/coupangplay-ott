@@ -64,6 +64,7 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
         {ordered.map((clip) => {
           const active = clip.id === selectedId;
           const protectedClip = isProtected(clip);
+          const canDelete = !!userUid && clip.authorUid === userUid;
           const { image, title } = clipPreview(clip, protectedClip);
           const episodeLabel = clipEpisodeLabel(clip);
           const commentCount = clip.commentCount ?? clip.comments.filter((comment) => !comment.deleted).length;
@@ -81,10 +82,23 @@ export const ClipFeed = ({ clips, selectedId, owner, isProtected, onSelect, onBa
               </div>
             </div>
             <div className="wowclip-feed-actions">
-              <button type="button" aria-label={'클립 공감 ' + clipLikeCount(clip)} aria-pressed={clipIsLiked(clip, owner.id)} onClick={() => perform(() => onLike(clip.id, owner.id))}><span><ClipIcon name="heart" filled={clipIsLiked(clip, owner.id)} /></span><small>{clipLikeCount(clip)}</small></button>
-              <button type="button" aria-label={'댓글 ' + commentCount} aria-expanded={active && commentsOpen} onClick={() => { if (!active) onSelect(clip.id); setCommentsOpen((open) => !open); }}><span><CommonIcon name="chat" /></span><small>{commentCount || '댓글'}</small></button>
-              <button type="button" aria-label="공유" onClick={() => onCopy(clip)}><span><CommonIcon name="share" /></span><small>공유</small></button>
-              <div className="wowclip-feed-more"><button type="button" aria-label="더보기" aria-expanded={menuId === clip.id} onClick={() => setMenuId(menuId === clip.id ? null : clip.id)}><span><CommonIcon name="more-vertical" /></span></button>{menuId === clip.id && <div className="wowclip-feed-menu"><button type="button" onClick={() => { onCopy(clip); setMenuId(null); }}>링크 복사</button>{clip.authorUid === userUid && <button type="button" onClick={() => { onDelete(clip.id); setMenuId(null); }}>클립 삭제</button>}</div>}</div>
+              <button type="button" className="wowclip-feed-action" aria-label={'클립 공감 ' + clipLikeCount(clip)} aria-pressed={clipIsLiked(clip, owner.id)} onClick={() => perform(() => onLike(clip.id, owner.id))}>
+                <span className="wowclip-feed-action-circle"><ClipIcon name="heart" filled={clipIsLiked(clip, owner.id)} /></span><small>{clipLikeCount(clip)}</small>
+              </button>
+              <button type="button" className="wowclip-feed-action" aria-label={'댓글 ' + commentCount} aria-expanded={active && commentsOpen} onClick={() => { if (!active) onSelect(clip.id); setCommentsOpen((open) => !open); }}>
+                <span className="wowclip-feed-action-circle"><CommonIcon name="chat" className="wowclip-feed-comment-icon" /></span><small>{commentCount || '댓글'}</small>
+              </button>
+              <button type="button" className="wowclip-feed-action" aria-label="공유" onClick={() => onCopy(clip)}>
+                <span className="wowclip-feed-action-circle"><CommonIcon name="share" className="wowclip-feed-share-icon" /></span><small>공유</small>
+              </button>
+              {canDelete && <div className="wowclip-feed-more">
+                <button type="button" className="wowclip-feed-action" aria-label="더보기" aria-expanded={menuId === clip.id} onClick={() => setMenuId(menuId === clip.id ? null : clip.id)}>
+                  <span className="wowclip-feed-action-circle"><CommonIcon name="more-vertical" /></span>
+                </button>
+                {menuId === clip.id && <div className="wowclip-feed-menu">
+                  <button type="button" onClick={() => { onDelete(clip.id); setMenuId(null); }}>클립 삭제</button>
+                </div>}
+              </div>}
             </div>
           </article>;
         })}

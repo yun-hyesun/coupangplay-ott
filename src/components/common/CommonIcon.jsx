@@ -24,6 +24,7 @@ const iconPaths = {
   "star-outline": "/images/icon/DesignSystem_Icon02/icon-star_border.svg",
   "chevron-down": "/images/icon/DesignSystem_Icon01/icon-expand_more.svg",
   "chevron-up": "/images/icon/DesignSystem_Icon01/icon-expand_less.svg",
+  "more-horizontal": "/images/icon/DesignSystem_Icon01/icon-more_horiz.svg",
   "more-vertical": "/images/icon/DesignSystem_Icon04/icon-more_vert.svg",
   "refresh": "/images/icon/DesignSystem_Icon04/icon-refresh.svg",
   "external": "/images/icon/DesignSystem_Icon01/icon-open_in_new.svg",

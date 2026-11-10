@@ -23,7 +23,6 @@ const { MyWowClip } = await import('../../src/page/my/MyWowClip.jsx');
 const { FullVideoClipButton } = await import('../../src/page/wowclip/components/FullVideoClipButton.jsx');
 const { ClipEditor } = await import('../../src/page/wowclip/components/ClipEditor.jsx');
 const { ClipComments } = await import('../../src/page/wowclip/components/ClipComments.jsx');
-const { ClipFeed } = await import('../../src/page/wowclip/components/ClipFeed.jsx');
 const { ClipPlayer } = await import('../../src/page/wowclip/components/ClipPlayer.jsx');
 const { useWowClipLibrary } = await import('../../src/page/wowclip/hooks/useWowClipLibrary.js');
 const roots = [];
@@ -180,22 +179,46 @@ test('댓글 공감 수는 서버 집계를 우선하고 예전 댓글은 공감
   }
 });
 
-test('감상 댓글 패널에 조회 상태를 전달하고 다시 불러올 수 있다', async () => {
-  const clip = { id: 'qa', title: '검수 클립', content: source.content, comments: [], likes: [] };
-  let refreshes = 0;
-  const props = { clips: [clip], selectedId: clip.id, owner, isProtected: () => false, onRefresh: () => { refreshes++; } };
-  const renderFeed = (state) => withRoutes(h(ClipFeed, { ...props, ...state }));
-  const root = await mount(renderFeed({ commentsLoading: true }), { createNodeMock: () => ({ children: [] }) });
+test('감상 중 댓글만 다시 불러오고 재생기와 댓글 초안을 유지한다', async () => {
+  useAuthStore.setState({ user: { uid: 'alice' }, loading: false });
+  useProfileStore.setState({ currentProfile: null });
+  const clip = { id: 'qa', title: '검수 클립', content: source.content, visibility: 'public', comments: [], likes: [] };
+  let listLoads = 0;
+  const details = [];
+  globalThis.__wowUiService.subscribe = (_options, data) => {
+    listLoads++;
+    queueMicrotask(() => data([clip]));
+    return () => {};
+  };
+  globalThis.__wowUiService.subscribeDetails = (id, _uid, data, error) => {
+    const subscription = { data, error, stopped: false };
+    assert.equal(id, clip.id);
+    details.push(subscription);
+    return () => { subscription.stopped = true; };
+  };
+  const root = await mount(h(MemoryRouter, { initialEntries: ['/wowclip?clip=qa'] }, h(WowClip)), { createNodeMock: () => ({ children: [] }) });
+  const player = root.root.findByType(ClipPlayer);
+  const comment = { id: 'old', text: '기존 댓글', author: 'bob' };
+  const snapshot = (comments) => ({ id: clip.id, liked: false, comments });
+  const readComments = () => root.root.findAllByProps({ className: 'wowclip-comment-text' }).map((node) => node.children[0]);
 
   await act(async () => root.root.findByProps({ 'aria-label': '댓글 0' }).props.onClick());
   assert.equal(root.root.findByProps({ role: 'status' }).children[0], '댓글을 불러오고 있어요.');
-
-  const error = '댓글을 불러오지 못했어요.';
-  await act(async () => root.update(renderFeed({ commentsError: error })));
-  assert.equal(root.root.findByProps({ role: 'alert' }).children[0], error);
-  assert.equal(root.root.findAllByProps({ className: 'wowclip-comments-empty' }).length, 0);
+  await act(async () => details[0].data(snapshot([comment])));
+  await act(async () => root.root.findByType('textarea').props.onChange({ target: { value: '작성 중' } }));
+  await act(async () => details[0].error(new Error('댓글 조회 실패')));
+  assert.ok(root.root.findByProps({ role: 'alert' }));
   await act(async () => root.root.findByProps({ 'aria-label': '댓글 새로고침' }).props.onClick());
-  assert.equal(refreshes, 1);
+  assert.equal(listLoads, 1);
+  assert.equal(details.length, 2);
+  assert.equal(details[0].stopped, true);
+  assert.equal(root.root.findByType(ClipPlayer), player);
+  assert.equal(root.root.findByProps({ role: 'status' }).children[0], '댓글을 불러오고 있어요.');
+  await act(async () => details[0].data(snapshot([{ ...comment, text: '늦게 도착한 댓글' }])));
+  assert.deepEqual(readComments(), ['기존 댓글']);
+  await act(async () => details[1].data(snapshot([{ ...comment, text: '갱신된 댓글' }])));
+  assert.deepEqual(readComments(), ['갱신된 댓글']);
+  assert.equal(root.root.findByType('textarea').props.value, '작성 중');
 });
 
 const protectedFixture = {
