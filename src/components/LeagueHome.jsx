@@ -6,7 +6,7 @@ export function LeagueHome({ league, scheduleState }) {
   return (
     <section className="league-detail__section league-detail__broadcast" aria-labelledby="league-detail-broadcast-title">
       <div className="league-detail__section-heading">
-        <h2 id="league-detail-broadcast-title">프리미엄 리그 중계</h2>
+        <h2 id="league-detail-broadcast-title">{league.name} 중계</h2>
       </div>
       {scheduleState.loading ? (
         <div className="league-detail__broadcast-grid">
@@ -14,7 +14,7 @@ export function LeagueHome({ league, scheduleState }) {
         </div>
       ) : games.length ? (
         <div className="league-detail__broadcast-grid">
-          {games.map((game) => <BroadcastCard key={game.gameId} game={game} leagueId={league.id} />)}
+          {games.map((game) => <BroadcastCard key={game.gameId} game={game} leagueId={league.id} sport={league.sport} />)}
         </div>
       ) : (
         <EmptyMessage>{scheduleState.errors.length ? scheduleState.errors.join(" · ") : "현재 예정되었거나 라이브 중인 경기가 없습니다."}</EmptyMessage>
