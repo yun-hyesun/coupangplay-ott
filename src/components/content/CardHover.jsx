@@ -1,23 +1,76 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/useAuthStore';
+import { subscribeMyPurchases } from '../../service/purchaseService';
 import './scss/CordHover.scss';
 
-export const CardHover = ({ item, type, isHover, fromStore = false }) => {
+export const CardHover = ({
+  item,
+  type,
+  isHover,
+  fromStore = false,
+}) => {
   const [videoKey, setVideoKey] = useState(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
+
+  const uid = useAuthStore((state) => state.user?.uid);
+
+  const [purchaseState, setPurchaseState] = useState({
+    uid: null,
+    items: [],
+  });
 
   const name = item.title || item.name;
   const date = item.release_date || item.first_air_date;
   const year = date?.slice(0, 4);
   const rating = item.vote_average?.toFixed(1);
 
+  // 로그인한 계정의 구매내역 실시간 확인
+  useEffect(() => {
+    if (!uid || !fromStore) return;
+
+    let active = true;
+
+    const unsubscribe = subscribeMyPurchases(
+      uid,
+      (items) => {
+        if (active) {
+          setPurchaseState({ uid, items });
+        }
+      },
+      (error) => {
+        if (active) {
+          console.error('구매 여부 확인 실패:', error);
+          setPurchaseState({ uid, items: [] });
+        }
+      }
+    );
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [uid, fromStore]);
+
+  // 작품 ID와 콘텐츠 종류가 일치하는 구매내역 확인
+  const isPurchased =
+    Boolean(uid) &&
+    purchaseState.uid === uid &&
+    purchaseState.items.some(
+      (purchase) =>
+        purchase.mediaType === type &&
+        String(purchase.contentId) === String(item.id) &&
+        purchase.status === 'mock_paid'
+    );
+
+  const needsPurchase = fromStore && !isPurchased;
+
   // TMDB 예고편 가져오기
   useEffect(() => {
-    if (!isHover) {
-      setVideoKey(null);
-      return;
-    }
+    setVideoKey(null);
+    setIsVideoReady(false);
+
+    if (!isHover) return;
 
     const controller = new AbortController();
 
@@ -27,9 +80,7 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
 
         const response = await fetch(
           `https://api.themoviedb.org/3/${type}/${item.id}/videos?api_key=${apiKey}&language=ko-KR`,
-          {
-            signal: controller.signal,
-          }
+          { signal: controller.signal }
         );
 
         if (!response.ok) {
@@ -37,29 +88,23 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
         }
 
         const data = await response.json();
-        console.log('TMDB 영상 데이터:', data.results);
 
         // 유튜브 예고편 우선 선택
-        let video = data.results?.find(
-          (video) =>
-            video.site === 'YouTube' &&
-            video.type === 'Trailer'
-        );
-
-        // 예고편 없으면 다른 영상 선택
-        if (!video) {
-          video = data.results?.find(
+        let video =
+          data.results?.find(
+            (video) =>
+              video.site === 'YouTube' &&
+              video.type === 'Trailer'
+          ) ||
+          data.results?.find(
             (video) => video.site === 'YouTube'
           );
-        }
 
-        // 한국어 영상 없으면 영어 영상 조회
+        // 한국어 영상이 없으면 영어 영상 조회
         if (!video) {
           const enResponse = await fetch(
             `https://api.themoviedb.org/3/${type}/${item.id}/videos?api_key=${apiKey}&language=en-US`,
-            {
-              signal: controller.signal,
-            }
+            { signal: controller.signal }
           );
 
           if (!enResponse.ok) {
@@ -70,23 +115,18 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
 
           video =
             enData.results?.find(
-              (v) =>
-                v.site === 'YouTube' &&
-                v.type === 'Trailer'
+              (video) =>
+                video.site === 'YouTube' &&
+                video.type === 'Trailer'
             ) ||
             enData.results?.find(
-              (v) => v.site === 'YouTube'
+              (video) => video.site === 'YouTube'
             );
         }
 
-        console.log('선택된 영상:', video);
-        console.log('영상 확인:', {
-          title: item.title || item.name,
-          type,
-          id: item.id,
-          videoKey: video?.key
-        });
-        setVideoKey(video?.key || null);
+        if (!controller.signal.aborted) {
+          setVideoKey(video?.key || null);
+        }
       } catch (error) {
         if (error.name !== 'AbortError') {
           console.error('영상 불러오기 실패:', error);
@@ -100,18 +140,19 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
   }, [isHover, item.id, type]);
 
   return (
-    <div
-      className="card-hover-content">
+    <div className="card-hover-content">
       <div className="preview-video-cover">
         {/* 영상이 준비되기 전까지 포스터 표시 */}
         <img
-          className={`preview-poster ${isVideoReady ? 'hide' : ''}`}
-          src={`https://image.tmdb.org/t/p/w780${item.backdrop_path || item.poster_path
-            }`}
+          className={`preview-poster ${
+            isVideoReady ? 'hide' : ''
+          }`}
+          src={`https://image.tmdb.org/t/p/w780${
+            item.backdrop_path || item.poster_path
+          }`}
           alt={name}
         />
 
-        {/* 영상 준비되면 표시 */}
         {isHover && videoKey && (
           <iframe
             key={`${item.id}-${videoKey}`}
@@ -142,40 +183,53 @@ export const CardHover = ({ item, type, isHover, fromStore = false }) => {
         </div>
 
         <div className="button-box">
-          {/* 영상 재생 페이지 이동 */}
+          {/* 미구매: 구매 페이지 / 구매 완료: 재생 페이지 */}
           <Link
             to={
-              fromStore
+              needsPurchase
                 ? `/purchase/checkout/${type}/${item.id}`
                 : `/watch/${type}/${item.id}`
             }
-            className="button main-btn icon-play"
+            className={`button main-btn ${
+              needsPurchase ? 'icon-purchase' : 'icon-play'
+            }`}
             state={
-              item.resume
+              !needsPurchase && item.resume
                 ? {
-                  content: item,
-                  ownerKey: item.ownerKey,
-                  resumeAt: item.position ?? 0,
-                  seasonNumber: item.seasonNumber ?? 1,
-                  episodeNumber: item.episodeNumber ?? 1,
-                  videoSrc: item.videoSrc || '',
-                  youtubeKey: item.youtubeKey || '',
-                  autoPlayNext: true,
-                }
+                    content: item,
+                    ownerKey: item.ownerKey,
+                    resumeAt: item.position ?? 0,
+                    seasonNumber: item.seasonNumber ?? 1,
+                    episodeNumber: item.episodeNumber ?? 1,
+                    videoSrc: item.videoSrc || '',
+                    youtubeKey: item.youtubeKey || '',
+                    autoPlayNext: true,
+                  }
                 : { content: item }
             }
           >
-            {fromStore ? '구매하기' : item.resume ? '이어보기' : '재생하기'}
+            {needsPurchase
+              ? '구매하기'
+              : item.resume
+                ? '이어보기'
+                : '재생하기'}
           </Link>
 
           {/* 상세페이지 이동 */}
           <Link
-            to={`/detail/${type}/${item.id}${fromStore ? "?from=store" : ""}`}
+            to={`/detail/${type}/${item.id}${
+              fromStore ? '?from=store' : ''
+            }`}
             className="button icon-details"
             state={{ content: item, fromStore }}
             aria-label="상세정보"
           >
-            <span className='details-text' aria-hidden="true">상세정보</span>
+            <span
+              className="details-text"
+              aria-hidden="true"
+            >
+              상세정보
+            </span>
           </Link>
 
           {/* 찜하기 */}
