@@ -1,11 +1,10 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./scss/Sports.scss";
 
 import {
   DEFAULT_SELECTED_LEAGUE_IDS,
   SPORTS_CATEGORIES,
-  SPORTS_FEATURED_LEAGUE_IDS,
   SPORTS_LEAGUES,
 } from "../../data/sportsLeagues";
 import {
@@ -469,6 +468,7 @@ export const Sports = () => {
   const [selectedDate, setSelectedDate] = useState(() => getSeoulDateKey());
   const [scoresOn, setScoresOn] = useState(false);
   const [showAllSchedule, setShowAllSchedule] = useState(false);
+  const SCHEDULE_PREVIEW_COUNT = 10;
   const [expandedGameIds, setExpandedGameIds] = useState([]);
   const [liveState, setLiveState] = useState({
     games: [],
@@ -498,11 +498,21 @@ export const Sports = () => {
     return SPORTS_LEAGUES.filter((league) => league.sport === activeCategory);
   }, [activeCategory]);
 
+  // Use the same ordered subscription list as the settings modal.
   const featuredLeagues = useMemo(
-    () =>
-      [...new Set([...SPORTS_FEATURED_LEAGUE_IDS, "f1", "BL1", "nfl", "kleague-1", "FL1"])].map((id) => getLeague(id)).filter(Boolean),
-    [],
+    () => canShowSubscriptions ? selectedLeagueIds.map(getLeague).filter(Boolean) : [],
+    [canShowSubscriptions, selectedLeagueIds],
   );
+
+  const sortedVisibleLeagues = useMemo(() => {
+    if (!canShowSubscriptions) return visibleLeagues;
+    const subscriptionOrder = new Map(selectedLeagueIds.map((id, index) => [id, index]));
+    return [...visibleLeagues].sort((a, b) => {
+      const aOrder = subscriptionOrder.get(a.id) ?? Infinity;
+      const bOrder = subscriptionOrder.get(b.id) ?? Infinity;
+      return aOrder - bOrder;
+    });
+  }, [visibleLeagues, selectedLeagueIds, canShowSubscriptions]);
 
   const calendarDays = useMemo(
     () => Array.from({ length: 63 }, (_, index) => shiftDate(selectedDate, index - 31)),
@@ -741,7 +751,7 @@ export const Sports = () => {
           </p>
         )}
         <div className="sports-fixtures">
-          {(showAllSchedule ? scheduleState.games : scheduleState.games.slice(0, 10)).map((game) => (
+          {(showAllSchedule ? scheduleState.games : scheduleState.games.slice(0, SCHEDULE_PREVIEW_COUNT)).map((game) => (
             <ScheduleMatch
               key={game.gameId}
               game={{
@@ -767,6 +777,19 @@ export const Sports = () => {
     if (!selected) return;
     rail.scrollLeft = selected.offsetLeft - rail.offsetLeft - (rail.clientWidth - selected.offsetWidth) / 2;
   }, [selectedDate, calendarDays]);
+
+  const [monthSlideDirection, setMonthSlideDirection] = useState(0);
+
+  const changeSelectedMonth = (amount) => {
+    setMonthSlideDirection(amount > 0 ? 1 : -1);
+    setSelectedDate((current) => {
+      const [year, month] = current.split("-").map(Number);
+      const target = new Date(Date.UTC(year, month - 1 + amount, 1));
+      return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, "0")}-01`;
+    });
+    setExpandedGameIds([]);
+    setShowAllSchedule(false);
+  };
 
   const changeSelectedDate = (amount) => {
     setSelectedDate((date) => shiftDate(date, amount));
@@ -830,7 +853,7 @@ export const Sports = () => {
             onClickCapture={leagueListDrag.onClickCapture}
             onDragStart={leagueListDrag.onDragStart}
           >
-            {visibleLeagues.map((league) => {
+            {sortedVisibleLeagues.map((league) => {
               const selected = canShowSubscriptions && selectedLeagueIds.includes(league.id);
               return (
                 <Link
@@ -896,10 +919,13 @@ export const Sports = () => {
         className="sports-section sports-section--main-leagues"
         aria-labelledby="sports-featured-title"
       >
-        <SectionTitle id="sports-featured-title" title="주요 리그" />
+        <SectionTitle id="sports-featured-title" title="MY 리그" />
         <div className="sports-rail-shell sports-rail-shell--featured">
           <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 주요 리그" onClick={() => scrollRail(featuredRailRef, -1)}>‹</button>
           <div className="sports-featured-leagues" ref={featuredRailRef} tabIndex={0} aria-label="주요 리그 목록">
+          {featuredLeagues.length === 0 && (
+            <p className="sports-data-message">찜한 리그가 없습니다. 스포츠 리그의 전체보기에서 관심 리그를 추가해 주세요.</p>
+          )}
           {featuredLeagues.map((league) => (
             <article className="sports-featured-league" key={league.id}>
               <Link
@@ -915,14 +941,17 @@ export const Sports = () => {
                   )}
                 </span>
               </Link>
-              <h3>{league.name}</h3>
-              <p className="sports-featured-league__type">{league.sport} · {league.scope}</p>
-              <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p>
-              <Link
-                to={`/sports/league/${encodeURIComponent(league.id)}`}
-              >
-                리그 둘러보기 <span aria-hidden="true">→</span>
-              </Link>
+              <div className="sports-featured-league__content">
+                <h3>{league.name}</h3>
+                <p className="sports-featured-league__type">{league.sport} · {league.scope}<br/> 경기 일정 · 하이라이트</p>
+                {/* <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p> */}
+                <Link
+                  className="sports-featured-league__link"
+                  to={`/sports/league/${encodeURIComponent(league.id)}`}
+                >
+                  리그 둘러보기 <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </article>
           ))}
           </div>
@@ -937,7 +966,7 @@ export const Sports = () => {
         <div className="sports-schedule-heading">
           <SectionTitle id="sports-schedule-title" title="오늘의 경기 일정" />
           <div className="sports-schedule-actions">
-            {scheduleState.games.length > 10 && !scheduleState.loading && (
+            {!scheduleState.loading && scheduleState.games.length > SCHEDULE_PREVIEW_COUNT && (
               <button type="button" className="sports-schedule-expand" aria-expanded={showAllSchedule} onClick={() => setShowAllSchedule((value) => !value)}>
                 {showAllSchedule ? "접기" : `전체보기 (${scheduleState.games.length}경기)`}
               </button>
@@ -960,8 +989,8 @@ export const Sports = () => {
           <button
             type="button"
             className="sports-calendar-previous"
-            aria-label="이전 날짜"
-            onClick={() => changeSelectedDate(-1)}
+            aria-label="이전 달 1일로 이동"
+            onClick={() => changeSelectedMonth(-1)}
           >
             ‹
           </button>
@@ -978,8 +1007,8 @@ export const Sports = () => {
             <button
               type="button"
               className="sports-calendar-next"
-              aria-label="다음 날짜"
-              onClick={() => changeSelectedDate(1)}
+              aria-label="다음 달 1일로 이동"
+              onClick={() => changeSelectedMonth(1)}
             >
               ›
             </button>
@@ -995,7 +1024,7 @@ export const Sports = () => {
 
         <div className="sports-rail-shell sports-rail-shell--calendar" role="group" aria-label="경기 날짜 선택">
           <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 날짜 보기" onClick={() => changeSelectedDate(-1)}>‹</button>
-          <div className="sports-calendar-days" ref={calendarRailRef} aria-label="선택 날짜를 중심으로 표시">
+          <div className={"sports-calendar-days" + (monthSlideDirection ? (monthSlideDirection > 0 ? " is-month-next" : " is-month-prev") : "")} ref={calendarRailRef} aria-label="선택 날짜를 중심으로 표시" onAnimationEnd={() => setMonthSlideDirection(0)}>
           {calendarDays.map((dateKey) => {
             const date = dateFromKey(dateKey);
             const weekday = WEEKDAYS[date.getUTCDay()];

@@ -269,7 +269,9 @@
     }
 
     &.is-selected {
+      border-width: 4px;
       border-color: #0080ff;
+      border-radius: 18px;
     }
 
     &--premier {
@@ -2674,6 +2676,7 @@
   }
 
 }
+
 /* Sports-only visual parity: never change the global root or other routes. */
 .sports-page {
   background: linear-gradient(180deg, #203f5e 0px, #101215 1250px, #101113 2800px);
@@ -2685,6 +2688,7 @@
     grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: clamp(8px, .85vw, 16px);
   }
+
   .sports-featured-league {
     box-sizing: border-box;
     width: 100%;
@@ -2698,14 +2702,50 @@
     flex-direction: column;
     text-align: center;
     transition: transform .2s ease, filter .2s ease;
-    &:hover { transform: translateY(-4px); filter: brightness(1.12); }
-    &__emblem { width: 100%; height: auto; flex: 0 0 45%; margin: 0 0 12px; }
-    &__logo { width: clamp(58px, 5.6vw, 90px); height: clamp(58px, 5.6vw, 90px); border-radius: 15px; }
-    h3 { font-size: clamp(13px, 1.15vw, 19px); line-height: 1.35; margin: 0 0 10px; overflow-wrap: anywhere; }
-    &__type { font-size: 12px; margin: 0 0 6px; }
-    &__caption { font-size: 11px; margin: 0 0 auto; }
-    > a:last-child { margin-top: auto; font-size: 12px; color: #fff; text-decoration: none; }
+
+    &:hover {
+      transform: translateY(-4px);
+      filter: brightness(1.12);
+    }
+
+    &__emblem {
+      width: 100%;
+      height: auto;
+      flex: 0 0 45%;
+      margin: 0 0 12px;
+    }
+
+    &__logo {
+      width: clamp(58px, 5.6vw, 90px);
+      height: clamp(58px, 5.6vw, 90px);
+      border-radius: 15px;
+    }
+
+    h3 {
+      font-size: clamp(13px, 1.15vw, 19px);
+      line-height: 1.35;
+      margin: 0 0 10px;
+      overflow-wrap: anywhere;
+    }
+
+    &__type {
+      font-size: 12px;
+      margin: 0 0 6px;
+    }
+
+    &__caption {
+      font-size: 11px;
+      margin: 0 0 auto;
+    }
+
+    >a:last-child {
+      margin-top: auto;
+      font-size: 12px;
+      color: #fff;
+      text-decoration: none;
+    }
   }
+
   .sports-calendar-days {
     grid-template-columns: 36px repeat(17, minmax(0, 1fr)) 36px;
     min-height: 82px;
@@ -2713,92 +2753,270 @@
     gap: 2px;
     padding: 4px;
   }
+
   .sports-calendar-day {
     gap: 3px;
     border-radius: 9px;
-    span { font-size: 12px; }
-    strong { font-size: 17px; }
+
+    span {
+      font-size: 12px;
+    }
+
+    strong {
+      font-size: 17px;
+    }
   }
+
   .sports-schedule-expand {
     padding: 9px 16px;
-    border: 1px solid rgba(255,255,255,.35);
+    border: 1px solid rgba(255, 255, 255, .35);
     border-radius: 8px;
-    background: rgba(255,255,255,.09);
+    background: rgba(255, 255, 255, .09);
     color: #fff;
     font-size: 14px;
     cursor: pointer;
-    &:hover { background: rgba(255,255,255,.2); }
+
+    &:hover {
+      background: rgba(255, 255, 255, .2);
+    }
   }
-  .sports-schedule-actions { display: flex; align-items: center; gap: 12px; }
+
+  .sports-schedule-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 }
+
 @media (max-width: 1400px) {
-  .sports-page .sports-featured-leagues { overflow-x: auto; grid-template-columns: repeat(8, minmax(140px, 1fr)); padding-bottom: 8px; }
-  .sports-page .sports-calendar-days { overflow-x: auto; grid-template-columns: 30px repeat(17, minmax(50px, 1fr)) 30px; }
+  .sports-page .sports-featured-leagues {
+    overflow-x: auto;
+    grid-template-columns: repeat(8, minmax(140px, 1fr));
+    padding-bottom: 8px;
+  }
+
+  .sports-page .sports-calendar-days {
+    overflow-x: auto;
+    grid-template-columns: 30px repeat(17, minmax(50px, 1fr)) 30px;
+  }
 }
+
 @media (max-width: 760px) {
-  .sports-page .sports-featured-leagues { grid-template-columns: repeat(8, 145px); }
-  .sports-page .sports-featured-league { height: 315px; }
-  .sports-page .sports-calendar-days { grid-template-columns: 28px repeat(17, 52px) 28px; }
-  .sports-page .sports-schedule-heading { gap: 8px; }
-  .sports-page .sports-schedule-actions { gap: 6px; }
-  .sports-page .sports-schedule-expand { padding: 7px 9px; font-size: 12px; }
+  .sports-page .sports-featured-leagues {
+    grid-template-columns: repeat(8, 145px);
+  }
+
+  .sports-page .sports-featured-league {
+    height: 315px;
+  }
+
+  .sports-page .sports-calendar-days {
+    grid-template-columns: 28px repeat(17, 52px) 28px;
+  }
+
+  .sports-page .sports-schedule-heading {
+    gap: 8px;
+  }
+
+  .sports-page .sports-schedule-actions {
+    gap: 6px;
+  }
+
+  .sports-page .sports-schedule-expand {
+    padding: 7px 9px;
+    font-size: 12px;
+  }
 }
 
 /* Sports-only fixed-width horizontal rails: cards/dates never shrink. */
 .sports-page {
-  .sports-rail-shell { position: relative; display: flex; align-items: stretch; min-width: 0; }
+  .sports-rail-shell {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+  }
+
   .sports-rail-nav {
-    position: absolute; z-index: 3; top: 50%; transform: translateY(-50%);
-    display: grid; place-items: center; width: 42px; height: 58px;
-    border: 1px solid rgba(255,255,255,.22); border-radius: 12px;
-    background: rgba(8,17,29,.86); color: #fff; font-size: 32px;
-    cursor: pointer; backdrop-filter: blur(8px);
-    &:hover, &:focus-visible { background: #244a70; outline-offset: 3px; }
-    &--prev { left: 6px; }
-    &--next { right: 6px; }
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 58px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: 12px;
+    background: rgba(8, 17, 29, .86);
+    color: #fff;
+    font-size: 32px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+
+    &:hover,
+    &:focus-visible {
+      background: #244a70;
+      outline-offset: 3px;
+    }
+
+    &--prev {
+      left: 6px;
+    }
+
+    &--next {
+      right: 6px;
+    }
   }
+
   .sports-featured-leagues {
-    display: flex !important; flex-wrap: nowrap; width: 100%; min-width: 0;
-    gap: 16px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth;
-    scroll-snap-type: x mandatory; scrollbar-width: none; padding: 6px 4px 12px;
-    &::-webkit-scrollbar { display: none; }
+    display: flex !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    gap: 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 6px 4px 12px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
+
   .sports-featured-league {
-    flex: 0 0 190px; width: 190px; min-width: 190px; max-width: 190px;
-    height: 350px; scroll-snap-align: start;
-  }
-  .sports-calendar-days {
-    display: flex !important; flex-wrap: nowrap; width: 100%; min-width: 0;
-    gap: 6px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth;
-    scroll-snap-type: x mandatory; scrollbar-width: none;
-    &::-webkit-scrollbar { display: none; }
-  }
-  .sports-calendar-day {
-    flex: 0 0 76px; width: 76px; min-width: 76px; height: 74px;
+    flex: 0 0 190px;
+    width: 190px;
+    min-width: 190px;
+    max-width: 190px;
+    height: 350px;
     scroll-snap-align: start;
   }
-  .sports-rail-shell--calendar .sports-rail-nav { width: 32px; height: 48px; font-size: 26px; }
+
+  .sports-calendar-days {
+    display: flex !important;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .sports-calendar-day {
+    flex: 0 0 76px;
+    width: 76px;
+    min-width: 76px;
+    height: 74px;
+    scroll-snap-align: start;
+  }
+
+  .sports-rail-shell--calendar .sports-rail-nav {
+    width: 32px;
+    height: 48px;
+    font-size: 26px;
+  }
 }
+
 @media (max-width: 760px) {
-  .sports-page .sports-featured-league { flex-basis: 155px; width: 155px; min-width: 155px; max-width: 155px; height: 315px; }
-  .sports-page .sports-calendar-day { flex-basis: 64px; width: 64px; min-width: 64px; height: 70px; }
+  .sports-page .sports-featured-league {
+    flex-basis: 155px;
+    width: 155px;
+    min-width: 155px;
+    max-width: 155px;
+    height: 315px;
+  }
+
+  .sports-page .sports-calendar-day {
+    flex-basis: 64px;
+    width: 64px;
+    min-width: 64px;
+    height: 70px;
+  }
 }
 
 /* Sports-only v5: 347:466 source card image proportions, centered calendar. */
 .sports-page {
-  .sports-featured-league { flex: 0 0 260px; width: 260px; min-width: 260px; max-width: 260px; height: 350px; background-size: 100% 100%; }
-  .sports-calendar-days { gap: 14px; padding-inline: max(12px, calc(50% - 46px)); scroll-padding-inline: 50%; }
+  .sports-featured-league {
+    flex: 0 0 260px;
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+    height: 350px;
+    background-size: 100% 100%;
+  }
+
+  .sports-calendar-days {
+    gap: 14px;
+    padding-inline: max(12px, calc(50% - 46px));
+    scroll-padding-inline: 50%;
+  }
+
   .sports-calendar-day {
-    box-sizing: border-box; flex: 0 0 92px; width: 92px; min-width: 92px; height: 88px; scroll-snap-align: center;
-    span { font-size: 15px; } strong { font-size: 23px; }
-    &.is-unavailable, &:disabled { opacity: .25; filter: grayscale(1); cursor: not-allowed; pointer-events: none; }
+    box-sizing: border-box;
+    flex: 0 0 92px;
+    width: 92px;
+    min-width: 92px;
+    height: 88px;
+    scroll-snap-align: center;
+
+    span {
+      font-size: 15px;
+    }
+
+    strong {
+      font-size: 23px;
+    }
+
+    &.is-unavailable,
+    &:disabled {
+      opacity: .25;
+      filter: grayscale(1);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
   }
 }
+
 @media (max-width: 760px) {
   .sports-page {
-    .sports-featured-league { flex: 0 0 220px; width: 220px; min-width: 220px; max-width: 220px; height: 296px; }
-    .sports-calendar-days { gap: 12px; padding-inline: max(12px, calc(50% - 39px)); }
-    .sports-calendar-day { flex: 0 0 78px; width: 78px; min-width: 78px; height: 82px; span { font-size: 14px; } strong { font-size: 21px; } }
+    .sports-featured-league {
+      flex: 0 0 220px;
+      width: 220px;
+      min-width: 220px;
+      max-width: 220px;
+      height: 296px;
+    }
+
+    .sports-calendar-days {
+      gap: 12px;
+      padding-inline: max(12px, calc(50% - 39px));
+    }
+
+    .sports-calendar-day {
+      flex: 0 0 78px;
+      width: 78px;
+      min-width: 78px;
+      height: 82px;
+
+      span {
+        font-size: 14px;
+      }
+
+      strong {
+        font-size: 21px;
+      }
+    }
   }
 }
 
@@ -2813,6 +3031,7 @@
     max-width: 16.25em;
     height: 21.875em;
   }
+
   .sports-calendar-days {
     overflow-x: hidden !important;
     scroll-behavior: auto !important;
@@ -2820,8 +3039,12 @@
     overscroll-behavior-x: none;
     touch-action: pan-y;
   }
-  .sports-calendar-day { scroll-snap-align: none; }
+
+  .sports-calendar-day {
+    scroll-snap-align: none;
+  }
 }
+
 @media (max-width: 760px) {
   .sports-page .sports-featured-league {
     font-size: clamp(11px, 2.8vw, 13.5px);
@@ -2830,5 +3053,241 @@
     min-width: 16.25em;
     max-width: 16.25em;
     height: 21.875em;
+  }
+}
+
+/* Featured league card: spacing belongs to the flex container, not text margins. */
+.sports-page .sports-featured-league {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  gap: 0;
+  background-image: url("/images/sports/League_Card.png");
+  background-color: #0f1827;
+  background-position: center;
+  background-size: 100% 100%;
+
+  &__emblem {
+    margin: 0;
+    box-shadow: none;
+    border: 0;
+  }
+
+  &__logo {
+    border: 0;
+    outline: none;
+    box-shadow: none;
+    filter: none;
+    background: rgba(9, 14, 42, 0.45);
+
+    img {
+      filter: none;
+      box-shadow: none;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(6px, .65em, 11px);
+  }
+
+  &__content>h3,
+  &__content>p,
+  &__content>a {
+    margin: 0;
+    padding: 0;
+  }
+
+  &__content>h3 {
+    line-height: 1.35;
+  }
+
+  &__content>p {
+    line-height: 1.4;
+  }
+
+  &__content>.sports-featured-league__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: #fff;
+    text-decoration: none;
+    line-height: 1.4;
+  }
+}
+
+
+/* Featured league: Figma reference (title 24px, body/CTA 16px).
+   Scoped overrides keep other sports cards and existing interactions untouched. */
+.sports-page .sports-featured-league {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background: linear-gradient(0deg, rgba(0, 132, 255, 0.8) 10%, rgba(11, 29, 49, 0.52) 40%, rgba(34, 89, 151, 0) 66%, rgba(15, 17, 20, 0.64) 100%),
+    #0f1114 url("/images/sports/League_Card.png") center bottom / cover no-repeat;
+
+  &__emblem {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+  }
+
+  &__logo {
+    box-sizing: border-box;
+    border: 1px solid rgba(0, 0, 0, .85);
+    outline: 0;
+    box-shadow: none;
+    filter: none;
+  }
+
+  &__content {
+    gap: 10px;
+    justify-content: center;
+  }
+
+  &__content>h3 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 32px;
+  }
+
+
+  &__content>.sports-featured-league__type,
+  &__content>.sports-featured-league__caption,
+  &__content>.sports-featured-league__link {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+}
+
+@media (max-width: 1400px) {
+  .sports-page .sports-featured-league {
+    &__content {
+      gap: 8px;
+    }
+
+    &__content>h3 {
+      font-size: 20px;
+      line-height: 27px;
+    }
+
+    &__content>.sports-featured-league__type,
+    &__content>.sports-featured-league__caption,
+    &__content>.sports-featured-league__link {
+      font-size: 14px;
+      line-height: 20px;
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .sports-page .sports-featured-league {
+    &__content {
+      gap: 6px;
+    }
+
+    &__content>h3 {
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    &__content>.sports-featured-league__type,
+    &__content>.sports-featured-league__caption,
+    &__content>.sports-featured-league__link {
+      font-size: 12px;
+      line-height: 18px;
+    }
+  }
+}
+
+/* Featured league: remove all outer borders and logo halo, preserve card artwork. */
+.sports-page .sports-featured-league {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+
+  &__emblem,
+  &__logo,
+  &__logo img {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+    filter: none;
+  }
+}
+
+/* Month navigation: directional, modest slide of the date strip only. */
+@keyframes sports-month-enter-next {
+  from {
+    opacity: .65;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes sports-month-enter-prev {
+  from {
+    opacity: .65;
+    transform: translateX(-24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.sports-page .sports-calendar-days.is-month-next {
+  animation: sports-month-enter-next 350ms ease-out both;
+}
+
+.sports-page .sports-calendar-days.is-month-prev {
+  animation: sports-month-enter-prev 350ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .sports-page .sports-calendar-days.is-month-next,
+  .sports-page .sports-calendar-days.is-month-prev {
+    animation: none;
+  }
+}
+
+/* Featured league visual cleanup: the rounded outline is baked into League_Card.png.
+   Crop the artwork slightly rather than hiding the artwork itself. */
+.sports-page .sports-featured-league {
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  background-size: 100% 100%, calc(100% + 18px) calc(100% + 18px);
+  background-position: center, center;
+  overflow: hidden;
+
+  &__emblem,
+  &__logo {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+    filter: none;
+    background: transparent;
+  }
+
+  &__logo img {
+    border: 0;
+    box-shadow: none;
+    filter: none;
   }
 }
