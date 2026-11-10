@@ -323,6 +323,37 @@ async function getOpenLigaBl2MatchdayMaps(seoulDate) {
   return { byDateAndTeams, byTeams };
 }
 
+function containsNbaWeek(week, gameTime) {
+  const start = Date.parse(week?.startDate), end = Date.parse(week?.endDate);
+  // ESPN's minute-precision end times include the entire final minute.
+  const precision = /T\d{2}:\d{2}(?:Z|[+-]\d{2}:?\d{2})$/.test(week?.endDate || "") ? 60000
+    : /\.\d+(?:Z|[+-]\d{2}:?\d{2})$/.test(week?.endDate || "") ? 1 : 1000;
+  return gameTime >= start && gameTime < end + precision;
+}
+
+async function getNbaWeekCalendar(seasonYear, signal) {
+  const base = `sports/basketball/leagues/nba/seasons/${seasonYear}/types/2/weeks`;
+  const data = await espnCoreFetch(`${base}?limit=100&lang=en&region=us`);
+  signal?.throwIfAborted();
+  if (!Array.isArray(data.items) || Number(data.pageCount || 1) > 1) throw new Error("NBA 주차 목록을 확인할 수 없습니다.");
+  const numbers = [...new Set(data.items.map(item => Number(item.number ?? item.$ref?.match(/\/weeks\/(\d+)(?:\?|$)/)?.[1])))]
+    .filter(number => Number.isInteger(number) && number > 0 && number <= 100);
+  if (!numbers.length) throw new Error("NBA 주차 목록을 확인할 수 없습니다.");
+  const weeks = [];
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(3, numbers.length) }, async () => {
+    while (!signal?.aborted && next < numbers.length) {
+      const number = numbers[next++];
+      try {
+        const week = await espnCoreFetch(`${base}/${number}?lang=en&region=us`);
+        if (Number(week.number) === number && Number.isFinite(Date.parse(week.startDate)) && Date.parse(week.endDate) >= Date.parse(week.startDate)) weeks.push(week);
+      } catch { /* Unknown week boundaries must not become invented week numbers. */ }
+    }
+  }));
+  signal?.throwIfAborted();
+  return weeks;
+}
+
 async function getNbaRegularSeasonWeek(game) {
   const seasonYear = Number(game.seasonYear);
   const gameTime = new Date(game.utcDate).getTime();
@@ -342,12 +373,7 @@ async function getNbaRegularSeasonWeek(game) {
     const candidates = await Promise.all(candidateNumbers.map((number) =>
       espnCoreFetch(`${base}/${number}?lang=en&region=us`).catch(() => null),
     ));
-    const week = candidates.find((candidate) => {
-      if (!candidate?.startDate || !candidate?.endDate) return false;
-      const start = new Date(candidate.startDate).getTime();
-      const end = new Date(candidate.endDate).getTime();
-      return gameTime >= start && gameTime <= end;
-    });
+    const week = candidates.find(candidate => containsNbaWeek(candidate, gameTime));
 
     return week?.number ? `${week.number}주차` : "";
   } catch {
@@ -693,10 +719,16 @@ async function getEspnLeagueSchedule(leagueId, seoulDate) {
     }
   }
   if (leagueId === "mls") {
+    // MLS is optional regular-season round enrichment. Empty dates and playoffs
+    // must not query the regular-season feed (which returns 404 for those gaps).
+    const needsMatchday = (game) => (game.matchday == null || game.matchday === "")
+      && (!game.seasonPhase || /regular.?season/i.test(game.seasonPhase));
+    if (!unique.some(needsMatchday)) return { games: unique, errors };
     try {
       const matchdays = await getMlsMatchdayMaps(seoulDate);
       return {
         games: unique.map((game) => {
+          if (!needsMatchday(game)) return game;
           const homeCode = game.home.sourceTeamCode;
           const awayCode = game.away.sourceTeamCode;
           const key = getMlsMatchKey(game.utcDate, homeCode, awayCode);
@@ -770,9 +802,62 @@ export async function getEspnScheduleForRange(leagueId, from, to, { signal } = {
   };
 }
 
+async function getNbaSeasonSchedule(from, to, { signal } = {}) {
+  signal?.throwIfAborted();
+  const start = parseDateKey(from);
+  const end = parseDateKey(to);
+  if (from > to) throw new RangeError("경기 조회 기간이 올바르지 않습니다.");
+  // ESPN groups by US calendar dates. Include the previous UTC month so games
+  // starting on Korean midnight at the season boundary are not lost.
+  start.setUTCDate(start.getUTCDate() - 1);
+  start.setUTCDate(1);
+  end.setUTCDate(1);
+  const months = [];
+  for (const date = new Date(start); date <= end; date.setUTCMonth(date.getUTCMonth() + 1)) {
+    months.push(date.toISOString().slice(0, 7).replace("-", ""));
+  }
+  const events = [], errors = [];
+  let next = 0, completed = 0;
+  await Promise.all(Array.from({ length: Math.min(3, months.length) }, async () => {
+    while (!signal?.aborted && next < months.length) {
+      const month = months[next++];
+      try {
+        const data = await espnFetch(`${ESPN_LEAGUE_PATHS.nba}/scoreboard`, { dates: month, limit: "1000" }, "events");
+        if (signal?.aborted) return;
+        events.push(...data.events);
+        completed++;
+      } catch (error) {
+        if (signal?.aborted) return;
+        errors.push(`${month.slice(0, 4)}년 ${Number(month.slice(4))}월: ${error.message || "NBA 일정 조회 실패"}`);
+      }
+    }
+  }));
+  signal?.throwIfAborted();
+  if (!completed) throw new Error("NBA 시즌 경기 일정을 불러오지 못했습니다.");
+  const games = uniqueGames(events.map(event => normalizeEspnEvent("nba", event)).filter(Boolean)
+    .filter(game => { const date = getSeoulDateKey(game.utcDate); return date >= from && date <= to; }));
+  const isRegular = game => String(game.seasonType) === "2" || /regular.?season/i.test(game.seasonPhase || "");
+  const calendars = new Map();
+  for (const year of new Set(games.filter(isRegular).map(game => Number(game.seasonYear)).filter(year => Number.isInteger(year) && year >= 1900 && year <= 2100))) {
+    try { calendars.set(year, await getNbaWeekCalendar(year, signal)); }
+    catch (error) { if (signal?.aborted) throw error; }
+  }
+  signal?.throwIfAborted();
+  let unclassified = false;
+  const classified = games.map(game => {
+    if (!isRegular(game)) return game;
+    const week = calendars.get(Number(game.seasonYear))?.find(week => containsNbaWeek(week, Date.parse(game.utcDate)));
+    if (!week) unclassified = true;
+    return { ...game, scheduleSegment: week ? `${Number(week.number)}주차` : "" };
+  });
+  if (unclassified) errors.push("일부 NBA 경기의 주차 정보를 확인하지 못했습니다. 날짜별 조회에서 경기를 확인할 수 있습니다.");
+  return { games: classified, errors: errors.sort() };
+}
+
 // The dedicated schedule tab needs the whole season, including postponed fixtures.
-// Fetch one competition range instead of issuing a request for every calendar day.
+// NBA accepts YYYYMM tokens; date-range tokens return 400 for this provider.
 export async function getEspnSeasonSchedule(leagueId, season, from, to, { signal } = {}) {
+  if (leagueId === "nba") return getNbaSeasonSchedule(from, to, { signal });
   if (FOOTBALL_DATA_COMPETITIONS.includes(leagueId)) {
     try {
       const data = await getFootballDataSeason(leagueId, season, { signal });

@@ -25,7 +25,7 @@ import { LiveBadge } from "../../components/LeagueDetailShared";
 import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
 import { useScheduleMatchVideos } from "../../hooks/useScheduleMatchVideos";
 import { getScheduleUnitLabel } from "../../data/leagueScheduleUnits";
-import { getSportsVideoId } from "../../data/sportsVideoPlayback";
+import { getYouTubeVideoId } from "../../data/youtubeVideoId";
 import { getMatchVideoKey } from "../../data/matchRelatedVideos";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -158,7 +158,7 @@ function TeamCrest({ team }) {
 function SportsVideoCard({ card, badge, live = false }) {
   const league = card.competitionCode ? getLeague(card.competitionCode) : null;
   const category = card.category || league?.name || card.competitionName || "스포츠";
-  const videoId = getSportsVideoId(card);
+  const videoId = getYouTubeVideoId(card);
   const Card = videoId ? Link : "article";
   const playbackProps = videoId ? {
     to: `/watch/sports/${encodeURIComponent(videoId)}`,
@@ -305,7 +305,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
     }
   };
   const detailsExpanded = !playAction && expanded && (!isEnded || hasRelatedVideos);
-  const liveVideoId = playAction ? getSportsVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
+  const liveVideoId = playAction ? getYouTubeVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
   const scheduleSubLabel = getScheduleSubLabel(game);
   const hasScore =
     scoresOn &&
@@ -929,11 +929,6 @@ export const Sports = () => {
               <h3>{league.name}</h3>
               <p className="sports-featured-league__type">{league.sport} · {league.scope}</p>
               <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p>
-              <Link
-                to={`/sports/league/${encodeURIComponent(league.id)}`}
-              >
-                리그 둘러보기 <span aria-hidden="true">→</span>
-              </Link>
             </article>
           ))}
           </div>

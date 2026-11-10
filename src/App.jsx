@@ -58,7 +58,6 @@ import { Category } from './page/category/Category';
 
 // Firebase 인증
 import { useAuthStore } from './store/useAuthStore';
-import { SportsWatch } from './page/home/components/SportsWatch';
 
 import { WowClip } from './page/wowclip/WowClip';
 
@@ -124,8 +123,6 @@ function App() {
         {/* 더보기 */}
         <Route path="/more" element={<More />} />
         <Route path="/wowclip" element={<WowClip />} />
-        {/* 메인스포츠 하이라이트 */}
-        <Route path="/watch/sports/:id" element={<SportsWatch />} />
         {/* 검색 */}
         <Route path="/search" element={<Search />} />
         {/* 카테고리 */}

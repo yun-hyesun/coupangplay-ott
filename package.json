@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "videos:sync": "node scripts/sync-youtube-catalog.mjs",
+    "videos:worker": "node scripts/sync-youtube-catalog.mjs --watch"
   },
   "dependencies": {
     "firebase": "^13.1.0",

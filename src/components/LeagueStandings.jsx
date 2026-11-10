@@ -1,20 +1,24 @@
 import { EmptyMessage } from "./LeagueDetailShared";
+import { selectLeagueStandings } from "../data/leagueStandingsView";
 
-export function LeagueStandings({ league, standingsState, tableRows, tableNote, tableColumns, isBasketball }) {
+export function LeagueStandings({ league, standingsState, tableRows, tableNote, tableColumns, isBasketball, fullPage = false, onShowAll }) {
+  const limit = fullPage ? 20 : 10;
+  const visibleRows = selectLeagueStandings(tableRows, limit, { allowUnranked: !fullPage });
   return (
-    <section className="league-detail__section league-detail__standings" aria-labelledby="league-detail-standings-title">
+    <section className={"league-detail__section league-detail__standings" + (fullPage ? " league-detail__standings--page" : "")} aria-labelledby="league-detail-standings-title" aria-busy={standingsState.loading}>
       <div className="league-detail__section-heading">
         <h2 id="league-detail-standings-title">리그 순위</h2>
+        {!fullPage && onShowAll && <button type="button" className="league-detail__standings-more" onClick={onShowAll}>전체보기 <span aria-hidden="true">›</span></button>}
       </div>
       {tableNote && <p className="league-detail__table-note">{tableNote}</p>}
       {standingsState.loading ? (
         <EmptyMessage>순위 정보를 불러오는 중입니다.</EmptyMessage>
-      ) : tableRows.length ? (
+      ) : visibleRows.length ? (
         <div className="league-detail__table-wrap">
-          <table aria-label={`${league.name} 리그 순위 상위 10팀`}>
+          <table aria-label={`${league.name} 리그 순위 상위 ${visibleRows.length}팀`}>
             <thead><tr>{tableColumns.map((column) => <th scope="col" key={column}>{column}</th>)}</tr></thead>
             <tbody>
-              {tableRows.slice(0, 10).map((row, index) => (
+              {visibleRows.map((row, index) => (
                 <tr key={row.teamId || row.teamName || index}>
                   <td>{row.rank ?? "—"}</td>
                   <td className="league-detail__table-team">
