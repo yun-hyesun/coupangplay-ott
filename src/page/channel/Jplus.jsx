@@ -6,13 +6,23 @@ import './scss/ChannelPage.scss';
 export const Jplus = () => (
   <main className="channel-page jplus-page">
     <ChannelBanner
-      railKey="sony-banner"
+      contentId={332713}
       logo="/images/channal11.svg"
       name="JPlus"
       description="다양한 이야기로 만나는 일본 드라마"
     />
 
-    <ContentRail railKey="jplus-popular" layout="vertical" showMore={false}/>
+    <ContentRail
+      railKey="jplus-popular"
+      layout="vertical"
+      showMore={false}
+      title={
+        <span className="channel-rail-title">
+          <img src="/images/channal11.svg" alt="jplus" />
+          <span>TOP 20</span>
+        </span>
+      }
+    />
     <ContentRail railKey="jplus-latest" />
     <ContentRail railKey="jplus-crime" />
     <ContentRail railKey="jplus-comedy" />

@@ -9,11 +9,11 @@ export const channelRailConfig = {
     "useTving": false,
     "limit": 20,
     "fullList": true,
-    "network": "95",
-    "sourceCheck": "network:95:EBS"
+    "network": "1796",
+    "sourceCheck": "network:1796:EBS"
   },
   "ebs-popular": {
-    "title": "인기 프로그램",
+    "title": "EBS on TOP 20",
     "type": "tv",
     "sort": "popularity.desc",
     "imageType": "세로",
@@ -21,8 +21,8 @@ export const channelRailConfig = {
     "useTving": false,
     "limit": 20,
     "fullList": true,
-    "network": "95",
-    "sourceCheck": "network:95:EBS",
+    "network": "1796",
+    "sourceCheck": "network:1796:EBS",
     "variant": "ranking"
   },
   "ebs-latest": {
@@ -34,8 +34,8 @@ export const channelRailConfig = {
     "useTving": false,
     "limit": 20,
     "fullList": true,
-    "network": "95",
-    "sourceCheck": "network:95:EBS"
+    "network": "1796",
+    "sourceCheck": "network:1796:EBS"
   },
   "ebs-documentary": {
     "title": "자연과 세상을 만나는 다큐멘터리",
@@ -46,8 +46,8 @@ export const channelRailConfig = {
     "useTving": false,
     "limit": 20,
     "fullList": true,
-    "network": "95",
-    "sourceCheck": "network:95:EBS",
+    "network": "1796",
+    "sourceCheck": "network:1796:EBS",
     "genre": "99"
   },
   "ebs-kids": {
@@ -59,8 +59,8 @@ export const channelRailConfig = {
     "useTving": false,
     "limit": 20,
     "fullList": true,
-    "network": "95",
-    "sourceCheck": "network:95:EBS",
+    "network": "1796",
+    "sourceCheck": "network:1796:EBS",
     "genre": "10762"
   },
   "paramount-banner": {
@@ -78,7 +78,7 @@ export const channelRailConfig = {
     "sourceCheck": "network:4330:Paramount"
   },
   "paramount-popular": {
-    "title": "인기 미국 시리즈",
+    "title": "Paramount+ TOP 20",
     "type": "tv",
     "sort": "popularity.desc",
     "imageType": "세로",
@@ -164,7 +164,7 @@ export const channelRailConfig = {
     "channelTitles": "moa"
   },
   "moa-popular": {
-    "title": "인기 중국 드라마",
+    "title": "moa TOP 20",
     "type": "tv",
     "sort": "popularity.desc",
     "imageType": "세로",
@@ -240,7 +240,7 @@ export const channelRailConfig = {
     "sourceCheck": "network:885:JTBC"
   },
   "jtbc-popular": {
-    "title": "인기 프로그램",
+    "title": "jtbc TOP 20",
     "type": "tv",
     "sort": "popularity.desc",
     "imageType": "세로",
@@ -316,7 +316,7 @@ export const channelRailConfig = {
     "sourceCheck": "company:5:Columbia,company:34:Sony"
   },
   "sony-popular": {
-    "title": "인기 영화",
+    "title": "sony TOP 20",
     "type": "movie",
     "sort": "popularity.desc",
     "imageType": "세로",
@@ -392,7 +392,7 @@ export const channelRailConfig = {
     "genre": "18"
   },
   "jplus-popular": {
-    "title": "인기 일본 드라마",
+    "title": "Jplus TOP 20",
     "type": "tv",
     "sort": "popularity.desc",
     "imageType": "세로",
@@ -466,7 +466,7 @@ export const channelRailConfig = {
     "sourceCheck": "network:49:HBO"
   },
   "hbo-popular": {
-    "title": "인기 HBO 시리즈",
+    "title": "HBO TOP 20",
     "type": "tv",
     "sort": "popularity.desc",
     "imageType": "세로",
@@ -529,4 +529,5 @@ export const channelRailConfig = {
     "sourceCheck": "network:49:HBO",
     "ended": true
   }
+  
 };

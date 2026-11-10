@@ -1,22 +1,37 @@
 .channel-page {
+
+  .adult-page {background: #000;}
+  .ebs-page {background: #000;}
+  .hbo-page {background: #000;}
+  .jplus-page {background: #000;}
+  .jtbc-page{background: #000;}
+  .moa-page{background: #000;}
+  .paramount-page{background: #000;}
+  .sony-page {background: #000;}
   
   .channel-page-banner {
       .inner {width: 100%; height: 100%; border-radius: 30px; border: 2px solid rgba(255,255,255,.1); overflow: hidden; position: relative;
       
         .banner-image {width: 100%; height: 100%; object-fit: cover; object-position: center top;}
 
-        .channel-info {@include pos-abs-centerY($l:5%); @include flexCol($gap: 20px); align-items: flex-start;
+        .channel-info {@include pos-abs-centerY($l:5%); @include flexCol($gap: 20px); align-items: flex-start;  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
         
           .channel-title {height: clamp(30px, 5.55vw, 80px);
           
-            img {height: 100%;}
+            img {height: 100%; filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));}
           }
 
-          > p {color: $color-text-sec1; font-size: clamp(14px, 1.25vw,18px);}
+          > p {color: #fff; font-size: clamp(14px, 1.73vw, 25px);}
 
           .channel-sign {line-height: 2.5; padding: 0.3em 1.2em;}
         }
       }
+    }
+
+    .channel-rail-title {display: flex; align-items: flex-end; gap: .8em;
+    
+      > img {height: clamp(20px, 2.43vw , 45px) ;}
+      > span {line-height: 1;}
     }
   
 }
