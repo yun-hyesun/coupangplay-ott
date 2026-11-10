@@ -20,6 +20,9 @@ export const Detail = () => {
   const { type, id } = useParams();
 
   const { state, search } = useLocation();
+  const isStoreDetail =
+  state?.fromStore === true ||
+  new URLSearchParams(search).get('from') === 'store';
 
   // 마이페이지에서 전달받은 리뷰 작성 대상
   const reviewRequest = new URLSearchParams(search);
