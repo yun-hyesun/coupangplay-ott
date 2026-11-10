@@ -1,3 +1,4 @@
+import { SharePopup } from '../../components/common/SharePopup';
 import CommonIcon from '../../components/common/CommonIcon';
 
 import { useEffect, useState } from 'react';
@@ -18,6 +19,8 @@ const imageUrl = (path) => path ? `${IMG}${path}` : '';
 
 export const Detail = () => {
   const { type, id } = useParams();
+  const [shareOpen, setShareOpen] = useState(false);
+  useEffect(() => setShareOpen(false), [type, id]);
 
   const { state, search } = useLocation();
   const isStoreDetail =
@@ -356,29 +359,15 @@ export const Detail = () => {
                   (!isCurrentList || watchlistLoading)
                 }
               >
-                <ActionIcon name="like" />
+                <ActionIcon name={liked ? 'liked' : 'like'} />
                 {liked ? '찜 완료' : '찜하기'}
               </button>
 
               <button
                 className="detail-button detail-button--outline"
                 type="button"
-                onClick={async () => {
-                  try {
-                    if (navigator.share) {
-                      await navigator.share({
-                        title,
-                        url: window.location.href
-                      });
-                    } else {
-                      await navigator.clipboard.writeText(
-                        window.location.href
-                      );
-                    }
-                  } catch {
-                    // 사용자가 공유를 취소한 경우
-                  }
-                }}
+                onClick={() => setShareOpen(true)}
+                aria-haspopup="dialog"
               >
                 <ActionIcon name="share" />
                 공유
@@ -646,7 +635,16 @@ export const Detail = () => {
           </section>
         )}
       </div>
-      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
+      {shareOpen && <SharePopup title={title} type={type}
+        url={new URL(`/detail/${type}/${id}`, window.location.origin).href}
+        onClose={() => setShareOpen(false)} />}
+      {popupEpisode && <ReviewPopup episode={popupEpisode} 
+      reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} 
+      onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} 
+      onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} 
+      onDelete={reviewId => removeReview(popupEpisode, reviewId)} 
+      error={reviewError} 
+      onClose={() => setPopupEpisode(null)} />}
     </main>
   );
 };
