@@ -1,5 +1,6 @@
-import { collection, doc, getDocFromServer, onSnapshot, query, where, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, where, orderBy, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { cloudClip, cloudComment, newCloudClip } from '../utils/cloudClipData.js';
+import { normalizeClipComment } from '../utils/clipCommentText.js';
 
 // 인증과 Firestore 인스턴스를 주입해 실제 앱과 에뮬레이터에서 같은 저장 코드를 검수합니다.
 export const createWowClipRepository = ({ database, currentUser }) => {
@@ -87,7 +88,7 @@ export const createWowClipRepository = ({ database, currentUser }) => {
     await runTransaction(database, async (transaction) => {
       const parentData = requireClip(await transaction.get(parent));
       const targetData = commentId ? (await transaction.get(target)) : null;
-      if (targetData && !targetData.exists()) throw new Error('댓글을 찾을 수 없어요.');
+      if (targetData && (!targetData.exists() || targetData.data().deleted)) throw new Error('댓글을 찾을 수 없어요.');
       const previous = await transaction.get(reaction);
       if (previous.exists()) transaction.delete(reaction);
       else transaction.set(reaction, { uid: user.uid, ...(commentId ? { commentId } : {}), createdAt: serverTimestamp() });
@@ -98,14 +99,13 @@ export const createWowClipRepository = ({ database, currentUser }) => {
 
   const addComment = async (id, text, owner, parentId = null) => {
     const user = requireUser();
-    const value = text.trim();
-    if (!value || value.length > 1000) throw new Error('댓글은 1~1000자로 작성해 주세요.');
+    const value = normalizeClipComment(text);
     const parent = clipRef(id), comment = doc(collection(parent, 'comments'));
     await runTransaction(database, async (transaction) => {
       const data = requireClip(await transaction.get(parent));
       if (parentId) {
         const root = await transaction.get(doc(parent, 'comments', parentId));
-        if (!root.exists() || root.data().parentId) throw new Error('답글을 달 원댓글을 찾을 수 없어요.');
+        if (!root.exists() || root.data().deleted || root.data().parentId) throw new Error('답글을 달 원댓글을 찾을 수 없어요.');
       }
       const profileId = owner.id?.startsWith(user.uid + ':') ? owner.id.slice(user.uid.length + 1) : 'default';
       transaction.set(comment, { text: value, parentId, authorUid: user.uid, profileId, ownerId: user.uid + ':' + profileId,
@@ -116,21 +116,57 @@ export const createWowClipRepository = ({ database, currentUser }) => {
     return comment.id;
   };
 
-  const hasRecordedView = async (id, uid) => {
-    if (!uid || currentUser()?.uid !== uid) return false;
-    return (await getDocFromServer(doc(clipRef(id), 'views', uid))).exists();
-  };
-
-  const recordView = async (id) => {
-    const user = currentUser();
-    if (!user?.uid) return;
-    const parent = clipRef(id), view = doc(parent, 'views', user.uid);
+  const changeOwnComment = async (id, commentId, change) => {
+    const user = requireUser();
+    const parent = clipRef(id);
+    const comment = doc(parent, 'comments', commentId);
     await runTransaction(database, async (transaction) => {
-      const data = requireClip(await transaction.get(parent));
-      if ((await transaction.get(view)).exists()) return;
-      transaction.set(view, { uid: user.uid, createdAt: serverTimestamp() });
-      transaction.update(parent, { views: data.views + 1 });
+      const clip = requireClip(await transaction.get(parent));
+      const current = (await transaction.get(comment)).data();
+      if (!current) throw new Error('댓글을 찾을 수 없어요.');
+      if (current.authorUid !== user.uid) throw new Error('내가 작성한 댓글만 변경할 수 있어요.');
+      change({ transaction, clip, parent, comment, current });
     });
   };
-  return { subscribe, subscribeDetails, saveClip, removeClip, toggleLike, addComment, hasRecordedView, recordView };
+
+  const editComment = async (id, commentId, text) => {
+    const value = normalizeClipComment(text);
+    return changeOwnComment(id, commentId, ({ transaction, comment, current }) => {
+      if (current.deleted) throw new Error('삭제된 댓글은 수정할 수 없어요.');
+      if (current.text !== value) transaction.update(comment, { text: value, editedAt: serverTimestamp() });
+    });
+  };
+
+  const removeComment = (id, commentId) => changeOwnComment(id, commentId, ({ transaction, clip, parent, comment, current }) => {
+    if (current.deleted) return;
+    // Keep the thread anchor and remove the original text, leaving other users' replies intact.
+    transaction.update(comment, { deleted: true, text: '' });
+    transaction.update(parent, { commentCount: clip.commentCount - 1, lastCommentId: commentId });
+  });
+
+  const subscribeRecordedView = (id, uid, profileId, onData, onError) => {
+    if (!uid || !profileId || currentUser()?.uid !== uid) return () => {};
+    const view = doc(clipRef(id), 'views', uid, 'profiles', profileId);
+    return onSnapshot(view, { includeMetadataChanges: true }, (snapshot) => {
+      if (!snapshot.metadata.fromCache && !snapshot.metadata.hasPendingWrites) onData(snapshot.exists());
+    }, onError);
+  };
+
+  const recordView = async (id, uid, profileId) => {
+    if (!uid) return;
+    if (currentUser()?.uid !== uid) return false;
+    const parent = clipRef(id), view = doc(parent, 'views', uid);
+    const profileView = profileId ? doc(view, 'profiles', profileId) : null;
+    await runTransaction(database, async (transaction) => {
+      const data = requireClip(await transaction.get(parent));
+      const counted = (await transaction.get(view)).exists();
+      const watched = profileView && (await transaction.get(profileView)).exists();
+      if (!counted) {
+        transaction.set(view, { uid, createdAt: serverTimestamp() });
+        transaction.update(parent, { views: data.views + 1 });
+      }
+      if (profileView && !watched) transaction.set(profileView, { createdAt: serverTimestamp() });
+    });
+  };
+  return { subscribe, subscribeDetails, saveClip, removeClip, toggleLike, addComment, editComment, removeComment, subscribeRecordedView, recordView };
 };

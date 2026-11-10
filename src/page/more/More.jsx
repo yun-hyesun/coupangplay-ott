@@ -113,6 +113,7 @@ export const More = () => {
     '/store': '스토어 홈으로',
     '/sports': '스포츠 홈으로',
     '/kids': '키즈 홈으로',
+    '/channel/adult': 'Adult 홈으로',
   };
 
   const from = location.state?.from;
