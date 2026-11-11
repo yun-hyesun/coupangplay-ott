@@ -1,63 +1,34 @@
-
 @use "../../../scss/variables" as *;
 @use "../../../scss/mixins" as *;
  // #################### header
 
-.header {min-height: 70px; padding: clamp(10px, 1.25vw, 18px) $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
+.header {height: 70px; padding-inline: $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
   &.active {background: $color-bg;}
-  &.active .header-search:has(.is-open) {background: $color-border;}
+  &.active .header-search {background: $color-border;}
 
-  
   .inner {@include flex-between(); height: 100%;
-    @include tablet {
-      @include flex-between($ai:flex-start);
-    }
-    
-    
+
     .header-left {@include flex-center($gap: 50px);
-      
+    
       .header-logo {width: 170px;
         img {width: 100%;}
       }
-      
-      .header-nav-menu {@include flex-center();
-        a {display: block; padding: 8px 15px; border-radius: 10px;}
-        .active {background: rgba(255,255,255,.2);}
-      }
 
-      @include tablet {
-        @include flex-center($ai:flex-start, $gap: 20px); flex-direction: column;
+      .header-nav-menu {@include flex-center();
+        a {padding: 8px 15px; border-radius: 10px;}
+        .active {background: rgba(255,255,255,.2);}
       }
     }
 
     .header-right {@include flex-center($gap: 20px);
 
-      .header-login {background: $color-pri; font-size: 14px; padding: 5px 15px; border-radius: 30px;}
+      .header-login {background: $color-pri; font-size: 18px; padding: 9px 18px; border-radius: 30px;}
 
-      .header-search {@include flex-center(); height: 44px; position: relative;
+      .header-search {@include flex-center(); height: 40px; padding: 5px 20px; border: 1px solid $color-border-light; border-radius: 30px; @include trans();
         
-        .header-search-form {@include flex-center(); height: 100%; padding: 5px 10px 5px 15px; border-radius: 30px; @include pos-abs($r:0);
-          &.is-open {gap: 10px; border: 1px solid $color-border-light;}
+        .header-search-form {@include flex-between($gap: 20px);
   
-          .header-search-btn {width: 20px; height: 20px; background: url(/images/search.svg) no-repeat center / contain;}
-          
-          .header-search-fields {@include flex-between($gap: 10px)}
-
-          input {font-weight: $font-w-R-400; width: 0; opacity: 0; @include trans(); 
-            &::placeholder {color: $color-text-sec1; font-size: 14px;}
-          }
-
-          .search-close {border: 1.5px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: inline-flex; justify-content: center; align-items: center; opacity: .5; display: none;
-
-            &:hover {opacity: 1;}
-            img {width: 20px;}
-          }
-
-          &.is-open {
-            input {width: 210px; opacity: 1;}
-            .search-close {display: inline-flex;}
-          }
-          
+          .header-search-btn {width: 20px; height: 20px; background: url(images/search.svg) no-repeat center / contain;}
         }
 
       }
@@ -179,6 +150,11 @@
           }
         }
 
+        a:first-child {
+          color: #fff;
+          font-weight: 500;
+        }
+
         .profile-dropdown-logout {
           margin-top: 4px;
 
@@ -220,103 +196,42 @@
   }
 }
 
+
 // #################### footer
 .footer {padding: 60px $padding-main; color: $color-text-sec2;
-  .inner {
+  .inner {@include flex-between($ai:flex-start);
 
-    @include tablet {
-      gap: 40px;
-      flex-direction: column;
-    }
+    .footer-left {font-size: 19px;
 
-    // ############## top
-    .footer-top {@include flex-between();  margin-bottom: 40px;
-      .footer-logo {width: 240px;
-        
-        @include tablet {
-          width: clamp(180px, 20vw ,240px);
-        }
+      .footer-logo {width: 240px; margin-bottom: 40px;
         img {width: 100%;}
       }
 
-      .footer-inquiry {@include flex-center($gap: 60px, $jc: flex-start); font-size: clamp(18px, 1.52vw ,22px); font-weight: $font-w-SB-600; margin-right: 50px;
-      
-      
-        @include tablet {
-          margin: 0;
-          gap: clamp(30px, 5vw, 60px);
+      .footer-address {line-height: 1.8;}
+      .footer-nav-menu {@include flex-center($gap: 40px); font-size: 20px; margin-top: 50px;
+
+        &:first-of-type {font-weight: $font-w-SB-600;}
+      }
+    } 
+
+    .footer-right {
+      .footer-inquiry {@include flex-center($gap: 60px, $jc: flex-start); font-size: 22px; font-weight: $font-w-SB-600;}
+
+      .footer-info {font-size: 19px; margin-block: 40px 40px;
+
+        &-list {@include flex-center($gap: 60px, $jc: flex-start);
+
+          dt {width: 150px;}
+          dd {color: $color-text-sec1;}
         }
       }
 
-    }
-
-    // ############## meddle
-    .footer-meddle {@include flex-between($ai:flex-start);
-
-      @include tablet {
-        flex-direction: column;
-      }
-
-      .footer-left {font-size: clamp(14px, 1.31vw, 19px);
-        .footer-address {line-height: 1.8;}
-
-      } 
-
-      .footer-right {@include flexCol;
-
-        @include tablet {
-          margin-top: clamp(20px, 3.33vw, 40px);
-          width: 100%;
-        }
-        
-        .footer-info {font-size: clamp(14px, 1.31vw, 19px); margin-block-end: 40px;
-  
-          &-list {@include flex-center($gap: 60px, $jc: flex-start);
-
-            @include tablet {
-              gap: clamp(30px, 5vw ,60px);
-            }
-            
-            dt {width: 150px;}
-            dd {color: $color-text-sec1;}
-  
-          }
-        }
-        
-        .footer-sns {@include flex-center($gap: 10px, $jc: flex-start);
-
-          a {display: block; width: 60px;
-            img {width: 100%;
-            
-            
-            }
-            @include tablet {
-              width: clamp(50px, 5vw, 60px);
-            }
-          }
-  
-          @include tablet {
-            justify-content: center;
-            gap: clamp(5px, 0.83vw, 10px)
-          }
+      .footer-sns {@include flex-center($gap: 10px, $jc: flex-start);
+        a {display: block; width: 60px;
+          img {width: 100%;}
         }
       }
     }
-    
-    
-
-    // ############## bottom 
-    .footer-bottom {
-      .footer-nav-menu {@include flex($gap: 10px 40px); font-size: clamp(16px, 1.38vw, 20px); margin-top: clamp(30px, 4.17vw ,50px); flex-wrap: wrap;
-
-        @include tablet {
-          justify-content: center;    
-        }
-
-      &:first-of-type {font-weight: $font-w-SB-600;}
-    }
-    }
-
 
   }
 }

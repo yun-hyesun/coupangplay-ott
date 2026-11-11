@@ -17,4 +17,3 @@ console.log("API KEY:", import.meta.env.VITE_FIREBASE_API_KEY);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
-console.log('Firebase 프로젝트 ID:', app.options.projectId);

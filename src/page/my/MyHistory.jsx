@@ -1,10 +1,6 @@
-import { Popup } from '../../components/common/Popup';
 
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
-import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
-import { ContentRail } from '../../components/content/ContentRail';
 import './scss/MyHistory.scss'
 
 // 상단 콘텐츠 탭
@@ -12,33 +8,68 @@ const contentTabs = [
   { title: '시청내역', path: '/my/history' },
   { title: '찜한 콘텐츠', path: '/my/watchlist' },
   { title: '개별 구매', path: '/my/purchases' },
-  { title: "내 와우 클립", path: "/wowclip?view=mine" },
   { title: '라이브 예약 알림', path: '/my/live' }
 ];
 
 // 장르 필터
 const genres = [
   '전체',
-  '시리즈',
-  '영화'
+  '스포츠',
+  '드라마',
+  '예능',
+  '영화',
+  '스토어',
+  '키즈'
+];
+
+// 임시 시청내역 데이터
+// 추후 Firebase 시청 기록 데이터로 교체
+const initialHistory = [
+  {
+    id: 1,
+    title: '너 말고 다른 연애',
+    info: '시즌 1 3화 · 24분 남음',
+    genre: '드라마',
+    image: '',
+    progress: 60
+  },
+  {
+    id: 2,
+    title: '사랑, 그날',
+    info: '시즌 1 3화 · 18분 남음',
+    genre: '드라마',
+    image: '',
+    progress: 40
+  },
+  {
+    id: 3,
+    title: '지금부터 문제는 아닙니다',
+    info: '시즌 1 3화 · 42분 남음',
+    genre: '예능',
+    image: '',
+    progress: 75
+  },
+  {
+    id: 4,
+    title: '유니버스 킬러',
+    info: '시즌 1 3화 · 35분 남음',
+    genre: '드라마',
+    image: '',
+    progress: 30
+  },
+  {
+    id: 5,
+    title: '랜덤스',
+    info: '시즌 1 3화 · 21분 남음',
+    genre: '영화',
+    image: '',
+    progress: 85
+  }
 ];
 
 export const MyHistory = () => {
-  const { history, ownerKey } = useProfileWatchHistory();
-  return (
-    <HistoryList
-      key={ownerKey ?? 'guest'}
-      history={history}
-      ownerKey={ownerKey}
-    />
-  );
-};
-
-const HistoryList = ({ history, ownerKey }) => {
-  const onDeleteHistory = useWatchHistoryStore((state) => state.onDeleteHistory);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState(false);
+  // 시청내역 데이터
+  const [history, setHistory] = useState(initialHistory);
 
   // 선택된 장르
   const [activeGenre, setActiveGenre] = useState('전체');
@@ -50,10 +81,10 @@ const HistoryList = ({ history, ownerKey }) => {
   const [selectedIds, setSelectedIds] = useState([]);
 
   // 장르별 필터링
-  const filteredHistory = history
-    .filter((item) => activeGenre === '전체' ||
-      (item.media_type === 'movie' ? '영화' : '시리즈') === activeGenre)
-    .map((item) => ({ ...item, id: item.docId }));
+  const filteredHistory = history.filter((item) => {
+    return activeGenre === '전체' ||
+      item.genre === activeGenre;
+  });
 
   // 콘텐츠 선택 / 해제
   const handleSelect = (id) => {
@@ -94,74 +125,47 @@ const HistoryList = ({ history, ownerKey }) => {
     }
   };
 
-  const handleDelete = () => { if (selectedIds.length && !deleting) { setDeleteError(false); setDeleteOpen(true); } };
-  const confirmDelete = async () => {
-    if (!selectedIds.length || deleting) return false;
+  // 선택 삭제 (현재는 임시 데이터에서만 삭제)
+  const handleDelete = () => {
+    if (selectedIds.length === 0) return;
 
+    const confirmed = window.confirm(
+      '선택한 시청내역을 삭제하시겠습니까?'
+    );
 
-    setDeleting(true);
-    setDeleteError(false);
-    try {
-      if (await onDeleteHistory(selectedIds)) { handleComplete(); setDeleteOpen(false); }
-      else { setDeleteError(true); return false; }
-    } catch {
-      setDeleteError(true);
-      return false;
-    } finally {
-      setDeleting(false);
-    }
+    if (!confirmed) return;
+
+    setHistory((prev) =>
+      prev.filter((item) => !selectedIds.includes(item.id))
+    );
+
+    setSelectedIds([]);
+    setIsEditing(false);
   };
 
   return (
     <main className="my-history">
       <div className="my-history-inner">
 
-
         {/* 상단 콘텐츠 탭 */}
         <nav
           className="my-history-tabs"
           aria-label="마이페이지 콘텐츠 메뉴"
         >
-          <Link
-            to="/my"
-            className="my-history-back"
-            aria-label="마이페이지로 돌아가기"
-          >
-            <img
-              src="/images/icon/icon-arrow_back_gray.svg"
-              alt=""
-            />
-          </Link>
-
-          {/* PC / 태블릿 콘텐츠 탭 */}
           {contentTabs.map((tab) => (
             <Link
               key={tab.path}
               to={tab.path}
-              className={tab.path === '/my/history' ? 'active' : ''}
+              className={
+                tab.path === '/my/history'
+                  ? 'active'
+                  : ''
+              }
             >
               {tab.title}
             </Link>
           ))}
-
-          {/* 모바일 전용 제목 */}
-          <h1 className="my-history-mobile-title">시청내역</h1>
-
-          {/* 모바일 전용 편집 버튼 */}
-          <div className="my-history-mobile-actions">
-            {isEditing ? (
-              <button type="button" onClick={handleComplete}>
-                완료
-              </button>
-            ) : (
-              <button type="button" onClick={handleEdit}>
-                편집
-              </button>
-            )}
-          </div>
         </nav>
-
-
 
         {/* 장르 필터 및 편집 메뉴 */}
         <div className="my-history-toolbar">
@@ -194,7 +198,7 @@ const HistoryList = ({ history, ownerKey }) => {
                   type="button"
                   className="delete"
                   onClick={handleDelete}
-                  disabled={deleting || selectedIds.length === 0}
+                  disabled={selectedIds.length === 0}
                 >
                   선택 삭제 ({selectedIds.length})
                 </button>
@@ -224,36 +228,94 @@ const HistoryList = ({ history, ownerKey }) => {
           </div>
         </div>
 
-        {deleteError && <p role="alert">시청내역을 삭제하지 못했습니다.</p>}
         {/* 시청내역 콘텐츠 목록 */}
         {filteredHistory.length === 0 ? (
           <p className="my-history-empty">
             시청내역이 없습니다.
           </p>
         ) : (
-          <ContentRail
-            asGrid
-            items={filteredHistory.map((item) => ({
-              ...item,
-              id: item.contentId,
-              resume: true,
-              historyLayout: true,
-              ownerKey,
-              position: item.completed ? 0 : item.position,
-            }))}
-            getSelection={isEditing ? (item) => ({
-              selected: selectedIds.includes(item.docId),
-              onToggle: () => handleSelect(item.docId),
-              disabled: deleting,
-            }) : undefined}
-          />
+          <div className="my-history-grid">
+            {filteredHistory.map((item) => {
+              const isSelected =
+                selectedIds.includes(item.id);
+
+              return (
+                <div
+                  className="my-history-item"
+                  key={item.id}
+                >
+                  <button
+                    type="button"
+                    className="my-history-thumbnail"
+                    onClick={() => {
+                      if (isEditing) {
+                        handleSelect(item.id);
+                      }
+                    }}
+                    disabled={!isEditing}
+                    aria-label={
+                      `${item.title} ${isSelected
+                        ? '선택 해제'
+                        : '선택'
+                      }`
+                    }
+                    aria-pressed={
+                      isEditing ? isSelected : undefined
+                    }
+                  >
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="my-history-image"
+                      />
+                    ) : (
+                      <span className="my-history-placeholder">
+                        {item.title}
+                      </span>
+                    )}
+
+                    {/* 시청 진행바 */}
+                    <span
+                      className="my-history-progress"
+                      style={{
+                        width: `${item.progress}%`
+                      }}
+                    />
+
+                    {/* 편집 모드 오버레이 */}
+                    {isEditing && (
+                      <span
+                        className={
+                          `my-history-overlay ${isSelected
+                            ? 'selected'
+                            : ''
+                          }`
+                        }
+                      >
+                        <img
+                          src={
+                            isSelected
+                              ? '/images/mypage/checked-true.svg'
+                              : '/images/mypage/checked-false.svg'
+                          }
+                          alt=""
+                          className="my-history-check"
+                        />
+                      </span>
+                    )}
+                  </button>
+
+                  <div className="my-history-info">
+                    <h3>{item.title}</h3>
+                    <p>{item.info}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
-      {deleteOpen && <Popup title="시청내역을 삭제하시겠습니까?"
-        description={`선택한 ${selectedIds.length}개의 시청내역을 삭제합니다.\n삭제한 내역은 복구할 수 없습니다.`}
-        onClose={() => setDeleteOpen(false)} onConfirm={confirmDelete} confirmText="삭제" busy={deleting}
-        error={deleteError ? '시청내역을 삭제하지 못했습니다. 다시 시도해 주세요.' : ''} />}
     </main>
   );
 };
-

@@ -1,95 +1,105 @@
-import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
-import { useSportsRails } from './useSportsRails';
 import { MainBanner } from '../../components/content/MainBanner';
 import { Channel } from './components/Channel';
 import { ContentRail } from '../../components/content/ContentRail';
-import { BannerHome } from './components/BannerHome';
-import { WowClipSection } from './components/WowClipSection';
-
 
 import './scss/home.scss';
 
 export const Home = () => {
-  const { highlights, newsLive = [], error } = useSportsRails();
-
-  const { history, ownerKey } = useProfileWatchHistory();
-  const continueWatching = history
-    .filter((item) => item.backdrop_path && !item.completed)
-    .map((item) => ({ ...item, resume: true, ownerKey }));
-
   return (
     <main>
       <MainBanner type="all"/>
-
       <Channel />
 
-      {continueWatching.length > 0 && (
-        <ContentRail title="이어서 시청하기" items={continueWatching} showMore={false} />
-      )}
+      {/* 이어서 시청하기: 시청 기록 연결 후 추가 */}
 
-      {/* layout= ranking vertical channel*/}
-      <ContentRail railKey="home-ranking" showMore={false} layout="ranking"/>
+      <ContentRail
+        title="인기 시리즈 TOP 20"
+        type="all"
+        variant="ranking"
+        sort="first_air_date.desc, primary_release_date.desc"
+        imageType="세로"
+        country="KR"
+      />
 
-      <ContentRail railKey="home-latest" />
+      <ContentRail
+        title="새롭게 공개된 콘텐츠"
+        type="tv"
+        sort="first_air_date.desc"
+        imageType="가로"
+      />
 
       {/* 지금 사람들이 함께 보는 콘텐츠 */}
 
       {/* 최근 본 콘텐츠와 비슷한 작품 */}
 
+      {/* 와우 클립 */}
 
-      <ContentRail railKey="home-binge" />
+      <ContentRail
+        title="정주행하기 좋은 시리즈"
+        type="tv"
+        genre="18,35"
+        ended
+        imageType="가로"
+        country="KR"
+      />
 
-      <ContentRail railKey="home-movie" />
-
-      <WowClipSection history={history} />
+      <ContentRail
+        title="지금 주목받는 영화"
+        type="movie"
+        imageType="가로"
+        sort="primary_release_date.desc"
+        country="KR|US"
+      />
 
       {/* 스포츠 패스 광고 */}
 
-      {/* {error && <p role="alert">스포츠 영상을 불러오지 못했습니다.</p>} */}
-      {highlights.length > 0 && (
-        <ContentRail title="다시 보는 경기 하이라이트" items={highlights} showMore={false} />
-      )}
+      {/* 스포츠 하이라이트 */}
 
-      {/* {replays.length > 0 && (
-        <ContentRail title="다시 보는 경기" items={replays} showMore={false} />
-      )}
-      {live.length > 0 && (
-        <ContentRail title="지금 LIVE" items={live} showMore={false} />
-      )} */}
+      {/* 지금 LIVE */}
 
-      {newsLive.length > 0 && (
-        <ContentRail title="지금 LIVE" items={newsLive} showMore={false} />
-      )}
-
-      <ContentRail railKey="home-drama" />
-
-
-      <ContentRail railKey="home-fun" />
-
-      {/* 오직 쿠팡플레이에서 */}
-      <ContentRail railKey="home-coupang-series" layout="vertical"/>
-      
-      {/* 광고 배너 */}
-      <BannerHome />
-
-      {/* JPLUS */}
       <ContentRail
-        railKey="home-jplus"
-        layout="channel"
-        intro={{
-          titleImage: '/images/channal11.svg',
-          description: '다채로운 일본 드라마를 한곳에서 만나보세요',
-          linkText: '채널 둘러보기',
-        }}
+        title="지금 가장 핫한 드라마"
+        type="tv"
+        genre="18"
+        imageType="가로"
+        country="KR|US"
+        sort="first_air_date.desc"
       />
 
+      <ContentRail
+        title="웃음이 필요할 때"
+        type="tv"
+        genre="10764,10767"
+        sort="first_air_date.desc"
+        imageType="가로"
+      />
 
-      <ContentRail railKey="home-classics" />
+      {/* 오직 쿠팡플레이에서 */}
 
-      <ContentRail railKey="home-light" />
+      {/* 광고 배너 */}
+
+      {/* JPLUS */}
+
+      <ContentRail
+        title="다시 꺼내 보는 명작"
+        type="movie"
+        untilYear={2020}
+        minVotes={300}
+        sort="vote_average.desc"
+        imageType="가로"
+        country="KR|US"
+      />
+
+      <ContentRail
+        title="가볍게 보기 좋은 영화"
+        type="movie"
+        genre="35, 18, 10749"
+        imageType="가로"
+        sort="primary_release_date.desc"
+        country="KR|US"
+      />
 
       {/* WOW 회원 콘텐츠 */}
     </main>
   );
 };
-

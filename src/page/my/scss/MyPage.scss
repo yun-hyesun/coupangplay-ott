@@ -9,7 +9,7 @@
         width: 100%;
         padding: 50px $padding-main 100px;
 
-        @include flex(null, flex-start);
+        @include flex(null, flex-start, 32px);
     }
 
     .mypage-content {
@@ -19,8 +19,6 @@
         display: flex;
         flex-direction: column;
         gap: 56px;
-        overflow: hidden;
-        padding-left: 32px;
     }
 }
 
@@ -38,59 +36,18 @@
     }
 }
 
+// 모바일
+// @media (max-width: 767px) {
+//     .mypage {
+//         .mypage-inner {
+//             flex-direction: column;
+//             padding: 30px 20px 60px;
+//             gap: 32px;
+//         }
 
-/* PC / 태블릿에서는 모바일 전용 영역 숨기기 */
-.mypage-mobile-profile,
-.mypage-mobile-menu {
-    display: none;
-}
-
-
-/* 모바일 */
-@media (max-width: 767px) {
-    .mypage {
-        .mypage-inner {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            padding: 24px 20px 60px;
-        }
-
-        // PC / 태블릿 사이드바 숨기기
-        .mypage-desktop-sidebar {
-            display: none;
-        }
-
-        // 모바일 프로필
-        .mypage-mobile-profile {
-            display: block;
-            width: 100%;
-            margin-bottom: 40px;
-        }
-
-        // 콘텐츠 목록
-        .mypage-content {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            min-width: 0;
-            flex: none;
-            gap: 40px;
-            padding-left: 0;
-            overflow: visible;
-        }
-
-        // 콘텐츠 섹션 공통
-        .mypage-content>section {
-            width: 100%;
-            min-width: 0;
-        }
-
-        // 모바일 하단 메뉴
-        .mypage-mobile-menu {
-            display: block;
-            width: 100%;
-            margin-top: 40px;
-        }
-    }
-}
+//         .mypage-content {
+//             width: 100%;
+//             flex: none;
+//         }
+//     }
+// }

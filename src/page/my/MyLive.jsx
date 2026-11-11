@@ -8,7 +8,6 @@ const contentTabs = [
     { title: '시청내역', path: '/my/history' },
     { title: '찜한 콘텐츠', path: '/my/watchlist' },
     { title: '개별 구매', path: '/my/purchases' },
-    { title: '내 와우 클립', path: '/wowclip?view=mine' },
     { title: '라이브 예약 알림', path: '/my/live' }
 ];
 
@@ -108,25 +107,10 @@ export const MyLive = () => {
             <div className="my-live-inner">
 
                 {/* 상단 콘텐츠 탭 */}
-
-                {/* 상단 콘텐츠 탭 */}
                 <nav
                     className="my-live-tabs"
                     aria-label="마이페이지 콘텐츠 메뉴"
                 >
-                    {/* 뒤로가기 버튼 */}
-                    <Link
-                        to="/my"
-                        className="my-live-back"
-                        aria-label="마이페이지로 돌아가기"
-                    >
-                        <img
-                            src="/images/icon/icon-arrow_back_gray.svg"
-                            alt=""
-                        />
-                    </Link>
-
-                    {/* 콘텐츠 탭 */}
                     {contentTabs.map((tab) => (
                         <Link
                             key={tab.path}
@@ -138,34 +122,7 @@ export const MyLive = () => {
                             {tab.title}
                         </Link>
                     ))}
-
-
-                    {/* 모바일 전용 제목 */}
-                    <h1 className="my-live-mobile-title">
-                        라이브 예약 알림
-                    </h1>
-
-                    {/* 모바일 전용 편집 버튼 */}
-                    <div className="my-live-mobile-actions">
-                        {isEditing ? (
-                            <button
-                                type="button"
-                                onClick={handleComplete}
-                            >
-                                완료
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleEdit}
-                            >
-                                편집
-                            </button>
-                        )}
-                    </div>
-
                 </nav>
-
 
                 {/* 장르 필터 + 편집 메뉴 */}
                 <div className="my-live-toolbar">
@@ -256,9 +213,10 @@ export const MyLive = () => {
                                         }}
                                         disabled={!isEditing}
                                         aria-label={
-                                            `${item.title} ${isSelected
-                                                ? '선택 해제'
-                                                : '선택'
+                                            `${item.title} ${
+                                                isSelected
+                                                    ? '선택 해제'
+                                                    : '선택'
                                             }`
                                         }
                                         aria-pressed={
@@ -281,17 +239,18 @@ export const MyLive = () => {
                                         {isEditing && (
                                             <span
                                                 className={
-                                                    `my-live-overlay ${isSelected
-                                                        ? 'selected'
-                                                        : ''
+                                                    `my-live-overlay ${
+                                                        isSelected
+                                                            ? 'selected'
+                                                            : ''
                                                     }`
                                                 }
                                             >
                                                 <img
                                                     src={
                                                         isSelected
-                                                            ? '/images/icon/DesignSystem_Icon02/icon-favorite_added.svg'
-                                                            : '/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg'
+                                                            ? '/images/mypage/checked-true.svg'
+                                                            : '/images/mypage/checked-false.svg'
                                                     }
                                                     alt=""
                                                     className="my-live-check"

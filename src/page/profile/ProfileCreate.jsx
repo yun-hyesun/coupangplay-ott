@@ -16,11 +16,9 @@ export const ProfileCreate = () => {
 
     const [profileData, setProfileData] = useState({
         name: '',
-        avatar: '/images/profile/profile-img/profile.svg',
+        avatar: '/images/profile.svg',
         isLocked: false,
-        pin: '',
-        rating: 'ALL',
-        isAdultVerified: false
+        rating: 'ALL'
     });
 
     const [selectedGenres, setSelectedGenres] = useState([]);
@@ -28,6 +26,11 @@ export const ProfileCreate = () => {
 
     // 1단계: 기본 프로필 정보
     const handleProfileNext = (data) => {
+        if (data.isLocked) {
+            alert('프로필 잠금 기능은 추후 구현할 예정입니다.');
+            return;
+        }
+
         setProfileData(data);
         setStep(2);
     };
@@ -40,22 +43,17 @@ export const ProfileCreate = () => {
 
     // 3단계: 콘텐츠 선택 후 Firebase 저장
     const handleContentNext = async () => {
-        if (selectedContents.length === 0 || loading) return;
+        if (selectedContents.length === 0) return;
 
         const profileId = await onAddProfile(
             profileData.name,
-            profileData.avatar,
-            {
-                isLocked: profileData.isLocked,
-                pin: profileData.pin,
-                rating: profileData.rating,
-                isAdultVerified: profileData.isAdultVerified
-            }
+            profileData.avatar
         );
 
         if (!profileId) return;
 
         const result = await onUpdateProfile(profileId, {
+            rating: profileData.rating,
             favoriteGenres: selectedGenres,
             favoriteContents: selectedContents.map(item => ({
                 tmdbId: item.tmdbId,
@@ -89,8 +87,6 @@ export const ProfileCreate = () => {
                         initialAvatar={profileData.avatar}
                         initialLocked={profileData.isLocked}
                         initialRating={profileData.rating}
-                        initialAdultVerified={profileData.isAdultVerified}
-                        initialPin={profileData.pin}
                         onSubmit={handleProfileNext}
                         onCancel={() => navigate('/profiles')}
                         submitText="다음"

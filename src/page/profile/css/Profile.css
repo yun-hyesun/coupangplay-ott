@@ -42,7 +42,7 @@
 }
 .profile-page .profile-select-inner h2 {
   margin-bottom: 36px;
-  font-size: 36px;
+  font-size: 48px;
   font-weight: 600;
   text-align: center;
 }
@@ -70,7 +70,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 36px;
+  font-size: 48px;
   font-weight: 300;
   color: #fff;
   transition: background 0.2s;
@@ -83,7 +83,7 @@
 }
 .profile-page .profile-edit-btn {
   width: 145px;
-  height: 45px;
+  height: 50px;
   margin-top: 48px;
   padding: 0 16px;
   border: none;
@@ -125,7 +125,7 @@
 }
 .profile-page .profile-create-inner > h2 {
   margin-bottom: 36px;
-  font-size: 36px;
+  font-size: 48px;
   font-weight: 600;
   text-align: center;
 }
@@ -143,7 +143,7 @@
 }
 .profile-page .profile-edit > h2 {
   margin-bottom: 12px;
-  font-size: 36px;
+  font-size: 48px;
   font-weight: 600;
   text-align: center;
 }
@@ -155,7 +155,7 @@
 }
 .profile-page .profile-edit .profile-delete-button {
   width: 145px;
-  height: 45px;
+  height: 50px;
   margin-top: 24px;
   padding: 0 16px;
   border: 1px solid #666;
@@ -188,7 +188,7 @@
 }
 .profile-page .genre-select h2 {
   margin-bottom: 40px;
-  font-size: 36px;
+  font-size: 48px;
   font-weight: 600;
   text-align: center;
 }
@@ -234,7 +234,7 @@
 }
 .profile-page .genre-buttons button {
   width: 145px;
-  height: 45px;
+  height: 50px;
   padding: 0 16px;
   flex-shrink: 0;
   border: none;
@@ -267,13 +267,13 @@
   align-items: center;
 }
 .profile-page .content-select > h2 {
-  margin-bottom: 12px;
-  font-size: 36px;
+  margin-bottom: 16px;
+  font-size: 48px;
   font-weight: 600;
   text-align: center;
 }
 .profile-page .content-select > p {
-  margin-bottom: 24px;
+  margin-bottom: 36px;
   color: #D4D4D4;
   font-size: 16px;
   text-align: center;
@@ -281,8 +281,8 @@
 .profile-page .content-grid {
   width: 100%;
   max-width: 1488px;
-  height: 65vh;
-  max-height: 750px;
+  height: 530px;
+  max-height: none;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-rows: max-content;
@@ -292,20 +292,17 @@
   border-radius: 8px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #555b63 #101113;
+  scrollbar-color: #555 transparent;
 }
 .profile-page .content-grid::-webkit-scrollbar {
   width: 6px;
 }
-.profile-page .content-grid::-webkit-scrollbar-track {
-  background: #101113;
-}
 .profile-page .content-grid::-webkit-scrollbar-thumb {
-  background: #555b63;
+  background: #555;
   border-radius: 10px;
 }
-.profile-page .content-grid::-webkit-scrollbar-thumb:hover {
-  background: #777d85;
+.profile-page .content-grid::-webkit-scrollbar-track {
+  background: transparent;
 }
 .profile-page .content-item {
   position: relative;
@@ -362,11 +359,11 @@
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 40px;
 }
 .profile-page .content-buttons button {
   width: 145px;
-  height: 45px;
+  height: 50px;
   padding: 0 16px;
   flex-shrink: 0;
   border: none;
@@ -396,7 +393,7 @@
   .profile-page .profile-edit > h2,
   .profile-page .genre-select h2,
   .profile-page .content-select > h2 {
-    font-size: 34px;
+    font-size: 40px;
   }
   .profile-page .genre-item {
     font-size: 16px;
@@ -412,8 +409,7 @@
     min-height: 75px;
   }
   .profile-page .content-grid {
-    height: 60vh;
-    max-height: 650px;
+    height: 500px;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     padding: 16px;
@@ -431,7 +427,7 @@
     padding: 110px 20px 60px;
   }
   .profile-page .profile-select-inner h2 {
-    font-size: 28px;
+    font-size: 32px;
     margin-bottom: 28px;
   }
   .profile-page .profile-list {
@@ -478,7 +474,7 @@
   }
   .profile-page .content-grid {
     height: auto;
-    max-height: 60vh;
+    max-height: 55vh;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     padding: 12px;

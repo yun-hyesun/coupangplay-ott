@@ -1,20 +1,13 @@
-import { useMyListArtwork } from './components/useMyListArtwork';
-import { ContentRail } from '../../components/content/ContentRail';
-import { Popup } from '../../components/common/Popup';
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './scss/MyPurchases.scss'
-import { useAuthStore } from '../../store/useAuthStore';
-import { subscribeMyPurchases } from '../../service/purchaseService';
-import { updatePurchaseHidden } from '../../service/purchaseService';
 
 // 상단 콘텐츠 탭
 const contentTabs = [
     { title: '시청내역', path: '/my/history' },
     { title: '찜한 콘텐츠', path: '/my/watchlist' },
     { title: '개별 구매', path: '/my/purchases' },
-    { title: '내 와우 클립', path: '/wowclip?view=mine' },
     { title: '라이브 예약 알림', path: '/my/live' }
 ];
 
@@ -29,22 +22,13 @@ const genres = [
     '키즈'
 ];
 
+// 임시 구매 데이터
+// 실제 구매 기능 연동 후 교체
+const initialPurchases = [];
+
 export const MyPurchases = () => {
-    const user = useAuthStore((state) => state.user);
-    const [purchases, setPurchases] = useState([]);
-    const [purchaseError, setPurchaseError] = useState('');
-
-    useEffect(() => {
-        setPurchases([]);
-        setPurchaseError('');
-        if (!user?.uid) return;
-
-        return subscribeMyPurchases(
-            user.uid,
-            setPurchases,
-            () => setPurchaseError('구매내역을 불러오지 못했습니다.')
-        );
-    }, [user?.uid]);
+    // 전체 구매 기록
+    const [purchases, setPurchases] = useState(initialPurchases);
 
     // 선택한 장르
     const [activeGenre, setActiveGenre] = useState('전체');
@@ -55,13 +39,13 @@ export const MyPurchases = () => {
     // 선택된 콘텐츠 ID
     const [selectedIds, setSelectedIds] = useState([]);
 
-    // 숨기기 확인 모달
-    const [showHideModal, setShowHideModal] = useState(false);
+    // 숨긴 콘텐츠 ID
+    // 현재는 화면에서만 유지됨
+    const [hiddenIds, setHiddenIds] = useState([]);
 
-    // 일반 모드에서는 숨긴 콘텐츠 제외
-    // 편집 모드에서는 숨긴 콘텐츠까지 표시
+    // 숨기지 않은 구매 기록만 표시
     const visiblePurchases = purchases.filter(
-        (item) => isEditing || !item.hidden
+        (item) => !hiddenIds.includes(item.id)
     );
 
     // 장르 필터링
@@ -70,15 +54,6 @@ export const MyPurchases = () => {
             activeGenre === '전체' ||
             item.genre === activeGenre
     );
-
-    const artworkItems = useMyListArtwork(filteredPurchases.map((item) => ({
-        ...item,
-        id: item.contentId,
-        purchaseId: item.id,
-        media_type: item.mediaType,
-        imageUrl: item.image,
-        isPurchase: true,
-    })), { keepMissing: true });
 
     // 콘텐츠 선택 / 해제
     const handleSelect = (id) => {
@@ -126,102 +101,34 @@ export const MyPurchases = () => {
         }
     };
 
-
-    // 선택 숨기기 모달 열기
+    // 선택한 구매 기록 숨기기
     const handleHide = () => {
         if (selectedIds.length === 0) return;
-        setShowHideModal(true);
-    };
 
-
-    const [isUpdating, setIsUpdating] = useState(false);
-
-    // 선택한 콘텐츠 숨기기
-    const handleConfirmHide = async () => {
-        if (!user?.uid || selectedIds.length === 0 || isUpdating) return false;
-
-        setIsUpdating(true);
-        setPurchaseError('');
-
-        try {
-            await Promise.all(
-                purchases
-                    .filter((item) =>
-                        selectedIds.includes(item.id) && !item.hidden
-                    )
-                    .map((item) =>
-                        updatePurchaseHidden(user.uid, item.id, true)
-                    )
-            );
-
-            setSelectedIds([]);
-            setIsEditing(false);
-            setShowHideModal(false);
-        } catch (err) {
-            console.error('구매내역 숨기기 오류:', err);
-            setPurchaseError('구매내역을 숨기지 못했습니다.');
-            return false;
-        } finally {
-            setIsUpdating(false);
-        }
-    };
-
-
-    // 숨긴 콘텐츠 다시 표시
-    const handleRestore = async () => {
-        if (!user?.uid || selectedIds.length === 0 || isUpdating) return false;
-
-        const hiddenItems = purchases.filter(
-            (item) => selectedIds.includes(item.id) && item.hidden
+        const confirmed = window.confirm(
+            '선택한 구매내역을 목록에서 숨기시겠습니까?\n실제 구매 기록은 삭제되지 않습니다.'
         );
 
-        if (hiddenItems.length === 0) return;
+        if (!confirmed) return;
 
-        setIsUpdating(true);
-        setPurchaseError('');
+        // 선택한 ID를 숨김 목록에 추가
+        setHiddenIds((prev) => [
+            ...new Set([...prev, ...selectedIds])
+        ]);
 
-        try {
-            await Promise.all(
-                hiddenItems.map((item) =>
-                    updatePurchaseHidden(user.uid, item.id, false)
-                )
-            );
-
-            setSelectedIds([]);
-        } catch (err) {
-            console.error('구매내역 복원 오류:', err);
-            setPurchaseError('구매내역을 복원하지 못했습니다.');
-        } finally {
-            setIsUpdating(false);
-        }
+        setSelectedIds([]);
+        setIsEditing(false);
     };
-
-
-
 
     return (
         <main className="my-purchases">
             <div className="my-purchases-inner">
-
 
                 {/* 상단 콘텐츠 탭 */}
                 <nav
                     className="my-purchases-tabs"
                     aria-label="마이페이지 콘텐츠 메뉴"
                 >
-                    {/* 뒤로가기 버튼 */}
-                    <Link
-                        to="/my"
-                        className="my-purchases-back"
-                        aria-label="마이페이지로 돌아가기"
-                    >
-                        <img
-                            src="/images/icon/icon-arrow_back_gray.svg"
-                            alt=""
-                        />
-                    </Link>
-
-                    {/* 콘텐츠 탭 */}
                     {contentTabs.map((tab) => (
                         <Link
                             key={tab.path}
@@ -235,34 +142,7 @@ export const MyPurchases = () => {
                             {tab.title}
                         </Link>
                     ))}
-
-
-                    {/* 모바일 전용 제목 */}
-                    <h1 className="my-purchases-mobile-title">
-                        개별 구매
-                    </h1>
-
-                    {/* 모바일 전용 편집 버튼 */}
-                    <div className="my-purchases-mobile-actions">
-                        {isEditing ? (
-                            <button
-                                type="button"
-                                onClick={handleComplete}
-                            >
-                                완료
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleEdit}
-                            >
-                                편집
-                            </button>
-                        )}
-                    </div>
-
                 </nav>
-
 
                 {/* 장르 필터 + 편집 메뉴 */}
                 <div className="my-purchases-toolbar">
@@ -303,31 +183,10 @@ export const MyPurchases = () => {
                                     className="hide"
                                     onClick={handleHide}
                                     disabled={
-                                        isUpdating ||
-                                        !selectedIds.some((id) =>
-                                            purchases.some(
-                                                (item) => item.id === id && !item.hidden
-                                            )
-                                        )
+                                        selectedIds.length === 0
                                     }
                                 >
                                     선택 숨기기 ({selectedIds.length})
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="restore"
-                                    onClick={handleRestore}
-                                    disabled={
-                                        isUpdating ||
-                                        !selectedIds.some((id) =>
-                                            purchases.some(
-                                                (item) => item.id === id && item.hidden
-                                            )
-                                        )
-                                    }
-                                >
-                                    선택 복원
                                 </button>
 
                                 <button
@@ -355,34 +214,88 @@ export const MyPurchases = () => {
                     </div>
                 </div>
 
-                {purchaseError && <p role="alert">{purchaseError}</p>}
-
                 {/* 구매 콘텐츠 목록 */}
                 {filteredPurchases.length === 0 ? (
                     <p className="my-purchases-empty">
                         표시할 구매내역이 없습니다.
                     </p>
                 ) : (
-                    <ContentRail
-                      asGrid
-                      items={artworkItems}
-                      getSelection={isEditing ? (item) => ({
-                        selected: selectedIds.includes(item.purchaseId),
-                        onToggle: () => handleSelect(item.purchaseId),
-                        disabled: isUpdating,
-                      }) : undefined}
-                    />
+                    <div className="my-purchases-grid">
+                        {filteredPurchases.map((item) => {
+                            const isSelected =
+                                selectedIds.includes(item.id);
+
+                            return (
+                                <div
+                                    className="my-purchases-item"
+                                    key={item.id}
+                                >
+                                    <button
+                                        type="button"
+                                        className="my-purchases-thumbnail"
+                                        onClick={() => {
+                                            if (isEditing) {
+                                                handleSelect(item.id);
+                                            }
+                                        }}
+                                        disabled={!isEditing}
+                                        aria-label={
+                                            `${item.title} ${isSelected
+                                                ? '선택 해제'
+                                                : '선택'
+                                            }`
+                                        }
+                                        aria-pressed={
+                                            isEditing
+                                                ? isSelected
+                                                : undefined
+                                        }
+                                    >
+                                        {item.image ? (
+                                            <img
+                                                src={item.image}
+                                                alt=""
+                                                className="my-purchases-image"
+                                            />
+                                        ) : (
+                                            <span className="my-purchases-placeholder">
+                                                {item.title}
+                                            </span>
+                                        )}
+
+                                        {/* 편집 모드 오버레이 */}
+                                        {isEditing && (
+                                            <span
+                                                className={
+                                                    `my-purchases-overlay ${isSelected
+                                                        ? 'selected'
+                                                        : ''
+                                                    }`
+                                                }
+                                            >
+                                                <img
+                                                    src={
+                                                        isSelected
+                                                            ? '/images/mypage/checked-true.svg'
+                                                            : '/images/mypage/checked-false.svg'
+                                                    }
+                                                    alt=""
+                                                    className="my-purchases-check"
+                                                />
+                                            </span>
+                                        )}
+                                    </button>
+
+                                    <div className="my-purchases-info">
+                                        <h3>{item.title}</h3>
+                                        <p>{item.info}</p>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
-
-
-            {showHideModal && <Popup
-                title="구매내역을 숨기시겠습니까?"
-                description={`선택한 ${selectedIds.length}개의 콘텐츠를 목록에서 숨깁니다.\n실제 구매 기록은 삭제되지 않습니다.`}
-                onClose={() => setShowHideModal(false)} onConfirm={handleConfirmHide}
-                confirmText="숨기기" busy={isUpdating} error={purchaseError} />}
-
-
         </main>
     );
 };
