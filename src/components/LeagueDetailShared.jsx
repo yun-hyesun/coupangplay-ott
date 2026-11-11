@@ -294,6 +294,17 @@ export function MatchCard({ game, leagueId, scoresOn }) {
               />
             </span>
           </button>
+        ) : status.type === "ended" ? (
+          <Link
+            className="league-detail__match-play-button"
+            to={`/sports/league/${leagueId}`}
+            state={{ leagueTab: "schedule", scheduleMatch: { ...game, competitionCode: leagueId } }}
+            aria-label={`${homeName} vs ${awayName} 경기 일정 및 관련 영상 보기`}
+          >
+            <span className="league-detail__match-action-icon" aria-hidden="true">
+              <img src="/images/sports/league-detail/schedule-play.svg" alt="" />
+            </span>
+          </Link>
         ) : (
           <span
             className="league-detail__match-action-icon"
@@ -381,7 +392,7 @@ function HighlightBadge({ kind = "highlight", fixture = false }) {
   );
 }
 
-export function VideoCard({ video, rank, badge = "하이라이트", variant, returnTab }) {
+export function VideoCard({ video, rank, badge = "하이라이트", variant, returnTab, returnMatch }) {
   const location = useLocation();
   const ranked = rank != null;
   const fixture = variant === "fixture";
@@ -390,7 +401,7 @@ export function VideoCard({ video, rank, badge = "하이라이트", variant, ret
   const VideoMain = videoId ? Link : video.url ? "a" : "div";
   const playbackProps = videoId ? {
     to: `/watch/sports/${encodeURIComponent(videoId)}`,
-    state: { title: video.title, returnTo: location.pathname + location.search, returnTab: returnTab || (variant === "feed" ? "videos" : "home") },
+    state: { title: video.title, returnTo: location.pathname + location.search, returnTab: returnTab || (variant === "feed" ? "videos" : "home"), returnScheduleMatch: returnTab === "schedule" ? returnMatch : undefined },
   } : video.url ? { href: video.url, target: "_blank", rel: "noopener noreferrer" } : {};
   const views = video.viewCount == null ? "" : `조회수 ${new Intl.NumberFormat("ko-KR").format(video.viewCount)}회`;
   const videoTooltip = views ? `${video.title}\n${views}` : video.title;

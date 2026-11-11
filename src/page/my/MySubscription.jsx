@@ -78,43 +78,51 @@ export const MySubscription = () => {
     const handleCancelSubscription = (subscription) => {
         setOpenMenuId(null);
         setActionError('');
+
+        if (subscription.status === 'cancel_pending') {
+            setOpenCancelId(subscription.id);
+            return;
+        }
+
         setCancelTarget(subscription);
     };
 
     // 구독 해지 확정
     const handleConfirmCancel = async () => {
-        if (!cancelTarget || actionBusy || !user) return;
-
-        setActionError('');
-
-        // 이미 해지 신청된 이용권은 중복 요청하지 않고 완료 안내만 표시
-        if (cancelTarget.status === 'cancel_pending') {
-            setCancelTarget(null);
-            setCancelDone(true);
-            return;
-        }
+        if (!cancelTarget || actionBusy) return;
 
         setActionBusy(true);
+        setActionError('');
 
         try {
-            if (cancelTarget.paymentMode === 'mock') {
-                await onMockCancelSubscription(cancelTarget.id);
-            } else {
-                await MySubscriptionActions({
-                    id: cancelTarget.id,
-                    action: 'cancel',
-                    user,
-                });
-
-                await onLoadSubscriptions();
-            }
-
-            if (useAuthStore.getState().user?.uid !== user.uid) {
+            // 이미 해지 신청된 구독은 중복 요청하지 않음
+            if (cancelTarget.status === 'cancel_pending') {
+                setCancelTarget(null);
+                setOpenCancelId(cancelTarget.id);
                 return;
             }
 
+            if (cancelTarget.paymentMode === 'mock') {
+                // Firebase에 등록된 시연용 구독
+                await onMockCancelSubscription(cancelTarget.id);
+            } else {
+                // Firebase에 없는 시연용 구독은 화면에서만 상태 변경
+                useSubscriptionStore.setState((state) => ({
+                    subscriptions: state.subscriptions.map((item) =>
+                        item.id === cancelTarget.id
+                            ? {
+                                ...item,
+                                status: 'cancel_pending',
+                                endDate: item.nextPaymentDate,
+                            }
+                            : item
+                    ),
+                }));
+            }
+
             setCancelTarget(null);
             setCancelDone(true);
+
         } catch (err) {
             setActionError(
                 err.message || '구독 해지 신청에 실패했습니다.'
