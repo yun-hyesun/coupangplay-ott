@@ -1,7 +1,11 @@
 
 import { useEffect, useRef } from 'react';
-import { useSearchParams, Link, useLocation } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import {
+  useSearchParams,
+  Link,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 import { useMovieStore } from '../../store/useMovieStore';
 import { ContentGrid } from '../../components/content/ContentGrid';
@@ -13,11 +17,12 @@ import './scss/more.scss';
 
 export const More = () => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const railKey = searchParams.get('rail');
   const config = railConfig[railKey];
   const MAX_ITEMS = 30;
   const loadRef = useRef(null);
-  const navigate = useNavigate();
 
   // Zustand 상태
   const moreLists = useMovieStore((state) => state.moreLists);
@@ -103,8 +108,6 @@ export const More = () => {
     );
   }
 
-  const location = useLocation();
-
   const homeLinks = {
     '/': '홈으로',
     '/drama': '드라마 홈으로',
@@ -121,7 +124,16 @@ export const More = () => {
 
   return (
     <main className="morePage">
-      <Link className="contentList-back" to={homePath}>
+      <Link
+        className="contentList-back"
+        to={homePath}
+        onClick={(event) => {
+          if (from) {
+            event.preventDefault();
+            navigate(-1);
+          }
+        }}
+      >
         {homeLinks[homePath]}
       </Link>
       <ContentTitle title={config.title} />

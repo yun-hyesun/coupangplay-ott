@@ -90,7 +90,7 @@
         display: block;
 
         width: 100%;
-        padding: 20px 24px;
+        padding: 0;
 
         background: transparent;
         border: none;
@@ -307,7 +307,7 @@
     .subscription-card {
         &.cancel-pending {
             padding: 0;
-            border-radius: 0;
+            border-radius: 8px;
         }
     }
 
@@ -317,7 +317,8 @@
         align-items: flex-start;
         gap: 24px;
         width: 100%;
-        padding: 24px 0;
+        padding: 20px 24px;
+        box-sizing: border-box;
 
     }
 
@@ -442,7 +443,7 @@
     .my-subscription {
         .subscription-card-top {
             gap: 12px;
-            padding: 20px 0;
+            padding: 16px;
         }
 
         .my-pass-cancel-question {
@@ -482,7 +483,9 @@
         }
 
         .subscription-card {
-            padding: 16px;
+            &.cancel-pending {
+                padding: 0;
+            }
         }
 
         .subscription-thumbnail {

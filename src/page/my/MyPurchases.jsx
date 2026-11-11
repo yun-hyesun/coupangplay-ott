@@ -1,3 +1,4 @@
+import { Popup } from '../../components/common/Popup';
 
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -126,7 +127,7 @@ export const MyPurchases = () => {
 
     // 선택한 콘텐츠 숨기기
     const handleConfirmHide = async () => {
-        if (!user?.uid || selectedIds.length === 0 || isUpdating) return;
+        if (!user?.uid || selectedIds.length === 0 || isUpdating) return false;
 
         setIsUpdating(true);
         setPurchaseError('');
@@ -148,6 +149,7 @@ export const MyPurchases = () => {
         } catch (err) {
             console.error('구매내역 숨기기 오류:', err);
             setPurchaseError('구매내역을 숨기지 못했습니다.');
+            return false;
         } finally {
             setIsUpdating(false);
         }
@@ -156,7 +158,7 @@ export const MyPurchases = () => {
 
     // 숨긴 콘텐츠 다시 표시
     const handleRestore = async () => {
-        if (!user?.uid || selectedIds.length === 0 || isUpdating) return;
+        if (!user?.uid || selectedIds.length === 0 || isUpdating) return false;
 
         const hiddenItems = purchases.filter(
             (item) => selectedIds.includes(item.id) && item.hidden
@@ -435,49 +437,12 @@ export const MyPurchases = () => {
             </div>
 
 
-            {showHideModal && (
-                <div className="my-purchases-modal">
-                    <div
-                        className="my-purchases-modal__content"
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="hide-modal-title"
-                    >
-                        <div className="my-purchases-modal__icon">
-                            <span>!</span>
-                        </div>
+            {showHideModal && <Popup
+                title="구매내역을 숨기시겠습니까?"
+                description={`선택한 ${selectedIds.length}개의 콘텐츠를 목록에서 숨깁니다.\n실제 구매 기록은 삭제되지 않습니다.`}
+                onClose={() => setShowHideModal(false)} onConfirm={handleConfirmHide}
+                confirmText="숨기기" busy={isUpdating} error={purchaseError} />}
 
-                        <h2 id="hide-modal-title">
-                            구매내역을 숨기시겠습니까?
-                        </h2>
-
-                        <p>
-                            선택한 {selectedIds.length}개의 콘텐츠를
-                            목록에서 숨깁니다.
-                            <br />
-                            실제 구매 기록은 삭제되지 않습니다.
-                        </p>
-
-                        <div className="my-purchases-modal__actions">
-                            <button
-                                type="button"
-                                className="my-purchases-modal__button my-purchases-modal__button--secondary"
-                                onClick={() => setShowHideModal(false)}
-                            >
-                                취소
-                            </button>
-
-                            <button
-                                type="button"
-                                className="my-purchases-modal__button"
-                                onClick={handleConfirmHide}
-                            >
-                                숨기기
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
         </main>
     );

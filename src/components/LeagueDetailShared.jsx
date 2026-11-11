@@ -1,3 +1,4 @@
+import { LoginNoticePopup } from './common/LoginNoticePopup';
 import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
 import { Link, useLocation } from "react-router-dom";
 import { getYouTubeVideoId } from "../data/youtubeVideoId";
@@ -146,6 +147,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
   );
 
   const [saving, setSaving] = useState(false);
+  const [loginNoticeOpen, setLoginNoticeOpen] = useState(false);
 
   // 경기 고유 ID
   const matchId = game.gameId ?? game.id;
@@ -195,7 +197,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
     if (saving) return;
 
     if (!auth.currentUser || !currentProfile) {
-      alert("로그인 후 프로필을 선택해 주세요.");
+      setLoginNoticeOpen(true);
       return;
     }
 
@@ -328,6 +330,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
           </span>
         )}
       </div>
+      {loginNoticeOpen && <div onClick={event => event.stopPropagation()}><LoginNoticePopup onClose={() => setLoginNoticeOpen(false)} /></div>}
     </article>
   );
 }

@@ -1,3 +1,4 @@
+import { Popup } from '../../components/common/Popup';
 
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -44,6 +45,8 @@ export const MyWatchlist = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [selectedIds, setSelectedIds] = useState([]);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
 
     // 현재 로그인 계정과 프로필 확인
     const uid = auth.currentUser?.uid || user?.uid;
@@ -127,14 +130,9 @@ export const MyWatchlist = () => {
     };
 
     // Firebase에서 선택한 찜 목록 삭제
-    const handleDelete = async () => {
-        if (selectedIds.length === 0 || isDeleting) return;
-
-        const confirmed = window.confirm(
-            '선택한 찜 콘텐츠를 삭제하시겠습니까?'
-        );
-
-        if (!confirmed) return;
+    const handleDelete = () => { if (selectedIds.length && !isDeleting) { setDeleteError(''); setDeleteOpen(true); } };
+    const confirmDelete = async () => {
+        if (selectedIds.length === 0 || isDeleting) return false;
 
         setIsDeleting(true);
 
@@ -145,14 +143,16 @@ export const MyWatchlist = () => {
 
             // 한 건씩 삭제하고 저장소의 목록 갱신
             for (const item of selectedItems) {
-                await onRemoveWatchlist(item);
+                if (!await onRemoveWatchlist(item)) throw new Error('삭제 실패');
             }
 
             setSelectedIds([]);
             setIsEditing(false);
+            setDeleteOpen(false);
         } catch (error) {
             console.error('찜 목록 삭제 실패:', error);
-            alert('일부 콘텐츠를 삭제하지 못했습니다.');
+            setDeleteError('일부 콘텐츠를 삭제하지 못했습니다. 다시 시도해 주세요.');
+            return false;
         } finally {
             setIsDeleting(false);
         }
@@ -413,6 +413,10 @@ export const MyWatchlist = () => {
                     </div>
                 )}
             </div>
+            {deleteOpen && <Popup title="찜한 콘텐츠를 삭제하시겠습니까?"
+                description={`선택한 ${selectedIds.length}개의 콘텐츠를 찜 목록에서 삭제합니다.\n콘텐츠는 나중에 다시 찜할 수 있습니다.`}
+                onClose={() => setDeleteOpen(false)} onConfirm={confirmDelete} confirmText="삭제"
+                busy={isDeleting} error={deleteError} />}
         </main>
     );
 };
