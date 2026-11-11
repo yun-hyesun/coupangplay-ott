@@ -60,6 +60,7 @@
   &__match-wrap { min-width: 0; overflow: hidden; border-radius: 16px;
     scroll-margin-top: 260px;
     &[data-expanded='true'] > .league-schedule__match { border-bottom-right-radius: 0; border-bottom-left-radius: 0; }
+    &[data-focused-match='true'] > .league-schedule__match { animation: schedule-match-arrival 800ms ease-in-out 80ms 1; }
   }
   &__badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
   &__badge { display: inline-flex; min-width: 44px; height: 30px; align-items: center; justify-content: center; gap: 6px; padding: 0 8px; border-radius: 6px; color: #fff; background: #0080ff; font-size: 14px; font-weight: 700; line-height: 20px; white-space: nowrap;
@@ -82,7 +83,7 @@
     span { max-width: 100%; overflow: hidden; color: #bac4cd; font-size: 18px; font-weight: 500; line-height: 28px; text-overflow: ellipsis; white-space: nowrap; }
   }
   &__actions { display: flex; justify-content: flex-end; padding-right: 24px; }
-  &__action { display: flex; width: 56px; height: 56px; flex: 0 0 56px; align-items: center; justify-content: center; padding: 0; border: 1px solid transparent !important; border-radius: 50%; color: #fff; background: #31353c !important; text-decoration: none;
+  &__action { display: flex; width: 56px; height: 56px; flex: 0 0 56px; align-items: center; justify-content: center; padding: 0; border-radius: 50%; color: #fff; background: #31353c !important; text-decoration: none;
     > img { display: block; max-width: none; }
     &[aria-pressed='true'] { border-color: #fff !important; }
     &.is-live { background: #0080ff !important; }
@@ -99,7 +100,11 @@
 
 @keyframes schedule-live-dot { 50% { opacity: 0; } }
 @keyframes schedule-loading { to { background-position: -150% 0; } }
-@media (prefers-reduced-motion: reduce) { .league-schedule__badge--live > img, .league-schedule__loading > div { animation: none; } }
+@keyframes schedule-match-arrival {
+  0%, 100% { background-color: var(--schedule-surface); }
+  50% { background-color: var(--schedule-surface-hover); }
+}
+@media (prefers-reduced-motion: reduce) { .league-schedule__badge--live > img, .league-schedule__loading > div, .league-schedule__match-wrap[data-focused-match='true'] > .league-schedule__match { animation: none; } }
 
 @media (max-width: 1500px) {
   .league-schedule {

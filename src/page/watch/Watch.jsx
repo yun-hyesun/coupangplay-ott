@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
@@ -15,7 +15,8 @@ import { auth } from '../../firebase/firebase';
 import { createWatchSession, joinWatchSession } from '../../service/sessionService';
 import { subscribeSessionMessages, sendSessionMessage } from '../../service/chatService';
 import { communityError } from '../../data/communityData';
-import { getWatchReturnDestination, resolveWatchMedia } from './watchMedia';
+import { getSportsLiveMatch, getWatchReturnDestination, resolveWatchMedia } from './watchMedia';
+import { getLivePreviewVideo } from '../../service/matchRelatedVideosService';
 
 const EMPTY = [];
 const formatTime = (seconds) => {
@@ -28,6 +29,7 @@ const formatTime = (seconds) => {
 export const Watch = () => {
   const { type, id } = useParams();
   const isSports = type === 'sports';
+  const isLiveMode = isSports && id === 'live';
   const navigate = useNavigate();
   const location = useLocation();
   const uid = useAuthStore((value) => value.user?.uid);
@@ -91,12 +93,22 @@ export const Watch = () => {
   }, [id, type, seasonNumber, episodeNumber, onFetchVideo, onFetchTvVideo, onFetchSeason, onFetchEpisode, onFetchEpisodeVideo]);
   const availableVideos = type === 'tv' ? [...episodeVideos, ...tvVideos] : movieVideos;
   const selectedVideo = availableVideos.find(v => v.site === 'YouTube' && v.key && v.type === 'Trailer') || availableVideos.find(v => v.site === 'YouTube' && v.key);
-  const { youtubeKey, videoSrc, title } = resolveWatchMedia({ type, id, state, selectedVideo });
+  const liveMatch = useMemo(() => isLiveMode ? getSportsLiveMatch(location.search) : null, [isLiveMode, location.search]);
+  const [liveVideoResult, setLiveVideoResult] = useState(null);
+  const [liveAttempt, setLiveAttempt] = useState(0);
+  const liveRequestKey = `${location.key}:${liveAttempt}`;
+  const liveResult = liveVideoResult?.key === liveRequestKey ? liveVideoResult : null;
+  const liveVideo = liveResult?.video;
+  const liveLoading = isLiveMode && !liveResult;
+  const { youtubeKey, videoSrc, title: mediaTitle } = resolveWatchMedia({ type, id, state, selectedVideo, liveVideo });
+  const title = isLiveMode ? liveMatch.title : mediaTitle;
   // videoSrc는 사용 가능한 직접 재생 영상 파일(mp4/webm)의 URL입니다.
   // TMDB 유튜브 예고편 키는 HTML video src로 직접 사용할 수 없습니다.
   const videoRef = useRef(null);
   const lastSaved = useRef({ route: '', at: 0 });
   const youtubePlayer = useRef(null);
+  const liveAutoplayTimer = useRef(null);
+  const [liveNeedsStart, setLiveNeedsStart] = useState(false);
   const [youtubePlaying, setYoutubePlaying] = useState(false);
   const autoPlayAttemptedRef = useRef(false);
   const [nextEpisodeNotice, setNextEpisodeNotice] = useState(false);
@@ -124,6 +136,17 @@ export const Watch = () => {
   const hasPlaybackError = Boolean(sourceKey) && failedSource === sourceKey;
   const controlsDisabled = (!videoSrc && !youtubeKey) || hasPlaybackError;
 
+  useEffect(() => {
+    if (!isLiveMode) return undefined;
+    const controller = new AbortController();
+    getLivePreviewVideo(liveMatch, { signal: controller.signal }).then(video => {
+      if (!controller.signal.aborted) setLiveVideoResult({ key: liveRequestKey, video, error: '' });
+    }).catch(error => {
+      if (!controller.signal.aborted) setLiveVideoResult({ key: liveRequestKey, video: null, error: error.message || '이전 경기 영상을 불러오지 못했습니다.' });
+    });
+    return () => controller.abort();
+  }, [isLiveMode, liveMatch, liveRequestKey]);
+
   // 같은 URL의 다음 회차로 이동해도 location.key 변경으로 알림을 갱신합니다.
   // 타이머는 페이지 전환/언마운트 시 정리해 이전 알림이 남지 않도록 합니다.
   useEffect(() => {
@@ -145,6 +168,8 @@ export const Watch = () => {
     setDuration(0);
     setPlaying(false);
     setYoutubePlaying(false);
+    setLiveNeedsStart(false);
+    return () => window.clearTimeout(liveAutoplayTimer.current);
   }, [videoSrc, youtubeKey, episodeNumber]);
 
   const handleVideoReady = async (event) => {
@@ -213,6 +238,7 @@ export const Watch = () => {
     } else video.pause();
   };
   const seek = (seconds) => {
+    if (isLiveMode) return;
     const video = videoRef.current;
     if (video && Number.isFinite(video.duration)) video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
     else if (youtubePlayer.current) {
@@ -222,6 +248,7 @@ export const Watch = () => {
     }
   };
   const changeProgress = (e) => {
+    if (isLiveMode) return;
     const video = videoRef.current;
     if (video && duration) video.currentTime = Number(e.target.value);
     else if (youtubePlayer.current && duration) { youtubePlayer.current.seekTo(Number(e.target.value), true); setCurrentTime(Number(e.target.value)); }
@@ -310,13 +337,17 @@ export const Watch = () => {
     setPlaybackAttempt(value => value + 1);
     setCurrentTime(0);
     setDuration(0);
+    if (isLiveMode) setLiveAttempt(value => value + 1);
   };
 
   return (
-    <main className="watch-page" aria-label={title} data-player="shared">
+    <main className={`watch-page${isLiveMode ? ' watch-page--live' : ''}`} aria-label={title} data-player="shared">
       <div className="watch-player">
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
-        {hasPlaybackError ? <div className="watch-player__placeholder watch-player__error" role="status">
+        {liveLoading ? <div className="watch-player__placeholder" role="status">같은 팀의 이전 경기 영상을 불러오는 중입니다.</div>
+        : isLiveMode && liveResult?.error ? <div className="watch-player__placeholder watch-player__error" role="status">
+          <p>{liveResult.error}</p><button type="button" onClick={retryPlayback}>다시 시도</button>
+        </div> : hasPlaybackError ? <div className="watch-player__placeholder watch-player__error" role="status">
           <p>영상을 재생하지 못했습니다. 다시 시도해 주세요.</p>
           <button type="button" onClick={retryPlayback}>다시 시도</button>
         </div> : videoSrc ? (
@@ -367,16 +398,26 @@ export const Watch = () => {
               } else {
                 setCurrentTime(target.getCurrentTime());
               }
+              if (isLiveMode) {
+                target.getIframe().tabIndex = -1;
+                target.playVideo();
+                window.clearTimeout(liveAutoplayTimer.current);
+                liveAutoplayTimer.current = window.setTimeout(() => {
+                  if (youtubePlayer.current === target && [-1, 2, 5].includes(target.getPlayerState())) setLiveNeedsStart(true);
+                }, 2000);
+              }
             }}
             onPlay={(event) => {
               youtubePlayer.current = event.target;
               setYoutubePlaying(true);
               setPlaying(true);
+              if (isLiveMode) { window.clearTimeout(liveAutoplayTimer.current); setLiveNeedsStart(false); }
             }}
             onPause={(event) => {
               setYoutubePlaying(false);
               setPlaying(false);
               savePlayback(event.target.getCurrentTime(), event.target.getDuration());
+              if (isLiveMode) setLiveNeedsStart(true);
             }}
             onError={handlePlaybackError}
             opts={{
@@ -386,11 +427,13 @@ export const Watch = () => {
                 autoplay: 1,
                 controls: 0,
                 rel: 0,
-                start: Math.max(0, Math.floor(state?.resumeAt || 0)),
+                start: isLiveMode ? 0 : Math.max(0, Math.floor(state?.resumeAt || 0)),
                 playsinline: 1,
+                ...(isLiveMode ? { disablekb: 1, fs: 0, loop: 1, playlist: youtubeKey } : {}),
               },
             }}
             onEnd={(event) => {
+              if (isLiveMode) return;
               setYoutubePlaying(false);
               setPlaying(false);
               const total = event.target.getDuration();
@@ -399,6 +442,10 @@ export const Watch = () => {
             }}
           />
         ) : <div className="watch-player__placeholder" role="status">{isSports ? '재생할 영상을 찾을 수 없습니다.' : '재생 가능한 예고편·클립이 없습니다.'}</div>}
+
+        {isLiveMode && liveNeedsStart && !hasPlaybackError && <button type="button" className="watch-player__live-start" onClick={() => {
+          setLiveNeedsStart(false); youtubePlayer.current?.playVideo();
+        }} aria-label="이전 경기 영상 재생 시작"><WatchIcon name="play" /><span>영상 재생 시작</span></button>}
 
         {nextEpisodeNotice && (
           <div className="watch-next-episode-notice" role="status" aria-live="polite">
@@ -416,7 +463,13 @@ export const Watch = () => {
         </header>
 
         <div className="watch-player__bottom">
-          <label className="watch-player__progress-label">
+          {isLiveMode ? <>
+            <div className="watch-player__live-status">
+              <span className="watch-player__live-badge"><i aria-hidden="true" />LIVE</span>
+              <span className="watch-player__live-source" title={liveVideo?.title}>이전 경기 영상{liveVideo?.title ? ` · ${liveVideo.title}` : ''}</span>
+            </div>
+            <div className="watch-player__live-track" aria-hidden="true" />
+          </> : <><label className="watch-player__progress-label">
             <span className="sr-only">영상 재생 위치</span>
             <input className="watch-player__progress" type="range" min="0" max={duration || 1} step="0.1" value={currentTime}
               onChange={changeProgress} disabled={controlsDisabled || !duration}
@@ -448,9 +501,10 @@ export const Watch = () => {
               <button type="button" aria-label="전체 화면" onClick={toggleFullscreen}><WatchIcon name="fullscreen" /></button>
             </div>
           </div>
+          </>}
         </div>
 
-        {panel === 'settings' && <WatchSettingsPanel
+        {!isLiveMode && panel === 'settings' && <WatchSettingsPanel
           tab={settingsTab} onTabChange={setSettingsTab} speed={speed} quality={quality}
           subtitle={subtitle} audio={audio} onClose={() => setPanel(null)}
           onSelect={(tab, value) => {
