@@ -72,13 +72,15 @@
         color: $color-text-pri;
         text-decoration: none;
 
-        &:hover .watchlist-thumbnail img {
+        &:hover .watchlist-thumbnail > img,
+        &:hover .watchlist-thumbnail > picture img {
             transform: scale(1.05);
         }
     }
 
     // 가로형 콘텐츠 썸네일
     .watchlist-thumbnail {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -89,7 +91,8 @@
         background: #262626;
         overflow: hidden;
 
-        img {
+        > img,
+        > picture img {
             display: block;
             width: 100%;
             height: 100%;
@@ -101,6 +104,13 @@
             color: $color-text-sec1;
             font-size: 16px;
         }
+    }
+
+    .watchlist-match-date {
+        margin-top: 6px;
+        color: $color-text-sec1;
+        font-size: 14px;
+        line-height: 1.5;
     }
 
     .watchlist-title {
@@ -206,4 +216,72 @@
             display: none;
         }
     }
+}
+
+.watchlist .sports-watchlist-thumbnail {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #15171b;
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+
+  .sports-watchlist-thumbnail__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__teams {
+    position: absolute;
+    inset: 12% 8% 22%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6%;
+  }
+
+  .sports-watchlist-thumbnail__teams > .sports-watchlist-thumbnail__team-logo {
+    flex: 0 0 24%;
+    width: 24%;
+    height: 68%;
+    max-width: 88px;
+    max-height: 88px;
+    object-fit: contain;
+  }
+
+  &__team-name {
+    flex: 0 1 36%;
+    font-size: clamp(11px, 5cqw, 20px);
+    text-align: center;
+  }
+
+  .sports-watchlist-thumbnail__versus {
+    color: #fff;
+    font-size: clamp(12px, 5cqw, 24px);
+    font-weight: 700;
+  }
+
+  &__shade {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+  }
+
+  &__date {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    font-size: clamp(11px, 5.5cqw, 22px);
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 1px 4px #000;
+  }
 }

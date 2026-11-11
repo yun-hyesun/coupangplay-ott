@@ -1,4 +1,5 @@
 import { findSportsTeam } from "./sportsTeams";
+import { SPORTS_LEAGUE_BY_ID } from "./sportsLeagues";
 
 const dateKey = (value, timeZone) => {
   const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
@@ -41,12 +42,19 @@ export function formatPromoMatchDate(game) {
 
 export function getPromoMatchWatchlistContent(game) {
   return {
-    id: `${game.competitionCode}_${game.gameId}`,
+    id: `${game.competitionCode}_${game.gameId ?? game.id}`,
     media_type: "sports",
     title: `${game.home.name} vs ${game.away.name}`,
     leagueId: game.competitionCode,
-    startTime: hasPromoKickoffTime(game) ? game.utcDate || game.startTime : null,
+    sport: SPORTS_LEAGUE_BY_ID[game.competitionCode]?.sport || game.sport || null,
     homeName: game.home.name,
     awayName: game.away.name,
+    homeTeamId: game.home.teamId ?? game.home.id ?? null,
+    awayTeamId: game.away.teamId ?? game.away.id ?? null,
+    homeLogo: game.home.crest || game.home.logoPath || null,
+    awayLogo: game.away.crest || game.away.logoPath || null,
+    thumbnail: game.broadcastThumbnail || game.thumbnail || null,
+    raceName: game.raceName || null,
+    startTime: hasPromoKickoffTime(game) ? game.utcDate || game.startTime : null,
   };
 }

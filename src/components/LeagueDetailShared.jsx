@@ -1,12 +1,14 @@
 import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
+import { SPORTS_LEAGUE_BY_ID } from "../data/sportsLeagues";
 import { Link, useLocation } from "react-router-dom";
 import { getYouTubeVideoId } from "../data/youtubeVideoId";
-import { formatBroadcastDate, getBroadcastStatus } from "../data/leagueBroadcasts";
+import { formatBroadcastDate, getBroadcastCountdown, getBroadcastStatus } from "../data/leagueBroadcasts";
 import { auth } from "../firebase/firebase";
 import { useEffect, useState } from "react";
 import { useWatchlistStore } from "../store/useWatchlistStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useProfileStore } from "../store/useProfileStore";
+import { getSportsLiveWatchDestination } from "../page/watch/watchMedia";
 import "./content/scss/ContentCard.scss";
 
 const SEOUL_TIME_ZONE = "Asia/Seoul";
@@ -153,14 +155,18 @@ export function MatchCard({ game, leagueId, scoresOn }) {
   const favoriteContent = {
     id: `${leagueId}_${matchId}`,
     media_type: "sports",
-    title: isRace
-      ? homeName
-      : `${homeName} vs ${awayName}`,
+    title: isRace ? homeName : `${homeName} vs ${awayName}`,
     leagueId,
-    startTime:
-      game.utcDate || game.startTime || null,
+    sport: SPORTS_LEAGUE_BY_ID[leagueId]?.sport || game.sport || null,
+    startTime: game.utcDate || game.startTime || null,
     homeName,
-    awayName
+    awayName,
+    homeTeamId: game.home?.teamId ?? game.home?.id ?? null,
+    awayTeamId: game.away?.teamId ?? game.away?.id ?? null,
+    homeLogo: game.home?.crest || game.home?.logoPath || null,
+    awayLogo: game.away?.crest || game.away?.logoPath || null,
+    thumbnail: game.broadcastThumbnail || game.thumbnail || null,
+    raceName: game.raceName || null,
   };
 
   const currentUid = auth.currentUser?.uid || user?.uid;
@@ -311,15 +317,15 @@ export function MatchCard({ game, leagueId, scoresOn }) {
             </span>
           </Link>
         ) : (
-          <span
-            className="league-detail__match-action-icon"
-            aria-hidden="true"
+          <Link
+            className="league-detail__match-play-button"
+            {...getSportsLiveWatchDestination(game, { leagueId, returnTo: `/sports/league/${leagueId}` })}
+            aria-label={`${homeName} vs ${awayName} LIVE 화면으로 이전 경기 영상 보기`}
           >
-            <img
-              src="/images/sports/league-detail/schedule-play.svg"
-              alt=""
-            />
-          </span>
+            <span className="league-detail__match-action-icon" aria-hidden="true">
+              <img src="/images/sports/league-detail/schedule-play.svg" alt="" />
+            </span>
+          </Link>
         )}
 
         {quality && (
@@ -335,16 +341,28 @@ export function MatchCard({ game, leagueId, scoresOn }) {
 
 export function BroadcastCard({ game, leagueId, sport }) {
   const isLive = getBroadcastStatus(game.status) === "live";
-  const startTime = formatBroadcastDate(game.utcDate || game.startTime);
+  const kickoff = game.utcDate || game.startTime;
+  const [now, setNow] = useState(Date.now);
+  const countdown = getBroadcastCountdown(game, now);
+  const startTime = formatBroadcastDate(kickoff);
+  useEffect(() => {
+    if (isLive || !kickoff || !Number.isFinite(Date.parse(kickoff))) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [isLive, kickoff]);
   const thumbnail = isLive && (game.broadcastThumbnail || game.thumbnail);
   const isRace = Boolean(game.raceName);
   const heading = isRace
     ? game.raceName
     : (game.home?.name || "홈 팀") + " vs " + (game.away?.name || "원정 팀");
+  const Media = isLive ? Link : "div";
 
   return (
     <article className="league-detail__broadcast-card" data-broadcast-status={isLive ? "live" : "scheduled"}>
-      <div className="league-detail__broadcast-media">
+      <Media className="league-detail__broadcast-media" {...(isLive ? {
+        ...getSportsLiveWatchDestination(game, { leagueId, returnTo: `/sports/league/${leagueId}` }),
+        "aria-label": `${heading} LIVE 화면으로 이전 경기 영상 보기`,
+      } : {})}>
         <img className="league-detail__broadcast-bg" src={thumbnail || BROADCAST_BACKGROUNDS_BY_SPORT[sport] || DETAIL_BACKGROUND} alt="" />
         {!thumbnail && <div className="league-detail__broadcast-teams">
           <TeamImage team={game.home} leagueId={leagueId} />
@@ -357,12 +375,15 @@ export function BroadcastCard({ game, leagueId, sport }) {
             <span><img src="/images/sports/league-detail/broadcast-play.svg" alt="" /></span>
           </span>
         </> : <div className="league-detail__broadcast-overlay">
-          <time dateTime={game.utcDate || game.startTime}>{startTime}</time>
+          {countdown ? <div className="league-detail__broadcast-countdown" role="timer" aria-live="off">
+            <span>{countdown.label}</span>
+            <time dateTime={`PT${countdown.remainingSeconds}S`}>{countdown.time}</time>
+          </div> : <time dateTime={kickoff}>{startTime}</time>}
         </div>}
-      </div>
+      </Media>
       <div className="league-detail__broadcast-copy">
         <strong>{heading}</strong>
-        <span>{startTime}</span>
+        {isLive ? <span>LIVE 중계 중</span> : !countdown && <span>{startTime}</span>}
       </div>
     </article>
   );

@@ -2561,6 +2561,12 @@
   font-weight: 700;
   background: #343b47;
 
+  &--image {
+    overflow: visible;
+    border-radius: 0;
+    background: transparent;
+  }
+
   img {
     position: absolute;
     inset: 0;

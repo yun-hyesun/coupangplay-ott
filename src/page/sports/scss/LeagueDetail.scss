@@ -913,6 +913,7 @@
   }
 
   &__broadcast-media {
+    display: block;
     position: relative;
     aspect-ratio: 436 / 240;
     overflow: hidden;
@@ -976,6 +977,28 @@
       font-size: 22px;
       font-weight: $font-w-B-700;
       line-height: 27.5px;
+    }
+  }
+
+  &__broadcast-countdown {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    > span {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+    }
+
+    > time {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 38px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .03em;
+      white-space: nowrap;
     }
   }
 
@@ -1517,6 +1540,14 @@
     margin: -5px 0 14px;
     color: #8996a2;
     font-size: 12px;
+  }
+
+  &__conference-heading {
+    margin: 24px 0 12px;
+    color: #f0f1f3;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
   }
 
   &__table-wrap {

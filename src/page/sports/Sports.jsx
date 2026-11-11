@@ -27,6 +27,7 @@ import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
 import { useScheduleMatchVideos } from "../../hooks/useScheduleMatchVideos";
 import { getScheduleUnitLabel } from "../../data/leagueScheduleUnits";
 import { getYouTubeVideoId } from "../../data/youtubeVideoId";
+import { getSportsLiveWatchDestination } from "../watch/watchMedia";
 import { getMatchVideoKey } from "../../data/matchRelatedVideos";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -253,14 +254,22 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
 
   const matchId = game.gameId ?? game.id;
 
+  const favoriteLeagueId = game.competitionCode || game.leagueId || "sports";
   const favoriteContent = {
-    id: `${game.competitionCode || game.leagueId || "sports"}_${matchId}`,
+    id: `${favoriteLeagueId}_${matchId}`,
     media_type: "sports",
-    title: `${game.home?.name || "홈 팀"} vs ${game.away?.name || "원정 팀"}`,
-    leagueId: game.competitionCode || game.leagueId || null,
+    title: game.raceName || `${game.home?.name || "홈 팀"} vs ${game.away?.name || "원정 팀"}`,
+    leagueId: favoriteLeagueId,
+    sport: SPORTS_LEAGUES.find((league) => league.id === favoriteLeagueId)?.sport || game.sport || null,
     startTime: game.utcDate || game.startTime || null,
-    homeName: game.home?.name || "홈 팀",
-    awayName: game.away?.name || "원정 팀"
+    homeName: game.raceName || game.home?.name || "홈 팀",
+    awayName: game.raceName ? "그랑프리" : game.away?.name || "원정 팀",
+    homeTeamId: game.home?.teamId ?? game.home?.id ?? null,
+    awayTeamId: game.away?.teamId ?? game.away?.id ?? null,
+    homeLogo: game.home?.crest || game.home?.logoPath || null,
+    awayLogo: game.away?.crest || game.away?.logoPath || null,
+    thumbnail: game.broadcastThumbnail || game.thumbnail || null,
+    raceName: game.raceName || null,
   };
 
   const currentOwnerKey =
@@ -316,7 +325,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
     }
   };
   const detailsExpanded = !playAction && expanded && (!isEnded || hasRelatedVideos);
-  const liveVideoId = playAction ? getYouTubeVideoId({ videoId: game.videoId, url: game.broadcastUrl || game.videoUrl }) : "";
+  const liveDestination = getSportsLiveWatchDestination(game);
   const scheduleSubLabel = getScheduleSubLabel(game);
   const hasScore =
     scoresOn &&
@@ -397,15 +406,11 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
         {!isScheduled && (!isEnded || hasRelatedVideos) && (<button
           type="button"
           className={"sports-fixture__action" + (playAction ? " is-active" : "")}
-          aria-label={playAction ? (liveVideoId ? "라이브 경기 재생" : "라이브 중계 미연결") : isEnded ? `${game.home.name} vs ${game.away.name} 관련 영상 ${detailsExpanded ? "접기" : "펼치기"}` : detailsExpanded ? "경기 정보 접기" : "경기 정보 펼치기"}
+          aria-label={playAction ? `${game.home.name} vs ${game.away.name} LIVE 화면으로 이전 경기 영상 보기` : isEnded ? `${game.home.name} vs ${game.away.name} 관련 영상 ${detailsExpanded ? "접기" : "펼치기"}` : detailsExpanded ? "경기 정보 접기" : "경기 정보 펼치기"}
           aria-expanded={playAction ? undefined : detailsExpanded}
           aria-controls={detailsExpanded ? detailsId : undefined}
-          disabled={playAction && !liveVideoId}
-          title={playAction && !liveVideoId ? "아직 연결된 라이브 중계 영상이 없습니다." : undefined}
           onClick={playAction ? () => {
-            if (liveVideoId) navigate(`/watch/sports/${encodeURIComponent(liveVideoId)}`, {
-              state: { title: `${game.home.name} vs ${game.away.name} LIVE`, returnTo: "/sports" },
-            });
+            navigate(liveDestination.to, { state: liveDestination.state });
           } : onToggle}
         >
           {playAction ? "▶" : (
@@ -974,49 +979,51 @@ export const Sports = () => {
       </section>
       */}
 
-      <section
-        className="sports-section sports-section--main-leagues"
-        aria-labelledby="sports-featured-title"
-      >
-        <SectionTitle id="sports-featured-title" title="MY 리그" />
-        <div className="sports-rail-shell sports-rail-shell--featured">
-          {featuredRailNavigation.prev && <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 MY 리그" onClick={() => scrollRail(featuredRailRef, -1)}>‹</button>}
-          <div className="sports-featured-leagues" ref={featuredRailRef} tabIndex={0} aria-label="주요 리그 목록">
-          {featuredLeagues.length === 0 && (
-            <p className="sports-data-message sports-featured-leagues__empty">찜한 리그가 없습니다. 스포츠 리그의 전체보기에서 관심 리그를 추가해 주세요.</p>
-          )}
-          {featuredLeagues.map((league) => (
-            <article className="sports-featured-league" key={league.id}>
-              <Link
-                className="sports-featured-league__emblem"
-                to={`/sports/league/${encodeURIComponent(league.id)}`}
-                aria-label={`${league.name} 상세 페이지`}
-              >
-                <span className="sports-featured-league__logo">
-                  {league.logoPath ? (
-                    <img src={league.logoPath} alt="" loading="lazy" />
-                  ) : (
-                    <span>{getLeagueAbbreviation(league)}</span>
-                  )}
-                </span>
-              </Link>
-              <div className="sports-featured-league__content">
-                <h3>{league.name}</h3>
-                <p className="sports-featured-league__type">{league.sport} · {league.scope}<br/>경기 일정 · 하이라이트</p>
-                {/* <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p> */}
-                <Link
-                  className="sports-featured-league__link"
-                  to={`/sports/league/${encodeURIComponent(league.id)}`}
-                >
-                  리그 둘러보기 <span aria-hidden="true">→</span>
-                </Link>
-              </div>
-            </article>
-          ))}
+      {canShowSubscriptions && (
+        <section
+          className="sports-section sports-section--main-leagues"
+          aria-labelledby="sports-featured-title"
+        >
+          <SectionTitle id="sports-featured-title" title="MY 리그" />
+          <div className="sports-rail-shell sports-rail-shell--featured">
+            {featuredRailNavigation.prev && <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 MY 리그" onClick={() => scrollRail(featuredRailRef, -1)}>‹</button>}
+            <div className="sports-featured-leagues" ref={featuredRailRef} tabIndex={0} aria-label="주요 리그 목록">
+              {featuredLeagues.length === 0 && (
+                <p className="sports-data-message sports-featured-leagues__empty">찜한 리그가 없습니다. 스포츠 리그의 전체보기에서 관심 리그를 추가해 주세요.</p>
+              )}
+              {featuredLeagues.map((league) => (
+                <article className="sports-featured-league" key={league.id}>
+                  <Link
+                    className="sports-featured-league__emblem"
+                    to={`/sports/league/${encodeURIComponent(league.id)}`}
+                    aria-label={`${league.name} 상세 페이지`}
+                  >
+                    <span className="sports-featured-league__logo">
+                      {league.logoPath ? (
+                        <img src={league.logoPath} alt="" loading="lazy" />
+                      ) : (
+                        <span>{getLeagueAbbreviation(league)}</span>
+                      )}
+                    </span>
+                  </Link>
+                  <div className="sports-featured-league__content">
+                    <h3>{league.name}</h3>
+                    <p className="sports-featured-league__type">{league.sport} · {league.scope}<br/>경기 일정 · 하이라이트</p>
+                    {/* <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p> */}
+                    <Link
+                      className="sports-featured-league__link"
+                      to={`/sports/league/${encodeURIComponent(league.id)}`}
+                    >
+                      리그 둘러보기 <span aria-hidden="true">→</span>
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+            {featuredRailNavigation.next && <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 MY 리그" onClick={() => scrollRail(featuredRailRef, 1)}>›</button>}
           </div>
-          {featuredRailNavigation.next && <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 MY 리그" onClick={() => scrollRail(featuredRailRef, 1)}>›</button>}
-        </div>
-      </section>
+        </section>
+      )}
 
       <section
         className="sports-section sports-section--schedule"

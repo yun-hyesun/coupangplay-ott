@@ -1,12 +1,101 @@
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { auth } from '../../firebase/firebase'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
 import { useWatchlistStore } from '../../store/useWatchlistStore'
+import { SPORTS_LEAGUE_BY_ID } from '../../data/sportsLeagues'
+import { findSportsTeam } from '../../data/sportsTeams'
+import { formatBroadcastDate } from '../../data/leagueBroadcasts'
 import './scss/MyPageHeader.scss'
 import './scss/MyWatchlist.scss'
+
+const MATCH_BACKGROUNDS = {
+  축구: "/images/sports/league-detail/detail-matchup-bg.png",
+  농구: "/images/sports/league-detail/broadcast-basketball-bg.png",
+  레이싱: "/images/sports/league-detail/broadcast-racing-flag-bg.png",
+  일반: "/images/sports/league-detail/broadcast-rugby-bg.png",
+};
+
+function getSportsWatchlistArtwork(item) {
+  const league = SPORTS_LEAGUE_BY_ID[item.leagueId];
+  const sport = league?.sport || item.sport || "축구";
+  const homeTeam = findSportsTeam(item.leagueId, { id: item.homeTeamId, name: item.homeName });
+  const awayTeam = findSportsTeam(item.leagueId, { id: item.awayTeamId, name: item.awayName });
+  return {
+    background: MATCH_BACKGROUNDS[sport] || MATCH_BACKGROUNDS.축구,
+    thumbnail: item.thumbnail || "",
+    homeLogo: homeTeam?.logoPath || item.homeLogo || "",
+    awayLogo: awayTeam?.logoPath || item.awayLogo || "",
+    leagueLogo: league?.logoPath || "",
+    isRace: sport === "레이싱" || Boolean(item.raceName),
+  };
+}
+
+function formatSportsWatchlistDate(value) {
+  return value && Number.isFinite(Date.parse(value)) ? formatBroadcastDate(value) : "일정 미정";
+}
+
+function getWatchlistNavigation(item) {
+  if (item.media_type !== "sports") {
+    return { to: `/detail/${item.media_type === "movie" ? "movie" : "tv"}/${item.id}` };
+  }
+  if (!SPORTS_LEAGUE_BY_ID[item.leagueId]) return { to: "/sports" };
+  const prefix = `${item.leagueId}_`;
+  const savedId = String(item.id);
+  return {
+    to: `/sports/league/${encodeURIComponent(item.leagueId)}`,
+    state: {
+      leagueTab: "schedule",
+      expandScheduleMatch: false,
+      scheduleMatch: {
+        gameId: savedId.startsWith(prefix) ? savedId.slice(prefix.length) : savedId,
+        competitionCode: item.leagueId,
+        utcDate: item.startTime || null,
+        home: { id: item.homeTeamId, name: item.homeName, crest: item.homeLogo },
+        away: { id: item.awayTeamId, name: item.awayName, crest: item.awayLogo },
+        raceName: item.raceName || (SPORTS_LEAGUE_BY_ID[item.leagueId].sport === "레이싱" ? item.homeName || item.title : undefined),
+      },
+    },
+  };
+}
+
+function TeamLogo({ src, name }) {
+  const [failed, setFailed] = useState(false);
+  return src && !failed ? (
+    <img className="sports-watchlist-thumbnail__team-logo" src={src} alt="" loading="lazy" onError={() => setFailed(true)} />
+  ) : (
+    <strong className="sports-watchlist-thumbnail__team-name">{name}</strong>
+  );
+}
+
+function SportsWatchlistThumbnail({ item }) {
+  const artwork = getSportsWatchlistArtwork(item);
+  const [failedThumbnail, setFailedThumbnail] = useState(null);
+  const showThumbnail = artwork.thumbnail && artwork.thumbnail !== failedThumbnail;
+  const date = formatSportsWatchlistDate(item.startTime);
+  const homeLogo = artwork.isRace ? artwork.leagueLogo : artwork.homeLogo;
+
+  return (
+    <div className="sports-watchlist-thumbnail" style={{ backgroundImage: `url("${artwork.background}")` }} role="img" aria-label={`${item.title} · ${date}`}>
+      {showThumbnail ? (
+        <img className="sports-watchlist-thumbnail__image" src={artwork.thumbnail} alt="" loading="lazy" onError={() => setFailedThumbnail(artwork.thumbnail)} />
+      ) : (
+        <div className="sports-watchlist-thumbnail__teams" aria-hidden="true">
+          <TeamLogo key={homeLogo || item.homeName} src={homeLogo} name={artwork.isRace ? item.title : item.homeName} />
+          {!artwork.isRace && <>
+            <span className="sports-watchlist-thumbnail__versus">VS</span>
+            <TeamLogo key={artwork.awayLogo || item.awayName} src={artwork.awayLogo} name={item.awayName} />
+          </>}
+        </div>
+      )}
+      <span className="sports-watchlist-thumbnail__shade" aria-hidden="true" />
+      <time className="sports-watchlist-thumbnail__date" dateTime={item.startTime || undefined}>{date}</time>
+    </div>
+  );
+}
+
 
 // 상단 콘텐츠 탭
 const contentTabs = [
@@ -322,45 +411,33 @@ export const MyWatchlist = () => {
 
                             const imagePath =
                                 item.backdrop_path || item.poster_path;
+                            const navigation = getWatchlistNavigation(item);
+                            const Thumbnail = isEditing ? 'button' : Link;
 
                             return (
                                 <div
                                     className="my-watchlist-item"
                                     key={itemKey}
                                 >
-                                    <button
-                                        type="button"
+                                    <Thumbnail
                                         className="my-watchlist-thumbnail"
-                                        onClick={() => {
-                                            if (isEditing) {
-                                                handleSelect(itemKey);
-                                            }
-                                        }}
-                                        disabled={!isEditing || isDeleting}
+                                        {...(isEditing ? {
+                                            type: 'button',
+                                            onClick: () => handleSelect(itemKey),
+                                            disabled: isDeleting,
+                                        } : navigation)}
                                         aria-label={
-                                            `${item.title} ${isSelected
+                                            isEditing ? `${item.title} ${isSelected
                                                 ? '선택 해제'
                                                 : '선택'
-                                            }`
+                                            }` : `${item.title} ${item.media_type === 'sports' ? '경기 일정 보기' : '상세 보기'}`
                                         }
                                         aria-pressed={
                                             isEditing ? isSelected : undefined
                                         }
                                     >
                                         {item.media_type === "sports" ? (
-                                            <div className="my-watchlist-placeholder">
-                                                <strong>{item.homeName || "스포츠 경기"}</strong>
-                                                <span>VS</span>
-                                                <strong>{item.awayName || ""}</strong>
-                                                {item.startTime && (
-                                                    <small>
-                                                        {new Date(item.startTime).toLocaleString(
-                                                            "ko-KR",
-                                                            { timeZone: "Asia/Seoul" }
-                                                        )}
-                                                    </small>
-                                                )}
-                                            </div>
+                                            <SportsWatchlistThumbnail item={item} />
                                         ) : imagePath ? (
                                             <picture>
                                                 {item.poster_path && (
@@ -402,10 +479,11 @@ export const MyWatchlist = () => {
                                                 />
                                             </span>
                                         )}
-                                    </button>
+                                    </Thumbnail>
 
                                     <div className="my-watchlist-info">
-                                        <h3>{item.title}</h3>
+                                        <h3>{isEditing ? item.title : <Link {...navigation}>{item.title}</Link>}</h3>
+                                        {item.media_type === 'sports' && <p>{formatSportsWatchlistDate(item.startTime)}</p>}
                                     </div>
                                 </div>
                             );

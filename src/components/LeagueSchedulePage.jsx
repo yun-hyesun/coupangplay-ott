@@ -9,10 +9,15 @@ import { getMatchVideoKey } from "../data/matchRelatedVideos";
 import { useScheduleMatchVideos } from "../hooks/useScheduleMatchVideos";
 import { getLeagueSeasonSchedule } from "../service/leagueScheduleService";
 import { findSportsTeam } from "../data/sportsTeams";
+import { auth } from "../firebase/firebase";
+import { useAuthStore } from "../store/useAuthStore";
+import { useProfileStore } from "../store/useProfileStore";
+import { useWatchlistStore } from "../store/useWatchlistStore";
+import { Link } from "react-router-dom";
+import { getSportsLiveWatchDestination } from "../page/watch/watchMedia";
 import "./scss/LeagueSchedulePage.scss";
 
 const ASSETS = "/images/sports/league-detail/schedule/";
-const SAVED_MATCHES_KEY = "coupangplay:sports:saved-matches";
 const EMPTY_GAMES = [];
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -22,11 +27,36 @@ function ScheduleArrow({ direction = "next" }) {
     : <img src={ASSETS + "next.svg"} alt="" aria-hidden="true" />;
 }
 
-function readSavedMatches() {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(SAVED_MATCHES_KEY) || "[]");
-    return Array.isArray(saved) ? saved.filter(value => typeof value === "string") : [];
-  } catch { return []; }
+function getScheduleWatchlistContent(game, league) {
+  const homeName = game.raceName || game.home?.name || "홈 팀";
+  const awayName = game.raceName ? "그랑프리" : game.away?.name || "원정 팀";
+  return {
+    id: `${league.id}_${game.gameId ?? game.id}`,
+    media_type: "sports",
+    title: game.raceName || `${homeName} vs ${awayName}`,
+    leagueId: league.id,
+    sport: league.sport,
+    startTime: game.utcDate || game.startTime || null,
+    homeName,
+    awayName,
+    homeTeamId: game.home?.teamId ?? game.home?.id ?? null,
+    awayTeamId: game.away?.teamId ?? game.away?.id ?? null,
+    homeLogo: game.home?.crest || game.home?.logoPath || null,
+    awayLogo: game.away?.crest || game.away?.logoPath || null,
+    thumbnail: game.broadcastThumbnail || game.thumbnail || null,
+    raceName: game.raceName || null,
+  };
+}
+
+function findWatchlistedMatch(watchlist, game, leagueId) {
+  const contentId = `${leagueId}_${game.gameId ?? game.id}`;
+  return watchlist.find(item => item.media_type === "sports" && String(item.id) === contentId)
+    || watchlist.find(item => item.media_type === "sports" && item.leagueId === leagueId && findScheduleMatch([game], {
+      utcDate: item.startTime,
+      home: { id: item.homeTeamId, name: item.homeName },
+      away: { id: item.awayTeamId, name: item.awayName },
+      raceName: item.raceName || (leagueId === "f1" ? item.homeName || item.title : undefined),
+    }, leagueId)) || null;
 }
 
 function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasError, onSelect, onClose }) {
@@ -91,13 +121,14 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
   );
 }
 
-function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onToggleSaved, relatedVideos, autoExpand = false }) {
+function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, saving = false, onToggleSaved, relatedVideos, focused = false, autoExpand = false }) {
   const detailsId = useId();
   const matchRef = useRef(null);
   const [expanded, setExpanded] = useState(autoExpand);
   const status = getGameStatus(game.status);
   const hasRelatedVideos = status.type === "ended" && Boolean(relatedVideos?.length);
-  const detailsExpanded = status.type === "ended" && expanded && (hasRelatedVideos || autoExpand);
+  const canExpand = status.type === "ended" && (hasRelatedVideos || saved || focused || autoExpand);
+  const detailsExpanded = canExpand && expanded;
   const unit = getScheduleUnit(game);
   const isMyTeam = (team) => {
     if (!team) return false;
@@ -112,9 +143,9 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
   const homeName = game.raceName || game.home?.name || "홈 팀";
   const awayName = game.raceName ? (game.venue || "그랑프리") : game.away?.name || "원정 팀";
   const title = `${homeName} vs ${awayName}`;
-  const liveUrl = game.broadcastUrl || "https://www.coupangplay.com/";
+  const liveDestination = getSportsLiveWatchDestination(game, { leagueId: league.id, returnTo: `/sports/league/${league.id}`, returnTab: "schedule" });
   useEffect(() => {
-    if (!autoExpand || !detailsExpanded) return undefined;
+    if (!focused) return undefined;
     const scrollToMatch = () => {
       matchRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
       matchRef.current?.querySelector("article")?.focus({ preventScroll: true });
@@ -128,10 +159,10 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
       window.cancelAnimationFrame(frame);
       window.cancelAnimationFrame(settledFrame);
     };
-  }, [autoExpand, detailsExpanded, hasRelatedVideos]);
+  }, [focused]);
   return (
-    <div ref={matchRef} className="league-schedule__match-wrap" data-expanded={detailsExpanded || undefined} data-focused-match={autoExpand || undefined}>
-    <article className="league-schedule__match" tabIndex={autoExpand ? -1 : undefined} data-match-status={status.type} data-my-team-home={homeIsMyTeam || undefined} data-my-team-away={awayIsMyTeam || undefined} aria-label={`${title}, ${status.label}`}>
+    <div ref={matchRef} className="league-schedule__match-wrap" data-expanded={detailsExpanded || undefined} data-focused-match={focused || undefined}>
+    <article className="league-schedule__match" tabIndex={focused ? -1 : undefined} data-match-status={status.type} data-my-team-home={homeIsMyTeam || undefined} data-my-team-away={awayIsMyTeam || undefined} aria-label={`${title}, ${status.label}`}>
       <div className="league-schedule__badges">
         <span className={`league-schedule__badge league-schedule__badge--${status.type}`}>
           {status.type === "live" && <img src={ASSETS + "live.svg"} alt="" />} {status.label}
@@ -149,10 +180,10 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
         <div className="league-schedule__team league-schedule__team--away">{!game.raceName && <TeamImage team={game.away} leagueId={league.id} />}<span title={awayName}>{awayName}</span></div>
       </div>
       <div className="league-schedule__actions">
-        {status.type === "scheduled" ? <button type="button" className="league-schedule__action" aria-label={`${title} 경기 찜하기`} aria-pressed={saved} onClick={() => onToggleSaved(game.gameId)}>
+        {status.type === "scheduled" ? <button type="button" className="league-schedule__action" aria-label={`${title} 경기 ${saved ? "찜 해제" : "찜하기"}`} aria-pressed={saved} disabled={saving || (game.gameId ?? game.id) == null} onClick={() => onToggleSaved(game)}>
           <img src={ASSETS + (saved ? "check.svg" : "plus.svg")} alt="" />
-        </button> : status.type === "live" ? <a className="league-schedule__action is-live" href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label={`${title} 쿠팡플레이에서 중계 보기`}><img src={ASSETS + "play.svg"} alt="" /></a>
-          : (hasRelatedVideos || detailsExpanded) && <button type="button" className="league-schedule__action league-schedule__action--expand" onClick={() => setExpanded(value => !value)}
+        </button> : status.type === "live" ? <Link className="league-schedule__action is-live" {...liveDestination} aria-label={`${title} LIVE 화면으로 이전 경기 영상 보기`}><img src={ASSETS + "play.svg"} alt="" /></Link>
+          : canExpand && <button type="button" className="league-schedule__action league-schedule__action--expand" onClick={() => setExpanded(value => !value)}
             aria-label={`${title} 관련 영상 ${detailsExpanded ? "접기" : "펼치기"}`} aria-expanded={detailsExpanded} aria-controls={detailsExpanded ? detailsId : undefined}>
             <img src={ASSETS + "related-collapse.svg"} alt="" />
           </button>}
@@ -163,32 +194,42 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
   );
 }
 
-export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = [], initialMatch = null }) {
+export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = [], initialMatch = null, expandInitialMatch = true }) {
+  const user = useAuthStore(state => state.user);
+  const authLoading = useAuthStore(state => state.loading);
+  const currentProfile = useProfileStore(state => state.currentProfile);
+  const { watchlist, ownerKey, loading: watchlistLoading, onLoadWatchlist } = useWatchlistStore();
+  const currentUid = auth.currentUser?.uid || user?.uid;
+  const currentOwnerKey = currentUid && currentProfile?.id ? `${currentUid}_${currentProfile.id}` : null;
+  const isCurrentWatchlist = Boolean(!authLoading && currentOwnerKey && ownerKey === currentOwnerKey);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const currentSeason = getScheduleSeason(league.id, today);
   const initialDate = initialMatch && getScheduleGameDate(initialMatch);
   const initialSeason = initialDate ? getScheduleSeason(league.id, initialDate) : currentSeason;
   const [season, setSeason] = useState(initialSeason);
-  const [mode, setMode] = useState(initialDate ? "date" : "round");
-  const [selection, setSelection] = useState(initialDate ? { season: initialSeason, date: initialDate, round: getScheduleUnit(initialMatch)?.value || "" } : null);
+  const [mode, setMode] = useState(initialMatch ? "date" : "round");
+  const [selection, setSelection] = useState(null);
+  const [followingInitialMatch, setFollowingInitialMatch] = useState(Boolean(initialMatch));
   const [roundOffset, setRoundOffset] = useState(0);
   const [result, setResult] = useState(null);
   const [attempt, setAttempt] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [savedMatches, setSavedMatches] = useState(readSavedMatches);
   const key = `${league.id}:${season}:${attempt}`;
   const loading = result?.key !== key;
   const scheduleGames = loading ? EMPTY_GAMES : result.games;
-  const focusedGame = useMemo(() => initialDate ? findScheduleMatch(scheduleGames, initialMatch, league.id) || initialMatch : null,
-    [scheduleGames, initialMatch, initialDate, league.id]);
+  const focusedGame = useMemo(() => followingInitialMatch && initialMatch ? findScheduleMatch(scheduleGames, initialMatch, league.id) || (initialDate && initialMatch.status ? initialMatch : null) : null,
+    [scheduleGames, initialMatch, initialDate, league.id, followingInitialMatch]);
   const games = useMemo(() => focusedGame && !scheduleGames.includes(focusedGame) ? [...scheduleGames, focusedGame] : scheduleGames,
     [scheduleGames, focusedGame]);
   const rounds = useMemo(() => getScheduleRounds(games), [games]);
   const recentGame = useMemo(() => getRecentScheduleGame(games, today), [games, today]);
   const currentSelection = selection?.season === season ? selection : null;
-  const round = currentSelection?.round || getScheduleUnit(recentGame || {})?.value || rounds[0]?.value || "";
-  const requestedDate = currentSelection?.date || (season === currentSeason ? today : getScheduleGameDate(recentGame || {}) || getSeasonRange(league.id, season).from);
+  const initialGameDate = followingInitialMatch ? getScheduleGameDate(focusedGame || {}) || initialDate : null;
+  const round = currentSelection?.round || getScheduleUnit(followingInitialMatch && focusedGame || recentGame || {})?.value || rounds[0]?.value || "";
+  const requestedDate = currentSelection?.date || initialGameDate || (season === currentSeason ? today : getScheduleGameDate(recentGame || {}) || getSeasonRange(league.id, season).from);
   const dateWindow = useMemo(() => getScheduleDateWindow(games, requestedDate), [games, requestedDate]);
-  const dateKey = dateWindow.selectedDate || requestedDate;
+  const dateKey = initialGameDate && !currentSelection ? initialGameDate : dateWindow.selectedDate || requestedDate;
   const dateOnly = !loading && games.length > 0 && !rounds.length;
   const viewMode = dateOnly ? "date" : mode;
   const roundWindow = getRoundWindow(rounds, round, roundOffset);
@@ -212,10 +253,12 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
   }, [league.id, season, attempt, key]);
 
   useEffect(() => {
-    try { window.localStorage.setItem(SAVED_MATCHES_KEY, JSON.stringify(savedMatches)); } catch { /* Keep local selections in memory. */ }
-  }, [savedMatches]);
+    if (authLoading || !auth.currentUser || !currentOwnerKey) return;
+    if (useWatchlistStore.getState().ownerKey !== currentOwnerKey) onLoadWatchlist();
+  }, [authLoading, currentOwnerKey, onLoadWatchlist]);
 
   function selectDate(date, year = getScheduleSeason(league.id, date)) {
+    setFollowingInitialMatch(false);
     const game = games.find(game => getScheduleGameDate(game) === date);
     setSeason(year);
     setSelection({ season: year, date, round: year === season ? getScheduleUnit(game || {})?.value || round : "" });
@@ -224,6 +267,7 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
   }
 
   function shiftPeriod(offset) {
+    setFollowingInitialMatch(false);
     if (viewMode === "round") { setSeason(value => value + offset); setSelection(null); setRoundOffset(0); }
     else {
       const date = new Date(`${dateKey}T00:00:00Z`);
@@ -232,7 +276,39 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
     }
   }
 
-  function toggleSaved(id) { setSavedMatches(previous => previous.includes(id) ? previous.filter(value => value !== id) : [...previous, id]); }
+  async function toggleSaved(game) {
+    if (savingRef.current) return;
+    const user = auth.currentUser;
+    const profile = useProfileStore.getState().currentProfile;
+    if (!user?.uid || !profile?.id) {
+      alert("로그인 후 프로필을 선택해 주세요.");
+      return;
+    }
+    if ((game.gameId ?? game.id) == null) return;
+
+    const expectedOwnerKey = `${user.uid}_${profile.id}`;
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      if (useWatchlistStore.getState().ownerKey !== expectedOwnerKey) await onLoadWatchlist();
+      if (auth.currentUser?.uid !== user.uid || useProfileStore.getState().currentProfile?.id !== profile.id) return;
+      const store = useWatchlistStore.getState();
+      if (store.ownerKey !== expectedOwnerKey) {
+        alert("찜 목록을 불러오지 못했습니다. 다시 시도해 주세요.");
+        return;
+      }
+      const savedItem = findWatchlistedMatch(store.watchlist, game, league.id);
+      const success = savedItem
+        ? await store.onRemoveWatchlist(savedItem)
+        : await store.onAddWatchlist(getScheduleWatchlistContent(game, league));
+      if (!success) alert("찜 목록을 변경하지 못했습니다. 다시 시도해 주세요.");
+    } catch {
+      alert("찜 목록을 변경하지 못했습니다. 다시 시도해 주세요.");
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }
 
   return (
     <section className="league-schedule" aria-labelledby="league-schedule-page-title">
@@ -248,14 +324,14 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
           <button className="league-schedule__icon-button" type="button" aria-label="경기 날짜 선택" aria-haspopup="dialog" onClick={() => setCalendarOpen(true)}><img src={ASSETS + "calendar.svg"} alt="" /></button>
           <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "다음 시즌" : "다음 달"} disabled={season > currentSeason} onClick={() => shiftPeriod(1)}><ScheduleArrow /></button>
         </div>
-        <div className="league-schedule__recent-wrap"><button className="league-schedule__recent" type="button" onClick={() => { setSeason(currentSeason); setSelection(null); setRoundOffset(0); }}>최근</button></div>
+        <div className="league-schedule__recent-wrap"><button className="league-schedule__recent" type="button" onClick={() => { setFollowingInitialMatch(false); setSeason(currentSeason); setSelection(null); setRoundOffset(0); }}>최근</button></div>
       </div>
       <div className="league-schedule__selector" role="group" aria-label={viewMode === "round" ? "라운드 선택" : "날짜 선택"}>
         <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "이전 라운드 묶음" : "이전 경기 날짜 묶음"} disabled={viewMode === "round" ? !roundWindow.hasPrevious : !dateWindow.hasPrevious}
           onClick={() => viewMode === "round" ? setRoundOffset(value => value - 5) : dateWindow.previousDate && selectDate(dateWindow.previousDate)}><ScheduleArrow direction="previous" /></button>
         <div className="league-schedule__options">
           {viewMode === "round" ? (roundWindow.items.length ? roundWindow.items.map(option => <button type="button" key={option.value} aria-label={option.label} aria-pressed={round === option.value}
-            onClick={() => { setSelection({ season, date: dateKey, round: option.value }); setRoundOffset(0); }}><strong>{option.kind === "round" ? `${option.number}R` : option.label}</strong><span>{option.kind === "round" ? "정규 리그" : "경기 일정"}</span></button>)
+            onClick={() => { setFollowingInitialMatch(false); setSelection({ season, date: dateKey, round: option.value }); setRoundOffset(0); }}><strong>{option.kind === "round" ? `${option.number}R` : option.label}</strong><span>{option.kind === "round" ? "정규 리그" : "경기 일정"}</span></button>)
             : <span className="league-schedule__selector-loading">{loading ? "경기 라운드를 불러오는 중입니다." : "조회된 라운드가 없습니다."}</span>)
             : dateWindow.items.length ? dateWindow.items.map(date => <button type="button" key={date} aria-label={date} aria-pressed={date === dateKey} aria-current={date === today ? "date" : undefined} onClick={() => selectDate(date)}>
               <strong>{Number(date.slice(-2))}</strong><span>{date === today ? "오늘" : WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()]}</span></button>)
@@ -269,9 +345,14 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
         {loading ? <div className="league-schedule__loading" role="status"><span className="league-schedule__sr-only">경기 일정을 불러오는 중입니다.</span>{[0, 1, 2].map(index => <div key={index} />)}</div>
           : groups.map(group => <section className="league-schedule__date-group" key={group.date} aria-label={group.date}>
             <h3><time dateTime={group.date}>{formatGameDate(`${group.date}T00:00:00+09:00`)}</time></h3>
-            {group.matches.map(game => <ScheduleMatchRow key={game.gameId} game={game} league={league} scoresOn={scoresOn} selectedTeamIds={selectedTeamIds} saved={savedMatches.includes(game.gameId)} onToggleSaved={toggleSaved} relatedVideos={scheduleMatchVideos[getMatchVideoKey(game)]} autoExpand={Boolean(focusedGame && game.gameId === focusedGame.gameId)} />)}
+            {group.matches.map(game => {
+              const focused = Boolean(followingInitialMatch && focusedGame && String(game.gameId) === String(focusedGame.gameId));
+              const saved = isCurrentWatchlist && Boolean(findWatchlistedMatch(watchlist, game, league.id));
+              return <ScheduleMatchRow key={game.gameId} game={game} league={league} scoresOn={scoresOn} selectedTeamIds={selectedTeamIds} saved={saved} saving={authLoading || watchlistLoading || saving} onToggleSaved={toggleSaved} relatedVideos={scheduleMatchVideos[getMatchVideoKey(game)]} focused={focused} autoExpand={focused && expandInitialMatch} />;
+            })}
           </section>)}
         {!loading && !groups.length && <p className="league-schedule__empty" role="status">{result.errors.length ? "경기 일정을 불러오지 못했습니다." : "선택한 조건에 등록된 경기가 없습니다."}</p>}
+        {!loading && followingInitialMatch && !focusedGame && <p className="league-schedule__empty" role="status">선택한 경기의 최신 일정을 찾지 못했습니다. 경기 일정이 변경되었거나 아직 공개되지 않았을 수 있습니다.</p>}
         {!loading && (result.errors.length > 0 || result.warning) && <div className="league-schedule__error" role="status"><p>{result.warning || (games.length ? "일부 경기 일정을 불러오지 못했습니다." : "현재 경기 일정을 확인할 수 없습니다. 잠시 후 다시 조회해 주세요.")}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button></div>}
       </div>
       {calendarOpen && <ScheduleCalendar date={dateKey} today={today} leagueId={league.id} games={games} season={season} loading={loading} hasError={!loading && result.errors.length > 0} onSelect={selectDate} onClose={() => setCalendarOpen(false)} />}
