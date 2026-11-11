@@ -1,0 +1,165 @@
+/* size */
+/* size */
+/* size */
+.store-channel-passes {
+  padding: 32px clamp(20px, 4vw, 80px) 40px;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+}
+.store-channel-passes__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.store-channel-passes h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+}
+.store-channel-passes__more {
+  flex-shrink: 0;
+  color: #A3A3A3;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.store-channel-passes__more:hover {
+  color: #FFFFFF;
+}
+.store-channel-passes__more:focus-visible {
+  outline: 2px solid #0084FF;
+  outline-offset: 4px;
+}
+.store-channel-passes__grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+}
+.store-channel-passes__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 144px;
+  min-width: 0;
+  padding: 20px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  text-decoration: none;
+}
+.store-channel-passes__card:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.store-channel-passes__card:focus-visible {
+  outline: 2px solid #0084FF;
+  outline-offset: 3px;
+}
+.store-channel-passes__logo {
+  width: 145px;
+  max-width: 100%;
+  height: 64px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.store-channel-passes__brand {
+  display: block;
+  flex-shrink: 0;
+  background: white;
+  mask-repeat: no-repeat;
+  mask-mode: alpha;
+}
+.store-channel-passes__brand--paramount {
+  width: 77.019px;
+  height: 48px;
+  position: relative;
+  background: transparent;
+}
+.store-channel-passes__brand--paramount::before {
+  content: "";
+  position: absolute;
+  inset: 0.18% 0.13% 0.18% 0.12%;
+  background: url("../assets/store-passes/paramount.svg") center/100% 100% no-repeat;
+  mask-image: url("../assets/store-passes/paramount-mask.svg"), url("../assets/store-passes/paramount-clip.svg");
+  mask-size: 77.02px 48px, 103.255px 66.812px;
+  mask-position: -0.09px -0.087px, -13.25px -9.746px;
+  mask-repeat: no-repeat;
+  mask-composite: intersect;
+}
+.store-channel-passes__brand--sony {
+  width: 32.192px;
+  height: 50px;
+  background: url("../assets/store-passes/sony.svg") center/contain no-repeat;
+}
+.store-channel-passes__brand--moa {
+  width: 88px;
+  height: 28.74px;
+  mask-image: url("../assets/store-passes/moa.png");
+  mask-size: 88.441px 28.744px;
+  mask-position: -0.441px 0;
+}
+.store-channel-passes__brand--jplus {
+  width: 104px;
+  height: 27.56px;
+  mask-image: url("../assets/store-passes/jplus.png");
+  mask-size: 104px 28.6px;
+  mask-position: 0 -0.52px;
+}
+.store-channel-passes__brand--ebs {
+  width: 112px;
+  height: 26.32px;
+  mask-image: url("../assets/store-passes/ebs.png");
+  mask-size: 112px 26.32px;
+}
+.store-channel-passes__brand--kids {
+  width: 90px;
+  height: 30.15px;
+  mask-image: url("../assets/store-passes/kids.png");
+  mask-size: 90px 30.15px;
+}
+.store-channel-passes__description {
+  font-size: 16px;
+  line-height: 24px;
+  color: #D4D4D4;
+  text-align: center;
+}
+@media (max-width: 1100px) {
+  .store-channel-passes__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .store-channel-passes {
+    padding-inline: 20px;
+  }
+  .store-channel-passes__header {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  .store-channel-passes h2 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+  .store-channel-passes__more {
+    margin-left: auto;
+  }
+  .store-channel-passes__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .store-channel-passes__card {
+    padding: 12px;
+  }
+  .store-channel-passes__description {
+    font-size: 14px;
+  }
+}
