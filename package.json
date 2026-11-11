@@ -7,13 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "videos:sync": "node scripts/sync-youtube-catalog.mjs",
+    "videos:worker": "node scripts/sync-youtube-catalog.mjs --watch"
   },
   "dependencies": {
     "firebase": "^13.1.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4",
+    "react-youtube": "^10.1.0",
     "sass": "^1.106.1",
     "swiper": "^14.3.0",
     "zustand": "^5.0.16"

@@ -33,6 +33,16 @@ const clearSavedProfileId = (uid) => {
     localStorage.removeItem(getSelectedProfileKey(uid));
 };
 
+// 시연용 PIN 해시 생성 (실제 서비스에서는 서버에서 검증 필요)
+const hashPin = async (pin) => {
+    const data = new TextEncoder().encode(pin);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+
+    return Array.from(new Uint8Array(hash))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('');
+};
+
 export const useProfileStore = create((set, get) => ({
     // 프로필 목록
     profiles: [],
@@ -47,6 +57,8 @@ export const useProfileStore = create((set, get) => ({
     // 프로필 목록 불러오기
     onLoadProfiles: async () => {
         const user = auth.currentUser;
+        console.log('현재 로그인 UID:', user?.uid);
+        console.log('현재 로그인 이메일:', user?.email);
 
         if (!user) {
             set({
@@ -108,6 +120,7 @@ export const useProfileStore = create((set, get) => ({
                 name: trimmedName,
                 avatar,
                 isLocked: false,
+                pinHash: null,
                 rating: 'ALL',
                 createdAt: serverTimestamp()
             };
@@ -128,7 +141,7 @@ export const useProfileStore = create((set, get) => ({
     },
 
     // 프로필 선택
-    onSelectProfile: async (profileId) => {
+    onSelectProfile: async (profileId, verifiedPin = '') => {
         const user = auth.currentUser;
 
         if (!user) {
@@ -160,11 +173,17 @@ export const useProfileStore = create((set, get) => ({
 
             // 잠금 프로필은 PIN 인증 후 선택 가능
             if (profile.isLocked) {
-                set({
-                    loading: false,
-                    error: '잠금 설정된 프로필입니다. PIN 인증이 필요합니다.'
-                });
-                return null;
+                const enteredHash = /^\d{4}$/.test(verifiedPin)
+                    ? await hashPin(verifiedPin)
+                    : null;
+
+                if (profile.pinHash !== enteredHash || !enteredHash) {
+                    set({
+                        loading: false,
+                        error: '잠금 설정된 프로필입니다. PIN 인증이 필요합니다.'
+                    });
+                    return null;
+                }
             }
 
             // 선택한 프로필 ID 저장
@@ -242,6 +261,206 @@ export const useProfileStore = create((set, get) => ({
             console.error('프로필 복원 오류:', error);
             set({ currentProfile: null });
             return null;
+        }
+    },
+
+
+    // 프로필 PIN 확인
+    onVerifyProfilePin: async (profileId, pin) => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            set({ error: '로그인이 필요합니다.' });
+            return false;
+        }
+
+        if (!/^\d{4}$/.test(pin)) {
+            set({ error: 'PIN 번호 4자리를 입력해 주세요.' });
+            return false;
+        }
+
+        try {
+            const snapshot = await getDoc(
+                getProfileRef(user.uid, profileId)
+            );
+
+            if (!snapshot.exists()) {
+                set({ error: '프로필을 찾을 수 없습니다.' });
+                return false;
+            }
+
+            const profile = snapshot.data();
+            const enteredHash = await hashPin(pin);
+
+            if (!profile.isLocked || profile.pinHash !== enteredHash) {
+                set({ error: 'PIN 번호가 일치하지 않습니다.' });
+                return false;
+            }
+
+            set({ error: null });
+            return true;
+
+        } catch (error) {
+            console.error('PIN 확인 오류:', error);
+            set({ error: error.message });
+            return false;
+        }
+    },
+
+    // 프로필 잠금 설정 및 해제
+    onUpdateProfileLock: async (profileId, isLocked, pin = '') => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            set({ error: '로그인이 필요합니다.' });
+            return false;
+        }
+
+        if (isLocked && !/^\d{4}$/.test(pin)) {
+            set({ error: 'PIN 번호 4자리를 입력해 주세요.' });
+            return false;
+        }
+
+        set({ loading: true, error: null });
+
+        try {
+            const updates = isLocked
+                ? {
+                    isLocked: true,
+                    pinHash: await hashPin(pin)
+                }
+                : {
+                    isLocked: false,
+                    pinHash: null
+                };
+
+            await updateDoc(
+                getProfileRef(user.uid, profileId),
+                updates
+            );
+
+            await get().onLoadProfiles();
+
+            const current = get().currentProfile;
+
+            if (current?.id === profileId) {
+                set({
+                    currentProfile: {
+                        ...current,
+                        ...updates
+                    }
+                });
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('프로필 잠금 설정 오류:', error);
+            set({ loading: false, error: error.message });
+            return false;
+        }
+    },
+
+    // 성인 인증 — 포트폴리오 시연용 생년월일 확인
+    onVerifyAdult: async (profileId, birthdate) => {
+        set({ error: null });
+
+        const user = auth.currentUser;
+
+        if (!user) {
+            set({ error: '로그인이 필요합니다.' });
+            return false;
+        }
+
+        if (!profileId) {
+            set({ error: '프로필을 선택해 주세요.' });
+            return false;
+        }
+
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthdate);
+
+        if (!match) {
+            set({ error: '올바른 생년월일을 입력해 주세요.' });
+            return false;
+        }
+
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+
+        const birth = new Date(year, month - 1, day);
+        const today = new Date();
+
+        if (
+            year < 1900 ||
+            birth.getFullYear() !== year ||
+            birth.getMonth() !== month - 1 ||
+            birth.getDate() !== day ||
+            birth > today
+        ) {
+            set({ error: '올바른 생년월일을 입력해 주세요.' });
+            return false;
+        }
+
+        let age = today.getFullYear() - year;
+
+        if (
+            today.getMonth() + 1 < month ||
+            (
+                today.getMonth() + 1 === month &&
+                today.getDate() < day
+            )
+        ) {
+            age--;
+        }
+
+        if (age < 19) {
+            set({ error: '만 19세 이상만 인증할 수 있습니다.' });
+            return false;
+        }
+
+        try {
+            const profileRef = getProfileRef(user.uid, profileId);
+            const snapshot = await getDoc(profileRef);
+
+            if (!snapshot.exists()) {
+                set({ error: '프로필을 찾을 수 없습니다.' });
+                return false;
+            }
+
+            await updateDoc(profileRef, {
+                isAdultVerified: true,
+                adultVerifiedAt: serverTimestamp(),
+            });
+
+            // 요청 도중 로그아웃하거나 계정이 바뀌었다면 상태 변경 중단
+            if (auth.currentUser?.uid !== user.uid) return false;
+
+            set((state) => ({
+                profiles: state.profiles.map((profile) =>
+                    profile.id === profileId
+                        ? { ...profile, isAdultVerified: true }
+                        : profile
+                ),
+                currentProfile:
+                    state.currentProfile?.id === profileId
+                        ? {
+                            ...state.currentProfile,
+                            isAdultVerified: true,
+                        }
+                        : state.currentProfile,
+                error: null,
+            }));
+
+            return true;
+        } catch (error) {
+            console.error('성인 인증 저장 오류:', error);
+
+            set({
+                error: error.message || '성인 인증 결과를 저장하지 못했습니다.',
+            });
+
+            return false;
         }
     },
 

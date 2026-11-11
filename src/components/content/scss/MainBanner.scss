@@ -1,6 +1,6 @@
-.main-banner {padding-inline: $padding-main; margin-bottom: 40px;
+.main-banner {height: 780px; max-height: 70vh; padding-inline: $padding-main; margin-bottom: clamp(20px, 2.77vw, 40px);
 
-  .swiper {width: 100%; height: 780px; max-height: 80vh;
+  .swiper {width: 100%; height: 100%;
     
     .swiper-slide {position: relative; pointer-events: none; overflow: hidden; border-radius: 30px;
       &::after {content: ''; @include pos-abs($t:0, $l:0); width: 100%; height: 100%; background: rgba(0,0,0,0.4);}
@@ -11,10 +11,15 @@
     
       .banner-slide-list {width: 100%; height: 100%; border-radius: 30px; border: 2px solid rgba(255,255,255,.1); overflow: hidden;
         
-        .slide-list-image {width: 100%; height: 100%; object-fit: cover; object-position: center top}
+        .slide-list-image {width: 100%; height: 100%; object-fit: cover; object-position: center top;}
         .slide-list-info {@include pos-abs($b:10%, $l:50px); width: 100%; text-shadow: 0 0 20px rgba(0,0,0,0.3);
         
-          .info-title {font-size: 55px; font-weight: $font-w-B-700; margin-bottom: 20px;}
+          .info-title {font-size: 55px; font-weight: $font-w-B-700; margin-bottom: 20px;
+          
+            @include tablet {
+              font-size: clamp(25px , 3.75vw, 45px);
+            }
+          }
 
           .info-description {
             width: 50%;
@@ -26,6 +31,11 @@
             overflow: hidden;
             text-overflow: ellipsis;
             word-break: keep-all; /* 단어 단위 줄바꿈 방지용 (필요에 따라 생략 가능) */
+
+            @include tablet {
+              width: 80%;
+              font-size: clamp(18px , 1.66vw, 20px);
+            }
           }
         }
       }
@@ -42,3 +52,4 @@
     .swiper-button-next {left: 100%; right: auto; margin-left: 22px;}
   }
 }
+

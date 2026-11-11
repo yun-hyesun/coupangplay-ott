@@ -32,3 +32,6 @@ playwright-report/
 .vercel/
 firebase-debug.log
 firestore-debug.log
+
+# Persistent local YouTube catalogue (shared by the dev server and sync worker)
+/.data/
