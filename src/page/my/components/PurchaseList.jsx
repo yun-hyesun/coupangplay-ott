@@ -1,10 +1,43 @@
-import React from 'react'
+
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '../../../store/useAuthStore'
+import { subscribeMyPurchases } from '../../../service/purchaseService'
 import '../scss/PurchaseList.scss'
 
 export const PurchaseList = () => {
-    // 추후 Firebase 구매 내역 데이터 연결 예정
-    const purchaseList = [];
+    // 로그인한 사용자 정보
+    const user = useAuthStore((state) => state.user);
+
+    // 구매 내역 저장
+    const [purchaseList, setPurchaseList] = useState([]);
+
+    // 데이터 불러오기 오류
+    const [purchaseError, setPurchaseError] = useState('');
+
+    // Firebase 구매 내역 실시간 연결
+    useEffect(() => {
+        setPurchaseList([]);
+        setPurchaseError('');
+
+        if (!user?.uid) return;
+
+        const unsubscribe = subscribeMyPurchases(
+            user.uid,
+            setPurchaseList,
+            (error) => {
+                console.error('구매내역 불러오기 오류:', error);
+                setPurchaseError('구매내역을 불러오지 못했습니다.');
+            }
+        );
+
+        return unsubscribe;
+    }, [user?.uid]);
+
+    // 숨기지 않은 구매 콘텐츠만 표시
+    const visiblePurchases = purchaseList.filter(
+        (item) => !item.hidden
+    );
 
     return (
         <section className="purchase-list">
@@ -33,22 +66,26 @@ export const PurchaseList = () => {
                 </Link>
             </div>
 
-            {purchaseList.length === 0 ? (
+            {purchaseError && (
+                <p role="alert">{purchaseError}</p>
+            )}
+
+            {visiblePurchases.length === 0 ? (
                 <p className="purchase-list-message">
                     구매한 콘텐츠가 없습니다.
                 </p>
             ) : (
                 <div className="purchase-list-grid">
-                    {purchaseList.slice(0, 5).map((item) => (
+                    {visiblePurchases.slice(0, 5).map((item) => (
                         <Link
                             key={item.id}
-                            to={`/detail/${item.media_type}/${item.id}`}
+                            to={`/detail/${item.mediaType}/${item.contentId}`}
                             className="purchase-list-item"
                         >
                             <div className="purchase-list-thumbnail">
-                                {item.backdrop_path ? (
+                                {item.image ? (
                                     <img
-                                        src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`}
+                                        src={item.image}
                                         alt={item.title}
                                     />
                                 ) : (
