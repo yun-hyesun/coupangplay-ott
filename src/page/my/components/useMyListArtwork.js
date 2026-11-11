@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 const getItemKey = (item) => `${item.media_type}-${item.id}`;
 
-export const useMyListArtwork = (items) => {
+export const useMyListArtwork = (items, { keepMissing = false } = {}) => {
     const [artworkByKey, setArtworkByKey] = useState({});
 
     const requestKey = JSON.stringify(
@@ -82,5 +82,5 @@ export const useMyListArtwork = (items) => {
                 logo_path: item.logo_path || artwork?.logo_path,
             };
         })
-        .filter((item) => item.backdrop_path);
+        .filter((item) => keepMissing || item.backdrop_path);
 };

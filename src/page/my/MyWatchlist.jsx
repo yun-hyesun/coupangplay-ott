@@ -1,3 +1,5 @@
+import { useMyListArtwork } from './components/useMyListArtwork';
+import { ContentRail } from '../../components/content/ContentRail';
 import { Popup } from '../../components/common/Popup';
 
 import React, { useEffect, useState } from 'react'
@@ -86,6 +88,8 @@ export const MyWatchlist = () => {
 
         return false;
     });
+
+    const artworkItems = useMyListArtwork(filteredWatchlist, { keepMissing: true });
 
     // 콘텐츠 고유 ID
     const getItemKey = (item) =>
@@ -314,103 +318,15 @@ export const MyWatchlist = () => {
                         찜한 콘텐츠가 없습니다.
                     </p>
                 ) : (
-                    <div className="my-watchlist-grid">
-                        {filteredWatchlist.map((item) => {
-                            const itemKey = getItemKey(item);
-                            const isSelected =
-                                selectedIds.includes(itemKey);
-
-                            const imagePath =
-                                item.backdrop_path || item.poster_path;
-
-                            return (
-                                <div
-                                    className="my-watchlist-item"
-                                    key={itemKey}
-                                >
-                                    <button
-                                        type="button"
-                                        className="my-watchlist-thumbnail"
-                                        onClick={() => {
-                                            if (isEditing) {
-                                                handleSelect(itemKey);
-                                            }
-                                        }}
-                                        disabled={!isEditing || isDeleting}
-                                        aria-label={
-                                            `${item.title} ${isSelected
-                                                ? '선택 해제'
-                                                : '선택'
-                                            }`
-                                        }
-                                        aria-pressed={
-                                            isEditing ? isSelected : undefined
-                                        }
-                                    >
-                                        {item.media_type === "sports" ? (
-                                            <div className="my-watchlist-placeholder">
-                                                <strong>{item.homeName || "스포츠 경기"}</strong>
-                                                <span>VS</span>
-                                                <strong>{item.awayName || ""}</strong>
-                                                {item.startTime && (
-                                                    <small>
-                                                        {new Date(item.startTime).toLocaleString(
-                                                            "ko-KR",
-                                                            { timeZone: "Asia/Seoul" }
-                                                        )}
-                                                    </small>
-                                                )}
-                                            </div>
-                                        ) : imagePath ? (
-                                            <picture>
-                                                {item.poster_path && (
-                                                    <source
-                                                        media="(max-width: 767px)"
-                                                        srcSet={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                                                    />
-                                                )}
-                                                <img
-                                                    src={`https://image.tmdb.org/t/p/w780${imagePath}`}
-                                                    alt=""
-                                                    className="my-watchlist-image"
-                                                />
-                                            </picture>
-                                        ) : (
-                                            <span className="my-watchlist-placeholder">
-                                                {item.title}
-                                            </span>
-                                        )}
-
-                                        {/* 편집 모드 */}
-                                        {isEditing && (
-                                            <span
-                                                className={
-                                                    `my-watchlist-overlay ${isSelected
-                                                        ? 'selected'
-                                                        : ''
-                                                    }`
-                                                }
-                                            >
-                                                <img
-                                                    src={
-                                                        isSelected
-                                                            ? '/images/icon/DesignSystem_Icon02/icon-favorite_added.svg'
-                                                            : '/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg'
-                                                    }
-                                                    alt=""
-                                                    className="my-watchlist-check"
-                                                />
-                                            </span>
-                                        )}
-                                    </button>
-
-                                    <div className="my-watchlist-info">
-                                        <h3>{item.title}</h3>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <ContentRail
+                      asGrid
+                      items={artworkItems}
+                      getSelection={isEditing ? (item) => ({
+                        selected: selectedIds.includes(getItemKey(item)),
+                        onToggle: () => handleSelect(getItemKey(item)),
+                        disabled: isDeleting,
+                      }) : undefined}
+                    />
                 )}
             </div>
             {deleteOpen && <Popup title="찜한 콘텐츠를 삭제하시겠습니까?"
