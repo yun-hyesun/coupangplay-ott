@@ -29,6 +29,8 @@
 
       @include mobile() {
         width: 100%; padding: 0;
+        background: transparent;
+        z-index: 0;
       }
 
       .contentRail-intro-title {
