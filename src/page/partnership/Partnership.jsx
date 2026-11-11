@@ -158,7 +158,7 @@ export const Partnership = () => {
           <Link className="partnership__policy" to="/privacy">개인정보처리방침 보기 ↗</Link>
         </section>
         <div className="partnership__actions">
-          {!endpoint && <p className="partnership__hint">현재는 시연용 페이지입니다. 입력한 내용과 파일은 전송·저장되지 않습니다.</p>}
+          {/* {!endpoint && <p className="partnership__hint">현재는 시연용 페이지입니다. 입력한 내용과 파일은 전송·저장되지 않습니다.</p>} */}
           {errors.submit && <p className="partnership__error" role="alert">{errors.submit}</p>}
           <button className="button main-btn partnership__submit" type="submit" disabled={status === 'submitting'}>{status === 'submitting' ? '제안 전송 중…' : '제휴 제안 보내기'}</button>
           <p className="partnership__hint">접수된 제안은 담당 부서에서 검토하며, 추가 협의가 필요한 경우 연락드립니다.</p>
