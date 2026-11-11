@@ -1,19 +1,40 @@
 .sports-banner {
   position: relative;
+  overflow: clip;
   padding-inline: $padding-main;
   margin-bottom: 48px;
 
   .swiper {
     width: 100%;
     height: clamp(380px, 35.2vw, 676px);
-    overflow: hidden;
+    overflow: visible;
   }
 
   .swiper-slide {
+    position: relative;
+    width: 100%;
     height: 100%;
     overflow: hidden;
     border-radius: 20px;
     background: #101923;
+    pointer-events: none;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background: rgba(0, 0, 0, .4);
+      pointer-events: none;
+    }
+
+    &-active {
+      pointer-events: auto;
+
+      &::after {
+        content: none;
+      }
+    }
   }
 
   &__slide {
@@ -112,27 +133,36 @@
   }
 
   .swiper-pagination {
-    bottom: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 5%;
     z-index: 3;
   }
 
   .swiper-pagination-bullet {
-    width: 9px;
-    height: 9px;
-    background: #fff;
-    opacity: .55;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .9);
   }
 
   .swiper-pagination-bullet-active {
-    width: 28px;
-    border-radius: 8px;
-    opacity: 1;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #fff;
   }
 
-  .swiper-button-prev,
-  .swiper-button-next {
-    color: #fff;
-    z-index: 4;
+  // Reuse the same arrow artwork, dimensions and states as MainBanner.
+  .sports-banner__prev {
+    left: calc(#{$padding-main} - 27px);
+    right: auto;
+  }
+
+  .sports-banner__next {
+    right: calc(#{$padding-main} - 27px);
+    left: auto;
   }
 
   @media (max-width: 767px) {
@@ -171,9 +201,12 @@
       font-size: clamp(28px, 7vw, 42px);
     }
 
-    .swiper-button-prev,
-    .swiper-button-next {
-      display: none;
+    .sports-banner__prev {
+      left: calc(16px - 27px);
+    }
+
+    .sports-banner__next {
+      right: calc(16px - 27px);
     }
   }
 }
