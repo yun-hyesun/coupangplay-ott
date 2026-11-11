@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CardHover } from './CardHover';
+import { Popup } from '../common/Popup';
 import { useMovieStore } from '../../store/useMovieStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import { subscribeMyPurchases } from '../../service/purchaseService';
 import "./scss/ContentCard.scss"
 
@@ -64,6 +66,26 @@ export const ContentCard = ({ item, type = 'movie', imageType = '가로', varian
 
 const ResumeContentCard = ({ item, selection }) => {
   const [isHover, setIsHover] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
+  const onDeleteHistory = useWatchHistoryStore((state) => state.onDeleteHistory);
+  const canDelete = !selection && !item.historyLayout && item.docId && item.ownerKey;
+
+  const openDeletePopup = () => {
+    setDeleteError(false);
+    setDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setDeleteError(false);
+    try {
+      if (await onDeleteHistory([item.docId], item.ownerKey)) return true;
+    } catch (error) {
+      console.error('시청내역 삭제 실패:', error);
+    }
+    setDeleteError(true);
+    return false;
+  };
 
   const {
     id,
@@ -73,6 +95,16 @@ const ResumeContentCard = ({ item, selection }) => {
     seasonNumber,
     episodeNumber,
   } = item;
+
+  const deleteButton = canDelete ? (
+    <button
+      type="button"
+      className="button circle-btn icon-delete contentCard-resumeDelete"
+      aria-label={`${title} 시청기록 삭제`}
+      title="시청기록 삭제"
+      onClick={openDeletePopup}
+    ></button>
+  ) : null;
 
   return (
     <article
@@ -135,7 +167,22 @@ const ResumeContentCard = ({ item, selection }) => {
       </div>
 
       {!selection && (
-        <CardHover item={item} type={media_type} isHover={isHover} />
+        <CardHover
+          item={item}
+          type={media_type}
+          isHover={isHover}
+          deleteButton={deleteButton}
+        />
+      )}
+      {deleteOpen && (
+        <Popup
+          title="시청내역을 삭제하시겠습니까?"
+          description="삭제한 내역은 복구할 수 없습니다."
+          onClose={() => setDeleteOpen(false)}
+          onConfirm={confirmDelete}
+          confirmText="삭제"
+          error={deleteError ? '시청내역을 삭제하지 못했습니다. 다시 시도해 주세요.' : ''}
+        />
       )}
     </article>
   );
