@@ -7,7 +7,32 @@ import { subscribeMyPurchases } from '../../service/purchaseService';
 import "./scss/ContentCard.scss"
 
 // Swiper와 Grid가 공통으로 쓰는 카드 (기존 hover 및 class 유지)
-export const ContentCard = ({ item, type = 'movie', imageType = '가로', variant = 'default', index = 0, fromStore = false }) => {
+const CardVisual = ({ selection, label, to, state, children }) => {
+  if (selection) {
+    return (
+      <button
+        type="button"
+        className="contentRail-visual contentRail-select"
+        aria-label={label}
+        aria-pressed={selection.selected}
+        disabled={selection.disabled}
+        onClick={selection.onToggle}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  if (!to) return <div className="contentRail-visual">{children}</div>;
+
+  return (
+    <Link className="contentRail-visual" to={to} state={state} aria-label={label}>
+      {children}
+    </Link>
+  );
+};
+
+export const ContentCard = ({ item, type = 'movie', imageType = '가로', variant = 'default', index = 0, fromStore = false, selection, listEntry = false }) => {
   if (item?.source === 'youtube') {
     const isLive = item.kind === 'live';
     return (
@@ -31,13 +56,13 @@ export const ContentCard = ({ item, type = 'movie', imageType = '가로', varian
   }
 
   if (item?.resume) {
-    return <ResumeContentCard item={item} />;
+    return <ResumeContentCard item={item} selection={selection} />;
   }
 
-  return <TmdbContentCard {...{ item, type, imageType, variant, index, fromStore }} />;
+  return <TmdbContentCard {...{ item, type, imageType, variant, index, fromStore, selection, listEntry }} />;
 };
 
-const ResumeContentCard = ({ item }) => {
+const ResumeContentCard = ({ item, selection }) => {
   const [isHover, setIsHover] = useState(false);
 
   const {
@@ -58,8 +83,8 @@ const ResumeContentCard = ({ item }) => {
       onFocus={() => setIsHover(false)}
     >
       <div className="contentRail-info">
-        <Link
-          className="contentRail-visual"
+        <CardVisual
+          selection={selection}
           to={`/watch/${media_type}/${id}`}
           state={{
             content: item,
@@ -71,13 +96,15 @@ const ResumeContentCard = ({ item }) => {
             youtubeKey: item.youtubeKey || '',
             autoPlayNext: true,
           }}
-          aria-label={`${title} 이어서 시청하기`}
+          label={selection ? title : `${title} 이어서 시청하기`}
         >
-          <img
-            src={`https://image.tmdb.org/t/p/w780${item.backdrop_path}`}
-            alt=""
-            loading="lazy"
-          />
+          {(item.backdrop_path || item.poster_path) && (
+            <img
+              src={`https://image.tmdb.org/t/p/w780${item.backdrop_path || item.poster_path}`}
+              alt=""
+              loading="lazy"
+            />
+          )}
 
           <progress
             max="100"
@@ -85,7 +112,7 @@ const ResumeContentCard = ({ item }) => {
             aria-label="시청 진행률"
             className="contentCard-progress"
           />
-        </Link>
+        </CardVisual>
 
         <p className="contentCard-sportsTitle">{title}</p>
 
@@ -107,16 +134,14 @@ const ResumeContentCard = ({ item }) => {
         </p>
       </div>
 
-      <CardHover
-        item={item}
-        type={media_type}
-        isHover={isHover}
-      />
+      {!selection && (
+        <CardHover item={item} type={media_type} isHover={isHover} />
+      )}
     </article>
   );
 };
 
-const TmdbContentCard = ({ item, type, imageType, variant, index, fromStore }) => {
+const TmdbContentCard = ({ item, type, imageType, variant, index, fromStore, selection, listEntry }) => {
   const [isHover, setIsHover] = useState(false);
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);
@@ -167,6 +192,13 @@ const isPurchased =
   const imagePath =
     imageType === '세로' ? item?.poster_path : item?.backdrop_path;
 
+  const isTmdb = mediaType === 'movie' || mediaType === 'tv';
+  const fallbackPath = listEntry ? item?.poster_path : undefined;
+  const artworkPath = imagePath || fallbackPath;
+  const imageUrl = artworkPath
+    ? `https://image.tmdb.org/t/p/w780${artworkPath}`
+    : listEntry ? item?.imageUrl : undefined;
+
   const purchaseKey = `${mediaType}-${id}`;
   const canBuy = useMovieStore(
     (state) => state.purchaseAvailability[purchaseKey]
@@ -177,12 +209,12 @@ const isPurchased =
   const isPurchase = isKnownPurchase || canBuy === true;
 
   useEffect(() => {
-    if (id && imagePath && !isKnownPurchase) {
+    if (isTmdb && id && imagePath && !isKnownPurchase) {
       onCheckPurchase(mediaType, id);
     }
-  }, [id, imagePath, isKnownPurchase, mediaType, onCheckPurchase]);
+  }, [id, imagePath, isKnownPurchase, isTmdb, mediaType, onCheckPurchase]);
 
-  if (!item || !imagePath) return null;
+  if (!item || (!imageUrl && !listEntry)) return null;
 
   return (
     <article
@@ -197,13 +229,15 @@ const isPurchased =
         </span>
       )}
       <div className="contentRail-info">
-        <Link to={`/detail/${mediaType}/${id}${fromStore ? "?from=store" : ""}`} state={fromStore ? { fromStore: true } : undefined} className="contentRail-visual" 
-        aria-label={`${name} 상세보기${
-          item.isCoupangSeries ? ', 쿠팡플레이' : ''
-        }${
-          isPurchased ? ', 구매완료' : isPurchase ? ', 개별구매' : ''
-        }`}>
-          <img src={`https://image.tmdb.org/t/p/w780${imagePath}`} alt={imageType === '가로' ? '' : name} loading="lazy" />
+        <CardVisual
+          selection={selection}
+          to={isTmdb ? `/detail/${mediaType}/${id}${fromStore ? '?from=store' : ''}` : undefined}
+          state={fromStore ? { fromStore: true } : undefined}
+          label={selection ? name : `${name} 상세보기${item.isCoupangSeries ? ', 쿠팡플레이' : ''}${isPurchased ? ', 구매완료' : isPurchase ? ', 개별구매' : ''}`}
+        >
+          {imageUrl && (
+            <img src={imageUrl} alt={imageType === '가로' ? '' : name} loading="lazy" />
+          )}
           {imageType === '가로' && (
             <div className="contentRail-titleArea">
               {item.logo_path ? (
@@ -230,9 +264,17 @@ const isPurchased =
               )}
             </div>
           )}
-        </Link>
+        </CardVisual>
+        {listEntry && (
+          <div className="contentRail-list-info">
+            <p className="contentRail-list-title">{name}</p>
+            {item.hidden && <p>숨긴 콘텐츠</p>}
+          </div>
+        )}
       </div>
-      <CardHover item={item} type={mediaType} isHover={isHover} fromStore={fromStore} />
+      {!selection && isTmdb && imageUrl && (
+        <CardHover item={item} type={mediaType} isHover={isHover} fromStore={fromStore} />
+      )}
     </article>
   );
 };

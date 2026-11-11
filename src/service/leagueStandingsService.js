@@ -121,3 +121,49 @@ export async function getFootballStandings(leagueId) {
     pending.delete(leagueId);
   }
 }
+
+export async function getNflStandings() {
+  const cached = cache.get("nfl");
+  if (cached && Date.now() < cached.expiresAt) return cached.rows;
+  if (pending.has("nfl")) return pending.get("nfl");
+
+  const request = (async () => {
+    const data = await requestJson(`/espn-standings/${ESPN_LEAGUE_PATHS.nfl}/standings`);
+    const conferences = (data.children || []).filter(group => ["AFC", "NFC"].includes(group.abbreviation));
+    if (!conferences.length || conferences.some(group => !Array.isArray(group.standings?.entries))) {
+      throw new Error("NFL 컨퍼런스 순위 응답 형식이 올바르지 않습니다.");
+    }
+    const rows = conferences.flatMap(group => group.standings.entries.map(entry => {
+      const remote = entry.team || {};
+      const stats = Object.fromEntries((entry.stats || []).map(stat => [stat.name, stat.value]));
+      const rank = numberOrNull(stats.playoffSeed ?? stats.rank);
+      if (remote.id == null || !Number.isInteger(rank) || rank < 1) {
+        throw new Error("NFL 팀 또는 순위 정보를 확인하지 못했습니다.");
+      }
+      const team = findSportsTeam("nfl", { name: espnTeamNames.nfl[String(remote.id)] || remote.displayName || remote.name });
+      const win = numberOrNull(stats.wins), loss = numberOrNull(stats.losses), draw = numberOrNull(stats.ties);
+      return {
+        sourceProvider: "espn",
+        season: data.season?.displayName || data.season?.year || "",
+        teamId: team?.id || `espn:${remote.id}`,
+        teamName: team?.name || remote.displayName || remote.name,
+        logoPath: team?.logoPath || remote.logos?.[0]?.href || "",
+        conference: group.abbreviation,
+        rank, win, loss, draw,
+        played: numberOrNull(stats.gamesPlayed) ?? ([win, loss, draw].every(value => value != null) ? win + loss + draw : null),
+        winPct: numberOrNull(stats.winPercent),
+        pointsFor: numberOrNull(stats.pointsFor),
+        pointsAgainst: numberOrNull(stats.pointsAgainst),
+        pointDiff: numberOrNull(stats.pointDifferential ?? stats.differential),
+      };
+    })).sort((a, b) => a.conference.localeCompare(b.conference) || a.rank - b.rank);
+    cache.set("nfl", { rows, expiresAt: Date.now() + CACHE_MS });
+    return rows;
+  })();
+  pending.set("nfl", request);
+  try {
+    return await request;
+  } finally {
+    pending.delete("nfl");
+  }
+}
