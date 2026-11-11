@@ -1,0 +1,213 @@
+@use "../../../scss/variables" as *;
+
+
+
+// ========================================
+// 구독 해지 모달
+// ========================================
+
+.my-pass-modal {
+    // dialog 기본 스타일 초기화 및 중앙 정렬
+    position: fixed;
+    inset: 0;
+
+    box-sizing: border-box;
+    width: calc(100% - 40px);
+    max-width: 495px;
+    min-height: 250px;
+    max-height: calc(100dvh - 40px);
+    margin: auto;
+    padding: 36px 40px 30px;
+
+    border: none;
+    border-radius: 10px;
+    background: #252525;
+    color: $color-text-pri;
+    text-align: center;
+
+    overflow-y: auto;
+
+    // 추가
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    // 모달 바깥 어두운 배경
+    &::backdrop {
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    &[open] {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .my-pass-modal-heading {
+        width: 100%;
+    }
+
+    .my-pass-modal-actions {
+        width: 100%;
+    }
+
+    // 제목 + 닫기 버튼
+    .my-pass-modal-heading {
+        margin-bottom: 14px;
+
+        h2 {
+            margin: 0;
+
+            font-family: $font-main;
+            font-size: 32px;
+            font-weight: 600;
+            color: $color-text-pri;
+        }
+
+        // 닫기 버튼
+        .my-pass-close {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 24px;
+            height: 24px;
+            padding: 0;
+
+            border: none;
+            background: transparent;
+            color: $color-text-pri;
+            font-size: 28px;
+            line-height: 1;
+
+            cursor: pointer;
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+    }
+
+    // 안내 문구
+
+    p {
+        margin: 0 0 26px;
+
+        width: 100%;
+        min-width: 0;
+
+        color: $color-text-sec1;
+        font-family: $font-main;
+        font-size: 16px;
+        line-height: 1.6;
+
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: keep-all;
+
+        strong {
+            color: $color-text-pri;
+            font-weight: 600;
+        }
+    }
+
+
+
+    // 돌아가기 / 구독 해지 / 확인 버튼 공통
+    .my-pass-modal-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        margin-top: 24px;
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            box-sizing: border-box;
+            width: fit-content;
+            min-width: 0;
+            height: 45px;
+            padding: 0 16px;
+            flex: 0 0 auto;
+
+            border: none;
+            border-radius: 5px;
+
+            background: $color-pri;
+            color: $color-text-pri;
+
+            font-family: $font-main;
+            font-size: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+
+            cursor: pointer;
+            transition: filter 0.2s;
+
+            // 돌아가기 버튼
+            &.is-secondary {
+                background: #424242;
+            }
+
+            &:hover:not(:disabled) {
+                filter: brightness(1.1);
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+    }
+}
+
+// ========================================
+// 반응형
+// ========================================
+
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .my-pass-modal {
+        .my-pass-modal-heading h2 {
+            font-size: 30px;
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .my-pass-modal {
+        width: calc(100% - 32px);
+        max-width: 380px;
+        padding: 32px 20px 24px;
+
+        .my-pass-modal-heading {
+            h2 {
+                font-size: 26px;
+            }
+        }
+
+        p {
+            font-size: 16px;
+        }
+
+        .my-pass-modal-actions {
+            gap: 12px;
+
+            button {
+                height: 45px;
+                padding: 0 16px;
+                font-size: 16px;
+            }
+        }
+    }
+}

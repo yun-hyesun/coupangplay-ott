@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useId} from "react";
 import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import "./scss/Sports.scss";
 
@@ -244,6 +245,11 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
   const currentProfile = useProfileStore((state) => state.currentProfile);
 
   const [saving, setSaving] = useState(false);
+  const [favoriteToast, setFavoriteToast] = useState("");
+  const [favoriteToastId, setFavoriteToastId] = useState(0);
+  const favoriteToastTimer = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(favoriteToastTimer.current), []);
 
   const matchId = game.gameId ?? game.id;
 
@@ -299,6 +305,11 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
 
       if (!success) {
         alert("찜하기 처리에 실패했습니다.");
+      } else {
+        setFavoriteToast(isFavorite ? "찜하기가 해제되었습니다." : "찜하기가 완료되었습니다.");
+        setFavoriteToastId((id) => id + 1);
+        window.clearTimeout(favoriteToastTimer.current);
+        favoriteToastTimer.current = window.setTimeout(() => setFavoriteToast(""), 2200);
       }
     } finally {
       setSaving(false);
@@ -424,6 +435,12 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           <span>한국 시간 {formatGameTime(game.utcDate || game.startTime)}</span>
         </div>
       ))}
+      {favoriteToast && createPortal(
+        <div key={favoriteToastId} className="sports-fixture__favorite-toast" role="status" aria-live="polite">
+          {favoriteToast}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -449,6 +466,7 @@ export const Sports = () => {
   onDragStart: onLeagueDragStart,
 } = useHorizontalDragScroll();
   const featuredRailRef = useRef(null);
+  const [featuredRailNavigation, setFeaturedRailNavigation] = useState({ prev: false, next: false });
   const calendarRailRef = useRef(null);
   const scrollRail = (ref, direction) => {
     const element = ref.current;
@@ -511,6 +529,35 @@ export const Sports = () => {
     () => canShowSubscriptions ? selectedLeagueIds.map(getLeague).filter(Boolean) : [],
     [canShowSubscriptions, selectedLeagueIds],
   );
+
+  useEffect(() => {
+    const rail = featuredRailRef.current;
+    if (!rail) return;
+    const updateNavigation = () => {
+      const maxScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const next = {
+        prev: maxScroll > 2 && rail.scrollLeft > 2,
+        next: maxScroll > 2 && rail.scrollLeft < maxScroll - 2,
+      };
+      setFeaturedRailNavigation((current) =>
+        current.prev === next.prev && current.next === next.next ? current : next
+      );
+    };
+    // MY 리그 목록이 처음 표시되거나 구성이 바뀌면 첫 카드에서 시작합니다.
+    // 이전 스크롤 위치가 복원되어 첫 화면에 왼쪽 화살표가 뜨는 현상을 방지합니다.
+    rail.scrollTo({ left: 0, behavior: "instant" });
+    updateNavigation();
+    rail.addEventListener("scroll", updateNavigation, { passive: true });
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateNavigation) : null;
+    observer?.observe(rail);
+    Array.from(rail.children).forEach((child) => observer?.observe(child));
+    window.addEventListener("resize", updateNavigation);
+    return () => {
+      rail.removeEventListener("scroll", updateNavigation);
+      window.removeEventListener("resize", updateNavigation);
+      observer?.disconnect();
+    };
+  }, [featuredLeagues]);
 
   const sortedVisibleLeagues = useMemo(() => {
     if (!canShowSubscriptions) return visibleLeagues;
@@ -933,10 +980,10 @@ export const Sports = () => {
       >
         <SectionTitle id="sports-featured-title" title="MY 리그" />
         <div className="sports-rail-shell sports-rail-shell--featured">
-          <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 주요 리그" onClick={() => scrollRail(featuredRailRef, -1)}>‹</button>
+          {featuredRailNavigation.prev && <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 MY 리그" onClick={() => scrollRail(featuredRailRef, -1)}>‹</button>}
           <div className="sports-featured-leagues" ref={featuredRailRef} tabIndex={0} aria-label="주요 리그 목록">
           {featuredLeagues.length === 0 && (
-            <p className="sports-data-message">찜한 리그가 없습니다. 스포츠 리그의 전체보기에서 관심 리그를 추가해 주세요.</p>
+            <p className="sports-data-message sports-featured-leagues__empty">찜한 리그가 없습니다. 스포츠 리그의 전체보기에서 관심 리그를 추가해 주세요.</p>
           )}
           {featuredLeagues.map((league) => (
             <article className="sports-featured-league" key={league.id}>
@@ -955,8 +1002,8 @@ export const Sports = () => {
               </Link>
               <div className="sports-featured-league__content">
                 <h3>{league.name}</h3>
-                <p className="sports-featured-league__type">{league.sport} · {league.scope}</p>
-                <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p>
+                <p className="sports-featured-league__type">{league.sport} · {league.scope}<br/>경기 일정 · 하이라이트</p>
+                {/* <p className="sports-featured-league__caption">경기 일정 · 하이라이트</p> */}
                 <Link
                   className="sports-featured-league__link"
                   to={`/sports/league/${encodeURIComponent(league.id)}`}
@@ -967,7 +1014,7 @@ export const Sports = () => {
             </article>
           ))}
           </div>
-          <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 주요 리그" onClick={() => scrollRail(featuredRailRef, 1)}>›</button>
+          {featuredRailNavigation.next && <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 MY 리그" onClick={() => scrollRail(featuredRailRef, 1)}>›</button>}
         </div>
       </section>
 

@@ -3,9 +3,11 @@ import { create } from 'zustand';
 import {
     collection,
     doc,
+    getDoc,
     getDocs,
     setDoc,
     deleteDoc,
+    updateDoc,
     serverTimestamp
 } from 'firebase/firestore';
 
@@ -130,6 +132,181 @@ export const useSubscriptionStore = create((set, get) => ({
         }
     },
 
+
+    // 구독 패스 모의 결제 및 등록
+    onMockSubscribe: async (plan) => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            set({ error: '로그인이 필요합니다.' });
+            return null;
+        }
+
+        if (!plan?.id || !plan?.name || !Number.isFinite(plan.price)) {
+            set({ error: '올바르지 않은 이용권 정보입니다.' });
+            return null;
+        }
+
+        const uid = user.uid;
+
+        const today = new Date();
+        const nextPayment = new Date(today);
+        nextPayment.setMonth(nextPayment.getMonth() + 1);
+
+        const subscriptionData = {
+            name: plan.name,
+            label: plan.label || plan.name,
+            price: plan.price,
+            billingCycle: '1개월마다 결제',
+            nextPaymentDate: nextPayment.toLocaleDateString('ko-KR'),
+            status: 'active',
+            paymentMode: 'mock',
+            createdAt: serverTimestamp()
+        };
+
+        set({ loading: true, error: null });
+
+        try {
+            // 동일한 이용권이 이미 등록되어 있는지 확인
+            const subscriptionRef = getSubscriptionRef(uid, plan.id);
+            const existing = await getDoc(subscriptionRef);
+
+            if (existing.exists() &&
+                existing.data().status === 'active') {
+                throw new Error('이미 구독 중인 이용권입니다.');
+            }
+
+            await setDoc(subscriptionRef, subscriptionData);
+
+            if (auth.currentUser?.uid !== uid) {
+                return null;
+            }
+
+            await get().onLoadSubscriptions();
+
+            return {
+                orderId: `MOCK-${plan.id}-${Date.now()}`,
+                status: 'mock_paid',
+                planId: plan.id
+            };
+
+        } catch (error) {
+            console.error('모의 구독 등록 오류:', error);
+            set({ error: error.message, loading: false });
+            throw error;
+        }
+    },
+
+
+    // 모의 구독 해지 신청
+    onMockCancelSubscription: async (subscriptionId) => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            throw new Error('로그인이 필요합니다.');
+        }
+
+        const uid = user.uid;
+
+        set({ loading: true, error: null });
+
+        try {
+            const subscriptionRef = getSubscriptionRef(
+                uid,
+                subscriptionId
+            );
+
+            const snapshot = await getDoc(subscriptionRef);
+
+            if (!snapshot.exists()) {
+                throw new Error('구독 정보를 찾을 수 없습니다.');
+            }
+
+            const subscription = snapshot.data();
+
+            if (subscription.paymentMode !== 'mock') {
+                throw new Error('시연용 구독만 이 기능을 사용할 수 있습니다.');
+            }
+
+            if (subscription.status !== 'active') {
+                throw new Error('현재 해지 신청할 수 없는 구독입니다.');
+            }
+
+            // 문서를 삭제하지 않고 상태만 변경
+            await updateDoc(subscriptionRef, {
+                status: 'cancel_pending',
+                endDate: subscription.nextPaymentDate,
+                canceledAt: serverTimestamp()
+            });
+
+            if (auth.currentUser?.uid !== uid) {
+                return false;
+            }
+
+            await get().onLoadSubscriptions();
+
+            return true;
+
+        } catch (error) {
+            set({ loading: false, error: error.message });
+            throw error;
+        }
+    },
+
+    // 모의 구독 해지 신청 취소
+    onMockResumeSubscription: async (subscriptionId) => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            throw new Error('로그인이 필요합니다.');
+        }
+
+        const uid = user.uid;
+
+        set({ loading: true, error: null });
+
+        try {
+            const subscriptionRef = getSubscriptionRef(
+                uid,
+                subscriptionId
+            );
+
+            const snapshot = await getDoc(subscriptionRef);
+
+            if (!snapshot.exists()) {
+                throw new Error('구독 정보를 찾을 수 없습니다.');
+            }
+
+            const subscription = snapshot.data();
+
+            if (
+                subscription.paymentMode !== 'mock' ||
+                subscription.status !== 'cancel_pending'
+            ) {
+                throw new Error('해지 신청을 취소할 수 없는 구독입니다.');
+            }
+
+            await updateDoc(subscriptionRef, {
+                status: 'active',
+                endDate: null,
+                canceledAt: null
+            });
+
+            if (auth.currentUser?.uid !== uid) {
+                return false;
+            }
+
+            await get().onLoadSubscriptions();
+
+            return true;
+
+        } catch (error) {
+            set({ loading: false, error: error.message });
+            throw error;
+        }
+    },
+
+
     // 이용권 등록
     onRegisterVoucher: async (code) => {
         const user = auth.currentUser;
@@ -169,7 +346,8 @@ export const useSubscriptionStore = create((set, get) => ({
             billingCycle: '1개월마다 결제',
             nextPaymentDate: nextPayment.toLocaleDateString('ko-KR'),
             status: 'active',
-            createdAt: serverTimestamp()
+            createdAt: serverTimestamp(),
+            paymentMode: 'mock',
         };
 
         set({ loading: true, error: null });

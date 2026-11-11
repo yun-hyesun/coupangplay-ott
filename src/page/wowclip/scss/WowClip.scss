@@ -830,6 +830,10 @@ html:has(.wowclip-page):not(:has(.wowclip-shortfeed)),
   margin-top: 4px;
 }
 
+.wowclip-comment-actions:has(> .wowclip-comment-like) {
+  column-gap: 4px;
+}
+
 .wowclip-comment-actions button {
   display: inline-flex;
   align-items: center;
@@ -847,7 +851,8 @@ html:has(.wowclip-page):not(:has(.wowclip-shortfeed)),
 .wowclip-comment-actions .wowclip-comment-like {
   flex-shrink: 0;
   justify-content: flex-start;
-  min-width: 56px;
+  min-width: 48px;
+  padding-inline-end: 2px;
 }
 
 .wowclip-comment-like-count {

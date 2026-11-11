@@ -28,7 +28,7 @@ const ClipCreationSession = ({ getSource, disabled = false, user }) => {
       try {
         await navigator.clipboard.writeText(`${window.location.origin}/wowclip?clip=${encodeURIComponent(clip.id)}`);
         notice = '클립 링크를 복사했어요.';
-      } catch { notice = '클립을 저장했어요. 링크 복사 버튼으로 다시 복사해 주세요.'; }
+      } catch { notice = '클립을 저장했어요. 공유 버튼으로 링크를 복사해 주세요.'; }
     }
     navigate(`/wowclip?clip=${encodeURIComponent(clip.id)}`, { state: { createdClipId: clip.id, notice } });
   };

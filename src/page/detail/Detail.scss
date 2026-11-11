@@ -1078,43 +1078,27 @@
       pointer-events: none;
     }
   }
+}
 
-  // 리뷰 작성 버튼의 공통 스타일이 별점 버튼에 적용되지 않도록 재설정
-  .detail-rating-stars__hit {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    display: block;
-    width: 50%;
-    min-width: 0;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent !important;
-    cursor: pointer;
-    z-index: 1;
-    appearance: none;
+.detail-hero__actions .detail-button--watchlist {
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  img {
+    transition: transform 0.2s;
   }
 
-  .detail-rating-stars__hit--left {
-    left: 0;
-    right: auto;
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--detail-blue);
+
+    img {
+      transform: scale(1.1);
+    }
   }
 
-  .detail-rating-stars__hit--right {
-    left: auto;
-    right: 0;
-  }
-
-  .detail-rating-stars__hit:hover,
-  .detail-rating-stars__hit:focus {
-    background: transparent !important;
-  }
-
-  .detail-rating-stars__hit:focus-visible {
-    outline: 2px solid #0084ff;
-    outline-offset: 2px;
+  &:disabled {
+    cursor: wait;
   }
 }

@@ -4,28 +4,33 @@ import { useNavigate } from 'react-router-dom';
 
 import { VoucherModal } from './components/MyVoucherModal';
 import { SubscriptionMenu } from './components/MySubscriptionMenu';
+import { MyPageHeader } from './components/MyPageHeader';
+import { MySubscriptionButton } from './components/MySubscriptionButton';
+import { MySubscriptionActions } from './components/MySubscriptionActions';
+import { MySubscriptionModal } from './components/MySubscriptionModal';
 
 import { useAuthStore } from '../../store/useAuthStore';
 import { useSubscriptionStore } from '../../store/useSubscriptionStore';
 
-// [추가] 공통 페이지 헤더
-import { MyPageHeader } from './components/MyPageHeader';
-
 import './scss/MySubscription.scss';
 import './scss/MySubscriptionUi.scss';
-import { MySubscriptionButton } from './components/MySubscriptionButton';
-import { MySubscriptionActions } from './components/MySubscriptionActions';
-import { MySubscriptionModal } from './components/MySubscriptionModal';
+
+const subscriptionLogos = {
+    'sports-pass': '/images/mypage/pass/sports-logo.svg',
+    'moa-pass': '/images/mypage/pass/moa-logo.svg',
+    'jplus-pass': '/images/mypage/pass/jplus-logo.svg',
+    'ebs-pass': '/images/mypage/pass/ebs-logo.svg',
+    'kids-pass': '/images/mypage/pass/kids-logo.svg',
+    'paramount-pass': '/images/mypage/pass/paramount-logo.svg',
+    'sony-pass': '/images/mypage/pass/sony-logo.svg',
+    'crunchyroll-pass': '/images/mypage/pass/crunchyroll-logo.svg',
+};
 
 export const MySubscription = () => {
     const navigate = useNavigate();
 
     const user = useAuthStore((state) => state.user);
     const authLoading = useAuthStore((state) => state.loading);
-    const [cancelTarget, setCancelTarget] = useState(null);
-    const [actionBusy, setActionBusy] = useState(false);
-    const [actionError, setActionError] = useState('');
-    const [cancelDone, setCancelDone] = useState(false);
 
     const {
         subscriptions,
@@ -33,22 +38,18 @@ export const MySubscription = () => {
         error,
         onLoadSubscriptions,
         onRegisterVoucher,
-        onCancelSubscription
+        onMockCancelSubscription,
+        onMockResumeSubscription,
     } = useSubscriptionStore();
 
     const [isVoucherOpen, setIsVoucherOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState(null);
+    const [openCancelId, setOpenCancelId] = useState(null);
 
-    // 이용권별 로고 이미지
-    const subscriptionLogos = {
-        'sports-pass': '/images/mypage/pass/sports-logo.svg',
-        'moa-pass': '/images/mypage/pass/moa-logo.svg',
-        'jplus-pass': '/images/mypage/pass/jplus-logo.svg',
-        'ebs-pass': '/images/mypage/pass/ebs-logo.svg',
-        'kids-pass': '/images/mypage/pass/kids-logo.svg',
-        'paramount-pass': '/images/mypage/pass/paramount-logo.svg',
-        'sony-pass': '/images/mypage/pass/sony-logo.svg',
-    };
+    const [cancelTarget, setCancelTarget] = useState(null);
+    const [actionBusy, setActionBusy] = useState(false);
+    const [actionError, setActionError] = useState('');
+    const [cancelDone, setCancelDone] = useState(false);
 
     // 로그인 계정이 변경되면 구독내역 다시 불러오기
     useEffect(() => {
@@ -62,7 +63,7 @@ export const MySubscription = () => {
         onLoadSubscriptions();
     }, [user?.uid, authLoading, onLoadSubscriptions]);
 
-    // 이용권 등록
+    // 이용권 코드 등록
     const handleRegisterVoucher = async (code) => {
         const success = await onRegisterVoucher(code);
 
@@ -73,35 +74,99 @@ export const MySubscription = () => {
         return success;
     };
 
-    // 구독 해지 팝업 열기
+    // 구독 해지 모달 열기
     const handleCancelSubscription = (subscription) => {
         setOpenMenuId(null);
         setActionError('');
+
+        if (subscription.status === 'cancel_pending') {
+            setOpenCancelId(subscription.id);
+            return;
+        }
+
         setCancelTarget(subscription);
     };
 
-    // 서버가 정기결제 중단을 확인한 후에만 완료 상태를 표시합니다.
+    // 구독 해지 확정
     const handleConfirmCancel = async () => {
-        if (!cancelTarget || actionBusy || !user) return;
-        setActionBusy(true); setActionError('');
+        if (!cancelTarget || actionBusy) return;
+
+        setActionBusy(true);
+        setActionError('');
+
         try {
-            await MySubscriptionActions({id:cancelTarget.id,action:'cancel',user});
-            if (useAuthStore.getState().user?.uid !== user.uid) return;
-            setCancelTarget(null); setCancelDone(true); await onLoadSubscriptions();
-        } catch (e) { setActionError(e.message); }
-        finally { setActionBusy(false); }
+            // 이미 해지 신청된 구독은 중복 요청하지 않음
+            if (cancelTarget.status === 'cancel_pending') {
+                setCancelTarget(null);
+                setOpenCancelId(cancelTarget.id);
+                return;
+            }
+
+            if (cancelTarget.paymentMode === 'mock') {
+                // Firebase에 등록된 시연용 구독
+                await onMockCancelSubscription(cancelTarget.id);
+            } else {
+                // Firebase에 없는 시연용 구독은 화면에서만 상태 변경
+                useSubscriptionStore.setState((state) => ({
+                    subscriptions: state.subscriptions.map((item) =>
+                        item.id === cancelTarget.id
+                            ? {
+                                ...item,
+                                status: 'cancel_pending',
+                                endDate: item.nextPaymentDate,
+                            }
+                            : item
+                    ),
+                }));
+            }
+
+            setCancelTarget(null);
+            setCancelDone(true);
+
+        } catch (err) {
+            setActionError(
+                err.message || '구독 해지 신청에 실패했습니다.'
+            );
+        } finally {
+            setActionBusy(false);
+        }
     };
+
+    // 구독 해지 신청 취소
     const handleResume = async (subscription) => {
-        if(actionBusy || !user)return;
-        setActionBusy(true);setActionError('');
-        try{await MySubscriptionActions({id:subscription.id,action:'resume',user});await onLoadSubscriptions();}
-        catch(e){setActionError(e.message);}finally{setActionBusy(false);}
+        if (actionBusy || !user) return;
+
+        setActionBusy(true);
+        setActionError('');
+
+        try {
+            if (subscription.paymentMode === 'mock') {
+                await onMockResumeSubscription(subscription.id);
+            } else {
+                await MySubscriptionActions({
+                    id: subscription.id,
+                    action: 'resume',
+                    user,
+                });
+
+                await onLoadSubscriptions();
+            }
+
+            setOpenCancelId(null);
+        } catch (err) {
+            setActionError(
+                err.message || '해지 신청 취소에 실패했습니다.'
+            );
+        } finally {
+            setActionBusy(false);
+        }
     };
 
     return (
         <main className="my-subscription">
             <div className="my-subscription-inner">
 
+                {/* 페이지 헤더 */}
                 <div className="subscription-header">
                     <MyPageHeader title="내 구독내역" />
 
@@ -116,6 +181,7 @@ export const MySubscription = () => {
                     </button>
                 </div>
 
+                {/* 구독내역 */}
                 {authLoading ? (
                     <div className="subscription-empty">
                         <p>로그인 상태를 확인하고 있습니다.</p>
@@ -146,79 +212,165 @@ export const MySubscription = () => {
                     </div>
                 ) : subscriptions.length > 0 ? (
                     <div className="subscription-list">
+                        {subscriptions.map((subscription) => {
+                            const isCancelPending =
+                                subscription.status === 'cancel_pending';
 
-                        {subscriptions.map((subscription) => (
-                            <div
-                                className="subscription-card"
-                                key={subscription.id}
-                            >
+                            const isCancelOpen =
+                                openCancelId === subscription.id;
 
-                                <div className="subscription-thumbnail">
-                                    <div className="subscription-play-badge">
-                                        <img
-                                            src="/images/badge-icon.svg"
-                                            alt=""
-                                        />
+                            return (
+                                <div
+                                    key={subscription.id}
+                                    className={`subscription-card ${isCancelPending ? 'cancel-pending' : ''
+                                        }`}
+                                >
+                                    {/* 상단: 로고, 정보, 더보기 */}
+                                    <div className="subscription-card-top">
+
+                                        <div className="subscription-thumbnail">
+                                            <div className="subscription-play-badge">
+                                                <img
+                                                    src="/images/badge-icon.svg"
+                                                    alt=""
+                                                />
+                                            </div>
+
+                                            <div className="subscription-logo">
+                                                {subscriptionLogos[subscription.id] ? (
+                                                    <img
+                                                        src={subscriptionLogos[subscription.id]}
+                                                        alt={subscription.name}
+                                                    />
+                                                ) : (
+                                                    <strong>
+                                                        {subscription.label || subscription.name}
+                                                    </strong>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="subscription-info">
+                                            <h3>{subscription.name}</h3>
+                                            <p>{subscription.billingCycle}</p>
+                                            <p>
+                                                {isCancelPending
+                                                    ? `이용 종료일 ${subscription.endDate ||
+                                                    subscription.nextPaymentDate
+                                                    }`
+                                                    : `다음 결제일 ${subscription.nextPaymentDate}`}
+                                            </p>
+                                        </div>
+
+                                        <div className="subscription-menu-wrap">
+                                            <button
+                                                type="button"
+                                                className="subscription-more-btn"
+                                                aria-label={`${subscription.name} 구독 관리`}
+                                                aria-expanded={
+                                                    openMenuId === subscription.id
+                                                }
+                                                onClick={() => {
+                                                    setOpenMenuId(
+                                                        openMenuId === subscription.id
+                                                            ? null
+                                                            : subscription.id
+                                                    );
+                                                }}
+                                            >
+                                                <img
+                                                    src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
+                                                    alt=""
+                                                />
+                                            </button>
+
+                                            {openMenuId === subscription.id && (
+                                                <SubscriptionMenu
+                                                    subscriptionName={subscription.name}
+                                                    onPaymentHistory={() => {
+                                                        setOpenMenuId(null);
+                                                        navigate(
+                                                            `/my/subscription/payment?plan=${subscription.id}`
+                                                        );
+                                                    }}
+                                                    onCancel={() =>
+                                                        handleCancelSubscription(subscription)
+                                                    }
+                                                />
+                                            )}
+                                        </div>
                                     </div>
 
-                                    <div className="subscription-logo">
-                                        {subscriptionLogos[subscription.id] ? (
-                                            <img
-                                                src={subscriptionLogos[subscription.id]}
-                                                alt={subscription.name}
-                                            />
-                                        ) : (
-                                            <strong>
-                                                {subscription.label || subscription.name}
-                                            </strong>
-                                        )}
-                                    </div>
-                                </div>
+                                    {/* 하단: 해지 신청한 이용권만 표시 */}
+                                    {isCancelPending && (
+                                        <div className="my-pass-cancel-accordion">
 
+                                            <button
+                                                type="button"
+                                                className="my-pass-cancel-question"
+                                                aria-expanded={isCancelOpen}
+                                                aria-controls={`cancel-answer-${subscription.id}`}
+                                                onClick={() => {
+                                                    setOpenCancelId(
+                                                        isCancelOpen
+                                                            ? null
+                                                            : subscription.id
+                                                    );
+                                                }}
+                                            >
+                                                <span>
+                                                    구독 해지가 신청되었습니다.
+                                                </span>
 
-                                <div className="subscription-info">
-                                    <h3>{subscription.name}</h3>
-                                    <p>{subscription.billingCycle}</p>
-                                    <p>{subscription.status === 'cancel_pending' ? `이용 종료일 ${subscription.endDate || subscription.nextPaymentDate}` : `다음 결제일 ${subscription.nextPaymentDate}`}</p>
-                                    {subscription.status === 'cancel_pending' && <div className="my-pass-cancel-banner"><p>구독 해지가 신청되었습니다. 이용기간 종료일까지 서비스를 이용할 수 있습니다.</p><MySubscriptionButton secondary disabled={actionBusy} onClick={()=>handleResume(subscription)}>해지 신청 취소</MySubscriptionButton></div>}
-                                </div>
+                                                <span
+                                                    className="my-pass-cancel-arrow"
+                                                    aria-hidden="true"
+                                                >
+                                                    <img
+                                                        src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
+                                                        alt=""
+                                                    />
+                                                </span>
+                                            </button>
 
-                                <div className="subscription-menu-wrap">
-                                    <button
-                                        type="button"
-                                        className="subscription-more-btn"
-                                        onClick={() => {
-                                            setOpenMenuId(
-                                                openMenuId === subscription.id
-                                                    ? null
-                                                    : subscription.id
-                                            );
-                                        }}
-                                        aria-label={`${subscription.name} 구독 관리`}
-                                        aria-expanded={openMenuId === subscription.id}
-                                    >
-                                        <img
-                                            src="/images/icon/DesignSystem_Icon01/icon-more_horiz.svg"
-                                            alt=""
-                                        />
-                                    </button>
+                                            <div
+                                                id={`cancel-answer-${subscription.id}`}
+                                                className={`my-pass-cancel-answer-wrap ${isCancelOpen ? 'open' : ''
+                                                    }`}
+                                            >
+                                                <div className="my-pass-cancel-answer-inner">
+                                                    <div className="my-pass-cancel-answer">
+                                                        <p>
+                                                            {subscription.name}의 구독 해지가
+                                                            신청되었습니다. 이용기간 종료일까지
+                                                            기존 혜택을 이용할 수 있습니다.
+                                                        </p>
 
-                                    {openMenuId === subscription.id && (
-                                        <SubscriptionMenu
-                                            subscriptionName={subscription.name}
-                                            onPaymentHistory={() => {
-                                                navigate(
-                                                    `/my/subscription/payment?plan=${subscription.id}`
-                                                );
-                                            }}
-                                            onCancel={() =>
-                                                handleCancelSubscription(subscription)
-                                            }
-                                        />
+                                                        <div className="my-pass-cancel-bottom">
+                                                            <span>
+                                                                이용 종료일 {
+                                                                    subscription.endDate ||
+                                                                    subscription.nextPaymentDate
+                                                                }
+                                                            </span>
+
+                                                            <button
+                                                                type="button"
+                                                                className="voucher-open-btn"
+                                                                disabled={actionBusy}
+                                                                onClick={() => handleResume(subscription)}
+                                                            >
+                                                                해지 신청 취소
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="subscription-empty">
@@ -228,9 +380,13 @@ export const MySubscription = () => {
                         </span>
                     </div>
                 )}
-                {(error || actionError) && subscriptions.length > 0 && <p role="alert">{error || actionError}</p>}
+
+                {(error || actionError) && subscriptions.length > 0 && (
+                    <p role="alert">{error || actionError}</p>
+                )}
             </div>
 
+            {/* 이용권 등록 모달 */}
             {isVoucherOpen && (
                 <VoucherModal
                     onClose={() => setIsVoucherOpen(false)}
@@ -239,20 +395,65 @@ export const MySubscription = () => {
                 />
             )}
 
+            {/* 구독 해지 확인 모달 */}
+            {cancelTarget && (
+                <MySubscriptionModal
+                    title="구독 해지"
+                    onClose={() => setCancelTarget(null)}
+                    busy={actionBusy}
+                >
+                    <p>
+                        <strong>{cancelTarget.name}</strong> 이용권을
+                        해지하시겠습니까?
+                    </p>
 
-            {cancelTarget && <MySubscriptionModal title="구독 해지" onClose={() => setCancelTarget(null)} busy={actionBusy}>
-                <p><strong>{cancelTarget.name}</strong> 이용권을 해지하시겠습니까?</p>
-                <p>구독 해지 후에도 이용기간 종료일까지 서비스를 이용할 수 있습니다.</p>
-                {actionError && <p role="alert">{actionError}</p>}
-                <div className="my-pass-modal-actions">
-                    <MySubscriptionButton secondary disabled={actionBusy} onClick={() => setCancelTarget(null)}>돌아가기</MySubscriptionButton>
-                    <MySubscriptionButton disabled={actionBusy} onClick={handleConfirmCancel}>{actionBusy ? '처리 중…' : '구독 해지'}</MySubscriptionButton>
-                </div>
-            </MySubscriptionModal>}
+                    <p>
+                        구독 해지 후에도 이용기간 종료일까지
+                        서비스를 이용할 수 있습니다.
+                    </p>
 
+                    {actionError && (
+                        <p role="alert">{actionError}</p>
+                    )}
 
+                    <div className="my-pass-modal-actions">
+                        <MySubscriptionButton
+                            secondary
+                            disabled={actionBusy}
+                            onClick={() => setCancelTarget(null)}
+                        >
+                            돌아가기
+                        </MySubscriptionButton>
 
-            {cancelDone && <MySubscriptionModal title="구독 해지가 신청되었습니다" onClose={()=>setCancelDone(false)}><p>이용기간 종료일까지 서비스를 이용할 수 있습니다.</p><MySubscriptionButton onClick={()=>setCancelDone(false)}>확인</MySubscriptionButton></MySubscriptionModal>}
+                        <MySubscriptionButton
+                            disabled={actionBusy}
+                            onClick={handleConfirmCancel}
+                        >
+                            {actionBusy ? '처리 중…' : '구독 해지'}
+                        </MySubscriptionButton>
+                    </div>
+                </MySubscriptionModal>
+            )}
+
+            {/* 구독 해지 완료 모달 */}
+            {cancelDone && (
+                <MySubscriptionModal
+                    title="구독 해지가 신청되었습니다"
+                    onClose={() => setCancelDone(false)}
+                >
+                    <p>
+                        이용기간 종료일까지 서비스를 이용할 수 있습니다.
+                    </p>
+
+                    <div className="my-pass-modal-actions">
+                        <MySubscriptionButton
+                            onClick={() => setCancelDone(false)}
+                        >
+                            확인
+                        </MySubscriptionButton>
+                    </div>
+                </MySubscriptionModal>
+            )}
         </main>
     );
 };

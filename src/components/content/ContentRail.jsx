@@ -23,7 +23,12 @@ export const ContentRail = ({
   variant,
   ...options
 }) => {
-  const baseConfig = railKey ? railConfig[railKey] : options;
+  const baseConfig = railKey
+  ? {
+      ...railConfig[railKey],
+      title: options.title ?? railConfig[railKey]?.title,
+    }
+  : options;
 
   const config = baseConfig
     ? {

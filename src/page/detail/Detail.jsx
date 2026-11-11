@@ -1,3 +1,6 @@
+import { toFivePointRating } from '../../utils/rating';
+import { LoginNoticePopup } from '../../components/common/LoginNoticePopup';
+import { SharePopup } from '../../components/common/SharePopup';
 import CommonIcon from '../../components/common/CommonIcon';
 
 import { useEffect, useState } from 'react';
@@ -17,12 +20,15 @@ const IMG = 'https://image.tmdb.org/t/p/original';
 const imageUrl = (path) => path ? `${IMG}${path}` : '';
 
 export const Detail = () => {
+  const [loginNoticeOpen, setLoginNoticeOpen] = useState(false);
   const { type, id } = useParams();
+  const [shareOpen, setShareOpen] = useState(false);
+  useEffect(() => setShareOpen(false), [type, id]);
 
   const { state, search } = useLocation();
   const isStoreDetail =
-  state?.fromStore === true ||
-  new URLSearchParams(search).get('from') === 'store';
+    state?.fromStore === true ||
+    new URLSearchParams(search).get('from') === 'store';
 
   // 마이페이지에서 전달받은 리뷰 작성 대상
   const reviewRequest = new URLSearchParams(search);
@@ -231,10 +237,9 @@ export const Detail = () => {
     ''
   ).slice(0, 4);
 
-  const rating =
-    typeof content.vote_average === 'number'
-      ? content.vote_average.toFixed(1)
-      : null;
+  // TMDB 평균은 10점 기준이므로 표시할 때만 5점 기준으로 환산합니다.
+  const fivePointRating = toFivePointRating(content.vote_average, 10);
+  const rating = fivePointRating === null ? null : fivePointRating.toFixed(1);
 
   // 현재 계정 + 프로필의 찜 목록인지 확인
   const expectedOwnerKey =
@@ -256,7 +261,7 @@ export const Detail = () => {
   // 찜하기 / 찜 해제
   const handleToggleWatchlist = async () => {
     if (!user || !currentProfile) {
-      alert('로그인 후 프로필을 선택해 주세요.');
+      setLoginNoticeOpen(true);
       return;
     }
 
@@ -357,29 +362,15 @@ export const Detail = () => {
                   (!isCurrentList || watchlistLoading)
                 }
               >
-                <ActionIcon name="like" />
+                <ActionIcon name={liked ? 'liked' : 'like'} />
                 {liked ? '찜 완료' : '찜하기'}
               </button>
 
               <button
                 className="detail-button detail-button--outline"
                 type="button"
-                onClick={async () => {
-                  try {
-                    if (navigator.share) {
-                      await navigator.share({
-                        title,
-                        url: window.location.href
-                      });
-                    } else {
-                      await navigator.clipboard.writeText(
-                        window.location.href
-                      );
-                    }
-                  } catch {
-                    // 사용자가 공유를 취소한 경우
-                  }
-                }}
+                onClick={() => setShareOpen(true)}
+                aria-haspopup="dialog"
               >
                 <ActionIcon name="share" />
                 공유
@@ -400,7 +391,7 @@ export const Detail = () => {
             <div className="detail-info__badges">
               {rating && (
                 <span className="detail-info__score">
-                  <StarIcon size={24} /> {rating}
+                  <StarIcon size={24} /> {rating} / 5
                 </span>
               )}
 
@@ -647,7 +638,17 @@ export const Detail = () => {
           </section>
         )}
       </div>
-      {popupEpisode && <ReviewPopup episode={popupEpisode} reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} onDelete={reviewId => removeReview(popupEpisode, reviewId)} error={reviewError} onClose={() => setPopupEpisode(null)} />}
+      {loginNoticeOpen && <LoginNoticePopup onClose={() => setLoginNoticeOpen(false)} />}
+      {shareOpen && <SharePopup title={title} type={type}
+        url={new URL(`/detail/${type}/${id}`, window.location.origin).href}
+        onClose={() => setShareOpen(false)} />}
+      {popupEpisode && <ReviewPopup episode={popupEpisode} 
+      reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} 
+      onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} 
+      onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} 
+      onDelete={reviewId => removeReview(popupEpisode, reviewId)} 
+      error={reviewError} 
+      onClose={() => setPopupEpisode(null)} />}
     </main>
   );
 };

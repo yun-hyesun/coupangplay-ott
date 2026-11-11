@@ -30,6 +30,7 @@ export const Adult = () => {
           railKey="adult-banner"
           logo="/images/channal04.svg"
           name="Adult"
+          buttonImg="/images/channal04.svg"
           description="성인 전용 콘텐츠를 만나보세요."
         />
 
@@ -38,6 +39,12 @@ export const Adult = () => {
           railKey="adult-ranking"
           layout="vertical"
           showMore={false}
+          title={
+            <span className="channel-rail-title">
+              <img src="/images/channal04.svg" alt="adult" />
+              <span>TOP 20</span>
+            </span>
+          }
         />
 
         {/* 일반 레일 7개 */}
