@@ -1,7 +1,7 @@
 import { KLEAGUE_LEAGUES } from "../data/kleagueLeagues";
 import { findSportsTeam, SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
 
-export { getFootballStandings, supportsFootballStandings } from "./leagueStandingsService";
+export { getFootballStandings, getNflStandings, supportsFootballStandings } from "./leagueStandingsService";
 
 // ===================== K리그 (kleague.com) =====================
 // 개발 중에는 vite 프록시(/kleague → www.kleague.com)를 거칩니다.

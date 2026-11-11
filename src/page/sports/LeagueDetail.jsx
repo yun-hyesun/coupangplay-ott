@@ -28,6 +28,7 @@ import {
   getKleagueStandings,
   getNbaGamesForSeoulDate,
   getNbaStandings,
+  getNflStandings,
   getMatchesForRange,
   getFootballStandings,
   supportsFootballStandings,
@@ -278,6 +279,7 @@ export const LeagueDetail = () => {
       try {
         let rows = [];
         if (league.id === "nba") rows = await getNbaStandings();
+        else if (league.id === "nfl") rows = await getNflStandings();
         else if (league.id === "kleague-1") rows = await getKleagueStandings("1");
         else if (league.id === "kleague-2") rows = await getKleagueStandings("2");
         else if (supportsFootballStandings(league.id)) rows = await getFootballStandings(league.id);
@@ -296,14 +298,24 @@ export const LeagueDetail = () => {
   useEffect(() => {
     if (!league || activeTab !== "home") return undefined;
     const controller = new AbortController();
-    loadLeagueBroadcasts({
-      dateKey: today,
-      loadSchedule: (dateKey) => loadLeagueSchedule(league, dateKey),
-      signal: controller.signal,
-    }).then((result) => {
-      if (!controller.signal.aborted) setBroadcastState({ ...result, leagueId: league.id });
-    });
-    return () => controller.abort();
+    let refreshing = false;
+    const refreshBroadcasts = async () => {
+      if (refreshing || controller.signal.aborted) return;
+      refreshing = true;
+      try {
+        const result = await loadLeagueBroadcasts({
+          dateKey: today,
+          loadSchedule: (dateKey) => loadLeagueSchedule(league, dateKey),
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) setBroadcastState({ ...result, leagueId: league.id });
+      } finally {
+        refreshing = false;
+      }
+    };
+    refreshBroadcasts();
+    const timer = window.setInterval(refreshBroadcasts, 60000);
+    return () => { window.clearInterval(timer); controller.abort(); };
   }, [league, today, activeTab]);
 
   const allLeagueVideos = useMemo(() => league ? getLeagueVideos(league) : [], [league]);
@@ -379,7 +391,7 @@ export const LeagueDetail = () => {
       logoPath: row.crest || row.logoPath || team?.logoPath,
     };
   });
-  const hasStandingsApi = supportsFootballStandings(league.id) || ["nba", "kleague-1", "kleague-2"].includes(league.id);
+  const hasStandingsApi = supportsFootballStandings(league.id) || ["nba", "nfl", "kleague-1", "kleague-2"].includes(league.id);
   const fallbackTeams = standingsRows.length || hasStandingsApi ? [] : leagueTeams.slice(0, 20).map((team) => ({
     teamName: team.name,
     logoPath: team.logoPath,
@@ -396,11 +408,14 @@ export const LeagueDetail = () => {
     gamesBehind: null,
   }));
   const tableRows = standingsRows.length ? standingsRows : fallbackTeams;
-  const tableNote = standingsRows.length && supportsFootballStandings(league.id)
+  const tableNote = standingsRows.length && league.id === "nfl"
+    ? `ESPN 기준 ${standingsRows[0].season || "현재"} 시즌 AFC·NFC 컨퍼런스 순위`
+    : standingsRows.length && supportsFootballStandings(league.id)
     ? `${standingsRows[0].sourceProvider === "espn" ? "ESPN" : "Football-Data"} 기준 현재 시즌 종합 순위`
     : (fallbackTeams.length ? "순위 통계가 연결되기 전까지 프로젝트에 저장된 팀 목록을 표시합니다." : "");
   const tableColumns = isBasketball
     ? ["순위", "팀", "승률", "경기", "승", "패", "승차"]
+    : league.id === "nfl" ? ["순위", "팀", "경기", "승", "패", "무", "승률", "득점", "실점", "득실차"]
     : ["순위", "팀", "승점", "경기", "승", "무", "패", "득점", "실점", "득실차"];
   const standingsProps = { league, standingsState, tableRows, tableNote, tableColumns, isBasketball };
   const changeTab = tabId => {
@@ -433,6 +448,7 @@ export const LeagueDetail = () => {
         today={today}
         selectedTeams={user ? selectedTeams : []}
         initialMatch={location.state?.scheduleMatch?.competitionCode === league.id ? location.state.scheduleMatch : null}
+        expandInitialMatch={location.state?.expandScheduleMatch !== false}
       /> : activeTab === "standings" ? <LeagueStandings
         {...standingsProps}
         fullPage
