@@ -16,7 +16,7 @@ export const SearchInput = () => {
 
   const inputRef = useRef(null);
   const composingSearch = useRef(false);
-  const previousPage = useRef('/');
+  const previousPage = useRef(null);
 
   // 입력창을 열면 자동으로 포커스
   useEffect(() => {
@@ -50,7 +50,11 @@ export const SearchInput = () => {
     setIsOpen(false);
 
     if (location.pathname === '/search') {
-      navigate(previousPage.current, { replace: true });
+      if (previousPage.current !== null) {
+        navigate(-1);
+      } else {
+        navigate('/', { replace: true });
+      }
     }
   };
 
@@ -59,13 +63,16 @@ export const SearchInput = () => {
       setSearchText('');
 
       if (location.pathname === '/search') {
-        navigate(previousPage.current, { replace: true });
+        if (previousPage.current !== null) {
+          navigate(-1);
+        } else {
+          navigate('/', { replace: true });
+        }
       }
 
       return;
     }
 
-    // 검색 페이지로 바로 진입했을 때는 홈으로 돌아가요.
     if (location.pathname !== '/search') {
       previousPage.current =
         location.pathname + location.search + location.hash;
