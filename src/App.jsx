@@ -53,6 +53,8 @@ import { MyFeedback } from './page/my/MyFeedback';
 import { MySupport } from './page/my/MySupport';
 import { MyNews } from './page/my/MyNews';
 
+import { ChannelSubscriptionGate } from './page/channel/components/ChannelSubscriptionGate';
+
 // 더보기
 import { More } from './page/more/More';
 // 검색
@@ -150,12 +152,54 @@ function App() {
 
 
         {/* 체널 */}
-        <Route path="/channel/ebs" element={<Ebs />} />
-        <Route path="/channel/paramount" element={<Paramount />} />
-        <Route path="/channel/moa" element={<Moa />} />
+        {/* 구독 패스가 있는 채널 */}
+        <Route
+          path="/channel/ebs"
+          element={
+            <ChannelSubscriptionGate planId="ebs-pass">
+              <Ebs />
+            </ChannelSubscriptionGate>
+          }
+        />
+
+        <Route
+          path="/channel/sony"
+          element={
+            <ChannelSubscriptionGate planId="sony-pass">
+              <Sony />
+            </ChannelSubscriptionGate>
+          }
+        />
+
+        <Route
+          path="/channel/paramount"
+          element={
+            <ChannelSubscriptionGate planId="paramount-pass">
+              <Paramount />
+            </ChannelSubscriptionGate>
+          }
+        />
+
+        <Route
+          path="/channel/moa"
+          element={
+            <ChannelSubscriptionGate planId="moa-pass">
+              <Moa />
+            </ChannelSubscriptionGate>
+          }
+        />
+
+        <Route
+          path="/channel/jplus"
+          element={
+            <ChannelSubscriptionGate planId="jplus-pass">
+              <Jplus />
+            </ChannelSubscriptionGate>
+          }
+        />
+
+        {/* 별도 구독 상품이 없는 채널 */}
         <Route path="/channel/jtbc" element={<Jtbc />} />
-        <Route path="/channel/sony" element={<Sony />} />
-        <Route path="/channel/jplus" element={<Jplus />} />
         <Route path="/channel/hbo" element={<Hbo />} />
         <Route path="/channel/adult" element={<Adult />} />
 

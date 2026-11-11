@@ -19,5 +19,8 @@ export function getWatchReturnDestination(state) {
       }
     } catch { /* Invalid return destinations fall back to the home page. */ }
   }
-  return { path, leagueTab: ['home', 'videos', 'schedule', 'standings'].includes(state?.returnTab) ? state.returnTab : 'home' };
+  const leagueTab = ['home', 'videos', 'schedule', 'standings'].includes(state?.returnTab) ? state.returnTab : 'home';
+  const scheduleMatch = state?.returnScheduleMatch;
+  return { path, leagueTab, ...(leagueTab === 'schedule' && scheduleMatch?.competitionCode
+    && path.split(/[?#]/)[0] === `/sports/league/${scheduleMatch.competitionCode}` ? { scheduleMatch } : {}) };
 }

@@ -9,6 +9,7 @@ export const Ebs = () => (
       railKey="ebs-banner"
       logo="/images/channal01.svg"
       name="EBS ON"
+      buttonImg="/images/channal01.svg"
       description="교육과 교양, 새로운 배움의 시작"
     />
 
