@@ -9,6 +9,7 @@ export const Sony = () => (
       railKey="sony-banner"
       logo="/images/channal09.svg"
       name="SONY PICTURES"
+      buttonImg="/images/channal09_title.svg"
       description="스크린을 채우는 다양한 영화"
     />
 

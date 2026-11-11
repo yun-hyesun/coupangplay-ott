@@ -188,7 +188,9 @@ export const LeagueDetail = () => {
   const user = useAuthStore((state) => state.user);
   const league = SPORTS_LEAGUE_BY_ID[leagueId];
   const [today, setToday] = useState(() => getSeoulDateKey());
-  const [activeTab, setActiveTab] = useState(() => ["home", "videos", "schedule", "standings"].includes(location.state?.leagueTab) ? location.state.leagueTab : "home");
+  const [tabSelection, setTabSelection] = useState(null);
+  const navigationTab = ["home", "videos", "schedule", "standings"].includes(location.state?.leagueTab) ? location.state.leagueTab : "home";
+  const activeTab = tabSelection?.key === location.key ? tabSelection.tab : navigationTab;
   const [activeFixtureTab, setActiveFixtureTab] = useState("upcoming");
   const [isCompactHeader, setIsCompactHeader] = useState(false);
   const [scoresOn, setScoresOn] = useState(true);
@@ -402,7 +404,7 @@ export const LeagueDetail = () => {
     : ["순위", "팀", "승점", "경기", "승", "무", "패", "득점", "실점", "득실차"];
   const standingsProps = { league, standingsState, tableRows, tableNote, tableColumns, isBasketball };
   const changeTab = tabId => {
-    setActiveTab(tabId);
+    setTabSelection({ key: location.key, tab: tabId });
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   };
 
@@ -412,6 +414,7 @@ export const LeagueDetail = () => {
         <LeagueHeader
           league={league}
           scoresOn={scoresOn}
+          showScoreToggle={activeTab !== "standings" && (activeTab !== "home" || activeFixtureTab === "ended")}
           onToggleScores={() => setScoresOn((value) => !value)}
           isMyLeague={isMyLeague}
           onToggleMyLeague={handleToggleMyLeague}
@@ -424,11 +427,12 @@ export const LeagueDetail = () => {
         />
       </div>
       {activeTab === "videos" ? <LeagueVideoFeed key={league.id} league={league} scoresOn={scoresOn} subscribedTeamIds={user ? subscribedTeamIds : []} /> : activeTab === "schedule" ? <LeagueSchedulePage
-        key={league.id}
+        key={`${league.id}:${location.key}`}
         league={league}
         scoresOn={scoresOn}
         today={today}
         selectedTeams={user ? selectedTeams : []}
+        initialMatch={location.state?.scheduleMatch?.competitionCode === league.id ? location.state.scheduleMatch : null}
       /> : activeTab === "standings" ? <LeagueStandings
         {...standingsProps}
         fullPage

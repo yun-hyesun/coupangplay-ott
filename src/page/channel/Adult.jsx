@@ -30,16 +30,11 @@ export const Adult = () => {
           railKey="adult-banner"
           logo="/images/channal04.svg"
           name="Adult"
+          buttonImg="/images/channal04.svg"
           description="성인 전용 콘텐츠를 만나보세요."
         />
 
         {/* 랭킹 */}
-        {/* <ContentRail
-          railKey="adult-ranking"
-          layout="vertical"
-          showMore={false}
-        /> */}
-
         <ContentRail
           railKey="adult-ranking"
           layout="vertical"

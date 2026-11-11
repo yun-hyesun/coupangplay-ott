@@ -52,12 +52,13 @@
     > h3 { margin: 0; font-size: 20px; font-weight: 700; line-height: 28px; }
   }
   &__match { position: relative; display: grid; min-height: 120px; grid-template-columns: 144px minmax(0, 1fr) 144px; align-items: center; padding: 0 32px; overflow: hidden; border-radius: 16px; background: var(--schedule-surface); transition: background-color .18s;
-    &:hover, &[data-match-status='ended'], &[data-match-status='live'] { background: var(--schedule-surface-hover); }
+    &:hover:not([data-match-status='ended']), &[data-match-status='live'] { background: var(--schedule-surface-hover); }
     &[data-my-team-home='true']::before, &[data-my-team-away='true']::after { position: absolute; top: 0; bottom: 0; width: 16px; background: var(--schedule-blue); content: ''; }
     &[data-my-team-home='true']::before { left: 0; }
     &[data-my-team-away='true']::after { right: 0; }
   }
   &__match-wrap { min-width: 0; overflow: hidden; border-radius: 16px;
+    scroll-margin-top: 260px;
     &[data-expanded='true'] > .league-schedule__match { border-bottom-right-radius: 0; border-bottom-left-radius: 0; }
   }
   &__badges { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -155,6 +156,6 @@
     &__action { width: 36px; height: 36px; flex-basis: 36px; }
     &__badge, &__quality { height: 22px; font-size: 11px; }
     &__empty { font-size: 15px; }
-    &__match-wrap { border-radius: 12px; }
+    &__match-wrap { border-radius: 12px; scroll-margin-top: 240px; }
   }
 }

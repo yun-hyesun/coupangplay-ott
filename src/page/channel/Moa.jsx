@@ -9,6 +9,7 @@ export const Moa = () => (
       railKey="moa-banner"
       logo="/images/channal10.svg"
       name="M.OA"
+      buttonImg="/images/channal10.svg"
       description="중국 드라마에서 만나는 다양한 이야기"
     />
 

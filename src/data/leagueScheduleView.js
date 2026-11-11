@@ -1,5 +1,6 @@
 import { getScheduleGameDate, shiftScheduleDate } from "./leagueScheduleRange.js";
 import { getScheduleUnit } from "./leagueScheduleUnits.js";
+import { findSportsTeam } from "./sportsTeams";
 
 const CALENDAR_YEAR_LEAGUES = new Set(["f1", "mls", "kleague-1", "kleague-2"]);
 
@@ -30,6 +31,22 @@ export function getRecentScheduleGame(games, today) {
     String(a.utcDate || a.startTime || a.dateKey).localeCompare(String(b.utcDate || b.startTime || b.dateKey)));
   return ordered.find(game => /^(IN_PLAY|LIVE|PAUSED)$/.test(game.status))
     || ordered.find(game => getScheduleGameDate(game) >= today) || ordered.at(-1);
+}
+
+export function findScheduleMatch(games, target, leagueId) {
+  if (!target) return null;
+  const byId = target.gameId != null && games.find(game => game.gameId != null && String(game.gameId) === String(target.gameId));
+  if (byId) return byId;
+  const date = getScheduleGameDate(target);
+  if (!date) return null;
+  if (target.raceName) return games.find(game => game.raceName === target.raceName
+    && getScheduleGameDate(game) === date && (game.utcDate || game.startTime) === (target.utcDate || target.startTime)) || null;
+  const home = target.home && findSportsTeam(leagueId, target.home);
+  const away = target.away && findSportsTeam(leagueId, target.away);
+  if (!home || !away) return null;
+  return games.find(game => getScheduleGameDate(game) === date
+    && game.home && findSportsTeam(leagueId, game.home)?.id === home.id
+    && game.away && findSportsTeam(leagueId, game.away)?.id === away.id) || null;
 }
 
 export function getRoundWindow(options, selectedValue, offset = 0) {

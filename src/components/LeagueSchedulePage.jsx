@@ -1,8 +1,8 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { findLeagueTeam, formatGameDate, formatGameTime, getGameStatus, TeamImage } from "./LeagueDetailShared";
 import { MatchRelatedVideos } from "./MatchRelatedVideos";
 import { SportsCalendarDialog, SportsCalendarNavButton } from "./SportsCalendarDialog";
-import { getCalendarDays, getRecentScheduleGame, getRoundWindow, getScheduleDateWindow, getScheduleRounds, getScheduleSeason, getSeasonRange, groupScheduleGames } from "../data/leagueScheduleView";
+import { findScheduleMatch, getCalendarDays, getRecentScheduleGame, getRoundWindow, getScheduleDateWindow, getScheduleRounds, getScheduleSeason, getSeasonRange, groupScheduleGames } from "../data/leagueScheduleView";
 import { getScheduleGameDate } from "../data/leagueScheduleRange";
 import { getScheduleUnit } from "../data/leagueScheduleUnits";
 import { getMatchVideoKey } from "../data/matchRelatedVideos";
@@ -91,12 +91,13 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
   );
 }
 
-function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onToggleSaved, relatedVideos }) {
+function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onToggleSaved, relatedVideos, autoExpand = false }) {
   const detailsId = useId();
-  const [expanded, setExpanded] = useState(false);
+  const matchRef = useRef(null);
+  const [expanded, setExpanded] = useState(autoExpand);
   const status = getGameStatus(game.status);
   const hasRelatedVideos = status.type === "ended" && Boolean(relatedVideos?.length);
-  const detailsExpanded = hasRelatedVideos && expanded;
+  const detailsExpanded = status.type === "ended" && expanded && (hasRelatedVideos || autoExpand);
   const unit = getScheduleUnit(game);
   const isMyTeam = (team) => {
     if (!team) return false;
@@ -105,15 +106,32 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
   };
   const homeIsMyTeam = isMyTeam(game.home);
   const awayIsMyTeam = isMyTeam(game.away);
-  const hasScores = scoresOn && ["live", "ended"].includes(status.type) && game.home?.score != null && game.away?.score != null;
+  const homeScore = game.home?.score ?? null;
+  const awayScore = game.away?.score ?? null;
   const quality = ["4K", "HDR"].includes(game.broadcastQuality) ? game.broadcastQuality : "";
   const homeName = game.raceName || game.home?.name || "홈 팀";
   const awayName = game.raceName ? (game.venue || "그랑프리") : game.away?.name || "원정 팀";
   const title = `${homeName} vs ${awayName}`;
   const liveUrl = game.broadcastUrl || "https://www.coupangplay.com/";
+  useEffect(() => {
+    if (!autoExpand || !detailsExpanded) return undefined;
+    const scrollToMatch = () => {
+      matchRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+      matchRef.current?.querySelector("article")?.focus({ preventScroll: true });
+    };
+    let settledFrame;
+    const frame = window.requestAnimationFrame(() => {
+      scrollToMatch();
+      settledFrame = window.requestAnimationFrame(scrollToMatch);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(settledFrame);
+    };
+  }, [autoExpand, detailsExpanded, hasRelatedVideos]);
   return (
-    <div className="league-schedule__match-wrap" data-expanded={detailsExpanded || undefined}>
-    <article className="league-schedule__match" data-match-status={status.type} data-my-team-home={homeIsMyTeam || undefined} data-my-team-away={awayIsMyTeam || undefined} aria-label={`${title}, ${status.label}`}>
+    <div ref={matchRef} className="league-schedule__match-wrap" data-expanded={detailsExpanded || undefined} data-focused-match={autoExpand || undefined}>
+    <article className="league-schedule__match" tabIndex={autoExpand ? -1 : undefined} data-match-status={status.type} data-my-team-home={homeIsMyTeam || undefined} data-my-team-away={awayIsMyTeam || undefined} aria-label={`${title}, ${status.label}`}>
       <div className="league-schedule__badges">
         <span className={`league-schedule__badge league-schedule__badge--${status.type}`}>
           {status.type === "live" && <img src={ASSETS + "live.svg"} alt="" />} {status.label}
@@ -124,9 +142,9 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
       <div className="league-schedule__matchup">
         <div className="league-schedule__team league-schedule__team--home"><span title={homeName}>{homeName}</span><TeamImage team={game.home} leagueId={league.id} /></div>
         <div className="league-schedule__center">
-          <strong className="league-schedule__score" aria-label={hasScores ? `홈 ${game.home.score}점` : undefined}>{hasScores ? game.home.score : ""}</strong>
+          <strong className="league-schedule__score" aria-label={scoresOn && homeScore != null ? `홈 ${homeScore}점` : undefined}>{scoresOn ? homeScore ?? "" : ""}</strong>
           <div className="league-schedule__time"><time dateTime={game.utcDate || game.startTime}>{formatGameTime(game.utcDate || game.startTime)}</time><span>{unit?.label || game.stage || league.name}</span></div>
-          <strong className="league-schedule__score league-schedule__score--away" aria-label={hasScores ? `원정 ${game.away.score}점` : undefined}>{hasScores ? game.away.score : ""}</strong>
+          <strong className="league-schedule__score league-schedule__score--away" aria-label={scoresOn && awayScore != null ? `원정 ${awayScore}점` : undefined}>{scoresOn ? awayScore ?? "" : ""}</strong>
         </div>
         <div className="league-schedule__team league-schedule__team--away">{!game.raceName && <TeamImage team={game.away} leagueId={league.id} />}<span title={awayName}>{awayName}</span></div>
       </div>
@@ -134,7 +152,7 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
         {status.type === "scheduled" ? <button type="button" className="league-schedule__action" aria-label={`${title} 경기 찜하기`} aria-pressed={saved} onClick={() => onToggleSaved(game.gameId)}>
           <img src={ASSETS + (saved ? "check.svg" : "plus.svg")} alt="" />
         </button> : status.type === "live" ? <a className="league-schedule__action is-live" href={liveUrl} target="_blank" rel="noopener noreferrer" aria-label={`${title} 쿠팡플레이에서 중계 보기`}><img src={ASSETS + "play.svg"} alt="" /></a>
-          : hasRelatedVideos && <button type="button" className="league-schedule__action league-schedule__action--expand" onClick={() => setExpanded(value => !value)}
+          : (hasRelatedVideos || detailsExpanded) && <button type="button" className="league-schedule__action league-schedule__action--expand" onClick={() => setExpanded(value => !value)}
             aria-label={`${title} 관련 영상 ${detailsExpanded ? "접기" : "펼치기"}`} aria-expanded={detailsExpanded} aria-controls={detailsExpanded ? detailsId : undefined}>
             <img src={ASSETS + "related-collapse.svg"} alt="" />
           </button>}
@@ -145,11 +163,13 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, onTo
   );
 }
 
-export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = [] }) {
+export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = [], initialMatch = null }) {
   const currentSeason = getScheduleSeason(league.id, today);
-  const [season, setSeason] = useState(currentSeason);
-  const [mode, setMode] = useState("round");
-  const [selection, setSelection] = useState(null);
+  const initialDate = initialMatch && getScheduleGameDate(initialMatch);
+  const initialSeason = initialDate ? getScheduleSeason(league.id, initialDate) : currentSeason;
+  const [season, setSeason] = useState(initialSeason);
+  const [mode, setMode] = useState(initialDate ? "date" : "round");
+  const [selection, setSelection] = useState(initialDate ? { season: initialSeason, date: initialDate, round: getScheduleUnit(initialMatch)?.value || "" } : null);
   const [roundOffset, setRoundOffset] = useState(0);
   const [result, setResult] = useState(null);
   const [attempt, setAttempt] = useState(0);
@@ -157,7 +177,11 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
   const [savedMatches, setSavedMatches] = useState(readSavedMatches);
   const key = `${league.id}:${season}:${attempt}`;
   const loading = result?.key !== key;
-  const games = loading ? EMPTY_GAMES : result.games;
+  const scheduleGames = loading ? EMPTY_GAMES : result.games;
+  const focusedGame = useMemo(() => initialDate ? findScheduleMatch(scheduleGames, initialMatch, league.id) || initialMatch : null,
+    [scheduleGames, initialMatch, initialDate, league.id]);
+  const games = useMemo(() => focusedGame && !scheduleGames.includes(focusedGame) ? [...scheduleGames, focusedGame] : scheduleGames,
+    [scheduleGames, focusedGame]);
   const rounds = useMemo(() => getScheduleRounds(games), [games]);
   const recentGame = useMemo(() => getRecentScheduleGame(games, today), [games, today]);
   const currentSelection = selection?.season === season ? selection : null;
@@ -245,7 +269,7 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
         {loading ? <div className="league-schedule__loading" role="status"><span className="league-schedule__sr-only">경기 일정을 불러오는 중입니다.</span>{[0, 1, 2].map(index => <div key={index} />)}</div>
           : groups.map(group => <section className="league-schedule__date-group" key={group.date} aria-label={group.date}>
             <h3><time dateTime={group.date}>{formatGameDate(`${group.date}T00:00:00+09:00`)}</time></h3>
-            {group.matches.map(game => <ScheduleMatchRow key={game.gameId} game={game} league={league} scoresOn={scoresOn} selectedTeamIds={selectedTeamIds} saved={savedMatches.includes(game.gameId)} onToggleSaved={toggleSaved} relatedVideos={scheduleMatchVideos[getMatchVideoKey(game)]} />)}
+            {group.matches.map(game => <ScheduleMatchRow key={game.gameId} game={game} league={league} scoresOn={scoresOn} selectedTeamIds={selectedTeamIds} saved={savedMatches.includes(game.gameId)} onToggleSaved={toggleSaved} relatedVideos={scheduleMatchVideos[getMatchVideoKey(game)]} autoExpand={Boolean(focusedGame && game.gameId === focusedGame.gameId)} />)}
           </section>)}
         {!loading && !groups.length && <p className="league-schedule__empty" role="status">{result.errors.length ? "경기 일정을 불러오지 못했습니다." : "선택한 조건에 등록된 경기가 없습니다."}</p>}
         {!loading && (result.errors.length > 0 || result.warning) && <div className="league-schedule__error" role="status"><p>{result.warning || (games.length ? "일부 경기 일정을 불러오지 못했습니다." : "현재 경기 일정을 확인할 수 없습니다. 잠시 후 다시 조회해 주세요.")}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button></div>}
