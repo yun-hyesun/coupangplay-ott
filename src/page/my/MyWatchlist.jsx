@@ -1,3 +1,5 @@
+import { useMyListArtwork } from './components/useMyListArtwork';
+import { ContentRail } from '../../components/content/ContentRail';
 import { Popup } from '../../components/common/Popup';
 
 import { useEffect, useState } from 'react'
@@ -175,6 +177,12 @@ export const MyWatchlist = () => {
 
         return false;
     });
+
+    const artworkItems = useMyListArtwork(
+        filteredWatchlist.filter((item) => item.media_type !== 'sports'),
+        { keepMissing: true }
+    );
+    const sportsItems = filteredWatchlist.filter((item) => item.media_type === 'sports');
 
     // 콘텐츠 고유 ID
     const getItemKey = (item) =>
@@ -403,92 +411,54 @@ export const MyWatchlist = () => {
                         찜한 콘텐츠가 없습니다.
                     </p>
                 ) : (
-                    <div className="my-watchlist-grid">
-                        {filteredWatchlist.map((item) => {
-                            const itemKey = getItemKey(item);
-                            const isSelected =
-                                selectedIds.includes(itemKey);
+                    <>
+                        {artworkItems.length > 0 && (
+                            <ContentRail
+                              asGrid
+                              items={artworkItems}
+                              getSelection={isEditing ? (item) => ({
+                                selected: selectedIds.includes(getItemKey(item)),
+                                onToggle: () => handleSelect(getItemKey(item)),
+                                disabled: isDeleting,
+                              }) : undefined}
+                            />
+                        )}
+                        {sportsItems.length > 0 && (
+                            <div className="my-watchlist-grid">
+                                {sportsItems.map((item) => {
+                                    const itemKey = getItemKey(item);
+                                    const isSelected = selectedIds.includes(itemKey);
+                                    const navigation = getWatchlistNavigation(item);
+                                    const Thumbnail = isEditing ? 'button' : Link;
 
-                            const imagePath =
-                                item.backdrop_path || item.poster_path;
-                            const navigation = getWatchlistNavigation(item);
-                            const Thumbnail = isEditing ? 'button' : Link;
-
-                            return (
-                                <div
-                                    className="my-watchlist-item"
-                                    key={itemKey}
-                                >
-                                    <Thumbnail
-                                        className="my-watchlist-thumbnail"
-                                        {...(isEditing ? {
-                                            type: 'button',
-                                            onClick: () => handleSelect(itemKey),
-                                            disabled: isDeleting,
-                                        } : navigation)}
-                                        aria-label={
-                                            isEditing ? `${item.title} ${isSelected
-                                                ? '선택 해제'
-                                                : '선택'
-                                            }` : `${item.title} ${item.media_type === 'sports' ? '경기 일정 보기' : '상세 보기'}`
-                                        }
-                                        aria-pressed={
-                                            isEditing ? isSelected : undefined
-                                        }
-                                    >
-                                        {item.media_type === "sports" ? (
-                                            <SportsWatchlistThumbnail item={item} />
-                                        ) : imagePath ? (
-                                            <picture>
-                                                {item.poster_path && (
-                                                    <source
-                                                        media="(max-width: 767px)"
-                                                        srcSet={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-                                                    />
-                                                )}
-                                                <img
-                                                    src={`https://image.tmdb.org/t/p/w780${imagePath}`}
-                                                    alt=""
-                                                    className="my-watchlist-image"
-                                                />
-                                            </picture>
-                                        ) : (
-                                            <span className="my-watchlist-placeholder">
-                                                {item.title}
-                                            </span>
-                                        )}
-
-                                        {/* 편집 모드 */}
-                                        {isEditing && (
-                                            <span
-                                                className={
-                                                    `my-watchlist-overlay ${isSelected
-                                                        ? 'selected'
-                                                        : ''
-                                                    }`
-                                                }
+                                    return (
+                                        <div className="my-watchlist-item" key={itemKey}>
+                                            <Thumbnail
+                                                className="my-watchlist-thumbnail"
+                                                {...(isEditing ? {
+                                                    type: 'button',
+                                                    onClick: () => handleSelect(itemKey),
+                                                    disabled: isDeleting,
+                                                    'aria-pressed': isSelected,
+                                                    style: isSelected ? {
+                                                        outline: '2px solid #0084ff',
+                                                        outlineOffset: '-2px',
+                                                    } : undefined,
+                                                } : navigation)}
+                                                aria-label={isEditing ? item.title : `${item.title} 경기 일정 보기`}
                                             >
-                                                <img
-                                                    src={
-                                                        isSelected
-                                                            ? '/images/icon/DesignSystem_Icon02/icon-favorite_added.svg'
-                                                            : '/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg'
-                                                    }
-                                                    alt=""
-                                                    className="my-watchlist-check"
-                                                />
-                                            </span>
-                                        )}
-                                    </Thumbnail>
-
-                                    <div className="my-watchlist-info">
-                                        <h3>{isEditing ? item.title : <Link {...navigation}>{item.title}</Link>}</h3>
-                                        {item.media_type === 'sports' && <p>{formatSportsWatchlistDate(item.startTime)}</p>}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                                <SportsWatchlistThumbnail item={item} />
+                                            </Thumbnail>
+                                            <div className="my-watchlist-info">
+                                                <h3>{isEditing ? item.title : <Link {...navigation}>{item.title}</Link>}</h3>
+                                                <p>{formatSportsWatchlistDate(item.startTime)}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
             {deleteOpen && <Popup title="찜한 콘텐츠를 삭제하시겠습니까?"
