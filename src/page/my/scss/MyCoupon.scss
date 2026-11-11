@@ -1,0 +1,273 @@
+@use "../../../scss/mixins" as *;
+@use "../../../scss/variables" as *;
+
+.my-coupon {
+  width: 100%;
+  min-height: 100vh;
+  background: #101113;
+  color: $color-text-pri;
+
+  &__inner {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  &__header {
+    padding-bottom: 24px;
+    border-bottom: 1px solid $color-border-light;
+
+    h2 {
+      font-size: 28px;
+      font-weight: $font-w-B-700;
+    }
+  }
+
+
+  &__tabs {
+    @include flex-center($jc: flex-start, $gap: 24px);
+    margin: 24px 0 24px;
+
+    button {
+      width: 145px;
+      height: 45px;
+      flex-shrink: 0;
+
+      border: none;
+      border-radius: 5px;
+      background: #424242;
+      color: $color-text-pri;
+
+      font-family: $font-main;
+      font-size: 16px;
+      font-weight: $font-w-M-500;
+
+      cursor: pointer;
+      @include trans(filter, 0.2s);
+
+      &.active {
+        background: $color-pri;
+      }
+
+      &:hover {
+        filter: brightness(1.1);
+      }
+    }
+  }
+
+
+  &__count {
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: $font-w-SB-600;
+
+    span {
+      margin-left: 6px;
+      color: $color-text-blue;
+    }
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    column-gap: 40px;
+    row-gap: 32px;
+  }
+}
+
+// 쿠폰 카드
+.coupon-card {
+  position: relative;
+  min-width: 0;
+  height: 175px;
+  overflow: hidden;
+  border-radius: $card-radius;
+  background: #eaf2ff;
+  color: #111;
+  @include flexCol;
+
+  // 절취선 양쪽 반원 홈
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: calc(75% - 5px);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #101113;
+    z-index: 1;
+  }
+
+  &::before {
+    left: -5px;
+  }
+
+  &::after {
+    right: -5px;
+  }
+
+  &__content {
+    height: 75%;
+    padding: 22px 8px 10px;
+    @include flexCol-center(4px);
+    text-align: center;
+  }
+
+  &__discount {
+    font-size: 16px;
+
+    strong {
+      font-size: 26px;
+      font-weight: $font-w-B-700;
+    }
+  }
+
+  &__name {
+    font-size: 16px;
+    font-weight: $font-w-M-500;
+  }
+
+  &__date {
+    font-size: 14px;
+    color: #777;
+  }
+
+  &__detail {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    border-top: 1px dashed #aaa;
+    font-size: 14px;
+    font-weight: $font-w-SB-600;
+    color: #111;
+    @include trans(background);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  // 만료된 쿠폰
+  &.expired {
+    background: #e5e5e5;
+
+    .coupon-card__discount,
+    .coupon-card__name {
+      color: #a5a5a5;
+    }
+
+    .coupon-card__date {
+      color: #444;
+    }
+  }
+}
+
+// 쿠폰 상세 모달
+.coupon-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  @include flex-center;
+
+  &__content {
+    width: min(400px, calc(100% - 32px));
+    padding: 32px;
+    border-radius: 12px;
+    background: $color-bg2;
+    color: $color-text-pri;
+    @include flexCol(16px);
+    text-align: center;
+
+    h3 {
+      font-size: 22px;
+      font-weight: $font-w-B-700;
+    }
+
+    strong {
+      font-size: 26px;
+    }
+
+    button {
+      height: 45px;
+      border-radius: 8px;
+      background: $color-pri;
+      font-weight: $font-w-SB-600;
+    }
+  }
+}
+
+@media (max-width: 1279px) {
+  .my-coupon {
+    &__inner {
+      padding: 32px 24px 60px;
+    }
+
+    &__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .my-coupon {
+    &__inner {
+      padding: 24px 16px 60px;
+    }
+
+    &__header h2 {
+      font-size: 24px;
+    }
+
+
+    &__tabs {
+      gap: 12px;
+
+      button {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+        height: 50px;
+        font-size: 16px;
+      }
+    }
+
+
+    &__count {
+      font-size: 18px;
+    }
+
+    &__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+  }
+
+  .coupon-card {
+    height: 160px;
+
+    &__content {
+      padding: 12px 4px;
+    }
+
+    &__discount {
+      font-size: 12px;
+
+      strong {
+        font-size: 20px;
+      }
+    }
+
+    &__name,
+    &__date {
+      font-size: 11px;
+    }
+
+    &__detail {
+      font-size: 12px;
+    }
+  }
+}

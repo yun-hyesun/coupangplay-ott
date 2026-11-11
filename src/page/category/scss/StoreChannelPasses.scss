@@ -1,0 +1,185 @@
+@use '../../../scss/variables' as v;
+@use '../../../scss/mixins' as m;
+
+.store-channel-passes {
+  padding: 32px v.$padding-main 40px;
+  color: v.$color-text-pri;
+  font-family: v.$font-main;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 36px;
+    font-weight: v.$font-w-B-700;
+  }
+
+  &__more {
+    flex-shrink: 0;
+    color: v.$color-text-sec2;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: v.$color-text-pri;
+    }
+
+    &:focus-visible {
+      outline: 2px solid v.$color-pri;
+      outline-offset: 4px;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  &__card {
+    @include m.flexCol-center($gap: 8px);
+    height: 144px;
+    min-width: 0;
+    padding: 20px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .05);
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      background: rgba(255, 255, 255, .1);
+    }
+
+    &:focus-visible {
+      outline: 2px solid v.$color-pri;
+      outline-offset: 3px;
+    }
+  }
+
+  &__logo {
+    width: 145px;
+    max-width: 100%;
+    height: 64px;
+    overflow: hidden;
+    @include m.flex-center();
+  }
+
+  &__brand {
+    display: block;
+    flex-shrink: 0;
+    background: white;
+    mask-repeat: no-repeat;
+    mask-mode: alpha;
+  }
+
+  &__brand--paramount {
+    width: 77.019px;
+    height: 48px;
+    position: relative;
+    background: transparent;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: .18% .13% .18% .12%;
+      background: url('../assets/store-passes/paramount.svg') center/100% 100% no-repeat;
+      mask-image: url('../assets/store-passes/paramount-mask.svg'),
+        url('../assets/store-passes/paramount-clip.svg');
+      mask-size: 77.02px 48px, 103.255px 66.812px;
+      mask-position: -.09px -.087px, -13.25px -9.746px;
+      mask-repeat: no-repeat;
+      mask-composite: intersect;
+    }
+  }
+
+  &__brand--sony {
+    width: 32.192px;
+    height: 50px;
+    background: url('../assets/store-passes/sony.svg') center/contain no-repeat;
+  }
+
+  &__brand--moa {
+    width: 88px;
+    height: 28.74px;
+    mask-image: url('../assets/store-passes/moa.png');
+    mask-size: 88.441px 28.744px;
+    mask-position: -.441px 0;
+  }
+
+  &__brand--jplus {
+    width: 104px;
+    height: 27.56px;
+    mask-image: url('../assets/store-passes/jplus.png');
+    mask-size: 104px 28.6px;
+    mask-position: 0 -.52px;
+  }
+
+  &__brand--ebs {
+    width: 112px;
+    height: 26.32px;
+    mask-image: url('../assets/store-passes/ebs.png');
+    mask-size: 112px 26.32px;
+  }
+
+  &__brand--kids {
+    width: 90px;
+    height: 30.15px;
+    mask-image: url('../assets/store-passes/kids.png');
+    mask-size: 90px 30.15px;
+  }
+
+  &__description {
+    font-size: 16px;
+    line-height: 24px;
+    color: v.$color-text-sec1;
+    text-align: center;
+  }
+
+  @media (max-width: 1100px) {
+    &__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    padding-inline: 20px;
+
+    &__header {
+      flex-wrap: wrap;
+      gap: 8px 16px;
+    }
+
+    h2 {
+      font-size: 24px;
+      line-height: 32px;
+    }
+
+    &__more {
+      margin-left: auto;
+    }
+
+    &__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    &__card {
+      padding: 12px;
+    }
+
+    &__description {
+      font-size: 14px;
+    }
+  }
+}

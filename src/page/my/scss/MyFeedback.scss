@@ -1,0 +1,358 @@
+@use "../../../scss/mixins" as *;
+@use "../../../scss/variables" as *;
+
+.my-feedback {
+    width: 100%;
+    min-height: 100vh;
+    background: #101113; // [추가] 내 티켓과 동일한 배경색
+    color: $color-text-pri;
+
+    // ========================================
+    // [추가] 공통 페이지 헤더 영역
+    // MyTicket과 동일한 1400px 레이아웃
+    // ========================================
+
+    &__container {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 24px 0;
+    }
+
+    &__header {
+        padding-bottom: 24px;
+        border-bottom: 1px solid $color-border-light;
+
+        .my-page-header {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .my-page-header__back {
+            position: static;
+            transform: none;
+        }
+
+        .my-page-header h2 {
+            margin: 0;
+            font-family: $font-main;
+            font-size: 28px;
+            font-weight: $font-w-B-700;
+            line-height: 1.4;
+            text-align: left;
+        }
+    }
+
+    // ========================================
+    // 피드백 입력 영역
+    // 기존 430px 중앙 정렬 유지
+    // ========================================
+
+    &__inner {
+        width: 100%;
+        max-width: 430px;
+        margin: 0 auto;
+        padding: 80px 0 100px;
+
+        @include flexCol;
+        align-items: center;
+    }
+
+    &__description {
+        margin-top: 0;
+        margin-bottom: 32px;
+
+        font-size: 16px;
+        font-weight: $font-w-M-500;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    &__form {
+        width: 100%;
+        @include flexCol(30px);
+    }
+
+    &__field {
+        width: 100%;
+        @include flexCol(12px);
+
+        label {
+            font-size: 16px;
+            font-weight: $font-w-SB-600;
+        }
+    }
+
+    // 주제 선택 드롭다운
+    &__select {
+        position: relative;
+        width: 100%;
+    }
+
+    &__select-button {
+        width: 100%;
+        height: 45px;
+        padding: 0 20px;
+
+        border: 1px solid $color-text-sec1;
+        border-radius: 6px;
+        background: transparent;
+        color: $color-text-pri;
+
+        font-size: 14px;
+        text-align: left;
+
+        @include flex-between;
+        cursor: pointer;
+    }
+
+    &__arrow {
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid $color-text-pri;
+        border-bottom: 2px solid $color-text-pri;
+        transform: rotate(45deg);
+        @include trans(transform);
+
+        &.open {
+            transform: rotate(225deg);
+        }
+    }
+
+    &__options {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        z-index: 10;
+
+        width: 100%;
+        max-height: 280px;
+        overflow-y: auto;
+
+        border: 1px solid $color-border;
+        background: #101113;
+
+        // 스크롤바 스타일
+        scrollbar-width: thin;
+        scrollbar-color: #555b63 #101113;
+
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: #101113;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #555b63;
+            border-radius: 10px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+            background: #777d85;
+        }
+
+        li {
+            width: 100%;
+        }
+
+        button {
+            width: 100%;
+            padding: 9px 20px;
+            color: $color-text-pri;
+            font-size: 14px;
+            text-align: left;
+
+            &.selected,
+            &:hover {
+                background: $color-pri;
+            }
+        }
+    }
+
+    // 내용 입력
+    textarea {
+        width: 100%;
+        height: 220px;
+        padding: 16px;
+        resize: none;
+
+        border: 1px solid $color-text-sec1;
+        border-radius: 6px;
+        outline: none;
+        background: transparent;
+        color: $color-text-pri;
+
+        font-family: $font-main;
+        font-size: 14px;
+        line-height: 1.6;
+
+        &:focus {
+            border-color: $color-pri;
+        }
+    }
+
+    // 제출 버튼
+    &__submit {
+        width: 375px;
+        max-width: 100%;
+        height: 48px;
+        margin: 0 auto;
+
+        border-radius: 6px;
+        background: $color-pri;
+        color: $color-text-pri;
+
+        font-size: 16px;
+        font-weight: $font-w-M-500;
+        cursor: pointer;
+        @include trans(filter);
+
+        &:hover:not(:disabled) {
+            filter: brightness(1.1);
+        }
+
+        &:disabled {
+            background: #292D33;
+            cursor: not-allowed;
+        }
+    }
+}
+
+// ========================================
+// 피드백 제출 완료 모달 (기존 유지)
+// ========================================
+
+.feedback-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+
+    @include flex-center;
+}
+
+.feedback-modal {
+    width: 100%;
+    max-width: 430px;
+    padding: 36px 30px;
+    border-radius: 10px;
+
+    background: $color-bg2;
+    color: $color-text-pri;
+    text-align: center;
+
+    @include flexCol-center(20px);
+
+    h3 {
+        font-size: 22px;
+        font-weight: $font-w-B-700;
+    }
+
+    p {
+        font-size: 16px;
+        font-weight: $font-w-R-400;
+        line-height: 1.5;
+        color: $color-text-sec1;
+    }
+
+    button {
+        width: 145px;
+        height: 45px;
+        margin-top: 8px;
+
+        border-radius: 5px;
+        background: $color-pri;
+        color: $color-text-pri;
+
+        font-size: 16px;
+        font-weight: $font-w-M-500;
+
+        cursor: pointer;
+        @include trans(filter, 0.2s);
+
+        &:hover {
+            filter: brightness(1.1);
+        }
+    }
+}
+
+// ========================================
+// 반응형
+// ========================================
+
+// 태블릿
+@media (min-width: 768px) and (max-width: 1279px) {
+    .my-feedback {
+        &__container {
+            padding: 32px 24px 0;
+        }
+
+        &__inner {
+            padding-top: 80px;
+        }
+    }
+}
+
+// 모바일
+@media (max-width: 767px) {
+    .my-feedback {
+        &__container {
+            padding: 24px 16px 0;
+        }
+
+        &__header {
+            padding-bottom: 20px;
+
+            .my-page-header h2 {
+                font-size: 24px;
+            }
+        }
+
+        &__inner {
+            width: calc(100% - 32px);
+            padding: 80px 0;
+        }
+
+        &__description {
+            font-size: 14px;
+        }
+
+        &__form {
+            gap: 24px;
+        }
+
+        &__field label {
+            font-size: 14px;
+        }
+
+        textarea {
+            height: 200px;
+        }
+
+        &__submit {
+            width: 100%;
+            height: 50px;
+        }
+    }
+
+    .feedback-modal {
+        padding: 30px 20px;
+
+        h3 {
+            font-size: 20px;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            max-width: 145px;
+        }
+    }
+}

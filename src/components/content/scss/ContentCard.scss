@@ -1,0 +1,176 @@
+.contentRail-card {@include flex-center($ai:flex-end); width: 100%; text-align: left; cursor: pointer; position: relative;
+  
+    .contentRail-rank {display: block; position: relative; /*margin-right: -20px;*/ margin-right: -7%; flex-shrink: 0;
+      img {height: clamp( 100px, 7.03vw, 180px);}
+    }
+
+    .contentRail-info {position: relative; width: 100%;
+    
+      .contentRail-visual { display: block; position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: $card-radius; background: #20242d; 
+
+        > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+        .contentRail-titleArea {@include pos-abs($t:0, $l:0); width: 100%; height: 100%; text-align: center;
+          .contentRail-tit-logo {max-width: 70%; max-height: 36%; @include pos-abs-centerX($b:10%); filter: drop-shadow(0 0 10px rgba(0,0,0,.3));}
+          .contentRail-tit {@include pos-abs-centerX($b:5%); filter: drop-shadow(0 0 10px rgba(0,0,0,.5)); font-size: clamp(20px, 2.08vw, 30px) 30px; font-family: $font-number; font-weight: $font-w-B-700; word-break: keep-all; width: 80%; line-height: 1.1;}
+        }
+      }
+    }
+
+    &--ver:has(.contentRail-rank) .contentRail-info {width: 70%; flex-shrink: 0;}
+    &--ver .contentRail-info {
+      .contentRail-visual {aspect-ratio: 2 / 3;}
+    }
+
+    .youtube-card {@include trans();
+
+        &:hover {transform: translateY(-15px);}
+      }
+
+    &-sportsTitle {
+      margin-top: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+.contentCard-badge {$badge-color: #000000; @include pos-abs($t: 5px, $r: 5px); background-color: $badge-color; font-size: 14px; padding: .2em .6em; border-radius: 5px; font-weight: $font-w-M-500;
+
+  &.purchase {color: #FF6E00;}
+  &.coupang {@include pos-abs($t: 0px, $r: unset, $l: 0); background: $color-pri; border-radius: 0 0 10px 0; font-size: 16px; @include flex-center($gap: .3em); padding: .3em .6em;
+  
+    &::before {content: ''; display: block; width: 15px; height: 15px; background: url(/public/images/badge-icon.svg) no-repeat center / contain;}
+  }
+  &.live {
+    @include pos-abs($t: 0px, $r: unset, $l: 0); background:#CD2626; border-radius: 0 0 10px 0; font-size: 16px; font-weight: $font-w-SB-600; @include flex-center($gap: .5em); padding: .3em .6em;
+
+    i {position: relative; display: block; width: 4px; height: 4px;
+      
+      span {width: 100%; height: 100%; position: relative;
+        display: block;  border-radius: 50%; background-color: #fff; 
+      }
+      
+      &::before {content: ''; @include pos-abs-center(); width: 100%; height: 100%; border-radius: 50%; background: rgba(255,255,255,.2); animation: live 1s ease-out alternate infinite;  backdrop-filter: blur(1.5px);}
+
+    }
+
+    @keyframes live {
+      0% {@include pos-abs-center-scale-s($s:1.5);}
+      100% {@include pos-abs-center-scale-n($s:3.5);}
+    }
+  }
+
+}
+
+// 시청내역
+.watchRail {
+  .contentCard-progress {
+    appearance: none;
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+    border: 0;
+    border-radius: 0;
+    overflow: hidden;
+    background: $color-progress;
+
+    // Chrome, Edge, Safari 배경
+    &::-webkit-progress-bar {
+      background: $color-progress;
+    }
+     // Chrome, Edge, Safari 진행 부분
+    &::-webkit-progress-value {
+      background: $color-pri;
+    }
+
+    // Firefox 진행 부분
+    &::-moz-progress-bar {
+      background: $color-pri;
+    }
+  }
+
+  .contentCard-sportsTitle {font-size: 18px; font-weight: $font-w-M-500; margin-block: .5em .2em;
+  
+    @include tablet {
+      font-size: clamp(16px, 1.25vw, 18px);
+    }
+  }
+  .contentCard-resumeInfo {font-size: 14px; color: $color-text-sec2;
+
+    @include tablet {
+      font-size: clamp(12px, 1.16vw, 14px);
+    }
+  }
+}
+
+.contentRail-list {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 32px 20px;
+
+  .contentRail-list-info {
+    min-width: 0;
+  }
+
+  .contentRail-list-title {
+    display: none;
+  }
+
+  @media (min-width: 768px) and (max-width: 1279px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 16px;
+  }
+
+  @media (max-width: 767px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+
+    .contentRail-card:not(.watchRail) .contentRail-info {
+      display: grid;
+      grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+      column-gap: 12px;
+      align-items: start;
+    }
+
+    .contentRail-list-title {
+      display: block;
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+.contentRail-card .contentRail-select {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  position: relative;
+  
+
+  &::before {content: ''; position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: rgba(0,0,0,.5);}
+
+  &::after {content: ''; position: absolute; width: 28px; height: 28px; top: 5%; right: 5%; background: url(/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg) no-repeat center / contain};
+
+  &[aria-pressed='true'] {
+    // outline: 2px solid $color-pri;
+    // outline-offset: -2px;
+    position: relative;
+
+    &::after {background-image: url(/images/icon/DesignSystem_Icon02/icon-favorite_added.svg)};
+  }
+}

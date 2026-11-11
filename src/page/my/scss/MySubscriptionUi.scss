@@ -1,0 +1,447 @@
+@use '../../../scss/variables' as *;
+@use '../../../scss/mixins' as *;
+// Figma 등록 스타일의 웹 매핑. 기존 my의 폰트·브랜드·보조색 변수를 재사용합니다.
+$my-page: #0f1114;
+$my-card: #13161a; // 패스 안내 시안의 카드 표면
+$my-info: #1b1e23;
+$my-control: #292d33;
+
+.my-pass-page {
+    font-family: $font-main;
+    color: $color-text-pri;
+    box-sizing: border-box;
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+        margin: 0;
+    }
+
+    h1 {
+        font-size: 32px;
+        line-height: 40px;
+        font-weight: $font-w-B-700;
+    }
+
+    h2 {
+        font-size: 24px;
+        line-height: 32px;
+        font-weight: $font-w-SB-600;
+    }
+
+    h3 {
+        font-size: 20px;
+        line-height: 28px;
+        font-weight: $font-w-SB-600;
+    }
+
+    p {
+        font-size: 16px;
+        line-height: 24px;
+    }
+
+    button {
+        font-family: inherit;
+    }
+
+    a {
+        color: inherit;
+    }
+}
+
+.my-pass-page {
+    background: $my-page;
+    min-height: 70vh;
+}
+
+.my-pass-inner {
+    max-width: 1920px;
+    padding: 48px 64px 80px;
+    margin: auto;
+}
+
+.my-pass-page-heading {
+    @include flex-between(center, 24px);
+}
+
+.my-pass-lead {
+    margin: 32px 0 !important;
+    color: $color-text-sec1;
+}
+
+.my-pass-info {
+    background: $my-info;
+    border-radius: 8px;
+    padding: 32px;
+    @include flexCol(16px);
+}
+
+.my-pass-text-button {
+    background: none;
+    color: $color-pri;
+    border: 0;
+    padding: 0;
+    text-align: left;
+    min-height: 45px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.my-pass-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 32px 0;
+}
+
+.my-pass-card {
+    background: $my-card;
+    border-radius: 8px;
+    padding: 24px;
+    @include flexCol(16px);
+    min-width: 0;
+}
+
+.my-pass-price {
+    font-size: 24px !important;
+    line-height: 32px !important;
+    font-weight: $font-w-SB-600;
+    color: $color-pri;
+}
+
+.my-pass-caption {
+    font-size: 14px !important;
+    line-height: 20px !important;
+    color: $color-text-sec2;
+}
+
+.my-pass-card .my-pass-button {
+    margin-top: auto;
+}
+
+.my-pass-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 45px;
+    min-width: 145px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 5px;
+    background: $color-pri;
+    color: $color-text-pri;
+    font: 600 16px/24px $font-main;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background .15s;
+
+    &.is-secondary {
+        background: $my-control;
+    }
+
+    &:hover:not(:disabled) {
+        background: $color-sec;
+    }
+
+    &:active:not(:disabled) {
+        filter: brightness(.9);
+    }
+
+    &:disabled {
+        opacity: .4;
+        cursor: not-allowed;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $color-text-pri;
+        outline-offset: 3px;
+    }
+}
+
+.my-pass-notices {
+    @include flexCol(24px);
+
+    ul {
+        padding-left: 20px;
+        margin: 0;
+        color: $color-text-sec1;
+        font-size: 14px;
+        line-height: 20px;
+        display: grid;
+        gap: 20px;
+    }
+}
+
+.my-pass-checkout {
+    max-width: 896px;
+    margin: auto;
+    padding: 48px 64px 80px;
+    @include flexCol(32px);
+
+    >p {
+        color: $color-text-sec1;
+    }
+
+    .my-pass-price {
+        font-size: 28px !important;
+        line-height: 36px !important;
+        font-weight: 700;
+    }
+
+    section h2 {
+        margin-bottom: 0;
+    }
+
+    .my-pass-info h2 {
+        font-size: 24px;
+    }
+}
+
+.my-pass-payment-method {
+    background: $my-control;
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 32px;
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+}
+
+
+
+.my-pass-agreement {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    font-size: 16px;
+    line-height: 24px;
+    cursor: pointer;
+
+    input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        opacity: 0;
+
+        &:focus-visible+.my-pass-agreement-check {
+            outline: 2px solid $color-pri;
+            outline-offset: 3px;
+        }
+    }
+
+    .my-pass-agreement-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+
+        border: 2px solid #777;
+        border-radius: 50%;
+
+        &.active {
+            border-color: $color-pri;
+        }
+
+        span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: $color-pri;
+        }
+    }
+
+    a {
+        text-decoration: underline;
+    }
+}
+
+.my-membership {
+    @include flexCol(72px);
+
+    >section {
+        @include flexCol(16px);
+    }
+
+    h2 {
+        font-size: 28px;
+        line-height: 36px;
+        font-weight: 700;
+    }
+
+    .my-pass-button {
+        width: 100%;
+    }
+}
+
+.my-membership-posters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.my-membership-poster {
+    aspect-ratio: 589.333/884;
+    overflow: hidden;
+    position: relative;
+    border-radius: 8px;
+
+    img {
+        position: absolute;
+        max-width: none;
+        height: 345.25%;
+        width: 434.39%;
+        top: -22.32%;
+        left: -26.7%;
+    }
+}
+
+.my-membership-poster-1 img {
+    left: -168.33%;
+}
+
+.my-membership-poster-2 img {
+    left: -309.5%;
+}
+
+.my-membership-poster-3 img,
+.my-membership-poster-4 img,
+.my-membership-poster-5 img {
+    width: 548.57%;
+    height: 436%;
+    top: -183.05%;
+}
+
+.my-membership-poster-3 img {
+    left: -46.86%;
+}
+
+.my-membership-poster-4 img {
+    left: -225.71%;
+}
+
+.my-membership-poster-5 img {
+    left: -404%;
+}
+
+.my-pass-faq {
+    details {
+        width: 100%;
+        background: $my-info;
+        border-radius: 8px;
+        padding: 24px;
+    }
+
+    summary {
+        cursor: pointer;
+        list-style: none;
+        min-height: 44px;
+        @include flex-between(center, 16px);
+        font-size: 20px;
+        font-weight: 600;
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        span::before {
+            content: '+';
+            font-size: 24px;
+        }
+    }
+
+    details[open] summary span::before {
+        content: '−';
+    }
+
+    details p {
+        padding-top: 16px;
+        color: $color-text-sec1;
+    }
+
+
+}
+
+@media(max-width:1279px) {
+    .my-pass-inner {
+        padding: 40px 40px 80px;
+    }
+
+    .my-pass-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media(max-width:767px) {
+
+    .my-pass-inner,
+    .my-pass-checkout {
+        padding: 30px 20px 60px;
+    }
+
+    .my-pass-page h1 {
+        font-size: 24px;
+        line-height: 32px;
+    }
+
+    .my-pass-page-heading {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .my-pass-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .my-pass-info {
+        padding: 24px;
+    }
+
+    .my-membership {
+        gap: 40px;
+    }
+
+    .my-membership-posters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .my-membership h2 {
+        font-size: 24px;
+        line-height: 32px;
+    }
+
+    .my-pass-faq summary {
+        font-size: 18px;
+    }
+
+}
+
+.my-pass-cancel-banner {
+    background: $my-info;
+    padding: 16px 24px;
+    border-radius: 8px;
+    @include flex-between(center, 16px);
+
+    p {
+        font-size: 14px;
+    }
+
+    @media(max-width:767px) {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

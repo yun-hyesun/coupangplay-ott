@@ -1,0 +1,173 @@
+@use "../../../scss/variables" as *;
+
+// PIN 팝업 배경
+.profile-pin-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+// PIN 팝업
+.profile-pin-modal {
+    width: 100%;
+    max-width: 430px;
+    padding: 36px 32px;
+
+    background: #21252B;
+    border: 1px solid $color-border-light;
+    border-radius: 10px;
+
+    font-family: $font-main;
+    color: $color-text-pri;
+    text-align: center;
+
+    h3 {
+        margin-bottom: 20px;
+        font-size: 24px;
+        font-weight: $font-w-B-700;
+    }
+
+    >p {
+        margin-bottom: 20px;
+        font-size: 16px;
+        line-height: 1.5;
+        color: $color-text-sec1;
+    }
+
+    // PIN 입력창
+    input {
+        display: block;
+        width: 100%;
+        height: 45px;
+        margin-bottom: 12px;
+        padding: 0 16px;
+
+        background: #303030;
+        border: 1px solid $color-border-light;
+        border-radius: 5px;
+
+        font-family: $font-main;
+        font-size: 18px;
+        color: $color-text-pri;
+        text-align: center;
+        letter-spacing: 4px;
+
+        &:focus {
+            outline: 1px solid $color-pri;
+        }
+
+        &::placeholder {
+            color: $color-text-sec2;
+            letter-spacing: normal;
+        }
+    }
+
+    // 오류 메시지
+    .profile-form-error {
+        margin-top: 8px;
+        margin-bottom: 0;
+        font-size: 14px;
+        color: #ff6b6b;
+    }
+
+    // 생년월일 입력창
+    .profile-birth-inputs {
+        display: flex;
+        gap: 12px;
+
+        input {
+            min-width: 0;
+            flex: 1;
+            width: 100%;
+            padding: 0 8px;
+            letter-spacing: 0;
+        }
+
+        input:first-child {
+            flex: 1.5;
+        }
+    }
+
+    // 취소 / 확인 버튼
+    .profile-pin-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        margin-top: 28px;
+
+        button {
+            width: 145px;
+            height: 45px;
+            flex-shrink: 0;
+
+            border: none;
+            border-radius: 5px;
+
+            font-family: $font-main;
+            font-size: 16px;
+            font-weight: $font-w-M-500;
+            color: $color-text-pri;
+
+            cursor: pointer;
+            transition: background 0.2s;
+
+            &:first-child {
+                background: #3c3c3c;
+
+                &:hover {
+                    background: #505050;
+                }
+            }
+
+            &:last-child {
+                background: $color-pri;
+
+                &:hover {
+                    filter: brightness(1.1);
+                }
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        }
+    }
+}
+
+// ========================================
+// 반응형
+// ========================================
+
+// 모바일
+@media (max-width: 767px) {
+    .profile-pin-modal {
+        padding: 28px 20px;
+
+        h3 {
+            font-size: 22px;
+        }
+
+        >p {
+            font-size: 16px;
+        }
+
+        .profile-pin-buttons {
+            gap: 12px;
+
+            button {
+                flex: 1;
+                min-width: 0;
+                width: auto;
+                height: 46px;
+            }
+        }
+    }
+}

@@ -1,0 +1,124 @@
+/* size */
+/* size */
+/* size */
+.my-wowclip-tabs {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  padding-bottom: 28.5px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+}
+.my-wowclip-tabs a {
+  font-family: "Pretendard", sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #A3A3A3;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.my-wowclip-tabs a:hover {
+  color: #FFFFFF;
+}
+.my-wowclip-tabs a.active {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+.my-wowclip-tabs .my-wowclip-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-right: -20px;
+}
+.my-wowclip-tabs .my-wowclip-back img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.my-wowclip-tabs .my-wowclip-back:hover {
+  opacity: 0.7;
+}
+
+.wowclip-page:has(.my-wowclip-tabs) {
+  width: 100%;
+  padding: 54.5px clamp(20px, 4vw, 80px) 100px;
+}
+.wowclip-page:has(.my-wowclip-tabs) > .wowclip-heading {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.wowclip-page:has(.my-wowclip-tabs) > .my-wowclip-tabs {
+  margin-bottom: 28px;
+}
+.wowclip-page:has(.my-wowclip-tabs) .my-wowclip-mobile-title {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .my-wowclip-tabs {
+    gap: 28px;
+    padding-bottom: 26.5px;
+  }
+  .my-wowclip-tabs a {
+    font-size: 20px;
+  }
+  .my-wowclip-tabs .my-wowclip-back {
+    margin-right: -20px;
+  }
+  .wowclip-page:has(.my-wowclip-tabs) {
+    padding: 42px 40px 80px;
+  }
+}
+@media (max-width: 767px) {
+  .my-wowclip-tabs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 0;
+    border-bottom: none;
+    overflow: visible;
+  }
+  .my-wowclip-tabs > a:not(.my-wowclip-back) {
+    display: none;
+  }
+  .my-wowclip-tabs .my-wowclip-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 0;
+    flex-shrink: 0;
+  }
+  .my-wowclip-tabs .my-wowclip-mobile-title {
+    display: block;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #FFFFFF;
+  }
+  .wowclip-page:has(.my-wowclip-tabs) {
+    padding: 30px 20px 60px;
+  }
+  .wowclip-page:has(.my-wowclip-tabs) > .my-wowclip-tabs {
+    margin-bottom: 24px;
+  }
+  .wowclip-page:has(.my-wowclip-tabs) > .wowclip-heading {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+  .wowclip-page:has(.my-wowclip-tabs) > .wowclip-browse-controls {
+    margin-bottom: 24px;
+  }
+  .wowclip-page:has(.my-wowclip-tabs) > .wowclip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}

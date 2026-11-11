@@ -1,0 +1,457 @@
+@charset "UTF-8";
+/* size */
+/* size */
+/* size */
+.my-subscription {
+  width: 100%;
+  min-height: 70vh;
+  background: #0f1114;
+  color: #FFFFFF;
+}
+.my-subscription .my-subscription-inner {
+  width: 100%;
+  max-width: 1792px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+.my-subscription .voucher-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: fit-content;
+  height: 45px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: #292d33;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.my-subscription .voucher-open-btn span {
+  font-size: 22px;
+  line-height: 1;
+}
+.my-subscription .voucher-open-btn:hover:not(:disabled) {
+  background: #505050;
+}
+.my-subscription .voucher-open-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.my-subscription .subscription-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.my-subscription .subscription-header .my-page-header {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.my-subscription .subscription-header h2 {
+  font-family: "Pretendard", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+.my-subscription .subscription-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 32px;
+}
+.my-subscription .subscription-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.my-subscription .subscription-card:hover {
+  background: #303135;
+}
+.my-subscription .subscription-thumbnail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  padding: 10px 10px;
+  background: #0084FF;
+  border-radius: 6px;
+}
+.my-subscription .subscription-thumbnail .subscription-play-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+.my-subscription .subscription-thumbnail .subscription-play-badge img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.my-subscription .subscription-thumbnail .subscription-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 28px;
+}
+.my-subscription .subscription-thumbnail .subscription-logo img {
+  display: block;
+  width: 100%;
+  max-width: 72px;
+  max-height: 28px;
+  object-fit: contain;
+}
+.my-subscription .subscription-thumbnail .subscription-logo strong {
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-align: center;
+}
+.my-subscription .subscription-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.my-subscription .subscription-info h3 {
+  font-family: "Pretendard", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+.my-subscription .subscription-info p {
+  font-family: "Pretendard", sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #A3A3A3;
+}
+.my-subscription .subscription-menu-wrap {
+  position: relative;
+  align-self: flex-start;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.my-subscription .subscription-menu-wrap .subscription-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: #FFFFFF;
+  cursor: pointer;
+}
+.my-subscription .subscription-menu-wrap .subscription-more-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.my-subscription .subscription-menu-wrap .subscription-more-btn img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.my-subscription .subscription-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 10;
+  width: 190px;
+  padding: 8px 0;
+  background: #292b30;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.my-subscription .subscription-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: #FFFFFF;
+  font-family: "Pretendard", sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+}
+.my-subscription .subscription-dropdown button:hover {
+  background: #292d33;
+}
+.my-subscription .subscription-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 360px;
+  text-align: center;
+}
+.my-subscription .subscription-empty p {
+  font-size: 20px;
+  font-weight: 600;
+}
+.my-subscription .subscription-empty span {
+  font-size: 16px;
+  color: #D4D4D4;
+}
+.my-subscription .subscription-dev-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+}
+.my-subscription .subscription-dev-controls button {
+  padding: 10px 16px;
+  background: #303030;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ========================================
+   구독 해지 신청 - 고객센터 FAQ 스타일
+======================================== */
+.my-subscription .subscription-card.cancel-pending {
+  padding: 0;
+  border-radius: 8px;
+}
+.my-subscription .subscription-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  padding: 20px 24px;
+  box-sizing: border-box;
+}
+.my-subscription .my-pass-cancel-accordion {
+  width: 100%;
+  margin-top: 0;
+}
+.my-subscription .my-pass-cancel-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 70px;
+  padding: 20px 16px;
+  border: none;
+  border-bottom: 1px solid #303135;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.my-subscription .my-pass-cancel-question:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.my-subscription .my-pass-cancel-question .my-pass-cancel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+.my-subscription .my-pass-cancel-question .my-pass-cancel-arrow img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  transform: rotate(-90deg);
+  transition: transform 0.3s ease;
+}
+.my-subscription .my-pass-cancel-question[aria-expanded=true] .my-pass-cancel-arrow img {
+  transform: rotate(90deg);
+}
+.my-subscription .my-pass-cancel-answer-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s ease, opacity 0.3s ease;
+}
+.my-subscription .my-pass-cancel-answer-wrap .my-pass-cancel-answer-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.my-subscription .my-pass-cancel-answer-wrap.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.my-subscription .my-pass-cancel-answer {
+  padding: 20px 16px;
+  background: #202123;
+  border-radius: 0 0 6px 6px;
+  color: #aaa;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.my-subscription .my-pass-cancel-answer p {
+  margin: 0;
+}
+.my-subscription .my-pass-cancel-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 10px;
+}
+.my-subscription .my-pass-cancel-bottom span {
+  font-size: 14px;
+  color: #aaa;
+}
+
+@media (max-width: 767px) {
+  .my-subscription .subscription-card-top {
+    gap: 12px;
+    padding: 16px;
+  }
+  .my-subscription .my-pass-cancel-question {
+    min-height: 56px;
+    padding: 18px 8px;
+    font-size: 14px;
+  }
+  .my-subscription .my-pass-cancel-answer {
+    padding: 20px 12px;
+    font-size: 14px;
+  }
+  .my-subscription .my-pass-cancel-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .my-subscription .my-subscription-inner {
+    padding: 24px 16px 60px;
+  }
+  .my-subscription .subscription-header {
+    gap: 12px;
+  }
+  .my-subscription .subscription-header h2 {
+    font-size: 22px;
+  }
+  .my-subscription .subscription-list {
+    gap: 16px;
+    padding-top: 24px;
+  }
+  .my-subscription .subscription-card.cancel-pending {
+    padding: 0;
+  }
+  .my-subscription .subscription-thumbnail {
+    width: 72px;
+    height: 86px;
+    gap: 8px;
+    padding: 10px 6px;
+  }
+  .my-subscription .subscription-thumbnail .subscription-play-badge {
+    width: 28px;
+    height: 28px;
+  }
+  .my-subscription .subscription-thumbnail .subscription-logo {
+    height: 20px;
+  }
+  .my-subscription .subscription-thumbnail .subscription-logo img {
+    max-width: 58px;
+    max-height: 20px;
+  }
+  .my-subscription .subscription-thumbnail .subscription-logo strong {
+    font-size: 10px;
+  }
+  .my-subscription .subscription-info {
+    gap: 6px;
+  }
+  .my-subscription .subscription-info h3 {
+    font-size: 16px;
+  }
+  .my-subscription .subscription-info p {
+    font-size: 12px;
+  }
+  .my-subscription .subscription-menu-wrap .subscription-more-btn {
+    width: 28px;
+    height: 28px;
+  }
+  .my-subscription .subscription-menu-wrap .subscription-more-btn img {
+    width: 20px;
+    height: 20px;
+  }
+  .my-subscription .subscription-dropdown {
+    width: 160px;
+  }
+  .my-subscription .subscription-dropdown button {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .my-subscription .subscription-empty {
+    min-height: 280px;
+  }
+  .my-subscription .subscription-empty p {
+    font-size: 18px;
+  }
+  .my-subscription .subscription-empty span {
+    font-size: 14px;
+  }
+}
+.payment-history-table {
+  width: 100%;
+  margin-top: 32px;
+  border-collapse: collapse;
+}
+.payment-history-table th,
+.payment-history-table td {
+  padding: 18px 16px;
+  text-align: left;
+  font-size: 16px;
+}
+.payment-history-table th {
+  background: #292b30;
+  color: #D4D4D4;
+  font-weight: 500;
+}
+.payment-history-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
+.payment-history-table td span {
+  color: #A3A3A3;
+}
+
+@media (max-width: 767px) {
+  .payment-history-table th,
+  .payment-history-table td {
+    padding: 14px 8px;
+    font-size: 12px;
+  }
+}

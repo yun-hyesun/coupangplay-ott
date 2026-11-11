@@ -1,0 +1,459 @@
+import { LoginNoticePopup } from './common/LoginNoticePopup';
+import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
+import { SPORTS_LEAGUE_BY_ID } from "../data/sportsLeagues";
+import { Link, useLocation } from "react-router-dom";
+import { getYouTubeVideoId } from "../data/youtubeVideoId";
+import { formatBroadcastDate, getBroadcastCountdown, getBroadcastStatus } from "../data/leagueBroadcasts";
+import { auth } from "../firebase/firebase";
+import { useEffect, useState } from "react";
+import { useWatchlistStore } from "../store/useWatchlistStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { useProfileStore } from "../store/useProfileStore";
+import { getSportsLiveWatchDestination } from "../page/watch/watchMedia";
+import "./content/scss/ContentCard.scss";
+
+const SEOUL_TIME_ZONE = "Asia/Seoul";
+const DETAIL_BACKGROUND = "/images/sports/league-detail/detail-matchup-bg.png";
+const BROADCAST_BACKGROUNDS_BY_SPORT = {
+  농구: "/images/sports/league-detail/broadcast-basketball-bg.png",
+  레이싱: "/images/sports/league-detail/broadcast-racing-flag-bg.png",
+  일반 :"/images/sports/league-detail/broadcast-rugby-bg.png"
+};
+
+export function normalizeSportsText(value) {
+  return String(value || "").normalize("NFKC").replace(/[\s.·_–-]/g, "").toLowerCase();
+}
+
+export function formatKoreanDate(dateKey) {
+  const date = new Date(dateKey + "T00:00:00Z");
+  if (Number.isNaN(date.getTime())) return dateKey;
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  }).format(date);
+}
+
+export function formatGameTime(value) {
+  if (!value) return "시간 미정";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "시간 미정";
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: SEOUL_TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+export function formatGameDate(value) {
+  if (!value) return "일정 미정";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "일정 미정";
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("ko-KR", {
+    timeZone: SEOUL_TIME_ZONE,
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+  }).formatToParts(date).map((part) => [part.type, part.value]));
+  return `${parts.month}월 ${parts.day}일 (${parts.weekday})`;
+}
+
+export function getGameStatus(status = "") {
+  if (/live|in.?play|paused|progress|quarter|halftime|overtime/i.test(status)) {
+    return { label: "LIVE", type: "live" };
+  }
+  if (/finished|full.?time|final|ended|complete/i.test(status)) {
+    return { label: "종료", type: "ended" };
+  }
+  if (/postponed|delayed/i.test(status)) return { label: "연기", type: "scheduled" };
+  if (/canceled/i.test(status)) return { label: "취소", type: "scheduled" };
+  return { label: "예정", type: "scheduled" };
+}
+
+export function findLeagueTeam(leagueId, candidate = {}) {
+  const teams = SPORTS_TEAMS_BY_LEAGUE[leagueId] || [];
+  const name = candidate.teamName || candidate.name || candidate.nameEn || candidate.team?.name || "";
+  const id = candidate.teamId ?? candidate.id;
+  return teams.find((team) => id != null && String(team.teamId) === String(id)) ||
+    teams.find((team) => normalizeSportsText(team.name) === normalizeSportsText(name)) ||
+    teams.find((team) => normalizeSportsText(name) && normalizeSportsText(name).includes(normalizeSportsText(team.name))) ||
+    null;
+}
+
+export function TeamImage({ team, leagueId, className = "" }) {
+  const localTeam = team ? findLeagueTeam(leagueId, team) : null;
+  const image = team?.crest || team?.logoPath || localTeam?.logoPath;
+  if (!image) return <span className={"league-detail__team-placeholder " + className} aria-hidden="true" />;
+  return <img className={className} src={image} alt="" loading="lazy" />;
+}
+
+export function EmptyMessage({ children }) {
+  return <p className="league-detail__empty" role="status">{children}</p>;
+}
+
+export function LiveBadge({ label, className = "" }) {
+  return (
+    <span className={"contentCard-badge live league-detail__live-badge" + (className ? " " + className : "")} aria-label={label}>
+      <i aria-hidden="true"><span /></i>LIVE
+    </span>
+  );
+}
+
+
+export function MatchCard({ game, leagueId, scoresOn }) {
+  const status = getGameStatus(game.status);
+  const isRace = Boolean(game.raceName);
+
+  const homeName = isRace
+    ? game.raceName
+    : game.home?.name || "홈 팀";
+
+  const awayName = isRace
+    ? "그랑프리"
+    : game.away?.name || "원정 팀";
+
+  const hasScore =
+    scoresOn &&
+    status.type === "ended" &&
+    game.home?.score != null &&
+    game.away?.score != null;
+
+  const quality = ["4K", "HDR"].includes(
+    game.broadcastQuality
+  )
+    ? game.broadcastQuality
+    : null;
+
+  // 기존 찜하기 Store
+  const watchlist = useWatchlistStore(
+    (state) => state.watchlist
+  );
+  const ownerKey = useWatchlistStore(
+    (state) => state.ownerKey
+  );
+  const onLoadWatchlist = useWatchlistStore(
+    (state) => state.onLoadWatchlist
+  );
+  const onAddWatchlist = useWatchlistStore(
+    (state) => state.onAddWatchlist
+  );
+  const onRemoveWatchlist = useWatchlistStore(
+    (state) => state.onRemoveWatchlist
+  );
+
+  const user = useAuthStore((state) => state.user);
+  const currentProfile = useProfileStore(
+    (state) => state.currentProfile
+  );
+
+  const [saving, setSaving] = useState(false);
+  const [loginNoticeOpen, setLoginNoticeOpen] = useState(false);
+
+  // 경기 고유 ID
+  const matchId = game.gameId ?? game.id;
+
+  const favoriteContent = {
+    id: `${leagueId}_${matchId}`,
+    media_type: "sports",
+    title: isRace ? homeName : `${homeName} vs ${awayName}`,
+    leagueId,
+    sport: SPORTS_LEAGUE_BY_ID[leagueId]?.sport || game.sport || null,
+    startTime: game.utcDate || game.startTime || null,
+    homeName,
+    awayName,
+    homeTeamId: game.home?.teamId ?? game.home?.id ?? null,
+    awayTeamId: game.away?.teamId ?? game.away?.id ?? null,
+    homeLogo: game.home?.crest || game.home?.logoPath || null,
+    awayLogo: game.away?.crest || game.away?.logoPath || null,
+    thumbnail: game.broadcastThumbnail || game.thumbnail || null,
+    raceName: game.raceName || null,
+  };
+
+  const currentUid = auth.currentUser?.uid || user?.uid;
+  const currentOwnerKey =
+    currentUid && currentProfile?.id
+      ? `${currentUid}_${currentProfile.id}`
+      : null;
+
+  // 현재 프로필의 찜 목록 불러오기
+  useEffect(() => {
+    if (
+      currentOwnerKey &&
+      ownerKey !== currentOwnerKey
+    ) {
+      onLoadWatchlist();
+    }
+  }, [currentOwnerKey, ownerKey, onLoadWatchlist]);
+
+  // 찜 여부
+  const isFavorite =
+    ownerKey === currentOwnerKey &&
+    watchlist.some(
+      (item) =>
+        item.media_type === "sports" &&
+        String(item.id) === favoriteContent.id
+    );
+
+  // 찜 추가 / 해제
+  const handleFavorite = async (event) => {
+    event.stopPropagation();
+
+    if (saving) return;
+
+    if (!auth.currentUser || !currentProfile) {
+      setLoginNoticeOpen(true);
+      return;
+    }
+
+    if (matchId == null) {
+      alert("경기 ID가 없어 찜할 수 없습니다.");
+      return;
+    }
+
+    if (ownerKey !== currentOwnerKey) {
+      await onLoadWatchlist();
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const success = isFavorite
+        ? await onRemoveWatchlist(favoriteContent)
+        : await onAddWatchlist(favoriteContent);
+
+      if (!success) {
+        alert("찜 목록을 변경하지 못했습니다.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <article
+      className="league-detail__match-card"
+      data-match-status={status.type}
+    >
+      {status.type === "live" ? (
+        <LiveBadge label="라이브 경기" />
+      ) : (
+        <span
+          className={
+            "league-detail__match-badge league-detail__match-badge--" +
+            status.type
+          }
+          aria-label={status.label}
+        >
+          {status.label}
+        </span>
+      )}
+
+      <div className="league-detail__match-teams">
+        <div className="league-detail__match-team league-detail__match-team--home">
+          <TeamImage team={game.home} leagueId={leagueId} />
+          <span title={homeName}>{homeName}</span>
+        </div>
+
+        <div className="league-detail__match-center">
+          {hasScore ? (
+            <strong>
+              {game.home.score} <i>:</i> {game.away.score}
+            </strong>
+          ) : (
+            <strong>
+              {formatGameTime(game.utcDate || game.startTime)}
+            </strong>
+          )}
+
+          <span>
+            {formatGameDate(
+              game.utcDate ||
+              game.startTime ||
+              game.dateKey
+            )}
+          </span>
+        </div>
+
+        <div className="league-detail__match-team league-detail__match-team--away">
+          {!isRace && (
+            <TeamImage team={game.away} leagueId={leagueId} />
+          )}
+          <span title={awayName}>{awayName}</span>
+        </div>
+      </div>
+
+      <div className="league-detail__match-action">
+        {status.type === "scheduled" ? (
+          <button
+            type="button"
+            className="league-detail__favorite-button"
+            onClick={handleFavorite}
+            disabled={saving || matchId == null}
+            aria-pressed={isFavorite}
+            aria-label={
+              isFavorite ? "경기 찜 해제" : "경기 찜하기"
+            }
+            title={
+              isFavorite ? "찜 해제" : "찜하기"
+            }
+          >
+            <span className="league-detail__match-action-icon">
+              <img
+                src={`/images/sports/league-detail/schedule-${isFavorite ? "check" : "plus"}.svg`}
+                alt=""
+              />
+            </span>
+          </button>
+        ) : status.type === "ended" ? (
+          <Link
+            className="league-detail__match-play-button"
+            to={`/sports/league/${leagueId}`}
+            state={{ leagueTab: "schedule", scheduleMatch: { ...game, competitionCode: leagueId } }}
+            aria-label={`${homeName} vs ${awayName} 경기 일정 및 관련 영상 보기`}
+          >
+            <span className="league-detail__match-action-icon" aria-hidden="true">
+              <img src="/images/sports/league-detail/schedule-play.svg" alt="" />
+            </span>
+          </Link>
+        ) : (
+          <Link
+            className="league-detail__match-play-button"
+            {...getSportsLiveWatchDestination(game, { leagueId, returnTo: `/sports/league/${leagueId}` })}
+            aria-label={`${homeName} vs ${awayName} LIVE 화면으로 이전 경기 영상 보기`}
+          >
+            <span className="league-detail__match-action-icon" aria-hidden="true">
+              <img src="/images/sports/league-detail/schedule-play.svg" alt="" />
+            </span>
+          </Link>
+        )}
+
+        {quality && (
+          <span className="league-detail__match-quality">
+            {quality}
+          </span>
+        )}
+      </div>
+      {loginNoticeOpen && <div onClick={event => event.stopPropagation()}><LoginNoticePopup onClose={() => setLoginNoticeOpen(false)} /></div>}
+    </article>
+  );
+}
+
+
+export function BroadcastCard({ game, leagueId, sport }) {
+  const isLive = getBroadcastStatus(game.status) === "live";
+  const kickoff = game.utcDate || game.startTime;
+  const [now, setNow] = useState(Date.now);
+  const countdown = getBroadcastCountdown(game, now);
+  const startTime = formatBroadcastDate(kickoff);
+  useEffect(() => {
+    if (isLive || !kickoff || !Number.isFinite(Date.parse(kickoff))) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [isLive, kickoff]);
+  const thumbnail = isLive && (game.broadcastThumbnail || game.thumbnail);
+  const isRace = Boolean(game.raceName);
+  const heading = isRace
+    ? game.raceName
+    : (game.home?.name || "홈 팀") + " vs " + (game.away?.name || "원정 팀");
+  const Media = isLive ? Link : "div";
+
+  return (
+    <article className="league-detail__broadcast-card" data-broadcast-status={isLive ? "live" : "scheduled"}>
+      <Media className="league-detail__broadcast-media" {...(isLive ? {
+        ...getSportsLiveWatchDestination(game, { leagueId, returnTo: `/sports/league/${leagueId}` }),
+        "aria-label": `${heading} LIVE 화면으로 이전 경기 영상 보기`,
+      } : {})}>
+        <img className="league-detail__broadcast-bg" src={thumbnail || BROADCAST_BACKGROUNDS_BY_SPORT[sport] || DETAIL_BACKGROUND} alt="" />
+        {!thumbnail && <div className="league-detail__broadcast-teams">
+          <TeamImage team={game.home} leagueId={leagueId} />
+          {!isRace && <span>VS</span>}
+          {!isRace && <TeamImage team={game.away} leagueId={leagueId} />}
+        </div>}
+        {isLive ? <>
+          <LiveBadge label="라이브 중계" />
+          <span className="league-detail__broadcast-play" aria-hidden="true">
+            <span><img src="/images/sports/league-detail/broadcast-play.svg" alt="" /></span>
+          </span>
+        </> : <div className="league-detail__broadcast-overlay">
+          {countdown ? <div className="league-detail__broadcast-countdown" role="timer" aria-live="off">
+            <span>{countdown.label}</span>
+            <time dateTime={`PT${countdown.remainingSeconds}S`}>{countdown.time}</time>
+          </div> : <time dateTime={kickoff}>{startTime}</time>}
+        </div>}
+      </Media>
+      <div className="league-detail__broadcast-copy">
+        <strong>{heading}</strong>
+        {isLive ? <span>LIVE 중계 중</span> : !countdown && <span>{startTime}</span>}
+      </div>
+    </article>
+  );
+}
+
+function HighlightBadge({ kind = "highlight", fixture = false }) {
+  const assets = "/images/sports/league-detail/popular/";
+  const feedAssets = "/images/sports/league-detail/videos/";
+  const fixtureAssets = "/images/sports/league-detail/schedule/related-";
+  const highlightAssets = fixture ? fixtureAssets : assets;
+  const recommendAssets = fixture ? fixtureAssets : feedAssets;
+  if (kind === "replay") return (
+    <span className="league-detail__replay-badge" aria-label="다시보기">
+      <span className="league-detail__replay-symbol" aria-hidden="true">
+        <span><img src={feedAssets + "replay-symbol.svg"} alt="" /></span>
+        <img src={feedAssets + "replay-symbol-overlay.svg"} alt="" />
+        <img src={feedAssets + "replay-symbol-overlay.svg"} alt="" />
+      </span>다시보기
+    </span>
+  );
+  const recommend = kind === "recommend";
+  return (
+    <span className={"league-detail__highlight-badge" + (recommend ? " league-detail__highlight-badge--recommend" : "")} aria-label={recommend ? "추천 영상" : "하이라이트"}>
+      <img className="league-detail__highlight-bg" src={recommend ? recommendAssets + "recommend-bg.svg" : highlightAssets + "highlight-bg.svg"} alt="" />
+      <span className="league-detail__highlight-symbol" aria-hidden="true"><img src={highlightAssets + "highlight-symbol.svg"} alt="" /></span>
+      <span className="league-detail__highlight-symbol-overlay" aria-hidden="true">
+        <img src={highlightAssets + "highlight-symbol-overlay.svg"} alt="" />
+        <img src={highlightAssets + "highlight-symbol-overlay.svg"} alt="" />
+      </span>
+      <img className="league-detail__highlight-label" src={recommend ? recommendAssets + "recommend-label.svg" : highlightAssets + "highlight-label.svg"} alt="" />
+    </span>
+  );
+}
+
+export function VideoCard({ video, rank, badge = "하이라이트", variant, returnTab, returnMatch }) {
+  const location = useLocation();
+  const ranked = rank != null;
+  const fixture = variant === "fixture";
+  const feed = variant === "feed" || fixture;
+  const videoId = getYouTubeVideoId(video);
+  const VideoMain = videoId ? Link : video.url ? "a" : "div";
+  const playbackProps = videoId ? {
+    to: `/watch/sports/${encodeURIComponent(videoId)}`,
+    state: { title: video.title, returnTo: location.pathname + location.search, returnTab: returnTab || (variant === "feed" ? "videos" : "home"), returnScheduleMatch: returnTab === "schedule" ? returnMatch : undefined },
+  } : video.url ? { href: video.url, target: "_blank", rel: "noopener noreferrer" } : {};
+  const views = video.viewCount == null ? "" : `조회수 ${new Intl.NumberFormat("ko-KR").format(video.viewCount)}회`;
+  const videoTooltip = views ? `${video.title}\n${views}` : video.title;
+  return (
+    <article className={"league-detail__video-card" + (ranked ? " league-detail__video-card--ranked" : "") + (feed ? " league-detail__video-card--feed" : "") + (fixture ? " league-detail__video-card--fixture" : "") + (rank >= 10 ? " league-detail__video-card--double" : "")}>
+      {ranked && <span className="league-detail__video-rank" aria-label={rank + "위"}>{rank}</span>}
+      <VideoMain
+        className="league-detail__video-main"
+        {...playbackProps}
+        aria-label={videoId ? `${video.title} 재생${views ? " · " + views : ""}` : video.url ? `${video.title} · 외부 영상 보기` : undefined}
+        title={videoId || video.url ? videoTooltip : undefined}
+      >
+        <div className="league-detail__video-media">
+          <img src={video.image} alt="" loading="lazy" />
+          {!ranked && !feed && <span className="league-detail__video-badge"><span aria-hidden="true">▶</span> {badge}</span>}
+          {ranked || feed ? <span className={feed ? "league-detail__feed-play" : "league-detail__popular-play"} aria-hidden="true"><span><img src={fixture ? "/images/sports/league-detail/schedule/related-video-play.svg" : feed ? "/images/sports/league-detail/videos/video-play.svg" : "/images/sports/league-detail/popular/video-play.svg"} alt="" /></span></span> : <span className="league-detail__play" aria-hidden="true"><span /></span>}
+          {ranked && video.quality && <span className="league-detail__video-quality">{video.quality}</span>}
+          {video.duration && <span className="league-detail__duration">{video.duration}</span>}
+        </div>
+        {(ranked || feed) && <HighlightBadge kind={feed ? video.kind : "highlight"} fixture={fixture} />}
+        <h3 title={videoTooltip}>{video.title}</h3>
+        {!ranked && video.meta && <p>{video.meta}</p>}
+      </VideoMain>
+    </article>
+  );
+}

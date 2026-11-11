@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function session(sessionId) { return get(/databases/$(database)/documents/watchSessions/$(sessionId)); }
+    function activeMember(sessionId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/watchSessions/$(sessionId)/members/$(request.auth.uid))
+        && session(sessionId).data.status == 'active';
+    }
+    match /contents/{contentId}/episodes/{episodeId}/reviews/{reviewId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['authorId','authorName','text','rating','spoiler','likes','createdAt','updatedAt','isEdited'])
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.authorName is string && request.resource.data.authorName.size() <= 100
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
+        && request.resource.data.rating is number && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.rating * 2 == int(request.resource.data.rating * 2)
+        && request.resource.data.spoiler is bool
+        && request.resource.data.likes == 0
+        && request.resource.data.isEdited == false
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if signedIn() && resource.data.authorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','updatedAt','isEdited'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.isEdited == true;
+      allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+    }
+    match /watchSessions/{sessionId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['contentId','episodeId','hostId','status','createdAt','endedAt'])
+        && request.resource.data.hostId == request.auth.uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.endedAt == null;
+      // 세션 정보는 참여 전에 조회할 수 있어야 초대 링크로 입장할 수 있습니다.
+      allow get: if signedIn();
+      allow list: if false;
+      allow update: if signedIn() && resource.data.hostId == request.auth.uid
+        && resource.data.status == 'active'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','endedAt'])
+        && request.resource.data.status == 'ended'
+        && request.resource.data.endedAt == request.time;
+      allow delete: if false;
+      match /members/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid;
+        allow list: if false;
+        allow create: if signedIn() && request.auth.uid == uid
+          && session(sessionId).data.status == 'active'
+          && request.resource.data.uid == uid
+          && request.resource.data.role == (session(sessionId).data.hostId == uid ? 'host' : 'member')
+          && request.resource.data.joinedAt == request.time;
+        allow update, delete: if false;
+      }
+      match /messages/{messageId} {
+        allow read: if activeMember(sessionId);
+        allow create: if activeMember(sessionId)
+          && request.resource.data.keys().hasOnly(['senderId','senderName','text','type','createdAt'])
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderName is string && request.resource.data.senderName.size() <= 100
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 300
+          && request.resource.data.type == 'text'
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+    // 이 파일은 커뮤니티 컬렉션의 규칙 예시입니다. 기존 프로젝트의 다른
+    // 컬렉션(users, profiles 등) 규칙과 병합한 후 배포해야 합니다.
+  }
+}
