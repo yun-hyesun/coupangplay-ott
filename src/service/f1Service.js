@@ -125,7 +125,7 @@ export async function getF1RacesForDate(seoulDate) {
       home: {
         id: "f1:series",
         name: "F1",
-        crest: "/images/sports/icon/League_logo/F1.png",
+        crest: "/images/sports/icon/League_logo/F1.svg",
         score: null,
       },
       away: {

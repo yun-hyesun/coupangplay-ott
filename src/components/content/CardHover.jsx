@@ -1,6 +1,8 @@
 import { formatFivePointRating } from '../../utils/rating';
-import React, { useEffect, useState, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useContext, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useProfileStore } from '../../store/useProfileStore';
+import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { subscribeMyPurchases } from '../../service/purchaseService';
 import { ChannelSubscriptionContext } from '../../page/channel/components/ChannelSubscriptionGate';
@@ -16,6 +18,106 @@ export const CardHover = ({
   const [isVideoReady, setIsVideoReady] = useState(false);
 
   const uid = useAuthStore((state) => state.user?.uid);
+  const navigate = useNavigate();
+  const profileId = useProfileStore((state) => state.currentProfile?.id);
+
+  const watchlist = useWatchlistStore((state) => state.watchlist);
+  const watchlistOwnerKey = useWatchlistStore((state) => state.ownerKey);
+  const watchlistLoading = useWatchlistStore((state) => state.loading);
+  const onLoadWatchlist = useWatchlistStore((state) => state.onLoadWatchlist);
+
+  const [isSavingWatchlist, setIsSavingWatchlist] = useState(false);
+  const watchlistSavingRef = useRef(false);
+
+  const currentOwnerKey =
+    uid && profileId ? `${uid}_${profileId}` : null;
+
+  const mediaType =
+    type === 'movie' || type === 'tv' ? type : item.media_type;
+
+  const isSaved =
+    Boolean(currentOwnerKey) &&
+    watchlistOwnerKey === currentOwnerKey &&
+    watchlist.some(
+      (saved) =>
+        saved.media_type === mediaType &&
+        String(saved.id) === String(item.id)
+    );
+
+  // 호버할 때 현재 프로필의 찜 목록 확인
+  useEffect(() => {
+    if (!isHover || !currentOwnerKey) return;
+
+    const state = useWatchlistStore.getState();
+
+    if (state.ownerKey !== currentOwnerKey && !state.loading) {
+      void onLoadWatchlist();
+    }
+  }, [isHover, currentOwnerKey, onLoadWatchlist]);
+
+  const handleWatchlist = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!uid) {
+      navigate('/login');
+      return;
+    }
+
+    if (!profileId) {
+      navigate('/profiles');
+      return;
+    }
+
+    if (watchlistSavingRef.current) return;
+
+    watchlistSavingRef.current = true;
+    setIsSavingWatchlist(true);
+
+    try {
+      let state = useWatchlistStore.getState();
+
+      if (state.ownerKey !== currentOwnerKey) {
+        await state.onLoadWatchlist();
+        state = useWatchlistStore.getState();
+      }
+
+      if (state.error || state.ownerKey !== currentOwnerKey) {
+        throw new Error('찜 목록을 불러오지 못했습니다. 다시 시도해 주세요.');
+      }
+
+      // 목록을 기다리는 동안 계정이나 프로필이 바뀌었으면 중단
+      if (
+        useAuthStore.getState().user?.uid !== uid ||
+        useProfileStore.getState().currentProfile?.id !== profileId
+      ) {
+        return;
+      }
+
+      const content = {
+        ...item,
+        media_type: mediaType,
+      };
+
+      const alreadySaved = state.isWatchlisted(content);
+
+      const success = alreadySaved
+        ? await state.onRemoveWatchlist(content)
+        : await state.onAddWatchlist(content);
+
+      if (!success) {
+        throw new Error(
+          useWatchlistStore.getState().error ||
+            '찜 목록을 변경하지 못했습니다.'
+        );
+      }
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      watchlistSavingRef.current = false;
+      setIsSavingWatchlist(false);
+    }
+  };
 
   const [purchaseState, setPurchaseState] = useState({
     uid: null,
@@ -275,9 +377,20 @@ export const CardHover = ({
           {/* 찜하기 */}
           <button
             type="button"
-            className="button circle-btn icon-dibs"
+            className={`button circle-btn icon-dibs${isSaved ? ' is-active' : ''}`}
+            onClick={handleWatchlist}
+            disabled={isSavingWatchlist || watchlistLoading}
+            aria-pressed={isSaved}
+            aria-label={isSaved ? '찜 해제' : '찜하기'}
+            title={isSaved ? '찜 해제' : '찜하기'}
           >
-            <span className="sr-only">찜하기</span>
+            <span className="sr-only">
+              {isSavingWatchlist
+                ? '찜 목록 변경 중'
+                : isSaved
+                  ? '찜 해제'
+                  : '찜하기'}
+            </span>
           </button>
         </div>
       </div>
