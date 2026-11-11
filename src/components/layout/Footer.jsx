@@ -73,7 +73,17 @@ export const Footer = () => {
 
             <address className='footer-address'>
               <p>쿠팡(주) · 대표이사: 로저스 해롤드 린 (Rogers Harold Lynn)</p>
-              <p>사업자 등록번호: 120-88-00767 · 사업자정보 확인</p>
+              <p>
+                사업자 등록번호: 120-88-00767 ·{' '}
+                <a
+                  href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=1208800767"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="사업자정보 확인 (새 탭)"
+                >
+                  사업자정보 확인
+                </a>
+              </p>
               <p>통신판매업신고: 2026-서울광진-1253</p>
               <p>주소: (05050) 서울특별시 광진구 아차산로 412, 2층 (자양동)</p>
               <p>호스팅 서비스 사업자: AWS 코리아</p>
