@@ -920,6 +920,10 @@
     background: #0f1113;
   }
 
+  &[data-sport="농구"] .league-detail__broadcast-media {
+    aspect-ratio: 430 / 242;
+  }
+
   &__broadcast-bg {
     position: absolute;
     inset: 0;

@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { A11y, Navigation } from 'swiper/modules';
 import { ContentTitle } from '../../../components/content/ContentTitle';
+import { railBreakpoints } from '../../../data/railBreakpoints';
 import { ClipCard } from '../../wowclip/components/ClipCard';
 import { useWowClipLibrary } from '../../wowclip/hooks/useWowClipLibrary';
 import { useSpoilerAccess } from '../../wowclip/hooks/useSpoilerAccess';
@@ -12,6 +13,10 @@ import '../../../components/content/scss/ContentRail.scss';
 import '../../wowclip/scss/WowClip.scss';
 import '../scss/WowClipSection.scss';
 
+const clipBreakpoints = Object.fromEntries(
+  Object.entries(railBreakpoints.horizontal).map(([width, { spaceBetween }]) => [width, { spaceBetween }]),
+);
+
 export const WowClipSection = ({ history }) => {
   const navigate = useNavigate();
   const { clips, error, reload, loading } = useWowClipLibrary();
@@ -20,8 +25,8 @@ export const WowClipSection = ({ history }) => {
     .slice(0, 8);
   const { isProtected } = useSpoilerAccess(publicClips, history);
 
-  return <section className="home-wowclip wowclip-section" aria-label="함께 나누는 와우 클립">
-    <div className="home-wowclip-heading">
+  return <section className="contentRail home-wowclip wowclip-section" aria-label="함께 나누는 와우 클립">
+    <div className="contentRail-heading">
       <ContentTitle title="함께 나누는 와우 클립" />
       <Link className="contentRail-more" to="/wowclip">더보기</Link>
     </div>
@@ -30,8 +35,8 @@ export const WowClipSection = ({ history }) => {
           className="home-wowclip-slider"
           modules={[Navigation, A11y]}
           slidesPerView="auto"
-          spaceBetween={12}
-          breakpoints={{ 641: { spaceBetween: 20 } }}
+          spaceBetween={clipBreakpoints[0].spaceBetween}
+          breakpoints={clipBreakpoints}
           navigation
           grabCursor
           watchOverflow

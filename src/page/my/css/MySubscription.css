@@ -75,7 +75,7 @@
 .my-subscription .subscription-card {
   display: block;
   width: 100%;
-  padding: 20px 24px;
+  padding: 0;
   background: transparent;
   border: none;
   border-radius: 8px;
@@ -243,14 +243,15 @@
 ======================================== */
 .my-subscription .subscription-card.cancel-pending {
   padding: 0;
-  border-radius: 0;
+  border-radius: 8px;
 }
 .my-subscription .subscription-card-top {
   display: flex;
   align-items: flex-start;
   gap: 24px;
   width: 100%;
-  padding: 24px 0;
+  padding: 20px 24px;
+  box-sizing: border-box;
 }
 .my-subscription .my-pass-cancel-accordion {
   width: 100%;
@@ -337,7 +338,7 @@
 @media (max-width: 767px) {
   .my-subscription .subscription-card-top {
     gap: 12px;
-    padding: 20px 0;
+    padding: 16px;
   }
   .my-subscription .my-pass-cancel-question {
     min-height: 56px;
@@ -366,8 +367,8 @@
     gap: 16px;
     padding-top: 24px;
   }
-  .my-subscription .subscription-card {
-    padding: 16px;
+  .my-subscription .subscription-card.cancel-pending {
+    padding: 0;
   }
   .my-subscription .subscription-thumbnail {
     width: 72px;

@@ -1,36 +1,19 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { Popup } from './Popup';
 import linkIcon from '../../assets/share/0ceb9.svg';
 import facebookMask from '../../assets/share/93158.svg';
 import facebookIcon from '../../assets/share/468c7.svg';
-import closeIcon from '../../assets/share/19011.svg';
 import emailIcon from '../../assets/share/b5c67.svg';
 import './SharePopup.scss';
 
 export const SharePopup = ({ title, type, url, onClose }) => {
-  const dialogRef = useRef(null);
   const linkRef = useRef(null);
-  const closeRef = useRef(null);
   const copying = useRef(false);
   const mounted = useRef(false);
   const [status, setStatus] = useState('');
   const [copied, setCopied] = useState(false);
   const titleId = useId();
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const previousFocus = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    mounted.current = true;
-    dialog.showModal();
-    closeRef.current?.focus();
-    document.body.style.overflow = 'hidden';
-    return () => {
-      mounted.current = false;
-      dialog.close();
-      document.body.style.overflow = previousOverflow;
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, []);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const copyLink = async () => {
     if (copying.current) return;
     copying.current = true;
@@ -54,18 +37,7 @@ export const SharePopup = ({ title, type, url, onClose }) => {
     } finally { copying.current = false; }
   };
   const encodedUrl = encodeURIComponent(url);
-  return createPortal(<dialog ref={dialogRef} className="share-popup" aria-labelledby={titleId}
-    onCancel={event => { event.preventDefault(); onClose(); }}
-    onClick={event => {
-      if (event.target !== event.currentTarget) return;
-      const rect = event.currentTarget.getBoundingClientRect();
-      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) onClose();
-    }}>
-    <div className="share-popup__content">
-      <header className="share-popup__header">
-        <h2 id={titleId}>공유하기</h2>
-        <button ref={closeRef} className="share-popup__close" type="button" aria-label="공유하기 닫기" onClick={onClose}><img src={closeIcon} alt="" /></button>
-      </header>
+  return <Popup title="공유하기" onClose={onClose} cancelText="닫기" showClose className="share-popup" icon={<img src={linkIcon} alt="" />}>
       <div className="share-popup__summary"><p>{type === 'tv' ? '시리즈' : '영화'}</p><h3>{title}</h3></div>
       <div className="share-popup__channels">
         <p>친구에게 콘텐츠를 공유해 보세요.</p>
@@ -84,6 +56,5 @@ export const SharePopup = ({ title, type, url, onClose }) => {
         {status && <p className="share-popup__status" role="status">{status}</p>}
       </div>
       <p className="share-popup__hint">링크를 받은 사람은 콘텐츠 상세 페이지로 이동합니다.</p>
-    </div>
-  </dialog>, document.body);
+  </Popup>;
 };

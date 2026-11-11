@@ -1,3 +1,4 @@
+import { LoginNoticePopup } from '../../components/common/LoginNoticePopup';
 import { useEffect, useMemo, useRef, useState, useId} from "react";
 import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
@@ -245,6 +246,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
   const currentProfile = useProfileStore((state) => state.currentProfile);
 
   const [saving, setSaving] = useState(false);
+  const [loginNoticeOpen, setLoginNoticeOpen] = useState(false);
   const [favoriteToast, setFavoriteToast] = useState("");
   const [favoriteToastId, setFavoriteToastId] = useState(0);
   const favoriteToastTimer = useRef(null);
@@ -282,7 +284,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
     if (saving) return;
 
     if (!auth.currentUser || !currentProfile) {
-      alert("로그인 후 프로필을 선택해 주세요.");
+      setLoginNoticeOpen(true);
       return;
     }
 
@@ -341,8 +343,8 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           </span>
 
           {isEnded && hasRelatedVideos && (
-            <span className="sports-fixture__highlight-badge">
-              하이라이트
+            <span className="sports-fixture__related-badge">
+              관련 영상
             </span>
           )}
         </div>
@@ -417,6 +419,7 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
             />
           )}
         </button>)}
+      {loginNoticeOpen && <div onClick={event => event.stopPropagation()}><LoginNoticePopup onClose={() => setLoginNoticeOpen(false)} /></div>}
       </article>
 
       {detailsExpanded && (isEnded ? (
