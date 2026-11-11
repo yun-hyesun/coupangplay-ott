@@ -1,6 +1,11 @@
 
-import { useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import {
+  Route,
+  Routes,
+  useLocation,
+  useNavigationType,
+} from 'react-router-dom';
 
 // 공통 레이아웃
 import { MainLayout } from './components/layout/MainLayout';
@@ -78,6 +83,35 @@ import { Hbo } from './page/channel/Hbo';
 import { Adult } from './page/channel/Adult';
 
 function App() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const scrollPositions = useRef(new Map());
+
+  useLayoutEffect(() => {
+    const savedPosition =
+      navigationType === 'POP'
+        ? scrollPositions.current.get(location.key) ?? 0
+        : 0;
+
+    window.scrollTo({
+      top: savedPosition,
+      left: 0,
+      behavior: 'instant',
+    });
+
+    const saveScrollPosition = () => {
+      scrollPositions.current.set(location.key, window.scrollY);
+    };
+
+    window.addEventListener('scroll', saveScrollPosition, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener('scroll', saveScrollPosition);
+    };
+  }, [location.key, navigationType]);
+
   const onAuthCheck = useAuthStore((state) => state.onAuthCheck);
 
   useEffect(() => {
