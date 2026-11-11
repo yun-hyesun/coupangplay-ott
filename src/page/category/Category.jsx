@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ContentGrid } from '../../components/content/ContentGrid';
 import { ContentTitle } from '../../components/content/ContentTitle';
 import {
@@ -56,6 +56,7 @@ export const Category = () => {
 };
 
 const CategoryContent = ({ section, categoryId, config }) => {
+  const navigate = useNavigate();
   const initialCategory = config.categories.find(
     (item) => item.id === categoryId
   );
@@ -155,7 +156,14 @@ const CategoryContent = ({ section, categoryId, config }) => {
 
   return (
     <main className="categoryPage">
-      <Link className="categoryPage-back" to={`/${section}`}>
+      <Link
+        className="categoryPage-back"
+        to={`/${section}`}
+        onClick={(event) => {
+          event.preventDefault();
+          navigate(-1);
+        }}
+      >
         {config.label} 홈으로
       </Link>
 

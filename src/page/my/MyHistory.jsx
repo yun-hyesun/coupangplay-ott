@@ -1,3 +1,4 @@
+import { Popup } from '../../components/common/Popup';
 
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -36,6 +37,7 @@ export const MyHistory = () => {
 const HistoryList = ({ history, ownerKey }) => {
   const onDeleteHistory = useWatchHistoryStore((state) => state.onDeleteHistory);
   const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
 
   // 선택된 장르
@@ -98,16 +100,19 @@ const HistoryList = ({ history, ownerKey }) => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedIds.length || deleting) return;
-    if (!window.confirm('선택한 시청내역을 삭제하시겠습니까?')) return;
+  const handleDelete = () => { if (selectedIds.length && !deleting) { setDeleteError(false); setDeleteOpen(true); } };
+  const confirmDelete = async () => {
+    if (!selectedIds.length || deleting) return false;
+
 
     setDeleting(true);
     setDeleteError(false);
     try {
-      if (await onDeleteHistory(selectedIds)) handleComplete();
+      if (await onDeleteHistory(selectedIds)) { handleComplete(); setDeleteOpen(false); }
+      else { setDeleteError(true); return false; }
     } catch {
       setDeleteError(true);
+      return false;
     } finally {
       setDeleting(false);
     }
@@ -330,6 +335,10 @@ const HistoryList = ({ history, ownerKey }) => {
           </div>
         )}
       </div>
+      {deleteOpen && <Popup title="시청내역을 삭제하시겠습니까?"
+        description={`선택한 ${selectedIds.length}개의 시청내역을 삭제합니다.\n삭제한 내역은 복구할 수 없습니다.`}
+        onClose={() => setDeleteOpen(false)} onConfirm={confirmDelete} confirmText="삭제" busy={deleting}
+        error={deleteError ? '시청내역을 삭제하지 못했습니다. 다시 시도해 주세요.' : ''} />}
     </main>
   );
 };

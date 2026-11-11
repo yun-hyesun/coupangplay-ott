@@ -1,0 +1,25 @@
+@use '../../scss/variables' as *;
+.common-popup {
+  position: fixed; inset: 0; width: 440px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px);
+  margin: auto; padding: 0; border: 0; border-radius: 12px; background: $color-bg2; color: $color-text-pri;
+  font-family: $font-main; overflow: auto; text-align: center;
+  &::backdrop { background: rgba(0,0,0,.75); }
+  &, * { box-sizing: border-box; }
+  h2, h3, p { margin: 0; }
+  button, input, a { font-family: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: default; opacity: .55; }
+  button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+  &__content { position: relative; padding: 40px 32px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  &__icon { width: 64px; height: 64px; flex-shrink: 0; border: 2px solid $color-pri; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: $color-pri; font-size: 32px; font-weight: 700; }
+  &__title { font-size: 22px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+  &__description { font-size: 15px; line-height: 1.7; color: $color-text-sec1; white-space: pre-line; }
+  &__body { width: 100%; min-width: 0; }
+  &__actions { display: flex; gap: 12px; width: 100%; margin-top: 12px; }
+  &__button { flex: 1; min-width: 0; min-height: 45px; padding: 10px 16px; border: none; border-radius: 5px; background: $color-pri; color: white; font-size: 16px; font-weight: 500; line-height: 25px; }
+  &__button--secondary { background: #424242; }
+  &__button:hover:not(:disabled) { filter: brightness(1.1); }
+  &__close { position: absolute; right: 12px; top: 12px; width: 44px; height: 44px; border: 0; border-radius: 5px; background: transparent; color: white; font-size: 28px; }
+  &__error { color: #ffb3b3; font-size: 14px; line-height: 1.6; }
+  @media(max-width:767px) { &__content { padding: 32px 20px; } &__title { font-size: 20px; } &__actions { flex-direction: column; } &__button { width: 100%; } }
+}

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../../store/useAuthStore'
 import { useWatchlistStore } from '../../../store/useWatchlistStore'
 import { useProfileStore } from '../../../store/useProfileStore'
-import '../scss/Watchlist.scss'
+import "../scss/WatchList.scss";
 
 export const WatchList = () => {
     // 로그인 사용자

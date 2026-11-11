@@ -27,7 +27,7 @@
       "풀럼",
       "헐 시티"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Premier_League.png",
+    "logoPath": "/images/sports/icon/League_logo/Premier_League.svg",
     "provider": "football-data",
     "competitionCode": "PL",
     "featured": true
@@ -70,7 +70,7 @@
       "LA 레이커스",
       "LA 클리퍼스"
     ],
-    "logoPath": "/images/sports/icon/League_logo/NBA.png",
+    "logoPath": "/images/sports/icon/League_logo/NBA.svg",
     "provider": "nba",
     "featured": true
   },
@@ -81,7 +81,7 @@
     "scope": "해외",
     "shortName": "F1",
     "teams": [],
-    "logoPath": "/images/sports/icon/League_logo/F1.png",
+    "logoPath": "/images/sports/icon/League_logo/F1.svg",
     "featured": false
   },
   {
@@ -112,7 +112,7 @@
       "오사수나",
       "헤타페"
     ],
-    "logoPath": "/images/sports/icon/League_logo/La_Liga.png",
+    "logoPath": "/images/sports/icon/League_logo/La_Liga.svg",
     "provider": "football-data",
     "competitionCode": "PD",
     "featured": true
@@ -169,7 +169,7 @@
       "포트",
       "꽁안 하노이"
     ],
-    "logoPath": "/images/sports/icon/League_logo/ACLE.png",
+    "logoPath": "/images/sports/icon/League_logo/ACLE.svg",
     "featured": false
   },
   {
@@ -191,7 +191,7 @@
       "비엣텔",
       "쿠칭 시티"
     ],
-    "logoPath": "/images/sports/icon/League_logo/ACL2.png",
+    "logoPath": "/images/sports/icon/League_logo/ACL2.svg",
     "featured": false
   },
   {
@@ -220,7 +220,7 @@
       "함부르크",
       "호펜하임"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Bundesliga.png",
+    "logoPath": "/images/sports/icon/League_logo/Bundesliga.svg",
     "provider": "football-data",
     "competitionCode": "BL1",
     "featured": false
@@ -231,7 +231,7 @@
     "sport": "축구",
     "scope": "해외",
     "shortName": "MLS",
-    "logoPath": "/images/sports/icon/League_logo/MLS_Square.svg",
+    "logoPath": "/images/sports/icon/League_logo/MLS.svg",
     "teams": [
       "LAFC",
       "댈러스",
@@ -272,7 +272,7 @@
     "sport": "축구",
     "scope": "국내",
     "shortName": "K리그2",
-    "logoPath": "/images/sports/icon/League_logo/K_League_2_Square.svg",
+    "logoPath": "/images/sports/icon/League_logo/K_League.svg",
     "teams": [
       "경남",
       "김포",
@@ -336,7 +336,7 @@
       "필라델피아",
       "LA 램스"
     ],
-    "logoPath": "/images/sports/icon/League_logo/NFL.png",
+    "logoPath": "/images/sports/icon/League_logo/NFL.svg",
     "featured": false
   },
   {
@@ -365,7 +365,7 @@
       "파리 FC",
       "PSG"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Ligue_1.png",
+    "logoPath": "/images/sports/icon/League_logo/Ligue_1.svg",
     "provider": "football-data",
     "competitionCode": "FL1",
     "featured": false
@@ -402,7 +402,7 @@
       "QPR",
       "WBA"
     ],
-    "logoPath": "/images/sports/icon/League_logo/EFL_Championship.png",
+    "logoPath": "/images/sports/icon/League_logo/EFL_Championship.svg",
     "provider": "football-data",
     "competitionCode": "ELC",
     "featured": false
@@ -433,7 +433,7 @@
       "헤르타",
       "홀슈타인 킬"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Bundesliga_2.png",
+    "logoPath": "/images/sports/icon/League_logo/Bundesliga_2.svg",
     "featured": false
   },
   {
@@ -517,7 +517,7 @@
       "동커스터",
       "월솔"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Carabao_Cup.png",
+    "logoPath": "/images/sports/icon/League_logo/Carabao_Cup.svg",
     "featured": false
   },
   {
@@ -567,7 +567,7 @@
       "에센",
       "비스바덴"
     ],
-    "logoPath": "/images/sports/icon/League_logo/DFB_Pokal.png",
+    "logoPath": "/images/sports/icon/League_logo/DFB_Pokal.svg",
     "featured": false
   },
   {
@@ -813,7 +813,7 @@
       "탬워스",
       "플리머스"
     ],
-    "logoPath": "/images/sports/icon/League_logo/FA_Cup.png",
+    "logoPath": "/images/sports/icon/League_logo/FA_Cup.svg",
     "featured": false
   },
   {
@@ -822,7 +822,7 @@
     "sport": "축구",
     "scope": "해외",
     "shortName": "북중미챔",
-    "logoPath": "/images/sports/icon/League_logo/Concacaf_Champions_Cup_Square.svg",
+    "logoPath": "/images/sports/icon/League_logo/Concacaf_Champions_Cup_new.svg",
     "teams": [
       "LAFC",
       "레알 에스파냐",
@@ -839,7 +839,7 @@
     "sport": "축구",
     "scope": "해외",
     "shortName": "쉬페르리",
-    "logoPath": "/images/sports/icon/League_logo/Super_Lig_Square.svg",
+    "logoPath": "/images/sports/icon/League_logo/Super_Lig.svg",
     "teams": [
       "베식타시"
     ],
@@ -909,7 +909,7 @@
       "바르바스트로",
       "데포르티보"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Copa_del_Rey.png",
+    "logoPath": "/images/sports/icon/League_logo/Copa_del_Rey.svg",
     "featured": false
   },
   {
@@ -1026,7 +1026,7 @@
       "헤이렌베인",
       "흐로닝언"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Eredivisie.png",
+    "logoPath": "/images/sports/icon/League_logo/Eredivisie.svg",
     "provider": "football-data",
     "competitionCode": "DED",
     "featured": false
@@ -1214,7 +1214,7 @@
       "흐벨",
       "됭케르크"
     ],
-    "logoPath": "/images/sports/icon/League_logo/Coupe_de_France.png",
+    "logoPath": "/images/sports/icon/League_logo/Coupe_de_France.svg",
     "featured": false
   },
   {

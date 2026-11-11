@@ -1,3 +1,4 @@
+import { LoginNoticePopup } from './common/LoginNoticePopup';
 import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
 import { Link, useLocation } from "react-router-dom";
 import { getYouTubeVideoId } from "../data/youtubeVideoId";
@@ -11,6 +12,11 @@ import "./content/scss/ContentCard.scss";
 
 const SEOUL_TIME_ZONE = "Asia/Seoul";
 const DETAIL_BACKGROUND = "/images/sports/league-detail/detail-matchup-bg.png";
+const BROADCAST_BACKGROUNDS_BY_SPORT = {
+  농구: "/images/sports/league-detail/broadcast-basketball-bg.png",
+  레이싱: "/images/sports/league-detail/broadcast-racing-flag-bg.png",
+  일반 :"/images/sports/league-detail/broadcast-rugby-bg.png"
+};
 
 export function normalizeSportsText(value) {
   return String(value || "").normalize("NFKC").replace(/[\s.·_–-]/g, "").toLowerCase();
@@ -141,6 +147,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
   );
 
   const [saving, setSaving] = useState(false);
+  const [loginNoticeOpen, setLoginNoticeOpen] = useState(false);
 
   // 경기 고유 ID
   const matchId = game.gameId ?? game.id;
@@ -190,7 +197,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
     if (saving) return;
 
     if (!auth.currentUser || !currentProfile) {
-      alert("로그인 후 프로필을 선택해 주세요.");
+      setLoginNoticeOpen(true);
       return;
     }
 
@@ -323,12 +330,13 @@ export function MatchCard({ game, leagueId, scoresOn }) {
           </span>
         )}
       </div>
+      {loginNoticeOpen && <div onClick={event => event.stopPropagation()}><LoginNoticePopup onClose={() => setLoginNoticeOpen(false)} /></div>}
     </article>
   );
 }
 
 
-export function BroadcastCard({ game, leagueId }) {
+export function BroadcastCard({ game, leagueId, sport }) {
   const isLive = getBroadcastStatus(game.status) === "live";
   const startTime = formatBroadcastDate(game.utcDate || game.startTime);
   const thumbnail = isLive && (game.broadcastThumbnail || game.thumbnail);
@@ -340,7 +348,7 @@ export function BroadcastCard({ game, leagueId }) {
   return (
     <article className="league-detail__broadcast-card" data-broadcast-status={isLive ? "live" : "scheduled"}>
       <div className="league-detail__broadcast-media">
-        <img className="league-detail__broadcast-bg" src={thumbnail || DETAIL_BACKGROUND} alt="" />
+        <img className="league-detail__broadcast-bg" src={thumbnail || BROADCAST_BACKGROUNDS_BY_SPORT[sport] || DETAIL_BACKGROUND} alt="" />
         {!thumbnail && <div className="league-detail__broadcast-teams">
           <TeamImage team={game.home} leagueId={leagueId} />
           {!isRace && <span>VS</span>}
