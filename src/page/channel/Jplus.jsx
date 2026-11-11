@@ -9,6 +9,7 @@ export const Jplus = () => (
       contentId={332713}
       logo="/images/channal11.svg"
       name="JPlus"
+      buttonImg="/images/channal11.svg"
       description="다양한 이야기로 만나는 일본 드라마"
     />
 

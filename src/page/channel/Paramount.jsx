@@ -9,6 +9,7 @@ export const Paramount = () => (
       railKey="paramount-banner"
       logo="/images/channal08.svg"
       name="Paramount+"
+      buttonImg="/images/channal08_title.svg"
       description="다양한 이야기로 만나는 미국 시리즈"
     />
 

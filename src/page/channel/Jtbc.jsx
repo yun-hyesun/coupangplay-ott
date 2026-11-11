@@ -9,6 +9,7 @@ export const Jtbc = () => (
       railKey="jtbc-banner"
       logo="/images/channal07.svg"
       name="JTBC"
+      buttonImg="/images/channal07.svg"
       description="드라마부터 예능까지, 함께 보는 즐거움"
     />
 

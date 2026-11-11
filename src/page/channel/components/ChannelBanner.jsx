@@ -13,6 +13,7 @@ export const ChannelBanner = ({
   contentId,
   logo,
   name,
+  buttonImg,
   description,
   onSubscribe,
   items: givenItems,
@@ -89,7 +90,7 @@ export const ChannelBanner = ({
             className="channel-sign button"
             onClick={onSubscribe}
           >
-            {name} 구독하기
+            <img src={buttonImg} alt={name} /> 구독하기
           </button>
         </div>
 
