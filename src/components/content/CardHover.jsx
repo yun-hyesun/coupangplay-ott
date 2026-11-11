@@ -1,3 +1,4 @@
+import { formatFivePointRating } from '../../utils/rating';
 import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -24,7 +25,7 @@ export const CardHover = ({
   const name = item.title || item.name;
   const date = item.release_date || item.first_air_date;
   const year = date?.slice(0, 4);
-  const rating = item.vote_average?.toFixed(1);
+  const rating = formatFivePointRating(item.vote_average, 10);
 
   // 로그인한 계정의 구매내역 실시간 확인
   useEffect(() => {
@@ -189,7 +190,7 @@ export const CardHover = ({
         <h4 className="content-title">{name}</h4>
 
         <div className="content-info">
-          <p className="info-rating">{rating}</p>
+          <p className="info-rating" aria-label={`5점 만점 평점 ${rating}`}>{rating} / 5</p>
 
           <p className="info-meta">
             <span className="meta-year">{year}</span>
