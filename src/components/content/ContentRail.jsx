@@ -15,6 +15,8 @@ import './scss/ContentRail.scss';
 // items를 전달하면 상세 페이지 추천처럼 외부에서 받은 작품을 표시한다.
 export const ContentRail = ({
   railKey,
+  asGrid = false,
+  getSelection,
   items: givenItems,
   showMore = true,
   kidsOnly = false,
@@ -76,6 +78,28 @@ export const ContentRail = ({
 
   const items = givenItems ?? savedItems ?? [];
   const isPoster = imageType === '세로';
+
+  if (asGrid) {
+    return (
+      <div className="contentRail-list">
+        {items.map((item) => {
+          const itemType = item.media_type || type;
+
+          return (
+            <ContentCard
+              key={item.docId || item.purchaseId || `${itemType}-${item.id}`}
+              item={item}
+              type={itemType}
+              imageType={imageType}
+              listEntry
+              selection={getSelection?.(item)}
+              fromStore={item.isPurchase === true}
+            />
+          );
+        })}
+      </div>
+    );
+  }
   const visibleItems = items
     .filter((item) => item.source === 'youtube'
       ? item.thumbnail

@@ -1,9 +1,18 @@
+import { Fragment } from "react";
 import { EmptyMessage } from "./LeagueDetailShared";
 import { selectLeagueStandings } from "../data/leagueStandingsView";
 
 export function LeagueStandings({ league, standingsState, tableRows, tableNote, tableColumns, isBasketball, fullPage = false, onShowAll }) {
   const limit = 20;
-  const visibleRows = selectLeagueStandings(tableRows, limit, { allowUnranked: !fullPage });
+  const isNfl = league.id === "nfl";
+  const tables = isNfl ? ["AFC", "NFC"].map(conference => ({
+    conference,
+    rows: selectLeagueStandings(tableRows.filter(row => row.conference === conference), fullPage ? 16 : 10),
+  })).filter(table => table.rows.length) : [{
+    conference: "",
+    rows: selectLeagueStandings(tableRows, limit, { allowUnranked: !fullPage }),
+  }];
+  const hasRows = tables.some(table => table.rows.length);
   return (
     <section className={"league-detail__section league-detail__standings" + (fullPage ? " league-detail__standings--page" : "")} aria-label={fullPage ? `${league.name} 순위` : undefined} aria-labelledby={fullPage ? undefined : "league-detail-standings-title"} aria-busy={standingsState.loading}>
       {!fullPage && <div className="league-detail__section-heading">
@@ -13,9 +22,11 @@ export function LeagueStandings({ league, standingsState, tableRows, tableNote, 
       {tableNote && <p className="league-detail__table-note">{tableNote}</p>}
       {standingsState.loading ? (
         <EmptyMessage>순위 정보를 불러오는 중입니다.</EmptyMessage>
-      ) : visibleRows.length ? (
+      ) : hasRows ? tables.map(({ conference, rows: visibleRows }) => (
+        <Fragment key={conference || "overall"}>
+        {conference && <h3 className="league-detail__conference-heading">{conference}</h3>}
         <div className="league-detail__table-wrap">
-          <table aria-label={`${league.name} 리그 순위 상위 ${visibleRows.length}팀`}>
+          <table aria-label={`${league.name} ${conference ? `${conference} 순위` : "리그 순위"} 상위 ${visibleRows.length}팀`}>
             <thead><tr>{tableColumns.map((column) => <th scope="col" key={column}>{column}</th>)}</tr></thead>
             <tbody>
               {visibleRows.map((row, index) => (
@@ -25,7 +36,13 @@ export function LeagueStandings({ league, standingsState, tableRows, tableNote, 
                     {row.logoPath && <img src={row.logoPath} alt="" loading="lazy" />}
                     <span>{row.teamName}</span>
                   </td>
-                  {isBasketball ? (
+                  {isNfl ? (
+                    <>
+                      <td>{row.played ?? "—"}</td><td>{row.win ?? "—"}</td><td>{row.loss ?? "—"}</td><td>{row.draw ?? "—"}</td>
+                      <td>{row.winPct == null ? "—" : (Number(row.winPct) * 100).toFixed(1) + "%"}</td>
+                      <td>{row.pointsFor ?? "—"}</td><td>{row.pointsAgainst ?? "—"}</td><td>{row.pointDiff ?? "—"}</td>
+                    </>
+                  ) : isBasketball ? (
                     <>
                       <td>{row.winPct == null ? "—" : (Number(row.winPct) * 100).toFixed(1) + "%"}</td>
                       <td>{row.played ?? "—"}</td><td>{row.win ?? "—"}</td><td>{row.loss ?? "—"}</td><td>{row.gamesBehind ?? "—"}</td>
@@ -40,7 +57,8 @@ export function LeagueStandings({ league, standingsState, tableRows, tableNote, 
             </tbody>
           </table>
         </div>
-      ) : (
+        </Fragment>
+      )) : (
         <EmptyMessage>{standingsState.error || "현재 제공되는 순위 데이터가 없습니다."}</EmptyMessage>
       )}
     </section>

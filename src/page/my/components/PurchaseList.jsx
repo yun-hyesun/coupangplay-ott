@@ -4,6 +4,10 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../../../store/useAuthStore'
 import { subscribeMyPurchases } from '../../../service/purchaseService'
 import '../scss/PurchaseList.scss'
+import { ContentRail } from '../../../components/content/ContentRail';
+import { ContentCard } from '../../../components/content/ContentCard';
+import { useMyListArtwork } from './useMyListArtwork';
+import '../scss/WatchHistory.scss';
 
 export const PurchaseList = () => {
     // 로그인한 사용자 정보
@@ -35,28 +39,46 @@ export const PurchaseList = () => {
     }, [user?.uid]);
 
     // 숨기지 않은 구매 콘텐츠만 표시
-    const visiblePurchases = purchaseList.filter(
-        (item) => !item.hidden
-    );
+    const purchasedItems = purchaseList
+    .filter((purchase) => !purchase.hidden && purchase.contentId)
+    .map((purchase) => {
+        const image = typeof purchase.image === 'string'
+            ? purchase.image.trim()
+            : '';
+
+        const posterPath = /^\/[^/]/.test(image)
+            ? image
+            : image.match(
+                /^(?:https?:)?\/\/image\.tmdb\.org\/t\/p\/[^/]+(\/[^?#]+)/i
+            )?.[1];
+
+        return {
+            id: purchase.contentId,
+            media_type: purchase.mediaType,
+            title: purchase.title,
+            poster_path: purchase.poster_path || posterPath,
+            backdrop_path: purchase.backdrop_path,
+            logo_path: purchase.logo_path,
+        };
+    });
+
+    const visiblePurchases = useMyListArtwork(purchasedItems);
 
     return (
-        <section className="purchase-list">
-            <div className="purchase-list-header">
-                <Link
-                    to="/my/purchases"
-                    className="purchase-list-heading"
-                >
+        <section className="watch-history">
+            <div className="watch-history-header">
+                <Link to="/my/purchases" className="watch-history-heading">
                     <h2>개별 구매</h2>
                     <img
+                        className="watch-history-arrow"
                         src="/images/icon/DesignSystem_Icon01/icon-chevron_right.svg"
                         alt=""
-                        className="purchase-list-arrow"
                     />
                 </Link>
 
                 <Link
                     to="/my/purchases"
-                    className="purchase-list-more"
+                    className="watch-history-more"
                     aria-label="전체 구매 내역 보기"
                 >
                     <img
@@ -66,40 +88,36 @@ export const PurchaseList = () => {
                 </Link>
             </div>
 
-            {purchaseError && (
-                <p role="alert">{purchaseError}</p>
-            )}
-
-            {visiblePurchases.length === 0 ? (
-                <p className="purchase-list-message">
-                    구매한 콘텐츠가 없습니다.
-                </p>
+            {purchaseError ? (
+                <p className="watch-history-message" role="alert">{purchaseError}</p>
+            ) : visiblePurchases.length === 0 ? (
+                <p className="watch-history-message">구매한 콘텐츠가 없습니다.</p>
             ) : (
-                <div className="purchase-list-grid">
-                    {visiblePurchases.slice(0, 5).map((item) => (
-                        <Link
-                            key={item.id}
-                            to={`/detail/${item.mediaType}/${item.contentId}`}
-                            className="purchase-list-item"
-                        >
-                            <div className="purchase-list-thumbnail">
-                                {item.image ? (
-                                    <img
-                                        src={item.image}
-                                        alt={item.title}
-                                    />
-                                ) : (
-                                    <span>이미지 없음</span>
-                                )}
-                            </div>
+                <div className="watch-history-content">
+                    <div className="watch-history-desktop">
+                        <ContentRail
+                            title=""
+                            items={visiblePurchases}
+                            showMore={false}
+                        />
+                    </div>
 
-                            <p className="purchase-list-title">
-                                {item.title}
-                            </p>
-                        </Link>
-                    ))}
+                    <div className="watch-history-mobile">
+                        {visiblePurchases.slice(0, 4).map((item) => (
+                            <div
+                                className="watch-history-mobile-item"
+                                key={`${item.media_type}-${item.id}`}
+                            >
+                                <ContentCard
+                                    item={item}
+                                    type={item.media_type || 'movie'}
+                                    imageType="가로"
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </section>
-    )
+    );
 }

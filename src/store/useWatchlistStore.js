@@ -57,12 +57,13 @@ export const useWatchlistStore = create((set, get) => ({
 
         const ownerKey = `${user.uid}_${profile.id}`;
 
-        set({
-            watchlist: [],
-            ownerKey: null,
+        // 같은 프로필의 목록을 갱신할 때는 기존 찜 상태를 유지합니다.
+        set((state) => ({
+            watchlist: state.ownerKey === ownerKey ? state.watchlist : [],
+            ownerKey: state.ownerKey === ownerKey ? ownerKey : null,
             loading: true,
             error: null
-        });
+        }));
 
         try {
             const snapshot = await getDocs(
@@ -146,6 +147,15 @@ export const useWatchlistStore = create((set, get) => ({
                     startTime: content.startTime || null,
                     homeName: content.homeName || null,
                     awayName: content.awayName || null,
+                    ...(content.media_type === 'sports' ? {
+                        sport: content.sport || null,
+                        homeTeamId: content.homeTeamId ?? null,
+                        awayTeamId: content.awayTeamId ?? null,
+                        homeLogo: content.homeLogo || null,
+                        awayLogo: content.awayLogo || null,
+                        thumbnail: content.thumbnail || null,
+                        raceName: content.raceName || null,
+                    } : {}),
                     createdAt: serverTimestamp()
                 }
             );

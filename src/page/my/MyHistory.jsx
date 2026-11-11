@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useProfileWatchHistory } from '../../store/useProfileWatchHistory';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
-import { ContentCard } from '../../components/content/ContentCard';
+import { ContentRail } from '../../components/content/ContentRail';
 import './scss/MyHistory.scss'
 
 // 상단 콘텐츠 탭
@@ -53,13 +53,7 @@ const HistoryList = ({ history, ownerKey }) => {
   const filteredHistory = history
     .filter((item) => activeGenre === '전체' ||
       (item.media_type === 'movie' ? '영화' : '시리즈') === activeGenre)
-    .map((item) => ({
-      ...item,
-      id: item.docId,
-      image: item.backdrop_path
-        ? `https://image.tmdb.org/t/p/w780${item.backdrop_path}`
-        : '',
-    }));
+    .map((item) => ({ ...item, id: item.docId }));
 
   // 콘텐츠 선택 / 해제
   const handleSelect = (id) => {
@@ -237,102 +231,22 @@ const HistoryList = ({ history, ownerKey }) => {
             시청내역이 없습니다.
           </p>
         ) : (
-          <div className="my-history-grid">
-            {filteredHistory.map((item) => {
-              if (!isEditing) {
-                return (
-                  <ContentCard
-                    key={item.docId}
-                    item={{
-                      ...item,
-                      id: item.contentId,
-                      resume: true,
-                      historyLayout: true,
-                      ownerKey,
-                      position: item.completed ? 0 : item.position,
-                    }}
-                  />
-                );
-              }
-
-              const isSelected =
-                selectedIds.includes(item.id);
-
-              return (
-                <div
-                  className="my-history-item"
-                  key={item.id}
-                >
-                  <button
-                    type="button"
-                    className="my-history-thumbnail"
-                    onClick={() => {
-                      if (isEditing) {
-                        handleSelect(item.id);
-                      }
-                    }}
-                    disabled={!isEditing}
-                    aria-label={
-                      `${item.title} ${isSelected
-                        ? '선택 해제'
-                        : '선택'
-                      }`
-                    }
-                    aria-pressed={
-                      isEditing ? isSelected : undefined
-                    }
-                  >
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt=""
-                        className="my-history-image"
-                      />
-                    ) : (
-                      <span className="my-history-placeholder">
-                        {item.title}
-                      </span>
-                    )}
-
-                    {/* 시청 진행바 */}
-                    <span
-                      className="my-history-progress"
-                      style={{
-                        width: `${item.progress}%`
-                      }}
-                    />
-
-                    {/* 편집 모드 오버레이 */}
-                    {isEditing && (
-                      <span
-                        className={
-                          `my-history-overlay ${isSelected
-                            ? 'selected'
-                            : ''
-                          }`
-                        }
-                      >
-                        <img
-                          src={
-                            isSelected
-                              ? '/images/icon/DesignSystem_Icon02/icon-favorite_added.svg'
-                              : '/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg'
-                          }
-                          alt=""
-                          className="my-history-check"
-                        />
-                      </span>
-                    )}
-                  </button>
-
-                  <div className="my-history-info">
-                    <h3>{item.title}</h3>
-                    <p>{item.info}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <ContentRail
+            asGrid
+            items={filteredHistory.map((item) => ({
+              ...item,
+              id: item.contentId,
+              resume: true,
+              historyLayout: true,
+              ownerKey,
+              position: item.completed ? 0 : item.position,
+            }))}
+            getSelection={isEditing ? (item) => ({
+              selected: selectedIds.includes(item.docId),
+              onToggle: () => handleSelect(item.docId),
+              disabled: deleting,
+            }) : undefined}
+          />
         )}
       </div>
       {deleteOpen && <Popup title="시청내역을 삭제하시겠습니까?"
