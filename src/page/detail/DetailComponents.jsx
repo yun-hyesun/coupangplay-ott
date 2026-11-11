@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { auth } from '../../firebase/firebase';
 import CommonIcon from '../../components/common/CommonIcon';
+import { Popup } from '../../components/common/Popup';
 
 // 별점
 const StarIcon = ({ size = 14 }) => <CommonIcon name="star" size={size} />;
@@ -89,7 +90,7 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
   return <article className="detail-review-item">
     <div className="detail-review-item__author"><strong>{review.author}</strong><span>{review.createdAt ? new Date(review.createdAt).toLocaleDateString('ko-KR') : ''}</span></div>
     {editing ? <div className="detail-review-popup__compose"><textarea aria-label="리뷰 수정" value={editText} maxLength={2000} onChange={e => setEditText(e.target.value)} /><button type="button" onClick={async () => { if (await onEdit(review.id, editText)) setEditing(false); }}>저장</button><button type="button" onClick={() => setEditing(false)}>취소</button></div> : <p>{review.content}</p>}
-    {mine && onEdit && onDelete && <div className="detail-review-item__meta"><button type="button" onClick={() => setEditing(true)}>수정</button><button type="button" onClick={() => { if (window.confirm('리뷰를 삭제할까요?')) onDelete(review.id); }}>삭제</button></div>}
+    {mine && onEdit && onDelete && <div className="detail-review-item__meta"><button type="button" onClick={() => setEditing(true)}>수정</button><button type="button" onClick={() => onDelete(review.id)}>삭제</button></div>}
     <div className="detail-review-item__meta"><span>좋아요 {review.likes ?? 0}</span><span aria-hidden="true">·</span><span>평점</span><RatingStars value={rating} size={14} /><span>{rating.toFixed(1)} / 5</span></div>
   </article>;
 };
@@ -102,22 +103,56 @@ const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, erro
   const [rating, setRating] = useState(5);
   const [spoiler, setSpoiler] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteReviewId, setDeleteReviewId] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
   const sorted = useMemo(() => sortReviews(reviews.filter(review => !spoilerHidden || !review.spoiler), sort), [reviews, sort, spoilerHidden]);
 
   useEffect(() => {
-    const onKeyDown = (event) => { if (event.key === 'Escape') onClose(); };
+    const onKeyDown = (event) => {
+      if (event.defaultPrevented || deleteReviewId !== null || document.querySelector('dialog[open]')) return;
+      if (event.key === 'Escape') onClose();
+    };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [onClose, deleteReviewId]);
 
   return <div className="detail-review-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="detail-review-popup" role="dialog" aria-modal="true" aria-labelledby="detail-review-popup-title">
       <div className="detail-review-popup__head"><h2 id="detail-review-popup-title">{episode.reviewTitle || `${episode.episode_number}화 리뷰`}</h2><ReviewSort sort={sort} onSort={setSort} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} /></div>
-      <div className="detail-review-popup__compose"><label className="sr-only" htmlFor="detail-review-draft">리뷰 작성</label><textarea id="detail-review-draft" value={draft} maxLength={2000} onChange={event => setDraft(event.target.value)} placeholder={episode.reviewPlaceholder || '이 회차에 대한 감상을 남겨주세요.'} rows="1" /><div className="detail-review-popup__rating"><span>평점</span><RatingStars value={rating} onChange={setRating} /><output aria-live="polite">{rating.toFixed(1)} / 5</output></div><label><input type="checkbox" checked={spoiler} onChange={e => setSpoiler(e.target.checked)} /> 스포일러 포함</label><button type="button" disabled={saving || !draft.trim()} onClick={async () => { setSaving(true); try { if (await onSave(draft, rating, spoiler)) setDraft(''); } finally { setSaving(false); } }}>리뷰 남기기</button></div>
+      <div className={`detail-review-popup__compose detail-review-popup__compose--draft${draft.trim() ? ' has-content' : ''}`}>
+        <div className="detail-review-popup__compose-heading">
+          <label htmlFor="detail-review-draft">리뷰 작성</label>
+          <span id="detail-review-count">{draft.length} / 2,000자</span>
+        </div>
+        <textarea id="detail-review-draft" aria-describedby="detail-review-count" value={draft} maxLength={2000}
+          onChange={event => setDraft(event.target.value)} disabled={saving}
+          placeholder={episode.reviewPlaceholder || '이 회차에 대한 감상을 남겨주세요.'} rows={3} />
+        <div className="detail-review-popup__compose-toolbar">
+          <div className="detail-review-popup__rating"><span>평점</span>
+            <RatingStars value={rating} onChange={saving ? undefined : setRating} />
+            <output aria-live="polite">{rating.toFixed(1)} / 5</output>
+          </div>
+          <button className="detail-review-popup__submit" type="button" disabled={saving || !draft.trim()} onClick={async () => {
+            if (saving || !draft.trim()) return;
+            setSaving(true);
+            try { if (await onSave(draft, rating, spoiler)) setDraft(''); }
+            finally { setSaving(false); }
+          }}>{saving ? '등록 중…' : '리뷰 남기기'}</button>
+        </div>
+        <label className="detail-review-popup__spoiler"><input type="checkbox" checked={spoiler} disabled={saving} onChange={e => setSpoiler(e.target.checked)} /> 스포일러 포함</label>
+      </div>
       {error && <p className="detail-empty" role="alert">{error}</p>}
-      <div className="detail-review-popup__list" tabIndex="0">{sorted.length ? sorted.slice(0, 5).map(review => <ReviewItem key={review.id} review={review} onEdit={onEdit} onDelete={onDelete} />) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}</div>
+      <div className="detail-review-popup__list" tabIndex="0">{sorted.length ? sorted.slice(0, 5).map(review => <ReviewItem key={review.id} review={review} onEdit={onEdit} onDelete={reviewId => { setDeleteError(''); setDeleteReviewId(reviewId); }} />) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}</div>
       <button className="detail-review-popup__close" type="button" onClick={onClose}>닫기</button>
     </section>
+    {deleteReviewId !== null && <Popup title="리뷰를 삭제하시겠습니까?"
+      description={'작성한 리뷰를 삭제합니다.\n삭제한 리뷰는 복구할 수 없습니다.'}
+      onClose={() => setDeleteReviewId(null)} confirmText="삭제" error={deleteError}
+      onConfirm={async () => {
+        const deleted = await onDelete(deleteReviewId);
+        if (!deleted) { setDeleteError('리뷰를 삭제하지 못했습니다. 다시 시도해 주세요.'); return false; }
+        return true;
+      }} />}
   </div>;
 };
 
