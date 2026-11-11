@@ -2,8 +2,36 @@ import { parseVideoMatch, getVideoDateKey, shiftVideoMonth } from "./leagueVideo
 import { LEAGUE_VIDEO_QUERIES, matchesVideoLeague } from "./leagueVideoQueries";
 import { getScheduleUnit } from "./leagueScheduleUnits";
 import { findSportsTeam } from "./sportsTeams";
+import { getYouTubeVideoId } from "./youtubeVideoId";
 
 const DAY_MS = 86400000;
+const COUPANG_SPORTS_CHANNEL_ID = "UCnBht7BrOx-A328KFXgysqQ";
+
+export function selectLivePreviewVideo(game, videos, now = Date.now()) {
+  const league = game.competitionCode;
+  const teams = [findSportsTeam(league, game.home), findSportsTeam(league, game.away)].filter(Boolean);
+  const pair = teams.length === 2 ? teams.map(team => team.id).sort().join("|") : "";
+  const kickoff = Date.parse(game.utcDate || game.startTime);
+  const before = Number.isFinite(kickoff) ? Math.min(kickoff, now) : now;
+  const seen = new Set();
+  const kinds = { replay: 0, highlight: 1, recommend: 2 };
+  const candidates = [];
+  for (const video of videos) {
+    const id = getYouTubeVideoId(video);
+    const published = Date.parse(video.publishedAt);
+    if (!id || seen.has(id) || video.channelId !== COUPANG_SPORTS_CHANNEL_ID || video.isShort !== false
+      || !Number.isFinite(published) || published >= before || !matchesVideoLeague(league, video.title)
+      || /프리뷰|preview|예고|인터뷰|interview|기자회견/i.test(video.title)) continue;
+    const match = parseVideoMatch(league, video);
+    const matchedTeams = [match.home, match.away].filter(Boolean);
+    if (league === "f1" ? !/\bF1\b|그랑프리|grand prix/i.test(video.title)
+      : matchedTeams.length !== 2 || !teams.some(team => matchedTeams.some(candidate => candidate.id === team.id))) continue;
+    seen.add(id);
+    candidates.push({ video, exactPair: Boolean(pair && matchedTeams.map(team => team.id).sort().join("|") === pair), published });
+  }
+  return candidates.sort((a, b) => Number(b.exactPair) - Number(a.exactPair)
+    || (kinds[a.video.kind] ?? 2) - (kinds[b.video.kind] ?? 2) || b.published - a.published)[0]?.video || null;
+}
 const RACE_NAMES = [
   [/australian/i, ["호주"]], [/chinese/i, ["중국"]], [/japanese/i, ["일본"]],
   [/bahrain/i, ["바레인"]], [/saudi/i, ["사우디"]], [/miami/i, ["마이애미"]],

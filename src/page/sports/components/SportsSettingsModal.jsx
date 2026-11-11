@@ -48,17 +48,23 @@ function LeagueImage({ league }) {
 
 function TeamImage({ team }) {
   const imageSource = team.logoPath || team.crest;
+  const [failedImageSource, setFailedImageSource] = useState("");
+  const hasImage = Boolean(imageSource && imageSource !== failedImageSource);
 
   return (
-    <span className="sports-settings-team-logo" aria-hidden="true">
-      <span>{team.name.slice(0, 1)}</span>
-      {imageSource && (
+    <span
+      className={"sports-settings-team-logo" + (hasImage ? " sports-settings-team-logo--image" : "")}
+      aria-hidden="true"
+    >
+      {hasImage ? (
         <img
           src={imageSource}
           alt=""
           loading="lazy"
-          onError={(event) => event.currentTarget.remove()}
+          onError={() => setFailedImageSource(imageSource)}
         />
+      ) : (
+        <span>{team.name.slice(0, 1)}</span>
       )}
     </span>
   );

@@ -1,3 +1,5 @@
+import { useMyListArtwork } from './components/useMyListArtwork';
+import { ContentRail } from '../../components/content/ContentRail';
 import { Popup } from '../../components/common/Popup';
 
 import React, { useEffect, useState } from 'react'
@@ -68,6 +70,15 @@ export const MyPurchases = () => {
             activeGenre === '전체' ||
             item.genre === activeGenre
     );
+
+    const artworkItems = useMyListArtwork(filteredPurchases.map((item) => ({
+        ...item,
+        id: item.contentId,
+        purchaseId: item.id,
+        media_type: item.mediaType,
+        imageUrl: item.image,
+        isPurchase: true,
+    })), { keepMissing: true });
 
     // 콘텐츠 선택 / 해제
     const handleSelect = (id) => {
@@ -352,87 +363,15 @@ export const MyPurchases = () => {
                         표시할 구매내역이 없습니다.
                     </p>
                 ) : (
-                    <div className="my-purchases-grid">
-                        {filteredPurchases.map((item) => {
-                            const isSelected =
-                                selectedIds.includes(item.id);
-
-                            return (
-                                <div
-                                    className={`my-purchases-item ${item.hidden ? 'is-hidden' : ''
-                                        }`}
-                                    key={item.id}
-                                >
-                                    <button
-                                        type="button"
-                                        className="my-purchases-thumbnail"
-                                        onClick={() => {
-                                            if (isEditing) {
-                                                handleSelect(item.id);
-                                            }
-                                        }}
-                                        disabled={!isEditing}
-                                        aria-label={
-                                            `${item.title} ${isSelected
-                                                ? '선택 해제'
-                                                : '선택'
-                                            }`
-                                        }
-                                        aria-pressed={
-                                            isEditing
-                                                ? isSelected
-                                                : undefined
-                                        }
-                                    >
-                                        {item.image ? (
-                                            <img
-                                                src={item.image}
-                                                alt=""
-                                                className="my-purchases-image"
-                                            />
-                                        ) : (
-                                            <span className="my-purchases-placeholder">
-                                                {item.title}
-                                            </span>
-                                        )}
-
-                                        {isEditing && item.hidden && (
-                                            <span className="my-purchases-hidden-label">
-                                                숨김
-                                            </span>
-                                        )}
-
-                                        {/* 편집 모드 오버레이 */}
-                                        {isEditing && (
-                                            <span
-                                                className={
-                                                    `my-purchases-overlay ${isSelected
-                                                        ? 'selected'
-                                                        : ''
-                                                    }`
-                                                }
-                                            >
-                                                <img
-                                                    src={
-                                                        isSelected
-                                                            ? '/images/icon/DesignSystem_Icon02/icon-favorite_added.svg'
-                                                            : '/images/icon/DesignSystem_Icon02/icon-favorite_added_white.svg'
-                                                    }
-                                                    alt=""
-                                                    className="my-purchases-check"
-                                                />
-                                            </span>
-                                        )}
-                                    </button>
-
-                                    <div className="my-purchases-info">
-                                        <h3>{item.title}</h3>
-                                        <p>{item.info}</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                    <ContentRail
+                      asGrid
+                      items={artworkItems}
+                      getSelection={isEditing ? (item) => ({
+                        selected: selectedIds.includes(item.purchaseId),
+                        onToggle: () => handleSelect(item.purchaseId),
+                        disabled: isUpdating,
+                      }) : undefined}
+                    />
                 )}
             </div>
 

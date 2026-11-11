@@ -856,10 +856,39 @@ async function getNbaSeasonSchedule(from, to, { signal } = {}) {
   return { games: classified, errors: errors.sort() };
 }
 
+async function getNflSeasonSchedule(from, to, { signal } = {}) {
+  signal?.throwIfAborted();
+  const start = parseDateKey(from);
+  const end = parseDateKey(to);
+  if (from > to) throw new RangeError("경기 조회 기간이 올바르지 않습니다.");
+  // NFL은 날짜 범위 요청을 거절하므로 달력 연도별로 조회한 뒤 한국 날짜로 필터링합니다.
+  start.setUTCDate(start.getUTCDate() - 1);
+  const years = [];
+  for (let year = start.getUTCFullYear(); year <= end.getUTCFullYear(); year++) years.push(year);
+  const results = await Promise.allSettled(years.map(year =>
+    espnFetch(`${ESPN_LEAGUE_PATHS.nfl}/scoreboard`, { dates: String(year), limit: "1000" }, "events")));
+  signal?.throwIfAborted();
+  const events = [], errors = [];
+  let completed = 0;
+  results.forEach((result, index) => {
+    if (result.status === "fulfilled") {
+      events.push(...result.value.events);
+      completed++;
+    } else {
+      errors.push(`${years[index]}년 NFL: ${result.reason?.message || "일정 조회 실패"}`);
+    }
+  });
+  if (!completed) throw new Error("NFL 시즌 경기 일정을 불러오지 못했습니다.");
+  const games = uniqueGames(events.map(event => normalizeEspnEvent("nfl", event)).filter(Boolean)
+    .filter(game => { const date = getSeoulDateKey(game.utcDate); return date >= from && date <= to; }));
+  return { games, errors };
+}
+
 // The dedicated schedule tab needs the whole season, including postponed fixtures.
 // NBA accepts YYYYMM tokens; date-range tokens return 400 for this provider.
 export async function getEspnSeasonSchedule(leagueId, season, from, to, { signal } = {}) {
   if (leagueId === "nba") return getNbaSeasonSchedule(from, to, { signal });
+  if (leagueId === "nfl") return getNflSeasonSchedule(from, to, { signal });
   if (FOOTBALL_DATA_COMPETITIONS.includes(leagueId)) {
     try {
       const data = await getFootballDataSeason(leagueId, season, { signal });
