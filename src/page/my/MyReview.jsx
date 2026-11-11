@@ -1,3 +1,4 @@
+import { formatFivePointRating } from '../../utils/rating';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
@@ -757,7 +758,7 @@ export const MyReview = () => {
                                           alt=""
                                           aria-hidden="true"
                                         />
-                                        {Number(review.rating || 0).toFixed(1)}
+                                        {formatFivePointRating(review.rating)} / 5
                                       </span>
 
 
@@ -895,7 +896,7 @@ export const MyReview = () => {
                                                 alt=""
                                                 aria-hidden="true"
                                               />
-                                              {Number(review.rating || 0).toFixed(1)}
+                                              {formatFivePointRating(review.rating)} / 5
                                             </span>
 
 
