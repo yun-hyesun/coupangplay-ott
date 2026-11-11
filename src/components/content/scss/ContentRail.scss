@@ -1,43 +1,45 @@
 
-.contentRail {padding: 40px $padding-main; color: $color-text-pri;
+.contentRail {$padding-block: clamp(20px ,2.77vw, 40px); padding: $padding-block $padding-main; color: $color-text-pri;
 
-  &-title { margin-bottom: 30px; font-size: 30px; font-weight: $font-w-B-700; }
-
-  &-card {@include flex-center($ai:flex-end); width: 100%; text-align: left; cursor: pointer;
-  
-    .contentRail-rank {display: block; position: relative; margin-right: -20px;
-      img {height: 180px;}
-    }
-
-    .contentRail-info {position: relative; width: 400px;
-    
-      .contentRail-visual { position: relative; overflow: hidden; aspect-ratio: 16 / 9; border-radius: $card-radius; background: #20242d; 
-
-        > img { display: block; width: 100%; height: 100%; object-fit: cover; }
-
-        .contentRail-titleArea {@include pos-abs($t:0, $l:0); width: 100%; height: 100%; text-align: center;
-          .contentRail-tit-logo {max-width: 70%; max-height: 36%; @include pos-abs-centerX($b:10%); filter: drop-shadow(0 0 10px rgba(0,0,0,.3));}
-          .contentRail-tit {@include pos-abs-centerX($b:5%); filter: drop-shadow(0 0 10px rgba(0,0,0,.5)); font-size: 40px; font-family: $font-number; font-weight: $font-w-B-700; word-break: keep-all; width: 80%;}
-        }
-      }
-    }
-
-    &--ver .contentRail-info {width: 280px;
-      .contentRail-visual {aspect-ratio: 2 / 3;}
-    }
+  &-heading {display: flex; align-items: center; justify-content: space-between; gap: 20px;}
+  &-more {color: rgba(255,255,255,.5); white-space: nowrap; text-decoration: none;   
+    &:hover {color: #fff; @include trans();}
   }
-
-  // &--poster &-visual { aspect-ratio: 2 / 3; }
-
-  // &--sports &-visual { border-radius: 12px; }
-
-  // progress { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; border: 0; appearance: none; background: $color-progress; }
-  // progress::-webkit-progress-bar { background: $color-progress; }
-  // progress::-webkit-progress-value { background: $color-pri; }
-  // progress::-moz-progress-bar { background: $color-pri; }
 
   // 스와이퍼
   .swiper-slide {width: auto;}
   .swiper-button-prev {left: 0;}
   .swiper-button-next {right: 0;}
+
+  // 채널베너
+  &--withIntro {$intro-width: clamp(308px, 17.8vw, 457px); $intro-gap: 19px; @include flex-center($jc:flex-start, $ai:stretch, $gap: $intro-gap); background-color: #0E1E2B; padding: 0; padding-right: $padding-main; margin-block: $padding-block;
+
+    @include mobile() {
+      flex-direction: column; padding: $padding-block $padding-main; margin: 0; 
+    }
+  
+    .swiper {width: calc(100% - $intro-width - $intro-gap); padding: clamp(30px , 3.47vw, 50px) 0; align-self: center;
+    
+      @include mobile() {
+        width: 100%; padding: 0;
+      }
+    }
+  
+    .contentRail-intro { width: $intro-width; flex-shrink: 0; @include flexCol-center($gap: clamp(.938rem, 1.66vw, 1.5rem)); align-items: flex-start; position: relative; z-index: 5; background-color: inherit; padding: $padding-block clamp(20px, 4vw, 80px);
+
+      @include mobile() {
+        width: 100%; padding: 0;
+        background: transparent;
+        z-index: 0;
+      }
+
+      .contentRail-intro-title {
+        img {height: clamp(30px, 3.47vw, 50px);}
+      }
+      > p {word-break: keep-all; color: $color-text-sec1; font-size: clamp(16px, 1.25vw, 18px); max-width: 270px;}
+    }
+
+
+    
+  }
 }

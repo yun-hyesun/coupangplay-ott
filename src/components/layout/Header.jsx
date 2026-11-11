@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
+import { SearchInput } from '../../page/search/components/SearchInput';
 import './scss/header-footer.scss'
 
 export const Header = () => {
-  
-    // 메인 메뉴
+
+  // 메인 메뉴
   const mainMenu = [
     { id: 1, menu: "스포츠", path: "/sports" },
     { id: 2, menu: "드라마", path: "/drama" },
@@ -21,8 +22,8 @@ export const Header = () => {
   const location = useLocation();
 
   // 스크롤
-  useEffect(()=>{
-    const handleScroll = ()=>{
+  useEffect(() => {
+    const handleScroll = () => {
       console.log(window.scrollY);
       setIsScrolled(window.scrollY > 100)
     }
@@ -31,10 +32,10 @@ export const Header = () => {
     handleScroll();
 
     // 홈에서 벗어나거나 컴포넌트가 사라질때 이벤트 해제
-    return()=> {
+    return () => {
       window.removeEventListener("scroll", handleScroll)
     }
-  }, []) 
+  }, [])
 
   // 로그인 상태
   const user = useAuthStore((state) => state.user);
@@ -113,11 +114,11 @@ export const Header = () => {
 
           <nav className='header-nav'>
             <ul className='header-nav-menu'>
-              {mainMenu.map((menu)=> (
+              {mainMenu.map((menu) => (
                 <li className='nav-menu-list' key={menu.id}>
-                  <NavLink 
-                  className={({ isActive }) => isActive ? 'active' : ''}
-                  to={menu.path}>{menu.menu}</NavLink>
+                  <NavLink
+                    className={({ isActive }) => isActive ? 'active' : ''}
+                    to={menu.path}>{menu.menu}</NavLink>
                 </li>
               ))}
             </ul>
@@ -132,32 +133,13 @@ export const Header = () => {
             </li>
           )}
 
-          {/* 검색 */}
-          <li className="header-search">
-            <form
-              className="header-search-form"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <button
-                type="button"
-                className="header-search-btn"
-                aria-label="검색"
-              />
 
-              <label
-                htmlFor="header-search-input"
-                className="sr-only"
-              >
-                검색
-              </label>
-
-              <input
-                type="search"
-                id="header-search-input"
-              />
-            </form>
-          </li>
-
+          {/* 로그인한 경우 검색 */}
+          {!authLoading && user && (
+            <li className="header-search">
+              <SearchInput />
+            </li>
+          )}
           {/* 로그인한 경우 프로필 메뉴 */}
           {!authLoading && user && (
             <li
@@ -212,53 +194,48 @@ export const Header = () => {
                     </div>
                   </Link>
 
+
+
                   {/* 드롭다운 메뉴 */}
                   <div className="profile-dropdown-menu">
-                    <Link to="/my">
-                      MY
+
+                    {/* 마이페이지 */}
+                    <Link
+                      to="/my"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      마이페이지
                     </Link>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        navigate('/my');
-                      }}
+                    {/* 구독 내역 */}
+                    <Link
+                      to="/my/subscription"
+                      onClick={() => setIsProfileOpen(false)}
                     >
-                      이용권 목록
-                    </button>
+                      구독 내역
+                    </Link>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        navigate('/my');
-                      }}
-                    >
-                      쿠폰 등록
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        navigate('/my');
-                      }}
+                    {/* 고객센터 */}
+                    <Link
+                      to="/my/support"
+                      onClick={() => setIsProfileOpen(false)}
                     >
                       고객센터
-                    </button>
+                    </Link>
 
+                    {/* 로그아웃 */}
                     <button
                       type="button"
                       className="profile-dropdown-logout"
                       onClick={handleLogout}
                       disabled={isLoggingOut}
                     >
-                      {isLoggingOut
-                        ? '로그아웃 중...'
-                        : '로그아웃'}
+                      {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
                     </button>
+
                   </div>
+
+
                 </div>
               )}
             </li>
@@ -268,3 +245,4 @@ export const Header = () => {
     </header>
   );
 };
+

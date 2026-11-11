@@ -57,12 +57,13 @@ export const useWatchlistStore = create((set, get) => ({
 
         const ownerKey = `${user.uid}_${profile.id}`;
 
-        set({
-            watchlist: [],
-            ownerKey: null,
+        // 같은 프로필의 목록을 갱신할 때는 기존 찜 상태를 유지합니다.
+        set((state) => ({
+            watchlist: state.ownerKey === ownerKey ? state.watchlist : [],
+            ownerKey: state.ownerKey === ownerKey ? ownerKey : null,
             loading: true,
             error: null
-        });
+        }));
 
         try {
             const snapshot = await getDocs(
@@ -123,7 +124,7 @@ export const useWatchlistStore = create((set, get) => ({
 
         if (
             !content?.id ||
-            !['movie', 'tv'].includes(content.media_type)
+            !['movie', 'tv', 'sports'].includes(content.media_type)
         ) {
             set({ error: '콘텐츠 정보가 올바르지 않습니다.' });
             return false;
@@ -142,6 +143,19 @@ export const useWatchlistStore = create((set, get) => ({
                     title: content.title || content.name || '',
                     poster_path: content.poster_path || null,
                     backdrop_path: content.backdrop_path || null,
+                    leagueId: content.leagueId || null,
+                    startTime: content.startTime || null,
+                    homeName: content.homeName || null,
+                    awayName: content.awayName || null,
+                    ...(content.media_type === 'sports' ? {
+                        sport: content.sport || null,
+                        homeTeamId: content.homeTeamId ?? null,
+                        awayTeamId: content.awayTeamId ?? null,
+                        homeLogo: content.homeLogo || null,
+                        awayLogo: content.awayLogo || null,
+                        thumbnail: content.thumbnail || null,
+                        raceName: content.raceName || null,
+                    } : {}),
                     createdAt: serverTimestamp()
                 }
             );

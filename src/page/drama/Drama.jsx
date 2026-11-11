@@ -1,41 +1,53 @@
+import { CategoryMenu } from '../../components/content/CategoryMenu';
+import { MainBanner } from '../../components/content/MainBanner';
 import { ContentRail } from '../../components/content/ContentRail';
 
 export const Drama = () => {
   return (
-    <main>
-      <h1
-        style={{
-          padding: '32px clamp(20px, 4vw, 80px)',
-          color: '#fff',
-        }}
-      >
-        드라마
-      </h1>
+    <main className="drama-page">
+      <MainBanner type="drama" />
+      <CategoryMenu section="drama" />
 
       <ContentRail
-        title="지금 인기 있는 드라마"
+        title="이번 주 드라마 TOP 20"
         type="tv"
-        genre="18"
-        imageType="가로"
-        slideView={6}
+        sort="popularity.desc"
+        imageType= '세로'
+        variant="ranking"
+        genre= '18'
+        country= 'KR|US|CN'
       />
 
       <ContentRail
-        title="한국 드라마"
+        title="새롭게 만나는 드라마"
         type="tv"
-        genre="18"
-        country="KR"
-        imageType="세로"
-        slideView={6}
-      />
-
-      <ContentRail
-        title="최근 첫 방영한 드라마"
-        type="tv"
-        genre="18"
         sort="first_air_date.desc"
-        imageType="가로"
-        slideView={6}
+        genre= '18'
+        country= 'KR|US|CN'
+      />
+
+      <ContentRail
+        title="쿠팡플레이 오리지널 드라마"
+        type="tv"
+        country= 'KR|US|CN'
+        sort="popularity.desc"
+        genre= '18'
+      />
+
+      <ContentRail
+        title="주말에 몰아보기 좋은 드라마"
+        type="tv"
+        country= 'KR'
+        sort="popularity.desc"
+        genre= '18,35'
+      />
+
+      <ContentRail
+        title="아시아 드라마를 만나다"
+        type="tv"
+        country="CN"
+        sort="popularity.desc"
+        genre= '18'
       />
     </main>
   );

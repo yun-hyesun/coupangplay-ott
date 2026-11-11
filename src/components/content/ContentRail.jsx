@@ -1,150 +1,179 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, A11y } from 'swiper/modules';
 import { useMovieStore } from '../../store/useMovieStore';
-
+import { railConfig } from '../../data/railConfig';
+import { makeParams, makeRailId } from '../../data/contentQuery';
+import { ContentCard } from './ContentCard';
+import { ContentTitle } from './ContentTitle';
+import { railBreakpoints } from '../../data/railBreakpoints';
 import 'swiper/css';
 import './scss/ContentRail.scss';
-import { CardHover } from './CardHover';
 
+// railKey를 전달하면 홈과 더보기 페이지에서 같은 설정을 사용한다.
+// items를 전달하면 상세 페이지 추천처럼 외부에서 받은 작품을 표시한다.
 export const ContentRail = ({
-  title,
-  type = 'movie',
-  genre,
-  country,
-  sort = 'popularity.desc',
-  slideView = "auto",
-  variant = 'default',
-  imageType = '가로',
-  ended = false, // 완결된 시리즈만
-  untilYear,     // 이 연도까지 개봉·첫 방영
-  minVotes,      // 최소 평가 수
+  railKey,
+  asGrid = false,
+  getSelection,
+  items: givenItems,
+  showMore = true,
+  kidsOnly = false,
+  intro,
+  layout = 'horizontal',
+  variant,
+  ...options
 }) => {
-  const railId = `${type}-${genre}-${country}-${sort}` + `-${ended}-${untilYear}-${minVotes}`;
+  const baseConfig = railKey
+  ? {
+      ...railConfig[railKey],
+      title: options.title ?? railConfig[railKey]?.title,
+    }
+  : options;
 
-  const items = useMovieStore((state) => state.rails[railId]);
+  const config = baseConfig
+    ? {
+        ...baseConfig,
+        variant: variant ?? baseConfig.variant ?? 'default',
+        kidsOnly: kidsOnly || baseConfig.kidsOnly || false,
+      }
+    : null;
+
+  const configId = makeRailId(config ?? {});
+  const type = config?.type || 'movie';
+
+  // layout으로 지정하면 카드 이미지 비율도 함께 변경
+  const imageType =
+    layout === 'vertical'
+      ? '세로'
+      : config?.imageType || '가로';
+
+  // 왼쪽 채널 소개(intro)가 있으면 채널형 설정 적용
+  const railType =
+    intro || layout === 'channel'
+      ? 'channel'
+      : config?.variant === 'ranking'
+        ? 'ranking'
+        : imageType === '세로'
+          ? 'vertical'
+          : 'horizontal';
+
+  const breakpoints = railBreakpoints[railType];
+  
+
+  const savedItems = useMovieStore((state) => state.rails[configId]);
+  const loading = useMovieStore((state) => givenItems === undefined && state.railLoading[configId]);
+  const error = useMovieStore((state) => givenItems === undefined && state.railErrors[configId]);
   const onFetchRail = useMovieStore((state) => state.onFetchRail);
+  const location = useLocation();
 
   useEffect(() => {
-  const params = {
-    sort_by: sort,
-  };
+    if (config && givenItems === undefined) {
+      onFetchRail(configId, type, makeParams(config));
+    }
+  }, [configId, type, onFetchRail, givenItems]);
 
-  if (genre) params.with_genres = genre;
-  if (country) params.with_origin_country = country;
+  if (!config) return null;
 
-  // TV 완결작
-  if (type === 'tv' && ended) {
-    params.with_status = '3';
+  const items = givenItems ?? savedItems ?? [];
+  const isPoster = imageType === '세로';
+
+  if (asGrid) {
+    return (
+      <div className="contentRail-list">
+        {items.map((item) => {
+          const itemType = item.media_type || type;
+
+          return (
+            <ContentCard
+              key={item.docId || item.purchaseId || `${itemType}-${item.id}`}
+              item={item}
+              type={itemType}
+              imageType={imageType}
+              listEntry
+              selection={getSelection?.(item)}
+              fromStore={item.isPurchase === true}
+            />
+          );
+        })}
+      </div>
+    );
   }
+  const visibleItems = items
+    .filter((item) => item.source === 'youtube'
+      ? item.thumbnail
+      : (isPoster ? item.poster_path : item.backdrop_path))
+    .slice(0, config.limit || 20);
 
-  // 지정 연도까지 개봉·첫 방영한 작품
-  if (untilYear) {
-    const dateKey =
-      type === 'movie'
-        ? 'primary_release_date.lte'
-        : 'first_air_date.lte';
-
-    params[dateKey] = `${untilYear}-12-31`;
-  }
-
-  // 최소 평가 수
-  if (minVotes) {
-    params['vote_count.gte'] = String(minVotes);
-  }
-
-  onFetchRail(railId, type, params);
-}, [railId,type,genre,country,sort,ended,untilYear,minVotes,onFetchRail,]);
-
-// 카드호버
-  const [hoveredId, setHoveredId] = useState(null);
-
+  const variantClass = `contentRail--${config.variant || 'default'}`;
+  const imageClass = isPoster ? 'contentRail--poster' : 'contentRail--landscape';
 
   return (
-    <section
-      className={`contentRail contentRail--${variant} ${
-        imageType === '세로' ? 'contentRail--poster' : 'contentRail--landscape'
-      }`}
-    >
-      <h3 className='contentRail-title'>{title}</h3>
+    <section className={`contentRail ${variantClass} ${imageClass}${intro ? ' contentRail--withIntro' : ''}`}>
+      <div className={intro ? 'contentRail-intro' : 'contentRail-heading'}>
 
-      <Swiper 
-      modules={[Navigation, A11y]}
-      navigation
-      a11y={{
-        prevSlideMessage: '이전 배너',
-        nextSlideMessage: '다음 배너',
-      }}
-      slidesPerView={slideView} 
-      spaceBetween={10}
+      {intro?.titleImage ? (
+        <h2 className="contentRail-intro-title">
+          <img src={intro.titleImage} alt={config.title} />
+        </h2>
+      ) : (
+        <ContentTitle title={config.title} />
+      )}
+
+      {intro && <p>{intro.description}</p>}
+
+      {railKey && showMore && (
+        <Link
+          className={intro ? 'contentRail-intro-link button' : 'contentRail-more'}
+          to={`/more?rail=${encodeURIComponent(railKey)}`}
+          state={{ from: location.pathname }}
+        >
+          {intro?.linkText ?? '더보기'}
+        </Link>
+      )}
+    </div>
+
+      {loading && !items.length && (
+        <p role="status">콘텐츠를 불러오는 중입니다.</p>
+      )}
+      {error && <p role="alert">{error}</p>}
+
+      {railKey && railKey.includes('-') && config.useTving === false &&
+        savedItems && !loading && !error && !visibleItems.length && (
+          <p className="channel-page__empty">표시할 작품이 없습니다.</p>
+      )}
+      <Swiper
+        modules={[Navigation, A11y]}
+        navigation
+        a11y={{
+          prevSlideMessage: '이전 작품',
+          nextSlideMessage: '다음 작품',
+        }}
+        // slidesPerView={config.slideView || 'auto'}
+        // spaceBetween={10}
+        slidesPerView={breakpoints[0].slidesPerView}
+        spaceBetween={breakpoints[0].spaceBetween}
+        breakpoints={breakpoints}
       >
-        {items
-          ?.filter((item) =>
-            imageType === '세로' ? item.poster_path : item.backdrop_path
-          )
-          .map((item, index) => {
-            const name = item.title || item.name;
+        {visibleItems.map((item, index) => {
+          const itemType = item.media_type || type;
 
-            const imagePath =
-              imageType === '세로' ? item.poster_path : item.backdrop_path;
-
-            return (
-              <SwiperSlide key={`${item.media_type}-${item.id}`}
-              onMouseEnter={() => setHoveredId(item.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              >
-                <article
-                  className={`contentRail-card ${
-                    imageType === '세로'
-                      ? 'contentRail-card--ver' : 'contentRail-card--hor'
-                  }`}
-                >
-                  {variant === 'ranking' && (
-                    <span
-                      className="contentRail-rank"
-                      aria-label={`${index + 1}위`}
-                    >
-                      <img src={`/images/ranking/ranking_${index + 1}.svg`} alt="" />
-                    </span>
-                  )}
-
-                  <div className="contentRail-info">
-                    <div className="contentRail-visual">
-                      <img
-                        src={`https://image.tmdb.org/t/p/w780${imagePath}`}
-                        alt={imageType === '가로' ? '' : name}
-                        loading="lazy"
-                      />
-
-                      {imageType === '가로' && (
-                        <div className="contentRail-titleArea">
-                          {item.logo_path ? (
-                            <img
-                              className="contentRail-tit-logo"
-                              src={`https://image.tmdb.org/t/p/original${item.logo_path}`}
-                              alt={name}
-                              loading="lazy"
-                            />
-                          ) : (
-                            <h4 className="contentRail-tit">
-                              {name}
-                            </h4>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <CardHover
-                    item={item}
-                    type={type === 'all' ? (item.media_type || 'tv') : type}
-                    isHover={hoveredId === item.id}
-                  />
-                </article>
-              </SwiperSlide>
-            );
-          })}
+          return (
+            <SwiperSlide key={`${itemType}-${item.id}`}>
+              <ContentCard
+                item={item}
+                type={itemType}
+                imageType={imageType}
+                variant={config.variant}
+                index={index}
+                fromStore={location.pathname === '/store' || railKey?.startsWith('store-')}
+              />
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     </section>
   );
 };
+
