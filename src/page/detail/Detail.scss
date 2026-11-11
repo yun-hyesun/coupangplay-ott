@@ -1162,3 +1162,22 @@
     background: #777d85;
   }
 }
+
+// 작은 평점에서도 외곽선과 채움 별을 같은 좌표에 겹칩니다.
+.detail-rating-stars {
+  line-height: 0;
+  &__star { display: block; position: relative; line-height: 0; padding: 0; }
+  &__star > img,
+  &__fill > img { display: block; position: absolute; top: 0; left: 0; margin: 0; }
+  &__fill { display: block; line-height: 0; }
+}
+.detail-review-like {
+  display: inline-flex; align-items: center; gap: 4px;
+  min-height: 32px; padding: 4px 8px; border: 1px solid #555b63; border-radius: 6px;
+  background: transparent; color: #a3a3a3; font: inherit; line-height: 20px; cursor: pointer;
+  &:hover:not(:disabled) { color: #fff; border-color: #0084ff; background: rgba(0,132,255,.1); }
+  &.is-liked { color: #5d9eff; border-color: #0084ff; background: rgba(0,132,255,.12); }
+  &:disabled { cursor: default; }
+  &:focus-visible { outline: 2px solid #0084ff; outline-offset: 3px; }
+}
+.detail-review-item p.detail-review-like-error { color: #ffb3b3; font-size: 13px; line-height: 20px; }

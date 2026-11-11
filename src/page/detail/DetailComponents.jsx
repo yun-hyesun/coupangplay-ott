@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { auth } from '../../firebase/firebase';
+import { useAuthStore } from '../../store/useAuthStore';
+import { likeReviewOnce, subscribeReviewLike } from '../../service/reviewService';
 import CommonIcon from '../../components/common/CommonIcon';
 import { Popup } from '../../components/common/Popup';
 
@@ -19,7 +21,7 @@ const RatingStars = ({ value, onChange, size = 28 }) => (
           name="star-outline"
           size={size} />
         {fill > 0 &&
-          <span aria-hidden="true"
+          <span className="detail-rating-stars__fill" aria-hidden="true"
             style={{
               position: 'absolute',
               inset: 0,
@@ -84,14 +86,50 @@ const EpisodeReviews = ({ episode, reviews, onOpenPopup }) => {
 const ReviewItem = ({ review, onEdit, onDelete }) => {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(review.content);
-  const mine = auth.currentUser?.uid === review.authorId;
+  const uid = useAuthStore(state => state.user?.uid);
+  const [likeState, setLikeState] = useState({ uid: null, path: null, liked: false, ready: false });
+  const [liking, setLiking] = useState(false);
+  const [likeError, setLikeError] = useState('');
+  const likeLock = useRef(false);
+  const path = review.documentPath;
+  useEffect(() => {
+    let active = true;
+    setLikeError('');
+    setLikeState({ uid, path, liked: false, ready: false });
+    if (!uid || !path) return () => { active = false; };
+    const unsubscribe = subscribeReviewLike(path, uid, liked => {
+      if (active) setLikeState({ uid, path, liked, ready: true });
+    }, () => {
+      if (active) setLikeError('좋아요 상태를 불러오지 못했습니다. 연결 및 Firestore 규칙을 확인해 주세요.');
+    });
+    return () => { active = false; unsubscribe(); };
+  }, [uid, path]);
+  const currentLike = likeState.uid === uid && likeState.path === path;
+  const liked = !!uid && currentLike && likeState.liked;
+  const handleLike = async () => {
+    if (!uid) { setLikeError('좋아요를 누르려면 로그인해 주세요.'); return; }
+    if (likeLock.current || liked || !currentLike || !likeState.ready) return;
+    likeLock.current = true; setLiking(true); setLikeError('');
+    try {
+      await likeReviewOnce(path);
+      if (auth.currentUser?.uid === uid) setLikeState({ uid, path, liked: true, ready: true });
+    } catch (error) {
+      if (auth.currentUser?.uid === uid) setLikeError(error.code === 'permission-denied'
+        ? '좋아요를 저장하지 못했습니다. Firestore 규칙을 확인해 주세요.' : error.message || '좋아요를 저장하지 못했습니다.');
+    } finally { likeLock.current = false; setLiking(false); }
+  };
+  const mine = uid === review.authorId;
   const rating = Math.max(1, Math.min(5, Number(review.rating) || 1));
 
   return <article className="detail-review-item">
     <div className="detail-review-item__author"><strong>{review.author}</strong><span>{review.createdAt ? new Date(review.createdAt).toLocaleDateString('ko-KR') : ''}</span></div>
     {editing ? <div className="detail-review-popup__compose"><textarea aria-label="리뷰 수정" value={editText} maxLength={2000} onChange={e => setEditText(e.target.value)} /><button type="button" onClick={async () => { if (await onEdit(review.id, editText)) setEditing(false); }}>저장</button><button type="button" onClick={() => setEditing(false)}>취소</button></div> : <p>{review.content}</p>}
     {mine && onEdit && onDelete && <div className="detail-review-item__meta"><button type="button" onClick={() => setEditing(true)}>수정</button><button type="button" onClick={() => onDelete(review.id)}>삭제</button></div>}
-    <div className="detail-review-item__meta"><span>좋아요 {review.likes ?? 0}</span><span aria-hidden="true">·</span><span>평점</span><RatingStars value={rating} size={14} /><span>{rating.toFixed(1)} / 5</span></div>
+    <div className="detail-review-item__meta"><button type="button" className={`detail-review-like${liked ? ' is-liked' : ''}`}
+      aria-pressed={liked} aria-label={`좋아요 ${review.likes ?? 0}개${liked ? ', 이미 참여함' : ''}`}
+      disabled={liking || liked || !path || (!!uid && (!currentLike || !likeState.ready))}
+      onClick={handleLike}>좋아요 <span>{review.likes ?? 0}</span></button><span aria-hidden="true">·</span><span>평점</span><RatingStars value={rating} size={14} /><span>{rating.toFixed(1)} / 5</span></div>
+    {likeError && <p className="detail-review-like-error" role="alert">{likeError}</p>}
   </article>;
 };
 
