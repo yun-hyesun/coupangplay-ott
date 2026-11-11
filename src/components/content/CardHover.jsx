@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { subscribeMyPurchases } from '../../service/purchaseService';
+import { ChannelSubscriptionContext } from '../../page/channel/components/ChannelSubscriptionGate';
 import './scss/CordHover.scss';
 
 export const CardHover = ({
@@ -64,6 +65,24 @@ export const CardHover = ({
     );
 
   const needsPurchase = fromStore && !isPurchased;
+
+  const channelSubscription = useContext(
+    ChannelSubscriptionContext
+  );
+
+  const subscriptionPending =
+    Boolean(channelSubscription) &&
+    channelSubscription.loading;
+
+  const subscriptionError =
+    channelSubscription?.error || '';
+
+  const needsSubscription =
+    Boolean(channelSubscription) &&
+    !channelSubscription.isSubscribed;
+
+  const buttonBlocked =
+    subscriptionPending || Boolean(subscriptionError);
 
   // TMDB 예고편 가져오기
   useEffect(() => {
@@ -186,33 +205,53 @@ export const CardHover = ({
           {/* 미구매: 구매 페이지 / 구매 완료: 재생 페이지 */}
           <Link
             to={
-              needsPurchase
-                ? `/purchase/checkout/${type}/${item.id}`
-                : `/watch/${type}/${item.id}`
+              needsSubscription
+                ? channelSubscription.checkoutPath
+                : needsPurchase
+                  ? `/purchase/checkout/${type}/${item.id}`
+                  : `/watch/${type}/${item.id}`
             }
             className={`button main-btn ${
-              needsPurchase ? 'icon-purchase' : 'icon-play'
+              needsSubscription
+                ? 'icon-subscribe'
+                : needsPurchase
+                  ? 'icon-purchase'
+                  : 'icon-play'
             }`}
+            aria-disabled={buttonBlocked || undefined}
+            onClick={(event) => {
+              if (buttonBlocked) {
+                event.preventDefault();
+              }
+            }}
             state={
-              !needsPurchase && item.resume
-                ? {
-                    content: item,
-                    ownerKey: item.ownerKey,
-                    resumeAt: item.position ?? 0,
-                    seasonNumber: item.seasonNumber ?? 1,
-                    episodeNumber: item.episodeNumber ?? 1,
-                    videoSrc: item.videoSrc || '',
-                    youtubeKey: item.youtubeKey || '',
-                    autoPlayNext: true,
-                  }
-                : { content: item }
+              needsSubscription || needsPurchase
+                ? undefined
+                : item.resume
+                  ? {
+                      content: item,
+                      ownerKey: item.ownerKey,
+                      resumeAt: item.position ?? 0,
+                      seasonNumber: item.seasonNumber ?? 1,
+                      episodeNumber: item.episodeNumber ?? 1,
+                      videoSrc: item.videoSrc || '',
+                      youtubeKey: item.youtubeKey || '',
+                      autoPlayNext: true,
+                    }
+                  : { content: item }
             }
           >
-            {needsPurchase
-              ? '구매하기'
-              : item.resume
-                ? '이어보기'
-                : '재생하기'}
+            {subscriptionPending
+              ? '구독 확인 중'
+              : subscriptionError
+                ? '구독 확인 실패'
+                : needsSubscription
+                  ? '구독하기'
+                  : needsPurchase
+                    ? '구매하기'
+                    : item.resume
+                      ? '이어보기'
+                      : '재생하기'}
           </Link>
 
           {/* 상세페이지 이동 */}
