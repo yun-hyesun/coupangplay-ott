@@ -343,8 +343,8 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
           </span>
 
           {isEnded && hasRelatedVideos && (
-            <span className="sports-fixture__highlight-badge">
-              하이라이트
+            <span className="sports-fixture__related-badge">
+              관련 영상
             </span>
           )}
         </div>
