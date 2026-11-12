@@ -69,7 +69,6 @@
 .my-subscription .subscription-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
   padding-top: 32px;
 }
 .my-subscription .subscription-card {
@@ -334,6 +333,12 @@
   font-size: 14px;
   color: #aaa;
 }
+.my-subscription .payment-history-note {
+  margin: 16px 0 0;
+  color: #a0a0a0;
+  font-size: 14px;
+  line-height: 1.5;
+}
 
 @media (max-width: 767px) {
   .my-subscription .subscription-card-top {
@@ -364,7 +369,6 @@
     font-size: 22px;
   }
   .my-subscription .subscription-list {
-    gap: 16px;
     padding-top: 24px;
   }
   .my-subscription .subscription-card.cancel-pending {
