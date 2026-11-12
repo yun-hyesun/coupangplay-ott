@@ -1,10 +1,11 @@
-import { formatFivePointRating } from '../../utils/rating';
+import { toFivePointRating } from '../../utils/rating';
 import { useCallback, useEffect, useState, useContext, useRef } from 'react';
 import YouTube from 'react-youtube';
 import { useNavigate, Link } from 'react-router-dom';
 import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useMovieStore } from '../../store/useMovieStore';
 import { subscribeMyPurchases } from '../../service/purchaseService';
 import { ChannelSubscriptionContext } from '../../page/channel/components/ChannelSubscriptionGate';
 import { getCachedPreviewVideos, getVideoFallback, loadPreviewVideos, selectPreviewVideos, videoTypeLabels } from '../../data/videoFallback';
@@ -91,6 +92,7 @@ export const CardHover = ({
   type,
   isHover,
   fromStore = false,
+  deleteButton,
 }) => {
   const uid = useAuthStore((state) => state.user?.uid);
   const navigate = useNavigate();
@@ -214,7 +216,19 @@ export const CardHover = ({
   const name = item.title || item.name;
   const date = item.release_date || item.first_air_date;
   const year = date?.slice(0, 4);
-  const rating = formatFivePointRating(item.vote_average, 10);
+  const contentId = item.id;
+  const detailKey = `${mediaType}-${contentId}`;
+  const detail = useMovieStore((state) => state.contentDetails[detailKey]);
+  const onFetchContentDetail = useMovieStore((state) => state.onFetchContentDetail);
+  const savedRating = toFivePointRating(item.vote_average, 10);
+  const rating = toFivePointRating(detail?.vote_average, 10) ?? savedRating;
+
+  useEffect(() => {
+    if (!isHover || detail || savedRating !== null || !contentId) return;
+    if (mediaType !== 'movie' && mediaType !== 'tv') return;
+
+    void onFetchContentDetail(mediaType, contentId);
+  }, [isHover, detail, savedRating, mediaType, contentId, onFetchContentDetail]);
 
   // 로그인한 계정의 구매내역 실시간 확인
   useEffect(() => {
@@ -298,7 +312,11 @@ export const CardHover = ({
         <h4 className="content-title">{name}</h4>
 
         <div className="content-info">
-          <p className="info-rating" aria-label={`5점 만점 평점 ${rating}`}>{rating} / 5</p>
+          {rating !== null && (
+            <p className="info-rating" aria-label={`5점 만점 평점 ${rating.toFixed(1)}`}>
+              {rating.toFixed(1)} / 5
+            </p>
+          )}
 
           <p className="info-meta">
             <span className="meta-year">{year}</span>
@@ -310,7 +328,7 @@ export const CardHover = ({
           <p className="meta-tag quality">HD</p>
         </div>
 
-        <div className="button-box">
+        <div className={deleteButton ? "button-box button-box--resume" : "button-box"}>
           {/* 미구매: 구매 페이지 / 구매 완료: 재생 페이지 */}
           <Link
             to={
@@ -380,24 +398,27 @@ export const CardHover = ({
             </span>
           </Link>
 
-          {/* 찜하기 */}
-          <button
-            type="button"
-            className={`button circle-btn icon-dibs${isSaved ? ' is-active' : ''}`}
-            onClick={handleWatchlist}
-            disabled={isSavingWatchlist || watchlistLoading}
-            aria-pressed={isSaved}
-            aria-label={isSaved ? '찜 해제' : '찜하기'}
-            title={isSaved ? '찜 해제' : '찜하기'}
-          >
-            <span className="sr-only">
-              {isSavingWatchlist
-                ? '찜 목록 변경 중'
-                : isSaved
-                  ? '찜 해제'
-                  : '찜하기'}
-            </span>
-          </button>
+          <div className="card-hover-actions">
+            {/* 찜하기 */}
+            <button
+              type="button"
+              className={`button circle-btn icon-dibs${isSaved ? ' is-active' : ''}`}
+              onClick={handleWatchlist}
+              disabled={isSavingWatchlist || watchlistLoading}
+              aria-pressed={isSaved}
+              aria-label={isSaved ? '찜 해제' : '찜하기'}
+              title={isSaved ? '찜 해제' : '찜하기'}
+            >
+              <span className="sr-only">
+                {isSavingWatchlist
+                  ? '찜 목록 변경 중'
+                  : isSaved
+                    ? '찜 해제'
+                    : '찜하기'}
+              </span>
+            </button>
+            {deleteButton}
+          </div>
         </div>
       </div>
     </div>

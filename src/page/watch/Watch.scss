@@ -187,18 +187,9 @@ $surface: #262626;
   margin-bottom: 14px;
 }
 
-.watch-player__live-badge {
-  display: inline-flex;
+.watch-player__live-status > .watch-player__live-badge.live {
+  position: static;
   flex-shrink: 0;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  background: #e32c36;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 20px;
-  i { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
 }
 
 .watch-player__live-source {

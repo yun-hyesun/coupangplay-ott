@@ -1,0 +1,30 @@
+// 카테고리 .dropDown의 색상·높이·간격·패널 스타일과 통일합니다.
+.season-select {
+  position: relative;
+  flex-shrink: 0;
+  font: inherit;
+  &__trigger {
+    display: inline-flex; align-items: center; justify-content: space-between; gap: 12px;
+    min-height: 44px; min-width: 112px; padding: .2em 1em;
+    border: 1px solid transparent; border-radius: 8px;
+    background: #262626; color: #fff; font: inherit; cursor: pointer;
+    &:hover { background: #404040; border-color: rgba(255,255,255,.2); }
+  }
+  &.is-open &__trigger { background: #404040; border-color: rgba(255,255,255,.2); }
+  &__list {
+    box-sizing: border-box; position: absolute; right: 0; top: calc(100% + 10px); z-index: 50;
+    width: max-content; min-width: 100%; max-width: min(320px, calc(100vw - 40px)); max-height: min(320px, 45dvh);
+    margin: 0; padding: 12px; list-style: none; overflow-y: auto;
+    border-radius: 12px; background: #21252b; box-shadow: 0 12px 32px rgba(0,0,0,.4);
+    scrollbar-width: thin; scrollbar-color: #555b63 #101113;
+  }
+  &__option {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 5px;
+    background: transparent; color: #e2e5e9; font: inherit; text-align: left; cursor: pointer;
+    span { overflow-wrap: anywhere; }
+    &:hover, &[aria-selected='true'] { background: rgba(255,255,255,.1); }
+    &[aria-selected='true'] { color: #fff; }
+  }
+  button:focus-visible { outline: 2px solid #0084ff; outline-offset: 3px; }
+}
