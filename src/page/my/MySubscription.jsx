@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { VoucherModal } from './components/MyVoucherModal';
 import { SubscriptionMenu } from './components/MySubscriptionMenu';
@@ -373,12 +373,16 @@ export const MySubscription = () => {
                         })}
                     </div>
                 ) : (
-                    <div className="subscription-empty">
-                        <p>현재 구독 중인 이용권이 없습니다.</p>
-                        <span>
-                            이용권을 등록하면 구독 정보를 확인할 수 있습니다.
-                        </span>
-                    </div>
+                    <section className="subscription-empty subscription-empty--passes" aria-labelledby="subscription-empty-title">
+                        <h2 id="subscription-empty-title">구독내역이 없습니다.</h2>
+                        <p>
+                            프리미엄으로 더 편하게, 패스로 더 넓게<br />
+                            당신의 시청 경험을 새롭게 만들어 보세요.
+                        </p>
+                        <Link className="subscription-empty__browse" to="/my/subscription/passes">
+                            구독채널 둘러보기
+                        </Link>
+                    </section>
                 )}
 
                 {(error || actionError) && subscriptions.length > 0 && (
