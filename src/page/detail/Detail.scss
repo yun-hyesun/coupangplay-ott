@@ -108,13 +108,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 28px;
+  padding: 0.3em 0.9em;
   border: 1px solid #737373;
   border-radius: 8px;
   font-weight: 700;
   background: rgba(20, 20, 20, .65);
   color: #fff;
   text-decoration: none;
+  height: 45px;
 
   &--primary {
     background: #0084ff;
@@ -572,6 +573,10 @@
   border: 0;
 }
 
+.detail-button.detail-button--watchlist:disabled {
+    cursor: default;
+}
+
 @media (max-width: 1200px) {
   .detail-page__inner {
     padding-inline: 32px;
@@ -693,7 +698,7 @@
 
 .detail-hero__actions .detail-button {
   gap: 8px;
-  min-height: 48px;
+  min-height: 45px;
 }
 
 .detail-hero__actions .detail-button.is-active {
