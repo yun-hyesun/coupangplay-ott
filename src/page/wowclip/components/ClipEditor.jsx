@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ClipModal } from './WowClipUi';
 import { ClipPlayer } from './ClipPlayer';
 import { contentTitle, formatTime, makeClip } from '../utils/wowClipData';
@@ -70,6 +70,7 @@ export const ClipEditor = ({ owner, source, onClose, onSave }) => {
   const [spoiler, setSpoiler] = useState(false);
   const [error, setError] = useState('');
   const [ready, setReady] = useState(false);
+  const markUnavailable = useCallback(() => setReady(false), []);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
 
@@ -90,8 +91,7 @@ export const ClipEditor = ({ owner, source, onClose, onSave }) => {
   return <ClipModal title="클립 만들기" onClose={onClose} className="wowclip-editor">
     <form className="wowclip-editor-body" onSubmit={submit}>
       <div className="wowclip-editor-preview">
-        <div className="wowclip-editor-source-player"><ClipPlayer clip={{ videoKey: source.videoKey, videoTitle: source.videoTitle, ...range }} preview previewRequest={previewRequest} onPosition={setPreviewPosition} onDuration={(length) => {
-          if (!(length > 0)) return;
+        <div className="wowclip-editor-source-player"><ClipPlayer clip={{ videoKey: source.videoKey, videoTitle: source.videoTitle, ...range }} preview previewRequest={previewRequest} onPosition={setPreviewPosition} onUnavailable={markUnavailable} onDuration={(length) => {
           setReady(true);
           const corrected = initialClipWindow(length, source.currentTime);
           if (range.end > length || bounds.end > length) {

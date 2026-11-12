@@ -1,5 +1,38 @@
 import { getYouTubeVideoId } from '../../data/youtubeVideoId.js';
 
+export function getWatchInviteSession(params) {
+  const session = params.get('session');
+  return session && /^[\w-]{1,128}$/.test(session) ? session : null;
+}
+
+export function getWatchInviteReturn(path) {
+  if (typeof path !== 'string' || !/^\/watch\/(tv|movie)\/[\w-]+\?/.test(path)) return null;
+  const url = new URL(path, 'https://player.invalid');
+  return getWatchInviteSession(url.searchParams) ? url.pathname + url.search : null;
+}
+
+export function getInviteEpisode(params) {
+  const parseNumber = (name, minimum) => {
+    const value = params.get(name);
+    if (!value || !/^\d+$/.test(value)) return undefined;
+    const number = Number(value);
+    return Number.isSafeInteger(number) && number >= minimum ? number : undefined;
+  };
+  return { seasonNumber: parseNumber('season', 0), episodeNumber: parseNumber('episode', 1) };
+}
+
+export function getClipRestriction({ type, youtubeKey, videoSrc, hasPlaybackError, videoLookupPending, activeFallback }) {
+  if (videoLookupPending) return '영상을 불러오는 중이에요. 잠시 후 다시 시도해 주세요.';
+  const restricted = '이 영상은 클립 기능이 제한돼 있어요.';
+  if (hasPlaybackError) return `${restricted} 원본 영상을 재생할 수 없어요.`;
+  if (videoSrc) return `${restricted} 직접 연결된 영상 파일은 클립 편집을 지원하지 않아요.`;
+  if (!/^[\w-]{11}$/.test(youtubeKey)) return `${restricted} 클립을 만들 수 있는 원본 영상이 없어요.`;
+  if (!activeFallback) return '';
+  const { videoType, scope } = activeFallback;
+  if ((type === 'movie' && videoType === 'film') || (type === 'tv' && videoType === 'episode' && scope.type === 'episode')) return '';
+  return `${restricted} 현재 재생 중인 대체 영상에서는 클립을 만들 수 없어요.`;
+}
+
 export function getSportsLiveWatchDestination(game, { leagueId = game.competitionCode || game.leagueId, returnTo = '/sports', returnTab = 'home' } = {}) {
   const params = new URLSearchParams(Object.entries({
     league: leagueId, match: game.gameId ?? game.id, home: game.home?.name,

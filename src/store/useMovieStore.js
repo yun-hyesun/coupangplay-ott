@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { railConfig } from '../data/railConfig';
+import { channelRailConfig } from '../data/channelRailConfig';
 import { makeParams } from '../data/contentQuery';
 
 const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -54,7 +55,7 @@ const featuredBannerLineups = {
 //   .then(data => console.table("쿠팡드라마",data.results));
 
 // TMDB 공통 요청
-const requestTmdb = async (path, query = {}) => {
+const requestTmdb = async (path, query = {}, options) => {
   const params = new URLSearchParams({
     api_key: TMDB_KEY,
     language: 'ko-KR',
@@ -62,7 +63,8 @@ const requestTmdb = async (path, query = {}) => {
   });
 
   const res = await fetch(
-    `https://api.themoviedb.org/3${path}?${params}`
+    `https://api.themoviedb.org/3${path}?${params}`,
+    options
   );
 
   if (!res.ok) {
@@ -127,6 +129,13 @@ const fetchBannerArtwork = async (item) => {
     return item;
   }
 };
+
+const requestTmdbVideos = (path, language) => requestTmdb(path, {
+  language,
+  include_video_language: 'ko,en',
+}, { signal: AbortSignal.timeout(5000) });
+
+const normalizeVideoTitle = (title) => (title ?? '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
 // 드라마 세부 카테고리의 키워드 ID 조회
 const categoryKeywordCache = new Map();
@@ -728,6 +737,63 @@ const fetchRailPage = async (type, query = {}, page = 1) => {
 };
 
 const purchaseRequests = new Set();
+const fetchRailPreview = async (type, params) => {
+  const works = new Map();
+  let hasNext = true;
+
+  for (let page = 1; works.size < 20 && hasNext && page <= 6; page += 1) {
+    const result = await fetchMorePage(type, params, page);
+    for (const item of result.results) {
+      works.set(`${item.media_type}-${item.id}`, item);
+    }
+    hasNext = result.hasNext;
+  }
+
+  return [...works.values()].slice(0, 20);
+};
+
+const channelBadgeRules = [
+  ['EBS ON', channelRailConfig['ebs-popular']],
+  ['SONY', channelRailConfig['sony-popular']],
+  ['Paramount+', channelRailConfig['paramount-popular']],
+  ['JPlus', channelRailConfig['jplus-popular']],
+];
+
+export const isMoaChannelWork = (item) => moaChannelTitles.some(([title, year]) =>
+  item?.original_name === title && item.first_air_date?.startsWith(String(year))
+);
+
+const getContentChannelBadges = (type, detail) => {
+  const genres = (detail.genres ?? []).map(({ id }) => String(id));
+  const badges = channelBadgeRules.filter(([, config]) => {
+    if (config.type !== type) return false;
+    if (config.country && !detail.origin_country?.includes(config.country)) return false;
+    if (config.network && !detail.networks?.some(({ id }) => String(id) === config.network)) return false;
+    if (config.companies && !detail.production_companies?.some(({ id }) =>
+      config.companies.split('|').includes(String(id)))) return false;
+    if (config.genre && !config.genre.split('|').some((id) => genres.includes(id))) return false;
+    return !config.excludeGenres?.split('|').some((id) => genres.includes(id));
+  }).map(([label]) => label);
+
+  if (type === 'tv' && isMoaChannelWork(detail)) badges.push('MOA');
+  return badges;
+};
+
+const channelBadgeRequests = new Set();
+const channelBadgeQueue = [];
+let activeChannelBadgeRequests = 0;
+
+const runChannelBadgeQueue = () => {
+  while (activeChannelBadgeRequests < 4 && channelBadgeQueue.length) {
+    const request = channelBadgeQueue.shift();
+    activeChannelBadgeRequests += 1;
+    void request().finally(() => {
+      activeChannelBadgeRequests -= 1;
+      runChannelBadgeQueue();
+    });
+  }
+};
+
 export const useMovieStore = create((set, get) => ({
 
   // =========================
@@ -851,6 +917,29 @@ export const useMovieStore = create((set, get) => ({
   },
 
 
+  channelBadges: {},
+
+  onCheckContentChannelBadges: (type, id) => {
+    if (!id || (type !== 'movie' && type !== 'tv')) return;
+
+    const key = `${type}-${id}`;
+    if (get().channelBadges[key] !== undefined || channelBadgeRequests.has(key)) return;
+
+    channelBadgeRequests.add(key);
+    channelBadgeQueue.push(async () => {
+      try {
+        const detail = get().contentDetails[key] ?? await requestTmdb(`/${type}/${id}`);
+        const badges = getContentChannelBadges(type, detail);
+        set((state) => ({ channelBadges: { ...state.channelBadges, [key]: badges } }));
+      } catch {
+        // 다음 페이지 진입 시 실패한 작품만 다시 조회할 수 있다.
+      } finally {
+        channelBadgeRequests.delete(key);
+      }
+    });
+    runChannelBadgeQueue();
+  },
+
   // 레일 이름마다 데이터와 요청 상태를 따로 저장합니다.
   rails: {},
   railLoading: {},
@@ -878,22 +967,7 @@ export const useMovieStore = create((set, get) => ({
           params.with_watch_monetization_types === 'buy' ||
           (params.kidsOnly && (params.with_companies || params.useTving === false))
         ) {
-          const works = new Map();
-          let page = 1;
-          let hasNext = true;
-
-          while (works.size < 20 && hasNext && page <= 6) {
-            const result = await fetchMorePage(type, params, page);
-
-            for (const item of result.results) {
-              works.set(`${item.media_type}-${item.id}`, item);
-            }
-
-            hasNext = result.hasNext;
-            page += 1;
-          }
-
-          items = [...works.values()].slice(0, 20);
+          items = await fetchRailPreview(type, params);
         } else if (type === 'all') {
           const [movies, tvs] = await Promise.all([
             fetchCoupangList('movie', params),
@@ -1143,7 +1217,7 @@ export const useMovieStore = create((set, get) => ({
   onFetchVideo: async (id) => {
     if (get().popVideo[id]) return;
 
-    const data = await requestTmdb(`/movie/${id}/videos`);
+    const data = await requestTmdbVideos(`/movie/${id}/videos`, 'ko-KR');
 
     set((state) => ({
       popVideo: {
@@ -1170,9 +1244,7 @@ export const useMovieStore = create((set, get) => ({
   onFetchTvVideo: async (id) => {
     if (get().tvVideo[id]) return;
 
-    const data = await requestTmdb(`/tv/${id}/videos`, {
-      language: 'en-US',
-    });
+    const data = await requestTmdbVideos(`/tv/${id}/videos`, 'en-US');
 
     set((state) => ({
       tvVideo: {
@@ -1241,9 +1313,9 @@ export const useMovieStore = create((set, get) => ({
 
     // 1. TMDB에서 에피소드 영상 검색
     try {
-      const data = await requestTmdb(
+      const data = await requestTmdbVideos(
         `/tv/${id}/season/${season}/episode/${episode}/videos`,
-        { language: 'en-US' }
+        'en-US'
       );
 
       videos = (data.results ?? []).filter(
@@ -1270,7 +1342,8 @@ export const useMovieStore = create((set, get) => ({
           (item) => item.episode_number === episode
         );
 
-        if (tvName) {
+        const normalizedTvName = normalizeVideoTitle(tvName);
+        if (normalizedTvName) {
           const searchText =
             `${tvName} 시즌 ${season} ${episode}화 ` +
             `${episodeInfo?.name || ''} 하이라이트`;
@@ -1286,7 +1359,8 @@ export const useMovieStore = create((set, get) => ({
           });
 
           const res = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?${params.toString()}`
+            `https://www.googleapis.com/youtube/v3/search?${params.toString()}`,
+            { signal: AbortSignal.timeout(4000) }
           );
 
           if (!res.ok) {
@@ -1296,12 +1370,13 @@ export const useMovieStore = create((set, get) => ({
           const data = await res.json();
 
           videos = (data.items ?? [])
-            .filter((item) => item.id?.videoId)
+            .filter((item) => item.id?.videoId && normalizeVideoTitle(item.snippet?.title).includes(normalizedTvName))
             .map((item) => ({
               key: item.id.videoId,
               name: item.snippet.title,
               site: 'YouTube',
               type: 'Clip',
+              fromSearch: true,
             }));
         }
       } catch (error) {

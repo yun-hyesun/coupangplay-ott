@@ -3,6 +3,7 @@
   inset: 0;
   width: 448px;
   max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
   margin: auto;
   padding: 24px;
   border: 1px solid #454b54;
@@ -20,6 +21,22 @@
   &__heading { display: flex; height: 48px; align-items: center; gap: 8px; margin-bottom: 16px; }
   &__month { display: flex; min-width: 0; flex: 1; justify-content: center; }
   .sports-calendar__month select { padding: 4px; border: 0; color-scheme: dark; background: #171b21; font-size: 18px; font-weight: 700; }
+  .sports-calendar__year-month-toggle { display: inline-flex; min-height: 30px; align-items: center; justify-content: center; gap: 10px; padding: 2px 4px; border-radius: 6px; font-size: 16px; font-weight: 700; line-height: 24px;
+    &:hover { background: #31353c; }
+    &[aria-expanded='true'] .sports-calendar__year-month-chevron { transform: rotate(180deg); }
+  }
+  &__year-month-chevron { width: 0; height: 0; border-right: 5px solid transparent; border-left: 5px solid transparent; border-top: 6px solid currentColor; }
+  &__year-month-picker { display: grid; height: 392px; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+  &__year-month-picker--video { height: 360px; }
+  &__year-month-column { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 8px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+    > button { display: flex; height: 48px; flex: 0 0 48px; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 12px; border-radius: 8px; font-size: 16px; text-align: left;
+      &:hover { background: #31353c; }
+      &[aria-pressed='true'] { color: #fff; background: #373b40; }
+    }
+  }
+  &__selection-check { width: 18px; height: 10px; flex: 0 0 18px; margin-bottom: 4px; border-bottom: 2px solid currentColor; border-left: 2px solid currentColor; transform: rotate(-45deg); }
+  &__period-label { font-size: 18px; font-weight: 700; line-height: 28px; white-space: nowrap; }
   &__nav { display: flex; width: 48px; height: 48px; flex: 0 0 48px; align-items: center; justify-content: center; padding: 0; border-radius: 16px;
     &:hover:not(:disabled) { background: rgba(255,255,255,.06); }
     > img { display: block; max-width: none; }
@@ -32,6 +49,9 @@
   }
   &__grid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 8px;
     &--months { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    &--units { height: 360px; grid-template-columns: repeat(4,minmax(0,1fr)); align-content: start; overflow-y: auto; overscroll-behavior: contain;
+      > button { min-width: 0; padding-inline: 4px; line-height: 20px; overflow-wrap: anywhere; }
+    }
     > .sports-calendar__weekday { height: 24px; color: #a3a3a3; font-size: 14px; line-height: 24px; text-align: center; }
     > button { position: relative; height: 48px; padding: 0; border-radius: 8px; font-size: 16px;
       &.is-outside { color: #666e7b; }
@@ -41,12 +61,20 @@
     }
   }
   .sports-calendar__grid > button:disabled { color: #666e7b; background: transparent; opacity: .4; cursor: not-allowed; }
-  &__close { width: 100%; height: 48px; margin-top: 16px; border-radius: 8px; background: #31353c !important; font-size: 18px !important; }
+  &__close { width: 100%; height: 48px; margin-top: 16px; border-radius: 8px; color: #fff; background: $color-pri !important; font-size: 18px !important; font-weight: $font-w-SB-600;
+    &:hover { background: $color-sec !important; }
+  }
 }
 @media (max-width: 700px) {
   .sports-calendar { padding: 16px;
     &__grid { gap: 4px; > button { height: 40px; } }
+    &__grid--units { height: 288px; }
     .sports-calendar__month select { font-size: 15px; }
+    .sports-calendar__year-month-toggle { min-height: 28px; font-size: 14px; line-height: 22px; }
+    &__year-month-picker { height: 320px; gap: 12px; }
+    &__year-month-picker--video { height: 288px; }
+    &__year-month-column { gap: 4px; > button { height: 40px; flex-basis: 40px; padding-inline: 8px; font-size: 14px; } }
+    &__period-label { font-size: 15px; }
     &__nav { width: 40px; height: 40px; flex-basis: 40px; }
   }
 }

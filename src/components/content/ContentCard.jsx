@@ -1,12 +1,55 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { CardHover } from './CardHover';
 import { Popup } from '../common/Popup';
-import { useMovieStore } from '../../store/useMovieStore';
+import { isMoaChannelWork, useMovieStore } from '../../store/useMovieStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import { subscribeMyPurchases } from '../../service/purchaseService';
 import "./scss/ContentCard.scss"
+
+const channelBadgePages = new Set(['/', '/drama', '/movie', '/entertainment', '/store', '/kids']);
+const emptyChannelBadges = [];
+
+const useCardChannelBadges = (type, id, item) => {
+  const { pathname } = useLocation();
+  const showBadges = (channelBadgePages.has(pathname) || pathname === '/search' ||
+    pathname.startsWith('/category/')) &&
+    (type === 'movie' || type === 'tv') && Boolean(id);
+  const badges = useMovieStore((state) =>
+    showBadges ? state.channelBadges[`${type}-${id}`] ?? emptyChannelBadges : emptyChannelBadges
+  );
+  const onCheckContentChannelBadges = useMovieStore((state) => state.onCheckContentChannelBadges);
+
+  useEffect(() => {
+    if (showBadges) onCheckContentChannelBadges(type, id);
+  }, [pathname, showBadges, type, id, onCheckContentChannelBadges]);
+
+  const hasMoaBadge = showBadges && type === 'tv' && isMoaChannelWork(item);
+  return hasMoaBadge && !badges.includes('MOA') ? [...badges, 'MOA'] : badges;
+};
+
+const channelBadgeClasses = {
+  'EBS ON': 'ebs',
+  SONY: 'sony',
+  'Paramount+': 'paramount',
+  MOA: 'moa',
+  JPlus: 'jplus',
+};
+
+const CardChannelBadges = ({ badges, hasSeries = false }) => {
+  if (!badges.length) return null;
+
+  return (
+    <div className={`contentCard-channelBadges${hasSeries ? ' has-series' : ''}`} aria-hidden="true">
+      {badges.map((name) => (
+        <span key={name} className={`channel-badge channel-badge--${channelBadgeClasses[name]}`}>
+          <span className='sr-only'>{name}</span>
+        </span>
+      ))}
+    </div>
+  );
+};
 
 // Swiper와 Grid가 공통으로 쓰는 카드 (기존 hover 및 class 유지)
 const CardVisual = ({ selection, label, to, state, children }) => {
@@ -96,6 +139,8 @@ const ResumeContentCard = ({ item, selection }) => {
     episodeNumber,
   } = item;
 
+  const channelBadges = useCardChannelBadges(media_type, id, item);
+
   const deleteButton = canDelete ? (
     <button
       type="button"
@@ -128,7 +173,7 @@ const ResumeContentCard = ({ item, selection }) => {
             youtubeKey: item.youtubeKey || '',
             autoPlayNext: true,
           }}
-          label={selection ? title : `${title} 이어서 시청하기`}
+          label={selection ? title : [`${title} 이어서 시청하기`, ...channelBadges].join(', ')}
         >
           {(item.backdrop_path || item.poster_path) && (
             <img
@@ -137,6 +182,8 @@ const ResumeContentCard = ({ item, selection }) => {
               loading="lazy"
             />
           )}
+
+          <CardChannelBadges badges={channelBadges} />
 
           <progress
             max="100"
@@ -172,6 +219,7 @@ const ResumeContentCard = ({ item, selection }) => {
           type={media_type}
           isHover={isHover}
           deleteButton={deleteButton}
+          channelBadges={channelBadges}
         />
       )}
       {deleteOpen && (
@@ -193,6 +241,7 @@ const TmdbContentCard = ({ item, type, imageType, variant, index, fromStore, sel
 
   const mediaType = item?.media_type || (type === 'all' ? 'tv' : type);
   const id = item?.id;
+  const channelBadges = useCardChannelBadges(mediaType, id, item);
   const uid = useAuthStore((state) => state.user?.uid);
 
 const [purchaseState, setPurchaseState] = useState({
@@ -280,7 +329,7 @@ const isPurchased =
           selection={selection}
           to={isTmdb ? `/detail/${mediaType}/${id}${fromStore ? '?from=store' : ''}` : undefined}
           state={fromStore ? { fromStore: true } : undefined}
-          label={selection ? name : `${name} 상세보기${item.isCoupangSeries ? ', 쿠팡플레이' : ''}${isPurchased ? ', 구매완료' : isPurchase ? ', 개별구매' : ''}`}
+          label={selection ? name : `${name} 상세보기${item.isCoupangSeries ? ', 쿠팡플레이' : ''}${isPurchased ? ', 구매완료' : isPurchase ? ', 개별구매' : ''}${channelBadges.length ? `, ${channelBadges.join(', ')}` : ''}`}
         >
           {imageUrl && (
             <img src={imageUrl} alt={imageType === '가로' ? '' : name} loading="lazy" />
@@ -292,6 +341,7 @@ const isPurchased =
               ) : <h4 className="contentRail-tit">{name}</h4>}
             </div>
           )}
+          <CardChannelBadges badges={channelBadges} hasSeries={item.isCoupangSeries} />
           {(item.isCoupangSeries || isPurchase || isPurchased) && (
             <div className="contentRail-badges" aria-hidden="true">
               {item.isCoupangSeries && (
@@ -320,7 +370,7 @@ const isPurchased =
         )}
       </div>
       {!selection && isTmdb && imageUrl && (
-        <CardHover item={item} type={mediaType} isHover={isHover} fromStore={fromStore} />
+        <CardHover item={item} type={mediaType} isHover={isHover} fromStore={fromStore} channelBadges={channelBadges} />
       )}
     </article>
   );

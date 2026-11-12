@@ -24,6 +24,7 @@ const EMPTY_FIXTURES = [];
 const SEASON_FIXTURE_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC"]);
 
 export function LeagueVideoFeed({ league, scoresOn, subscribedTeamIds = [] }) {
+  const unitName = ["nfl", "nba"].includes(league.id) ? "주차" : "라운드";
   const [mode, setMode] = useState("date");
   const [month, setMonth] = useState(getCurrentVideoMonth);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -127,9 +128,9 @@ export function LeagueVideoFeed({ league, scoresOn, subscribedTeamIds = [] }) {
             <button type="button" aria-pressed={mode === "team"} onClick={() => setMode("team")}>팀별</button>
           </div>
           <label className="league-video-feed__select league-video-feed__round">
-            <span className="league-video-feed__sr-only">라운드 선택</span>
-            <select value={selectedRound} onChange={event => setRound(event.target.value)} aria-label="라운드 선택" disabled={!roundState} aria-busy={!roundState} title={!roundState ? "경기 구분을 조회하는 중입니다." : roundState.error || (roundState.currentLabel ? `현재 ${roundState.currentLabel}까지 진행됐습니다.` : "API에서 확인된 경기 구분이 없습니다.")}>
-              <option value="">전체라운드</option>
+            <span className="league-video-feed__sr-only">{unitName} 선택</span>
+            <select value={selectedRound} onChange={event => setRound(event.target.value)} aria-label={`${unitName} 선택`} disabled={!roundState} aria-busy={!roundState} title={!roundState ? "경기 구분을 조회하는 중입니다." : roundState.error || (roundState.currentLabel ? `현재 ${roundState.currentLabel}까지 진행됐습니다.` : "API에서 확인된 경기 구분이 없습니다.")}>
+              <option value="">전체{unitName}</option>
               {roundOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
             <img src={ASSETS + "select-down.svg"} alt="" />
@@ -180,7 +181,7 @@ export function LeagueVideoFeed({ league, scoresOn, subscribedTeamIds = [] }) {
               </Swiper>
             </article>
           ))}
-          {!groups.length && !state.error && !state.notice && <EmptyMessage>선택한 날짜·팀·라운드에 해당하는 쿠팡플레이 스포츠 영상이 없습니다.</EmptyMessage>}
+          {!groups.length && !state.error && !state.notice && <EmptyMessage>선택한 날짜·팀·{unitName}에 해당하는 쿠팡플레이 스포츠 영상이 없습니다.</EmptyMessage>}
           {state.notice && <p className="league-video-feed__round-error" role="status">{state.notice} <button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button></p>}
           {state.error && <div className="league-video-feed__error" role="alert"><p>{state.error}</p><button type="button" onClick={() => state.videos.length ? loadMore() : setAttempt(value => value + 1)}>다시 시도</button></div>}
           {state.nextPageToken && <button className="league-video-feed__more" type="button" onClick={loadMore} disabled={state.loadingMore}>{state.loadingMore ? "불러오는 중…" : "영상 더 보기"}</button>}
