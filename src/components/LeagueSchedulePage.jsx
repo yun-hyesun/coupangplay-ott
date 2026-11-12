@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { findLeagueTeam, formatGameDate, formatGameTime, getGameStatus, TeamImage } from "./LeagueDetailShared";
 import { MatchRelatedVideos } from "./MatchRelatedVideos";
 import { SportsCalendarDialog, SportsCalendarNavButton } from "./SportsCalendarDialog";
+import { SportsCalendarYearMonthPicker } from "./SportsCalendarYearMonthPicker";
 import { findScheduleMatch, getCalendarDays, getRecentScheduleGame, getRoundWindow, getScheduleBrowseRange, getScheduleDateWindow, getScheduleRounds, getScheduleSeason, getSeasonRange, groupScheduleGames, isScheduleDateInRange } from "../data/leagueScheduleView";
 import { getScheduleGameDate } from "../data/leagueScheduleRange";
 import { getScheduleUnit } from "../data/leagueScheduleUnits";
@@ -28,12 +29,12 @@ function ScheduleArrow({ direction = "next" }) {
 }
 
 function getScheduleWatchlistContent(game, league) {
-  const homeName = game.raceName || game.home?.name || "홈 팀";
-  const awayName = game.raceName ? "그랑프리" : game.away?.name || "원정 팀";
+  const homeName = game.home?.name || "홈 팀";
+  const awayName = game.away?.name || "원정 팀";
   return {
     id: `${league.id}_${game.gameId ?? game.id}`,
     media_type: "sports",
-    title: game.raceName || `${homeName} vs ${awayName}`,
+    title: `${homeName} vs ${awayName}`,
     leagueId: league.id,
     sport: league.sport,
     startTime: game.utcDate || game.startTime || null,
@@ -44,7 +45,6 @@ function getScheduleWatchlistContent(game, league) {
     homeLogo: game.home?.crest || game.home?.logoPath || null,
     awayLogo: game.away?.crest || game.away?.logoPath || null,
     thumbnail: game.broadcastThumbnail || game.thumbnail || null,
-    raceName: game.raceName || null,
   };
 }
 
@@ -55,7 +55,6 @@ function findWatchlistedMatch(watchlist, game, leagueId) {
       utcDate: item.startTime,
       home: { id: item.homeTeamId, name: item.homeName },
       away: { id: item.awayTeamId, name: item.awayName },
-      raceName: item.raceName || (leagueId === "f1" ? item.homeName || item.title : undefined),
     }, leagueId)) || null;
 }
 
@@ -68,8 +67,6 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [draftMonth, setDraftMonth] = useState(month);
   const monthPickerId = useId();
-  const yearListRef = useRef(null);
-  const monthListRef = useRef(null);
   const [seasonResults, setSeasonResults] = useState({});
   const [attempt, setAttempt] = useState(0);
   const [year, number] = month.split("-").map(Number);
@@ -95,15 +92,6 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
     selectMonth(`${draftYear}-${String(value).padStart(2, "0")}`);
     setMonthPickerOpen(false);
   };
-
-  useEffect(() => {
-    if (!monthPickerOpen) return;
-    for (const list of [yearListRef.current, monthListRef.current]) {
-      const selected = list?.querySelector('[aria-pressed="true"]');
-      if (selected) list.scrollTop += selected.getBoundingClientRect().top - list.getBoundingClientRect().top
-        - (list.clientHeight - selected.clientHeight) / 2;
-    }
-  }, [monthPickerOpen]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -134,20 +122,15 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
           {monthPickerOpen ? <span className="sports-calendar__nav" aria-hidden="true" /> : <SportsCalendarNavButton label="달력 다음 달" disabled={month >= maxMonth} onClick={() => shiftMonth(1)} />}
         </div>
         {monthPickerOpen ? (
-          <div className="sports-calendar__year-month-picker" id={monthPickerId} role="group" aria-label="연도와 월 목록">
-            <div className="sports-calendar__year-month-column" role="group" aria-label="연도 선택" ref={yearListRef}>
-              {Array.from({ length: currentYear - minYear + 1 }, (_, index) => currentYear - index).map(value => <button type="button" key={value} aria-pressed={draftYear === value}
-                onClick={() => setDraftMonth(`${value}-${String(draftNumber).padStart(2, "0")}`)}>
-                <span>{value}년</span>{draftYear === value && <span className="sports-calendar__selection-check" aria-hidden="true" />}
-              </button>)}
-            </div>
-            <div className="sports-calendar__year-month-column" role="group" aria-label="월 선택" ref={monthListRef}>
-              {Array.from({ length: 12 }, (_, index) => 12 - index).map(value => <button type="button" key={value} aria-pressed={draftNumber === value}
-                onClick={() => chooseMonth(value)}>
-                <span>{value}월</span>{draftNumber === value && <span className="sports-calendar__selection-check" aria-hidden="true" />}
-              </button>)}
-            </div>
-          </div>
+          <SportsCalendarYearMonthPicker
+            id={monthPickerId}
+            year={draftYear}
+            month={draftNumber}
+            minYear={minYear}
+            maxYear={currentYear}
+            onYearChange={value => setDraftMonth(`${value}-${String(draftNumber).padStart(2, "0")}`)}
+            onMonthChange={chooseMonth}
+          />
         ) : <>
         <p className="sports-calendar__notice" role="status">
           {calendarLoading ? "경기 일정이 있는 날짜를 확인하고 있습니다." : calendarError ? "일부 일정을 확인하지 못했습니다. 확인된 경기 날짜만 선택할 수 있습니다." : "경기가 있는 날짜만 선택할 수 있습니다."}
@@ -242,8 +225,8 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, savi
   const homeScore = game.home?.score ?? null;
   const awayScore = game.away?.score ?? null;
   const quality = ["4K", "HDR"].includes(game.broadcastQuality) ? game.broadcastQuality : "";
-  const homeName = game.raceName || game.home?.name || "홈 팀";
-  const awayName = game.raceName ? (game.venue || "그랑프리") : game.away?.name || "원정 팀";
+  const homeName = game.home?.name || "홈 팀";
+  const awayName = game.away?.name || "원정 팀";
   const title = `${homeName} vs ${awayName}`;
   const liveDestination = getSportsLiveWatchDestination(game, { leagueId: league.id, returnTo: `/sports/league/${league.id}`, returnTab: "schedule" });
   useEffect(() => {
@@ -279,7 +262,7 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, savi
           <div className="league-schedule__time"><time dateTime={game.utcDate || game.startTime}>{formatGameTime(game.utcDate || game.startTime)}</time><span>{unit?.label || game.stage || league.name}</span></div>
           <strong className="league-schedule__score league-schedule__score--away" aria-label={scoresOn && awayScore != null ? `원정 ${awayScore}점` : undefined}>{scoresOn ? awayScore ?? "" : ""}</strong>
         </div>
-        <div className="league-schedule__team league-schedule__team--away">{!game.raceName && <TeamImage team={game.away} leagueId={league.id} />}<span title={awayName}>{awayName}</span></div>
+        <div className="league-schedule__team league-schedule__team--away"><TeamImage team={game.away} leagueId={league.id} /><span title={awayName}>{awayName}</span></div>
       </div>
       <div className="league-schedule__actions">
         {status.type === "scheduled" ? <button type="button" className="league-schedule__action" aria-label={`${title} 경기 ${saved ? "찜 해제" : "찜하기"}`} aria-pressed={saved} disabled={saving || (game.gameId ?? game.id) == null} onClick={() => onToggleSaved(game)}>

@@ -4,7 +4,7 @@ import { useAuthStore } from '../../../store/useAuthStore'
 import { useProfileStore } from '../../../store/useProfileStore'
 import { getLiveReminderItems, useWatchlistStore } from '../../../store/useWatchlistStore'
 import { SPORTS_LEAGUE_BY_ID } from '../../../data/sportsLeagues'
-import { findSportsTeam } from '../../../data/sportsTeams'
+import { findSportsTeam, SPORTS_TEAM_PLACEHOLDER } from '../../../data/sportsTeams'
 import { formatBroadcastDate } from '../../../data/leagueBroadcasts'
 import '../scss/LiveReminder.scss'
 
@@ -26,19 +26,15 @@ function getSportsWatchlistArtwork(item) {
         thumbnail: item.thumbnail || '',
         homeLogo: homeTeam?.logoPath || item.homeLogo || '',
         awayLogo: awayTeam?.logoPath || item.awayLogo || '',
-        leagueLogo: league?.logoPath || '',
-        isRace: sport === '레이싱' || Boolean(item.raceName),
     };
 }
 
-function TeamLogo({ src, name }) {
+function TeamLogo({ src }) {
     const [failed, setFailed] = useState(false);
+    const hasImage = Boolean(src && !failed);
 
-    return src && !failed ? (
-        <img className="sports-watchlist-thumbnail__team-logo" src={src} alt="" loading="lazy" onError={() => setFailed(true)} />
-    ) : (
-        <strong className="sports-watchlist-thumbnail__team-name">{name}</strong>
-    );
+    return <img className="sports-watchlist-thumbnail__team-logo" src={hasImage ? src : SPORTS_TEAM_PLACEHOLDER}
+        alt="" loading="lazy" onError={hasImage ? () => setFailed(true) : undefined} />;
 }
 
 // 이전 경기 찜 목록의 썸네일을 요약·전체 예약 목록에서 함께 사용합니다.
@@ -47,7 +43,7 @@ export const SportsWatchlistThumbnail = ({ item }) => {
     const [failedThumbnail, setFailedThumbnail] = useState(null);
     const showThumbnail = artwork.thumbnail && artwork.thumbnail !== failedThumbnail;
     const date = formatBroadcastDate(item.startTime);
-    const homeLogo = artwork.isRace ? artwork.leagueLogo : artwork.homeLogo;
+    const homeLogo = artwork.homeLogo;
 
     return (
         <div className="sports-watchlist-thumbnail" style={{ backgroundImage: `url("${artwork.background}")` }} role="img" aria-label={`${item.title} · ${date}`}>
@@ -55,11 +51,9 @@ export const SportsWatchlistThumbnail = ({ item }) => {
                 <img className="sports-watchlist-thumbnail__image" src={artwork.thumbnail} alt="" loading="lazy" onError={() => setFailedThumbnail(artwork.thumbnail)} />
             ) : (
                 <div className="sports-watchlist-thumbnail__teams" aria-hidden="true">
-                    <TeamLogo key={homeLogo || item.homeName} src={homeLogo} name={artwork.isRace ? item.title : item.homeName} />
-                    {!artwork.isRace && <>
-                        <span className="sports-watchlist-thumbnail__versus">VS</span>
-                        <TeamLogo key={artwork.awayLogo || item.awayName} src={artwork.awayLogo} name={item.awayName} />
-                    </>}
+                    <TeamLogo key={homeLogo || item.homeName} src={homeLogo} />
+                    <span className="sports-watchlist-thumbnail__versus">VS</span>
+                    <TeamLogo key={artwork.awayLogo || item.awayName} src={artwork.awayLogo} />
                 </div>
             )}
             <span className="sports-watchlist-thumbnail__shade" aria-hidden="true" />

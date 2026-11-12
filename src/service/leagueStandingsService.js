@@ -2,7 +2,7 @@ import { findSportsTeam } from "../data/sportsTeams";
 import { ESPN_LEAGUE_PATHS } from "../data/espnLeagues";
 import espnTeamNames from "../data/espnTeamNames.json";
 
-const COMPETITIONS = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC"]);
+const COMPETITIONS = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC", "mls"]);
 const CACHE_MS = 5 * 60 * 1000;
 const cache = new Map();
 const pending = new Map();
@@ -57,29 +57,38 @@ async function requestJson(url) {
 }
 
 async function loadEspnStandings(leagueId) {
-  const data = await requestJson(`/espn-standings/${ESPN_LEAGUE_PATHS[leagueId]}/standings`);
+  const isMls = leagueId === "mls";
+  const season = Number(new Intl.DateTimeFormat("en", { timeZone: "Asia/Seoul", year: "numeric" }).format(new Date()));
+  // MLS 기본 응답이 다음 시즌을 가리킬 수 있어 현재 연도를 지정합니다.
+  const data = await requestJson(`/espn-standings/${ESPN_LEAGUE_PATHS[leagueId]}/standings${isMls ? `?season=${season}` : ""}`);
+  if (isMls && Number(data.season?.year) !== season) throw new Error("요청한 MLS 시즌과 순위 데이터가 일치하지 않습니다.");
   const tables = [];
   const collect = (node) => {
-    if (Array.isArray(node.standings?.entries)) tables.push(node.standings.entries);
+    if (Array.isArray(node.standings?.entries)) tables.push({ entries: node.standings.entries, conference: node.abbreviation });
     for (const child of node.children || []) collect(child);
   };
   collect(data);
   if (!tables.length) throw new Error("ESPN 리그 순위 응답 형식이 올바르지 않습니다.");
-  return tables.flat().map((entry) => {
+  if (isMls && ["East", "West"].some(conference => !tables.some(table => table.conference === conference && table.entries.length))) {
+    throw new Error("MLS 컨퍼런스 순위 응답 형식이 올바르지 않습니다.");
+  }
+  return tables.flatMap(({ entries, conference }) => entries.map((entry) => {
     const stats = Object.fromEntries((entry.stats || []).map((stat) => [stat.name, stat.value]));
     const remote = entry.team || {};
     // ESPN ID를 Football-Data ID로 비교하지 않고 기존 팀명 번역을 재사용합니다.
     const team = findSportsTeam(leagueId, { name: espnTeamNames.soccer[String(remote.id)] || remote.displayName || remote.name });
-    return normalizeStanding(leagueId, {
+    const row = normalizeStanding(leagueId, {
       position: stats.rank ?? entry.note?.rank,
       team: { id: team?.teamId ?? (remote.id == null ? null : `espn:${remote.id}`), name: team?.name || remote.displayName || remote.name, shortName: team?.name || remote.shortDisplayName, crest: team?.logoPath || remote.logos?.[0]?.href },
       playedGames: stats.gamesPlayed, won: stats.wins, draw: stats.ties, lost: stats.losses,
       points: stats.points, goalsFor: stats.pointsFor, goalsAgainst: stats.pointsAgainst, goalDifference: stats.pointDifferential,
     }, "espn");
-  });
+    return isMls ? { ...row, conference, season } : row;
+  }));
 }
 
 async function loadStandings(leagueId) {
+  if (leagueId === "mls") return loadEspnStandings(leagueId);
   let data;
   try {
     data = await requestJson(`/football-data/competitions/${leagueId}/standings`);

@@ -3,7 +3,7 @@ import { sportsTeamAliases } from "./sportsTeamAliases.js";
 export const LEAGUE_VIDEO_QUERIES = {
   PL: "프리미어리그", PD: "라리가", PD2: "라리가2", BL1: "분데스리가", BL2: "분데스리가2",
   FL1: "리그1", DED: "에레디비시", ELC: "챔피언십", FAC: "FA컵", carabao: "카라바오컵",
-  "kleague-1": "K리그1", "kleague-2": "K리그2", nba: "NBA", nfl: "NFL", f1: "F1",
+  "kleague-1": "K리그1", "kleague-2": "K리그2", nba: "NBA", nfl: "NFL",
   mls: "MLS", dfb: "DFB 포칼", "copa-del-rey": "코파 델 레이", "coupe-de-france": "쿠프 드 프랑스",
   "concacaf-champions-cup": "CONCACAF", acle: "AFC 챔피언스리그", acl2: "AFC 챔피언스리그2", "super-lig": "쉬페르리그",
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { EmptyMessage, VideoCard } from "./LeagueDetailShared";
+import { EmptyMessage, TeamImage, VideoCard } from "./LeagueDetailShared";
 import { getMyTeamPopularVideos } from "../service/myTeamPopularVideosService";
 
 export function LeagueMyTeamVideos({ league, selectedTeams, onOpenTeamSettings }) {
@@ -28,7 +28,7 @@ export function LeagueMyTeamVideos({ league, selectedTeams, onOpenTeamSettings }
       </div> : <>
         <div className="league-detail__team-video-groups">
           {state.groups.map(({ team, videos, notice, error }) => <div className="league-detail__team-video-group" key={team.id} aria-label={`${team.name} 인기영상`}>
-            <div className="league-detail__team-heading">{team.logoPath && <img src={team.logoPath} alt="" />}<h3>{team.name}</h3></div>
+            <div className="league-detail__team-heading"><TeamImage team={team} leagueId={league.id} /><h3>{team.name}</h3></div>
             {videos.length ? <div className="league-detail__team-video-grid">
               {videos.map(video => <VideoCard key={video.id} video={video} badge={video.kind === "replay" ? "다시보기" : video.kind === "highlight" ? "하이라이트" : "주요장면"} />)}
             </div> : !error && <EmptyMessage>확인된 {team.name} 인기영상이 없습니다.</EmptyMessage>}
