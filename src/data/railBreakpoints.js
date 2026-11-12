@@ -23,7 +23,7 @@ export const railBreakpoints = {
     600: { slidesPerView: 3.2, spaceBetween: 8 },
     767: { slidesPerView: 4.1, spaceBetween: 8 },
     1800: { slidesPerView: 5.1, spaceBetween: 10 },
-    1920: { slidesPerView: 6.1, spaceBetween: 10 },
+    1920: { slidesPerView: 6.1, spaceBetween: 70 },
   },
 
   // 채널 로고형
