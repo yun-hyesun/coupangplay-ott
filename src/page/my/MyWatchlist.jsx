@@ -8,97 +8,8 @@ import { auth } from '../../firebase/firebase'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
 import { useWatchlistStore } from '../../store/useWatchlistStore'
-import { SPORTS_LEAGUE_BY_ID } from '../../data/sportsLeagues'
-import { findSportsTeam } from '../../data/sportsTeams'
-import { formatBroadcastDate } from '../../data/leagueBroadcasts'
 import './scss/MyPageHeader.scss'
 import './scss/MyWatchlist.scss'
-
-const MATCH_BACKGROUNDS = {
-  축구: "/images/sports/league-detail/detail-matchup-bg.png",
-  농구: "/images/sports/league-detail/broadcast-basketball-bg.png",
-  레이싱: "/images/sports/league-detail/broadcast-racing-flag-bg.png",
-  일반: "/images/sports/league-detail/broadcast-rugby-bg.png",
-};
-
-function getSportsWatchlistArtwork(item) {
-  const league = SPORTS_LEAGUE_BY_ID[item.leagueId];
-  const sport = league?.sport || item.sport || "축구";
-  const homeTeam = findSportsTeam(item.leagueId, { id: item.homeTeamId, name: item.homeName });
-  const awayTeam = findSportsTeam(item.leagueId, { id: item.awayTeamId, name: item.awayName });
-  return {
-    background: MATCH_BACKGROUNDS[sport] || MATCH_BACKGROUNDS.축구,
-    thumbnail: item.thumbnail || "",
-    homeLogo: homeTeam?.logoPath || item.homeLogo || "",
-    awayLogo: awayTeam?.logoPath || item.awayLogo || "",
-    leagueLogo: league?.logoPath || "",
-    isRace: sport === "레이싱" || Boolean(item.raceName),
-  };
-}
-
-function formatSportsWatchlistDate(value) {
-  return value && Number.isFinite(Date.parse(value)) ? formatBroadcastDate(value) : "일정 미정";
-}
-
-function getWatchlistNavigation(item) {
-  if (item.media_type !== "sports") {
-    return { to: `/detail/${item.media_type === "movie" ? "movie" : "tv"}/${item.id}` };
-  }
-  if (!SPORTS_LEAGUE_BY_ID[item.leagueId]) return { to: "/sports" };
-  const prefix = `${item.leagueId}_`;
-  const savedId = String(item.id);
-  return {
-    to: `/sports/league/${encodeURIComponent(item.leagueId)}`,
-    state: {
-      leagueTab: "schedule",
-      expandScheduleMatch: false,
-      scheduleMatch: {
-        gameId: savedId.startsWith(prefix) ? savedId.slice(prefix.length) : savedId,
-        competitionCode: item.leagueId,
-        utcDate: item.startTime || null,
-        home: { id: item.homeTeamId, name: item.homeName, crest: item.homeLogo },
-        away: { id: item.awayTeamId, name: item.awayName, crest: item.awayLogo },
-        raceName: item.raceName || (SPORTS_LEAGUE_BY_ID[item.leagueId].sport === "레이싱" ? item.homeName || item.title : undefined),
-      },
-    },
-  };
-}
-
-function TeamLogo({ src, name }) {
-  const [failed, setFailed] = useState(false);
-  return src && !failed ? (
-    <img className="sports-watchlist-thumbnail__team-logo" src={src} alt="" loading="lazy" onError={() => setFailed(true)} />
-  ) : (
-    <strong className="sports-watchlist-thumbnail__team-name">{name}</strong>
-  );
-}
-
-function SportsWatchlistThumbnail({ item }) {
-  const artwork = getSportsWatchlistArtwork(item);
-  const [failedThumbnail, setFailedThumbnail] = useState(null);
-  const showThumbnail = artwork.thumbnail && artwork.thumbnail !== failedThumbnail;
-  const date = formatSportsWatchlistDate(item.startTime);
-  const homeLogo = artwork.isRace ? artwork.leagueLogo : artwork.homeLogo;
-
-  return (
-    <div className="sports-watchlist-thumbnail" style={{ backgroundImage: `url("${artwork.background}")` }} role="img" aria-label={`${item.title} · ${date}`}>
-      {showThumbnail ? (
-        <img className="sports-watchlist-thumbnail__image" src={artwork.thumbnail} alt="" loading="lazy" onError={() => setFailedThumbnail(artwork.thumbnail)} />
-      ) : (
-        <div className="sports-watchlist-thumbnail__teams" aria-hidden="true">
-          <TeamLogo key={homeLogo || item.homeName} src={homeLogo} name={artwork.isRace ? item.title : item.homeName} />
-          {!artwork.isRace && <>
-            <span className="sports-watchlist-thumbnail__versus">VS</span>
-            <TeamLogo key={artwork.awayLogo || item.awayName} src={artwork.awayLogo} name={item.awayName} />
-          </>}
-        </div>
-      )}
-      <span className="sports-watchlist-thumbnail__shade" aria-hidden="true" />
-      <time className="sports-watchlist-thumbnail__date" dateTime={item.startTime || undefined}>{date}</time>
-    </div>
-  );
-}
-
 
 // 상단 콘텐츠 탭
 const contentTabs = [
@@ -111,7 +22,7 @@ const contentTabs = [
 
 // 장르 필터
 const genres = [
-    '전체', '시리즈', '스포츠', '드라마', '예능',
+    '전체', '시리즈', '드라마', '예능',
     '영화', '스토어', '키즈'
 ];
 const mobileGenres = ['전체', '시리즈', '영화'];
@@ -153,9 +64,11 @@ export const MyWatchlist = () => {
         onLoadWatchlist();
     }, [authLoading, currentOwnerKey, onLoadWatchlist]);
 
-    // 다른 프로필의 찜 목록이 잠시 보이지 않도록 확인
+    // 현재 프로필의 영화·시리즈만 마이페이지에 표시
     const currentWatchlist =
-        ownerKey === currentOwnerKey ? watchlist : [];
+        ownerKey === currentOwnerKey
+            ? watchlist.filter((item) => item.media_type === 'movie' || item.media_type === 'tv')
+            : [];
 
     // 현재 저장된 데이터의 media_type으로 영화 분류
     // 다른 장르 필터는 추후 장르 데이터 연동 시 확장
@@ -171,18 +84,13 @@ export const MyWatchlist = () => {
             return item.media_type === "tv";
         }
 
-        if (activeGenre === "스포츠") {
-            return item.media_type === "sports";
-        }
-
         return false;
     });
 
     const artworkItems = useMyListArtwork(
-        filteredWatchlist.filter((item) => item.media_type !== 'sports'),
+        filteredWatchlist,
         { keepMissing: true }
     );
-    const sportsItems = filteredWatchlist.filter((item) => item.media_type === 'sports');
 
     // 콘텐츠 고유 ID
     const getItemKey = (item) =>
@@ -411,54 +319,15 @@ export const MyWatchlist = () => {
                         찜한 콘텐츠가 없습니다.
                     </p>
                 ) : (
-                    <>
-                        {artworkItems.length > 0 && (
-                            <ContentRail
-                              asGrid
-                              items={artworkItems}
-                              getSelection={isEditing ? (item) => ({
-                                selected: selectedIds.includes(getItemKey(item)),
-                                onToggle: () => handleSelect(getItemKey(item)),
-                                disabled: isDeleting,
-                              }) : undefined}
-                            />
-                        )}
-                        {sportsItems.length > 0 && (
-                            <div className="my-watchlist-grid">
-                                {sportsItems.map((item) => {
-                                    const itemKey = getItemKey(item);
-                                    const isSelected = selectedIds.includes(itemKey);
-                                    const navigation = getWatchlistNavigation(item);
-                                    const Thumbnail = isEditing ? 'button' : Link;
-
-                                    return (
-                                        <div className="my-watchlist-item" key={itemKey}>
-                                            <Thumbnail
-                                                className="my-watchlist-thumbnail"
-                                                {...(isEditing ? {
-                                                    type: 'button',
-                                                    onClick: () => handleSelect(itemKey),
-                                                    disabled: isDeleting,
-                                                    'aria-pressed': isSelected,
-                                                    style: isSelected ? {
-                                                        outline: '2px solid #0084ff',
-                                                        outlineOffset: '-2px',
-                                                    } : undefined,
-                                                } : navigation)}
-                                                aria-label={isEditing ? item.title : `${item.title} 경기 일정 보기`}
-                                            >
-                                                <SportsWatchlistThumbnail item={item} />
-                                            </Thumbnail>
-                                            <div className="my-watchlist-info">
-                                                <h3>{isEditing ? item.title : <Link {...navigation}>{item.title}</Link>}</h3>
-                                                <p>{formatSportsWatchlistDate(item.startTime)}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </>
+                    <ContentRail
+                        asGrid
+                        items={artworkItems}
+                        getSelection={isEditing ? (item) => ({
+                            selected: selectedIds.includes(getItemKey(item)),
+                            onToggle: () => handleSelect(getItemKey(item)),
+                            disabled: isDeleting,
+                        }) : undefined}
+                    />
                 )}
             </div>
             {deleteOpen && <Popup title="찜한 콘텐츠를 삭제하시겠습니까?"

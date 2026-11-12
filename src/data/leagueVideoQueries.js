@@ -26,11 +26,22 @@ export function matchesVideoLeague(leagueId, title = "") {
   return !explicit || explicit === leagueId;
 }
 
-export const getVideoTeamQuery = team => team === "라싱 산탄데르" ? "산탄데르" : team;
+export const getVideoTeamQuery = team => team === "라싱 산탄데르" ? "산탄데르"
+  : team === "시애틀 사운더스" ? "시애틀" : team;
+
+export function getVideoTeamAliases(team) {
+  return [team,
+    // 영상 제목의 축약명은 MLS의 정식 팀명에만 연결합니다.
+    ...(team === "시애틀 사운더스" ? ["시애틀"] : []),
+    ...Object.entries(sportsTeamAliases)
+      .filter(([, name]) => normalizeLeague(name) === normalizeLeague(team))
+      .map(([alias]) => alias),
+  ];
+}
 
 export function matchesVideoTeam(team, title = "") {
   if (!team) return true;
-  const names = [team, ...Object.entries(sportsTeamAliases).filter(([, name]) => normalizeLeague(name) === normalizeLeague(team)).map(([alias]) => alias)];
+  const names = getVideoTeamAliases(team);
   const text = normalizeLeague(title);
   return names.some(name => text.includes(normalizeLeague(name)));
 }

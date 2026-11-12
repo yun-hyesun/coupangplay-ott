@@ -1,6 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useProfileStore } from '../../store/useProfileStore';
 import { ProfileForm } from './components/ProfileForm';
@@ -9,6 +9,7 @@ import './scss/ProfilePinModal.scss';
 
 export const ProfileEdit = () => {
     const navigate = useNavigate();
+    const { state } = useLocation();
     const { profileId } = useParams();
 
     const { user, loading: authLoading } = useAuthStore();
@@ -38,12 +39,12 @@ export const ProfileEdit = () => {
         if (authLoading) return;
 
         if (!user) {
-            navigate('/login', { replace: true });
+            navigate('/login', { replace: true, state });
             return;
         }
 
         onLoadProfiles();
-    }, [authLoading, user, navigate, onLoadProfiles]);
+    }, [authLoading, user, navigate, onLoadProfiles, state]);
 
     // URL에 있는 프로필 ID로 수정할 프로필 찾기
     const profile = profiles.find(
@@ -79,7 +80,7 @@ export const ProfileEdit = () => {
                 }
             }
 
-            navigate('/profiles');
+            navigate('/profiles', { state });
         } catch (error) {
             console.error('프로필 수정 오류:', error);
             setMessage('프로필 수정 중 오류가 발생했습니다.');
@@ -107,7 +108,7 @@ export const ProfileEdit = () => {
             if (result) {
                 setDeleteModal(false);
                 setDeletePinModal(false);
-                navigate('/profiles');
+                navigate('/profiles', { state });
             } else {
                 setDeleteError('프로필 삭제에 실패했습니다.');
             }
@@ -182,7 +183,7 @@ export const ProfileEdit = () => {
         return (
             <main className="profile-page">
                 <p>{error || '프로필을 찾을 수 없습니다.'}</p>
-                <button onClick={() => navigate('/profiles')}>
+                <button onClick={() => navigate('/profiles', { state })}>
                     프로필 선택으로 돌아가기
                 </button>
             </main>
@@ -204,7 +205,7 @@ export const ProfileEdit = () => {
                     initialRating={profile.rating || 'ALL'}
                     initialAdultVerified={profile.isAdultVerified || false}
                     onSubmit={handleUpdate}
-                    onCancel={() => navigate('/profiles')}
+                    onCancel={() => navigate('/profiles', { state })}
                     submitText="완료"
                     loading={loading || isDeleting}
                 />

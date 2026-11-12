@@ -1,11 +1,13 @@
+import { useCardChannelSubscription } from '../../hooks/useCardChannelSubscription';
 import { toFivePointRating } from '../../utils/rating';
 import React, { useEffect, useLayoutEffect, useState, useContext, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import { useMovieStore } from '../../store/useMovieStore';
-import { subscribeMyPurchases } from '../../service/purchaseService';
+import { useContentPurchase } from '../../hooks/useContentPurchase';
 import { ChannelSubscriptionContext } from '../../page/channel/components/ChannelSubscriptionGate';
 import './scss/CordHover.scss';
 
@@ -15,6 +17,7 @@ export const CardHover = ({
   isHover,
   fromStore = false,
   deleteButton,
+  channelBadges = [],
 }) => {
   const [videoKey, setVideoKey] = useState(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
@@ -179,15 +182,42 @@ export const CardHover = ({
     }
   };
 
-  const [purchaseState, setPurchaseState] = useState({
-    uid: null,
-    items: [],
-  });
-
   const name = item.title || item.name;
   const date = item.release_date || item.first_air_date;
   const year = date?.slice(0, 4);
   const contentId = item.id;
+  const savedProgress = useWatchHistoryStore((state) => {
+    if (!currentOwnerKey || state.ownerKey !== currentOwnerKey) return null;
+
+    return state.history.find((entry) =>
+      entry.media_type === mediaType &&
+      String(entry.id) === String(contentId) &&
+      entry.completed !== true &&
+      Number(entry.position) > 0
+    ) ?? null;
+  });
+
+  useEffect(() => {
+    if (!isHover || !currentOwnerKey || item.resume) return;
+
+    const history = useWatchHistoryStore.getState();
+    if (history.ownerKey !== currentOwnerKey && !history.loading) {
+      void history.onLoadHistory();
+    }
+  }, [isHover, currentOwnerKey, item.resume]);
+
+  const resumeEntry = item.resume ? item : savedProgress;
+  const playbackState = resumeEntry ? {
+    content: item,
+    ownerKey: resumeEntry.ownerKey ?? currentOwnerKey,
+    resumeAt: resumeEntry.position ?? 0,
+    seasonNumber: resumeEntry.seasonNumber ?? 1,
+    episodeNumber: resumeEntry.episodeNumber ?? 1,
+    videoSrc: resumeEntry.videoSrc || '',
+    youtubeKey: resumeEntry.youtubeKey || '',
+    autoPlayNext: true,
+  } : { content: item };
+
   const detailKey = `${mediaType}-${contentId}`;
   const detail = useMovieStore((state) => state.contentDetails[detailKey]);
   const onFetchContentDetail = useMovieStore((state) => state.onFetchContentDetail);
@@ -201,63 +231,24 @@ export const CardHover = ({
     void onFetchContentDetail(mediaType, contentId);
   }, [isHover, detail, savedRating, mediaType, contentId, onFetchContentDetail]);
 
-  // 로그인한 계정의 구매내역 실시간 확인
-  useEffect(() => {
-    if (!uid || !fromStore) return;
+  const channelSubscription = useContext(ChannelSubscriptionContext);
+  const { isPurchase, needsPurchase: requiresPurchase, purchasePending, purchaseError, purchasePath } =
+    useContentPurchase(mediaType, item.id, {
+      knownPurchase: fromStore || item.isPurchase === true,
+      enabled: isHover && !channelSubscription,
+    });
 
-    let active = true;
-
-    const unsubscribe = subscribeMyPurchases(
-      uid,
-      (items) => {
-        if (active) {
-          setPurchaseState({ uid, items });
-        }
-      },
-      (error) => {
-        if (active) {
-          console.error('구매 여부 확인 실패:', error);
-          setPurchaseState({ uid, items: [] });
-        }
-      }
-    );
-
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, [uid, fromStore]);
-
-  // 작품 ID와 콘텐츠 종류가 일치하는 구매내역 확인
-  const isPurchased =
-    Boolean(uid) &&
-    purchaseState.uid === uid &&
-    purchaseState.items.some(
-      (purchase) =>
-        purchase.mediaType === type &&
-        String(purchase.contentId) === String(item.id) &&
-        purchase.status === 'mock_paid'
-    );
-
-  const needsPurchase = fromStore && !isPurchased;
-
-  const channelSubscription = useContext(
-    ChannelSubscriptionContext
+  const needsPurchase = !channelSubscription && requiresPurchase;
+  const cardSubscription = useCardChannelSubscription(
+    channelBadges,
+    isHover && !channelSubscription && !isPurchase && !purchasePending && !purchaseError
   );
-
-  const subscriptionPending =
-    Boolean(channelSubscription) &&
-    channelSubscription.loading;
-
-  const subscriptionError =
-    channelSubscription?.error || '';
-
-  const needsSubscription =
-    Boolean(channelSubscription) &&
-    !channelSubscription.isSubscribed;
-
-  const buttonBlocked =
-    subscriptionPending || Boolean(subscriptionError);
+  const subscription = channelSubscription ?? (isPurchase ? null : cardSubscription);
+  const subscriptionPending = Boolean(subscription?.loading);
+  const subscriptionError = Boolean(subscription?.error);
+  const needsSubscription = Boolean(subscription) && !subscription.isSubscribed;
+  const buttonBlocked = subscriptionPending || subscriptionError ||
+    (!channelSubscription && (purchasePending || purchaseError));
 
   // TMDB 예고편 가져오기
   useEffect(() => {
@@ -334,7 +325,11 @@ export const CardHover = ({
   }, [isHover, item.id, type]);
 
   return (
-    <div ref={hoverCardRef} className="card-hover-content">
+    <div
+      ref={hoverCardRef}
+      className="card-hover-content"
+      onFocus={(event) => event.stopPropagation()}
+    >
       <div className="preview-video-cover">
         {/* 영상이 준비되기 전까지 포스터 표시 */}
         <img
@@ -385,9 +380,9 @@ export const CardHover = ({
           <Link
             to={
               needsSubscription
-                ? channelSubscription.checkoutPath
+                ? subscription.checkoutPath
                 : needsPurchase
-                  ? `/purchase/checkout/${type}/${item.id}`
+                  ? purchasePath
                   : `/watch/${type}/${item.id}`
             }
             className={`button main-btn ${
@@ -403,22 +398,7 @@ export const CardHover = ({
                 event.preventDefault();
               }
             }}
-            state={
-              needsSubscription || needsPurchase
-                ? undefined
-                : item.resume
-                  ? {
-                      content: item,
-                      ownerKey: item.ownerKey,
-                      resumeAt: item.position ?? 0,
-                      seasonNumber: item.seasonNumber ?? 1,
-                      episodeNumber: item.episodeNumber ?? 1,
-                      videoSrc: item.videoSrc || '',
-                      youtubeKey: item.youtubeKey || '',
-                      autoPlayNext: true,
-                    }
-                  : { content: item }
-            }
+            state={needsSubscription || needsPurchase ? undefined : playbackState}
           >
             {subscriptionPending
               ? '구독 확인 중'
@@ -426,11 +406,15 @@ export const CardHover = ({
                 ? '구독 확인 실패'
                 : needsSubscription
                   ? '구독하기'
-                  : needsPurchase
-                    ? '구매하기'
-                    : item.resume
-                      ? '이어보기'
-                      : '재생하기'}
+                  : !channelSubscription && purchasePending
+                    ? '구매 확인 중'
+                    : !channelSubscription && purchaseError
+                      ? '구매 확인 실패'
+                      : needsPurchase
+                        ? '구매하기'
+                        : resumeEntry
+                          ? '이어보기'
+                          : '재생하기'}
           </Link>
 
           {/* 상세페이지 이동 */}
