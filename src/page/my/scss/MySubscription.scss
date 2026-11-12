@@ -602,3 +602,61 @@
         }
     }
 }
+
+// Figma 2988:2345 · 로그인 후 구독내역이 없는 상태만 적용
+.my-subscription .subscription-empty--passes {
+    min-height: clamp(360px, calc(100svh - 180px), 930px);
+    padding: 48px 16px;
+    gap: 24px;
+    box-sizing: border-box;
+    font-family: $font-main;
+
+    h2 {
+        margin: 0;
+        color: $color-text-pri;
+        font-size: 28px;
+        font-weight: $font-w-B-700;
+        line-height: 36px;
+    }
+
+    p {
+        margin: 0;
+        color: $color-text-pri;
+        font-size: 16px;
+        font-weight: $font-w-R-400;
+        line-height: 24px;
+        overflow-wrap: anywhere;
+    }
+
+    .subscription-empty__browse {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        color: $color-text-blue;
+        font-size: 16px;
+        font-weight: $font-w-R-400;
+        line-height: 24px;
+        transition: color 0.2s ease;
+        border-radius: 4px;
+
+        &:hover {
+            color: $color-text-pri;
+            text-decoration: none;
+        }
+
+        &:focus-visible {
+            outline: 2px solid $color-pri;
+            outline-offset: 4px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        min-height: 400px;
+
+        h2 {
+            font-size: 24px;
+            line-height: 32px;
+        }
+    }
+}

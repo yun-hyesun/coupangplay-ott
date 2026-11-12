@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
+import { ChannelSubscriptionContext } from './ChannelSubscriptionGate';
 import { useMovieStore } from '../../../store/useMovieStore';
 import { railConfig } from '../../../data/railConfig';
 import {
@@ -18,6 +19,11 @@ export const ChannelBanner = ({
   onSubscribe,
   items: givenItems,
 }) => {
+  const subscription = useContext(ChannelSubscriptionContext);
+  const showSubscribeButton =
+    Boolean(subscription?.checkoutPath) &&
+    !subscription.loading &&
+    !subscription.isSubscribed;
   const config = railConfig[railKey];
   const railId = makeRailId(config ?? {});
   const detailKey = `tv-${contentId}`;
@@ -85,13 +91,16 @@ export const ChannelBanner = ({
   
           <p>{description}</p>
   
-          <button
-            type="button"
-            className="channel-sign button"
-            onClick={onSubscribe}
-          >
-            <img src={buttonImg} alt={name} /> 구독하기
-          </button>
+          {showSubscribeButton && (
+            <button
+              type="button"
+              className="channel-sign button"
+              onClick={onSubscribe}
+              disabled={Boolean(subscription?.error)}
+            >
+              <img src={buttonImg} alt="" /> 구독하기
+            </button>
+          )}
         </div>
 
       </div>

@@ -1,3 +1,4 @@
+import { SeasonSelect } from '../../components/common/SeasonSelect';
 import { toFivePointRating } from '../../utils/rating';
 import { LoginNoticePopup } from '../../components/common/LoginNoticePopup';
 import { SharePopup } from '../../components/common/SharePopup';
@@ -488,36 +489,11 @@ export const Detail = () => {
             <div className="detail-section-heading">
               <h2 id="episodes-title">회차</h2>
 
-              <label className="detail-season-select">
-                <span className="sr-only">
-                  시즌 선택
-                </span>
-
-                <select
-                  value={season}
-                  onChange={event => {
-                    setSeason(event.target.value);
-                    setOpenedEpisode(null);
-                    setPopupEpisode(null);
-                  }}
-                >
-                  {seasons
-                    .filter(s => s.season_number >= 0)
-                    .map(s => (
-                      <option
-                        key={s.id}
-                        value={s.season_number}
-                      >
-                        {s.name ||
-                          `시즌 ${s.season_number}`}
-                      </option>
-                    ))}
-
-                  {!seasons.length && (
-                    <option value="1">시즌 1</option>
-                  )}
-                </select>
-              </label>
+              <SeasonSelect seasons={seasons} value={season} onChange={value => {
+                setSeason(value);
+                setOpenedEpisode(null);
+                setPopupEpisode(null);
+              }} />
             </div>
 
             <div className="detail-episodes__list">
