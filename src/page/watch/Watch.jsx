@@ -5,6 +5,7 @@ import YouTube from 'react-youtube';
 import WatchIcon from './WatchIcon';
 import WatchSettingsPanel from './WatchSettingsPanel';
 import WatchChatPanel from './WatchChatPanel';
+import { Popup } from '../../components/common/Popup';
 import { FullVideoClipButton } from '../wowclip/components/FullVideoClipButton';
 import { captureClipPlayback } from '../wowclip/utils/captureClipPlayback';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -12,7 +13,7 @@ import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import './Watch.scss';
 import { auth } from '../../firebase/firebase';
-import { createWatchSession, joinWatchSession } from '../../service/sessionService';
+import { createWatchSession, joinWatchSession, trackWatchPresence, WATCH_PROFILE_KICKED } from '../../service/sessionService';
 import { subscribeSessionMessages, sendSessionMessage } from '../../service/chatService';
 import { communityError } from '../../data/communityData';
 import { selectWatchVideo, videoTypeLabels } from '../../data/videoFallback';
@@ -57,7 +58,7 @@ export const Watch = () => {
   const seasonNumber = inviteEpisode?.seasonNumber ?? state?.seasonNumber ?? 1;
   const episodeNumber = inviteEpisode?.episodeNumber ?? (state?.episodeNumber || 1);
   const watchRequestKey = `${location.key}/${type}/${id}/${seasonNumber}/${episodeNumber}`;
-  const sessionScope = `${watchRequestKey}/${uid}`;
+  const sessionScope = `${watchRequestKey}/${uid}/${profileId}`;
   const [settledLookup, setSettledLookup] = useState(null);
   const storedEpisodes = useMovieStore(s => s.episodes[`${id}-${seasonNumber}`] ?? EMPTY);
   const episodes = storedEpisodes.length ? storedEpisodes : (state?.episodes ?? []);
@@ -169,6 +170,7 @@ export const Watch = () => {
   const sessionRequest = useRef(null);
   const automaticJoinScope = useRef(null);
   const [playerNotice, setPlayerNotice] = useState(null);
+  const [removedSessionScope, setRemovedSessionScope] = useState(null);
   const [manualInvite, setManualInvite] = useState(null);
   const [chatDraft, setChatDraft] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
@@ -258,10 +260,28 @@ export const Watch = () => {
   };
 
   const showNotice = (text, icon) => setPlayerNotice({ scope: sessionScope, text, icon });
+  const onKicked = useEffectEvent(() => {
+    setWatchSession(null);
+    setManualInvite(null);
+    setChatError('');
+    setPanel(current => current === 'chat' ? null : current);
+    setRemovedSessionScope(sessionScope);
+  });
+
   useEffect(() => {
-    if (!sessionId) return;
-    return subscribeSessionMessages(sessionId, setChatMessages, err => setChatError(communityError(err)));
-  }, [sessionId]);
+    if (!sessionId || !profileId || auth.currentUser?.uid !== uid) return;
+    let kicked = false;
+    const reportError = error => { if (!kicked && currentSessionScope.current === sessionScope) setChatError(communityError(error)); };
+    const stopPresence = trackWatchPresence(sessionId, profileId, () => {
+      kicked = true;
+      if (currentSessionScope.current === sessionScope) onKicked();
+    }, reportError);
+    const stopMessages = subscribeSessionMessages(sessionId, setChatMessages, reportError);
+    return () => {
+      stopPresence();
+      stopMessages();
+    };
+  }, [sessionId, sessionScope, uid, profileId]);
 
   const connectTogether = async () => {
     if (sessionRequest.current === sessionScope) return;
@@ -274,7 +294,7 @@ export const Watch = () => {
     setChatError('');
     setChatMessages([]);
     try {
-      const args = { type, contentId: id, season: seasonNumber, episode: episodeNumber, memberName: profileName };
+      const args = { type, contentId: id, season: seasonNumber, episode: episodeNumber, profileId, memberName: profileName };
       const nextId = invitedSessionId ? await joinWatchSession(invitedSessionId, args) : await createWatchSession(args);
       if (currentSessionScope.current !== sessionScope) return;
       setWatchSession({ scope: sessionScope, id: nextId });
@@ -283,7 +303,8 @@ export const Watch = () => {
     } catch (err) {
       if (currentSessionScope.current !== sessionScope) return;
       setWatchSession(null);
-      showNotice(communityError(err));
+      if (err?.code === WATCH_PROFILE_KICKED) setRemovedSessionScope(sessionScope);
+      else showNotice(communityError(err));
     } finally {
       if (sessionRequest.current === sessionScope) sessionRequest.current = null;
     }
@@ -297,12 +318,12 @@ export const Watch = () => {
 
   useEffect(() => {
     if (!invitedSessionId || authLoading) return;
-    if (!uid) {
-      navigate('/login', { replace: true, state: { watchInvite: location.pathname + location.search } });
+    if (!uid || !profileId) {
+      navigate(uid ? '/profiles' : '/login', { replace: true, state: { watchInvite: location.pathname + location.search } });
       return;
     }
     joinFromInvite();
-  }, [authLoading, invitedSessionId, location.pathname, location.search, navigate, sessionScope, uid]);
+  }, [authLoading, invitedSessionId, location.pathname, location.search, navigate, profileId, sessionScope, uid]);
 
   const toggleTogetherMode = () => {
     if (!togetherMode) {
@@ -342,7 +363,7 @@ export const Watch = () => {
     event.preventDefault();
     if (!togetherMode || !sessionId || !chatDraft.trim() || sendingChat) return;
     setSendingChat(true);
-    try { setChatError(''); await sendSessionMessage(sessionId, chatDraft); setChatDraft(''); }
+    try { setChatError(''); await sendSessionMessage(sessionId, chatDraft, profileId); setChatDraft(''); }
     catch (err) { setChatError(communityError(err)); }
     finally { setSendingChat(false); }
   };
@@ -474,6 +495,9 @@ export const Watch = () => {
 
   return (
     <main className={`watch-page${isLiveMode ? ' watch-page--live' : ''}`} aria-label={displayTitle} data-player="shared">
+      {removedSessionScope === sessionScope && <Popup title="같이 보기에서 추방됐어요"
+        description="방장이 회원님을 내보냈어요. 이 프로필로는 이 방에 다시 참여할 수 없어요."
+        cancelText="확인" onClose={() => setRemovedSessionScope(null)} />}
       <div className="watch-player">
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
         {liveLoading ? <div className="watch-player__placeholder" role="status">같은 팀의 이전 경기 영상을 불러오는 중입니다.</div>
@@ -678,7 +702,7 @@ export const Watch = () => {
             togetherMode={togetherMode} sessionId={sessionId} messages={chatMessages}
             draft={chatDraft} onDraftChange={setChatDraft} onSend={sendChat}
             onClose={() => setPanel(null)} error={chatError} sending={sendingChat}
-            currentUid={auth.currentUser?.uid}
+            currentUid={uid} currentProfileId={profileId}
             onCopyInvite={copyInvite} manualInviteUrl={togetherMode && manualInvite?.sessionId === sessionId ? manualInvite.url : ''}
           />}
           <div className="watch-player-notice" role="status" aria-atomic="true">

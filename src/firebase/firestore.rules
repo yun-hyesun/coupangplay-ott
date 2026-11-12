@@ -3,10 +3,27 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function session(sessionId) { return get(/databases/$(database)/documents/watchSessions/$(sessionId)); }
+    function memberPath(sessionId, uid) { return /databases/$(database)/documents/watchSessions/$(sessionId)/members/$(uid); }
     function activeMember(sessionId) {
       return signedIn()
-        && exists(/databases/$(database)/documents/watchSessions/$(sessionId)/members/$(request.auth.uid))
+        && exists(memberPath(sessionId, request.auth.uid))
         && session(sessionId).data.status == 'active';
+    }
+    function validProfileId(profileId) {
+      return profileId is string && profileId.matches('^[A-Za-z0-9_-]{1,128}$');
+    }
+    function ownsWatchProfile(profileId) {
+      return validProfileId(profileId)
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid)/profiles/$(profileId));
+    }
+    function watchProfilePath(sessionId, profileId) {
+      let memberId = request.auth.uid + ':' + profileId;
+      return /databases/$(database)/documents/watchSessions/$(sessionId)/profileMembers/$(memberId);
+    }
+    function activeWatchProfile(sessionId, profileId) {
+      return activeMember(sessionId) && validProfileId(profileId)
+        && exists(watchProfilePath(sessionId, profileId))
+        && !('kickedAt' in get(watchProfilePath(sessionId, profileId)).data);
     }
     match /contents/{contentId}/episodes/{episodeId}/reviews/{reviewId} {
       allow read: if true;
@@ -53,8 +70,9 @@ service cloud.firestore {
     }
     match /watchSessions/{sessionId} {
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['contentId','episodeId','hostId','status','createdAt','endedAt'])
+        && request.resource.data.keys().hasOnly(['contentId','episodeId','hostId','hostProfileId','status','createdAt','endedAt'])
         && request.resource.data.hostId == request.auth.uid
+        && ownsWatchProfile(request.resource.data.hostProfileId)
         && request.resource.data.status == 'active'
         && request.resource.data.createdAt == request.time
         && request.resource.data.endedAt == null;
@@ -79,10 +97,40 @@ service cloud.firestore {
           && request.resource.data.joinedAt == request.time;
         allow update, delete: if false;
       }
+      match /profileMembers/{memberId} {
+        allow get: if signedIn() && (memberId.split(':')[0] == request.auth.uid || activeMember(sessionId));
+        allow list: if activeMember(sessionId);
+        allow create: if signedIn()
+          && session(sessionId).data.status == 'active'
+          && existsAfter(memberPath(sessionId, request.auth.uid))
+          && request.resource.data.keys().hasOnly(['uid','profileId','name','role','joinedAt'])
+          && request.resource.data.uid == request.auth.uid
+          && ownsWatchProfile(request.resource.data.profileId)
+          && memberId == request.auth.uid + ':' + request.resource.data.profileId
+          && request.resource.data.name is string && request.resource.data.name.size() <= 100
+          && request.resource.data.role == (session(sessionId).data.hostId == request.auth.uid
+            && session(sessionId).data.get('hostProfileId', request.resource.data.profileId) == request.resource.data.profileId ? 'host' : 'member')
+          && request.resource.data.joinedAt == request.time;
+        allow update: if activeMember(sessionId)
+          && session(sessionId).data.hostId == request.auth.uid
+          && resource.data.role == 'member' && !('kickedAt' in resource.data)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['kickedAt'])
+          && request.resource.data.kickedAt == request.time;
+        allow delete: if false;
+      }
+      match /presence/{connectionId} {
+        allow read: if activeMember(sessionId);
+        allow create, update: if activeWatchProfile(sessionId, request.resource.data.profileId)
+          && request.resource.data.keys().hasOnly(['uid','profileId','seenAt'])
+          && request.resource.data.uid == request.auth.uid
+          && (resource == null || (resource.data.uid == request.auth.uid && resource.data.profileId == request.resource.data.profileId))
+          && request.resource.data.seenAt == request.time;
+        allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      }
       match /messages/{messageId} {
         allow read: if activeMember(sessionId);
-        allow create: if activeMember(sessionId)
-          && request.resource.data.keys().hasOnly(['senderId','senderName','text','type','createdAt'])
+        allow create: if activeWatchProfile(sessionId, request.resource.data.senderProfileId)
+          && request.resource.data.keys().hasOnly(['senderId','senderProfileId','senderName','text','type','createdAt'])
           && request.resource.data.senderId == request.auth.uid
           && request.resource.data.senderName is string && request.resource.data.senderName.size() <= 100
           && request.resource.data.text is string

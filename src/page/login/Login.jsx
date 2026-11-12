@@ -23,7 +23,7 @@ export const Login = () => {
     try {
       const user = await onEmailLogin(email, password);
       if (user) {
-        navigate(watchInvite || "/profiles", { replace: Boolean(watchInvite) });
+        navigate("/profiles", { replace: Boolean(watchInvite), state: watchInvite ? { watchInvite } : undefined });
       }
     } finally {
       setIsSubmitting(false);
@@ -37,7 +37,7 @@ export const Login = () => {
     try {
       const user = await onGoogleLogin();
       if (user) {
-        navigate(watchInvite || "/profiles", { replace: Boolean(watchInvite) });
+        navigate("/profiles", { replace: Boolean(watchInvite), state: watchInvite ? { watchInvite } : undefined });
       }
     } finally {
       setIsSubmitting(false);

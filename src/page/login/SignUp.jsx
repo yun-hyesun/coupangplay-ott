@@ -40,7 +40,7 @@ export const Signup = () => {
       const user = await onEmailSignup(email, password);
 
       if (user) {
-        navigate(watchInvite || "/profiles", { replace: Boolean(watchInvite) });
+        navigate("/profiles", { replace: Boolean(watchInvite), state: watchInvite ? { watchInvite } : undefined });
       }
     } finally {
       setIsSubmitting(false);
