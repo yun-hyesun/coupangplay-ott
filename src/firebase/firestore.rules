@@ -29,6 +29,26 @@ service cloud.firestore {
         && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000
         && request.resource.data.updatedAt == request.time
         && request.resource.data.isEdited == true;
+      // 좋아요 카운트와 본인 참여 기록은 반드시 한 트랜잭션으로 생성합니다.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+        && resource.data.likes is int && resource.data.likes >= 0
+        && request.resource.data.likes == resource.data.likes + 1
+        && !exists(/databases/$(database)/documents/contents/$(contentId)/episodes/$(episodeId)/reviews/$(reviewId)/likes/$(request.auth.uid))
+        && getAfter(/databases/$(database)/documents/contents/$(contentId)/episodes/$(episodeId)/reviews/$(reviewId)/likes/$(request.auth.uid)).data.uid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/contents/$(contentId)/episodes/$(episodeId)/reviews/$(reviewId)/likes/$(request.auth.uid)).data.createdAt == request.time;
+      match /likes/{uid} {
+        allow get: if signedIn() && request.auth.uid == uid;
+        allow list: if false;
+        allow create: if signedIn() && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
+          && request.resource.data.uid == uid
+          && request.resource.data.createdAt == request.time
+          && get(/databases/$(database)/documents/contents/$(contentId)/episodes/$(episodeId)/reviews/$(reviewId)).data.likes is int
+          && getAfter(/databases/$(database)/documents/contents/$(contentId)/episodes/$(episodeId)/reviews/$(reviewId)).data.likes
+            == get(/databases/$(database)/documents/contents/$(contentId)/episodes/$(episodeId)/reviews/$(reviewId)).data.likes + 1;
+        allow update, delete: if false;
+      }
       allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
     }
     match /watchSessions/{sessionId} {

@@ -51,6 +51,7 @@
     &::before {background-image: url(/public/images/card-hover/icon-lock.svg); width:25px;}
   }
   &.icon-dibs {
+
     &::before {background-image: url(/public/images/card-hover/plus.svg); width:25px;}
 
     &.is-active {
@@ -66,5 +67,7 @@
     }
 
   }
+
+  &.icon-delete::before {background-image: url(/public/images/card-hover/trash.svg); width:25px;}
 
 }

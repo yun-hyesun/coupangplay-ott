@@ -112,10 +112,11 @@ export const useWatchHistoryStore = create((set, get) => ({
         }
     },
 
-    onDeleteHistory: async (ids) => {
+    onDeleteHistory: async (ids, expectedOwner) => {
         const user = auth.currentUser;
         const profile = useProfileStore.getState().currentProfile;
         if (!user || !profile || !ids.length) return false;
+        if (expectedOwner && expectedOwner !== `${user.uid}_${profile.id}`) return false;
 
         try {
             const historyRef = getHistoryRef(user.uid, profile.id);
