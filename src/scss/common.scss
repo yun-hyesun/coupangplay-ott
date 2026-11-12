@@ -71,3 +71,19 @@
   &.icon-delete::before {background-image: url(/public/images/card-hover/trash.svg); width:25px;}
 
 }
+
+
+// 뱃지
+.info-badges {margin-bottom: clamp(30px, 3.47vw, 50px) ; font-family: $font-title; font-weight: 500; font-size: clamp(16px, 1.38vw, 20px);
+  // &:has(.info-badge--purchase) {margin-bottom: 50px;}
+
+  // 쿠팡시리즈
+  .info-badge--series {@include flex-center($jc:flex-start, $gap: .3em);   line-height: 1em; text-shadow: 0 0 20px rgba(0,0,0,0.2);
+
+    & i {display: block; width: clamp(20px, 2vw, 30px); aspect-ratio: 1/1; background: $color-pri url(/images/badge-icon.svg) no-repeat center / 58%; border-radius: 6px; margin-bottom: .2em;}
+    
+  }
+
+  // 개별구매
+  .info-badge--purchase {background-color: #000; color: #FF6E00; padding: .4em .5em .2em; border-radius: 7px;}
+}

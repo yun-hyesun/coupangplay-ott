@@ -13,6 +13,38 @@ const storeBannerMovieIds = [
   575264, // 미션 임파서블: 데드 레코닝 PART ONE
 ];
 
+// 배열 순서가 배너의 슬라이드 순서
+const featuredBannerLineups = {
+  all: [
+    ['tv', '100일의 거짓말', 2026],
+    ['tv', '너 말고 다른 연애', 2026],
+    ['tv', '직장인들', 2025],
+    ['tv', '안나', 2022],
+    ['tv', '저스트 메이크업', 2025, 'Just Makeup'],
+  ],
+  drama: [
+    ['tv', '내가 떨릴 수 있게', 2026],
+    ['tv', '100일의 거짓말', 2026],
+    ['tv', '유부녀 킬러', 2026],
+    ['tv', '안나', 2022],
+    ['tv', '지금 불륜이 문제가 아닙니다', 2026],
+  ],
+  entertainment: [
+    ['tv', '저스트 메이크업', 2025, 'Just Makeup'],
+    ['tv', '봉주르빵집', 2026],
+    ['tv', '원희는 스무살', 2026],
+    ['tv', '나 혼자 산다', 2013],
+    ['tv', '대탈출', 2018, 'The Great Escape'],
+  ],
+  movie: [
+    ['movie', '헝거게임: 판엠의 불꽃', 2012, 'The Hunger Games'],
+    ['movie', 'F1 더 무비', 2025, 'F1'],
+    ['movie', '헤어질 결심', 2022, 'Decision to Leave'],
+    ['movie', '미지의 땅: 겨울의 K2', 2026, 'The Last First: Winter K2'],
+    ['movie', '메이데이', 2026, 'Mayday'],
+  ],
+};
+
 // fetch(`https://api.themoviedb.org/3/watch/providers/movie?api_key=${TMDB_KEY}&language=ko-KR&watch_region=KR`)
 //   .then(res => res.json())
 //   .then(data => console.table("쿠팡영화",data.results));
@@ -38,6 +70,62 @@ const requestTmdb = async (path, query = {}) => {
   }
 
   return res.json();
+};
+
+const normalizeBannerTitle = (title = '') =>
+  title.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+
+const fetchFeaturedBanner = async ([mediaType, title, year, originalTitle]) => {
+  const yearParam = mediaType === 'movie' ? 'primary_release_year' : 'first_air_date_year';
+  const queries = originalTitle ? [title, originalTitle] : [title];
+  const acceptedTitles = queries.map(normalizeBannerTitle);
+
+  for (const query of queries) {
+    const data = await requestTmdb(`/search/${mediaType}`, {
+      query,
+      [yearParam]: String(year),
+      include_adult: 'false',
+    });
+
+    const item = data.results?.find((result) =>
+      [result.title, result.name, result.original_title, result.original_name]
+        .some((name) => acceptedTitles.includes(normalizeBannerTitle(name)))
+    );
+
+    if (item) return { ...item, media_type: mediaType };
+  }
+
+  return null;
+};
+
+const fetchBannerSeriesStatus = async (item) => {
+  if (item.isCoupangSeries || item.media_type !== 'tv') return Boolean(item.isCoupangSeries);
+
+  try {
+    const detail = await requestTmdb(`/tv/${item.id}`);
+    return detail.networks?.some((network) => network.id === 5169) ?? false;
+  } catch {
+    return false;
+  }
+};
+
+const fetchBannerArtwork = async (item) => {
+  try {
+    const images = await requestTmdb(`/${item.media_type}/${item.id}/images`, {
+      include_image_language: 'ko,en,null',
+    });
+    const logos = images.logos ?? [];
+    const logo = logos.find((image) => image.iso_639_1 === 'ko')
+      ?? logos.find((image) => image.iso_639_1 === 'en');
+
+    return {
+      ...item,
+      backdrop_path: item.backdrop_path ?? images.backdrops?.[0]?.file_path,
+      logo_path: logo?.file_path,
+    };
+  } catch {
+    return item;
+  }
 };
 
 // 드라마 세부 카테고리의 키워드 ID 조회
@@ -894,37 +982,20 @@ export const useMovieStore = create((set, get) => ({
     });
 
     try {
-      const popular = {
-        sort_by: 'popularity.desc',
-      };
-
+      const lineup = featuredBannerLineups[type];
       let items = [];
 
-
       switch (type) {
-        // 한국 드라마 최신순
+        case 'all':
         case 'drama':
-          items = await fetchCoupangList('tv', {
-            with_genres: '18',
-            with_origin_country: 'KR',
-            sort_by: 'first_air_date.desc',
-          });
-          break;
-
-        // 티빙 예능 최신순
         case 'entertainment':
-          items = await fetchCoupangList('tv', {
-            with_genres: '10764|10767',
-            sort_by: 'first_air_date.desc',
-          });
+        case 'movie': {
+          const results = await Promise.allSettled(lineup.map(fetchFeaturedBanner));
+          items = results.flatMap((result) =>
+            result.status === 'fulfilled' && result.value ? [result.value] : []
+          );
           break;
-
-        // 영화 최신순
-        case 'movie':
-          items = await fetchCoupangList('movie', {
-            sort_by: 'primary_release_date.desc',
-          });
-          break;
+        }
 
         // 키즈 최신순
 
@@ -992,63 +1063,12 @@ export const useMovieStore = create((set, get) => ({
           break;
         }
 
-        // 홈: 영화 + 드라마 최신순
-
-
-        case 'all':
-        default: {
-          const [movies, koreanDramas, overseasDramas] =
-            await Promise.all([
-              // 영화
-              fetchCoupangList('movie', {
-                sort_by: 'primary_release_date.desc',
-              }),
-
-              // 한국 드라마
-              fetchCoupangList('tv', {
-                with_genres: '18',
-                with_origin_country: 'KR',
-                sort_by: 'first_air_date.desc',
-              }),
-
-              // 해외 드라마
-              fetchCoupangList('tv', {
-                with_genres: '18',
-                without_origin_country: 'KR',
-                sort_by: 'first_air_date.desc',
-              }),
-            ]);
-
-          // 종류별 최신 작품 선택
-          const latest = (list, count) =>
-            [...list]
-              .filter((item) => item.backdrop_path)
-              .sort((a, b) => {
-                const dateA = a.release_date || a.first_air_date || '';
-                const dateB = b.release_date || b.first_air_date || '';
-                return dateB.localeCompare(dateA);
-              })
-              .slice(0, count);
-
-          items = [
-            ...latest(movies, 2),
-            ...latest(koreanDramas, 1),
-            ...latest(overseasDramas, 2),
-          ];
-
-          break;
-        }
-
-
-
       }
-
-
 
       const seen = new Set();
 
       const banners = items
-        .filter((item) => item.backdrop_path)
+        .filter((item) => lineup || item.backdrop_path)
         .filter((item) => {
           const key = `${item.media_type}-${item.id}`;
 
@@ -1058,7 +1078,7 @@ export const useMovieStore = create((set, get) => ({
           return true;
         })
         .sort((a, b) => {
-          if (type === 'kids' || type === 'purchase') return 0;
+          if (lineup || type === 'kids' || type === 'purchase') return 0;
 
           const dateA = a.release_date || a.first_air_date || '';
           const dateB = b.release_date || b.first_air_date || '';
@@ -1067,13 +1087,35 @@ export const useMovieStore = create((set, get) => ({
         })
         .slice(0, 5);
 
+      const bannersWithArtwork = (await Promise.all(banners.map(async (item) => {
+        const [artwork, isCoupangSeries] = await Promise.all([
+          fetchBannerArtwork(item),
+          fetchBannerSeriesStatus(item),
+        ]);
+
+        return {
+          ...artwork,
+          isCoupangSeries,
+          isPurchase: type === 'purchase' || artwork.isPurchase === true,
+        };
+      })))
+        .filter((item) => item.backdrop_path);
+
+      if (lineup && bannersWithArtwork.length === 0) {
+        throw new Error('지정한 배너 작품을 불러오지 못했습니다.');
+      }
+
       // 종류를 바꿨다면 이전 요청 결과는 저장하지 않음
       if (get().bannerRequestId !== requestId) return;
 
       set({
-        bannerContents: banners,
+        bannerContents: bannersWithArtwork,
         isBannerLoaded: true,
       });
+
+      for (const item of bannersWithArtwork) {
+        if (!item.isPurchase) void get().onCheckPurchase(item.media_type, item.id);
+      }
     } catch (error) {
       if (get().bannerRequestId === requestId) {
         set({ bannerError: error.message });
