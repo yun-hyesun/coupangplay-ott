@@ -12050,6 +12050,865 @@
       "scope": {
         "type": "title"
       }
+    },
+    "movie/1451944": {
+      "title": "러스트 스토리 3",
+      "youtubeId": "PhNJ34l5NFo",
+      "videoTitle": "Lust Stories 3 | Official Trailer | Netflix India",
+      "channel": "Netflix India",
+      "videoType": "trailer",
+      "language": "hi",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/94662": {
+      "title": "몬카트",
+      "youtubeId": "2tNMk1OWEOI",
+      "videoTitle": "몬카트 EP 01 : 기사를 꿈꾸는 소년",
+      "channel": "몬카트TV",
+      "videoType": "episode",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "episode",
+        "seasonNumber": 1,
+        "episodeNumber": 1
+      },
+      "endSeconds": 30
+    },
+    "tv/290196": {
+      "title": "꼬모와 장난감",
+      "youtubeId": "VMvMqrUdxpg",
+      "videoTitle": "서프라이즈 꼬모 | 꼬모의 장난감 색깔 퀴즈 쇼!",
+      "channel": "토닥토닥 꼬모 - 애니메이션, 동요, 놀이",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/321237": {
+      "title": "꼬모쿡",
+      "youtubeId": "HiK1l10Nv5Q",
+      "videoTitle": "꼬모쿡 | 아이들을 위한 요리 놀이 콘텐츠! 🍔",
+      "channel": "토닥토닥 꼬모 - 애니메이션, 동요, 놀이",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/97426": {
+      "title": "바다나무 스토리즈",
+      "youtubeId": "F7lT400NEsw",
+      "videoTitle": "(SERIES!) Badanamu Stories Trailer l Nursery Rhymes & Kids Songs",
+      "channel": "Badanamu",
+      "videoType": "trailer",
+      "language": "en",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/211638": {
+      "title": "바비의 드림하우스 어드벤처: 우리 가족 화이팅",
+      "youtubeId": "iqZpTWTwuyc",
+      "videoTitle": "Dreamhouse Adventures: Go Team Roberts! | 🙌 Clips",
+      "channel": "Barbie",
+      "videoType": "clip",
+      "language": "en",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/287928": {
+      "title": "핑크퐁 생활습관동요",
+      "youtubeId": "R2PHf8j7nFo",
+      "videoTitle": "핑크퐁과 함께 배꼽인사 안녕하세요! | 배꼽인사송 | 인사 습관 | 핑크퐁! 생활습관동요",
+      "channel": "핑크퐁 (인기 동요・동화)",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/296272": {
+      "title": "핑크퐁 오싹오싹 명작동화",
+      "youtubeId": "MPiIoADFQu0",
+      "videoTitle": "[NEW✨] 핑크퐁 오싹오싹 명작동화 특집ㅣ+모음집ㅣ헨젤과 그레텔, 아기돼지 삼형제 외ㅣ엄마 아빠 책 읽어 주세요 📖ㅣ세계명작동화ㅣ뮤지컬 동화ㅣ핑크퐁! 인기동화",
+      "channel": "핑크퐁 (인기 동요・동화)",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/72976": {
+      "title": "하트시그널",
+      "youtubeId": "I0euVtPgQU0",
+      "videoTitle": "[하트시그널 선공개] 시즌1 입주자들 등장! 다시 만난 하트시그널 / 채널A 하트시그널 시즌2",
+      "channel": "play 채널A",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/64369": {
+      "title": "TV 동물농장",
+      "youtubeId": "x7erU_lUg7Y",
+      "videoTitle": "[7월 24일 예고] 미어캣의 인생 철학, 들어보실래요? #TV동물농장 #AnimalFarm #SBSstory",
+      "channel": "SBS STORY",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/65278": {
+      "title": "SBS 인기가요",
+      "youtubeId": "Raq60LmsBrc",
+      "videoTitle": "ULSSIGU - 임영웅 | SBS 250914 방송",
+      "channel": "SBSKPOP X INKIGAYO",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/24633": {
+      "title": "인어 아가씨",
+      "youtubeId": "b-PZGedCVIw",
+      "videoTitle": "[#인어아가씨/Miss Mermaid] 37~39회 몰아보기 | 아버지의 존재 자체를 부정하는 장서희 MBC020816방송",
+      "channel": "옛드",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/18495": {
+      "title": "논스톱",
+      "youtubeId": "8wZdj29vShs",
+      "videoTitle": "Nonstop, 1회, EP001, #01",
+      "channel": "옛드",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/65255": {
+      "title": "미월전",
+      "youtubeId": "cWcRkS9eCjE",
+      "videoTitle": "芈月传 01 | The Legend of Mi Yue 01（孙俪，刘涛，黄轩，赵立新 领衔主演） Letv Official",
+      "channel": "乐视视频官方频道 Letv Official Channel",
+      "videoType": "episode",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "episode",
+        "seasonNumber": 1,
+        "episodeNumber": 1
+      },
+      "endSeconds": 30
+    },
+    "tv/3824": {
+      "title": "신조협려 2006",
+      "youtubeId": "382MaLhtIw8",
+      "videoTitle": "【FULL】Return of the Condor Heroes 06 | Forbidden Love of the chivalrous girl（Liu YiFei）",
+      "channel": "SENTV English - C-Drama",
+      "videoType": "clip",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/62057": {
+      "title": "GTO 1998",
+      "youtubeId": "9C27wxqMyaM",
+      "videoTitle": "反町隆史 - 鬼塚英吉の伝説の壁破壊シーン | GTO | Netflix Japan",
+      "channel": "Netflix Japan",
+      "videoType": "clip",
+      "language": "ja",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/90631": {
+      "title": "스페셜 탐사 스포트라이트",
+      "youtubeId": "ECvDH0OZ6wM",
+      "videoTitle": "개인화된 디스플레이의 사용 PC·스마트폰의 뒤를 이을 VR🥽 스페셜 탐사 스포트라이트 286회 | JTBC 210925 방송",
+      "channel": "교양 Voyage",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/30801": {
+      "title": "1박 2일",
+      "youtubeId": "Top_glvlRJI",
+      "videoTitle": "연정훈·김종민·문세윤·딘딘·나인우·유선호, '1박 2일' 녹화 가는 여섯 남자 [비하인드]",
+      "channel": "비하인드 BEHIND",
+      "videoType": "featurette",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "movie/1212839": {
+      "title": "아가미",
+      "youtubeId": "NYm03K5kvhE",
+      "videoTitle": "[Gill] trailer official from Annecy International Animated Film Festival",
+      "channel": "연필로 명상하기",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "movie/1681546": {
+      "title": "아이엠 포포",
+      "youtubeId": "ayU6JJ5vDbQ",
+      "videoTitle": "[아이엠 포포] OST 영상",
+      "channel": "시네마 뉴원",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "movie/910388": {
+      "title": "고고다이노 공룡탐험대 - 전설의 공룡을 찾아서",
+      "youtubeId": "7k1xWV6p2Xo",
+      "videoTitle": "[고고다이노 극장판: 전설의 공룡을 찾아서] 하이라이트 클립 첫번째!",
+      "channel": "고고다이노",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "movie/508339": {
+      "title": "날아라! 호빵맨: 바나나섬을 되찾아줘",
+      "youtubeId": "oeI7N8hpan0",
+      "videoTitle": "극장판 날아라! 호빵맨 : 바나나섬을 되찾아줘 메인 예고편",
+      "channel": "앤토커뮤니케이션",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "movie/72442": {
+      "title": "사랑이 무서워",
+      "youtubeId": "ebWEV_Sl2j0",
+      "videoTitle": "[movie] lim chang jung, 'Love is scared'preview  (임창정, \"촬영 중 신생아 입양 고려\")",
+      "channel": "ystarchannel2",
+      "videoType": "featurette",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "movie/361517": {
+      "title": "션샤인 러브",
+      "youtubeId": "4RvkyogSagU",
+      "videoTitle": "#무비 [무료영화] 션샤인 러브 (2015) / 믿고 보는 오정세의 판타지 코믹 러브 스토리",
+      "channel": "스밍스",
+      "videoType": "film",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "movie/1796117": {
+      "title": "비틀린넥타이: 더 무비",
+      "youtubeId": "_YyqzX6Qekw",
+      "videoTitle": "뜨거웠던 첫 촬영 ❤️‍🔥 | #2 Twisted Tie [Making] 비틀린넥타이",
+      "channel": "STRONGBERRY",
+      "videoType": "behind the scenes",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/83612": {
+      "title": "장야",
+      "youtubeId": "Ltk_lUrjuKs",
+      "videoTitle": "【日本限定】《将夜2》第18集预告｜王鹤棣 宋伊人 杨超越 袁冰妍 郑少秋 王劲松 成泰燊 郭品超 Ever Night 2【捷成华视偶像剧场】",
+      "channel": "捷成华视—偶像剧场 Idol & Romance",
+      "videoType": "trailer",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "season",
+        "seasonNumber": 2
+      }
+    },
+    "tv/97010": {
+      "title": "청담동 살아요",
+      "youtubeId": "sH73_arj9sE",
+      "videoTitle": "이건 첫 번째 레슨~ 연체료 제때 갚기🔥 과거 특출했던 유노윤호 서울말 연기 시절?ㅎ｜청담동 살아요 | JTBC 111205 방송",
+      "channel": "DRAMA Voyage",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/212267": {
+      "title": "추광자: 빛의 구원자",
+      "youtubeId": "HRON2MdyiHw",
+      "videoTitle": "[티저] 내가 다시 만나게 될 거라고 했죠? 라운희X오천 예측불허 로맨스! '추광자 : 빛의 구원자' 티저 공개 + 6월 4일 첫 방송",
+      "channel": "아시아앤 스튜디오 AsiaN STUDIO",
+      "videoType": "teaser",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/196157": {
+      "title": "성락응성당: 별이 떨어질 때",
+      "youtubeId": "YkqkZ3851pU",
+      "videoTitle": "[예고] '진성욱X이란적'주연 '성락응성당 : 별이 떨어질 때' 전체 예고 공개✨+7월 3일 (월) 첫 방송✔",
+      "channel": "아시아앤 스튜디오 AsiaN STUDIO",
+      "videoType": "trailer",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/68746": {
+      "title": "EBS 스페이스 공감",
+      "youtubeId": "uL93ry0FJsg",
+      "videoTitle": "소연이의 끝내주는 EBS 스페이스 공감 촬영 비하인드 👵🩷 [#HASHTALK] EP.53ㅣi-dle (아이들)ㅣSUB",
+      "channel": "i-dle (아이들)",
+      "videoType": "behind the scenes",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/33881": {
+      "title": "강심장",
+      "youtubeId": "R6-sxeQ2F-Y",
+      "videoTitle": "지드래곤 붐 콜라보 | 강심장 EP.1",
+      "channel": "SBS 옛날 예능 - 빽능",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/68083": {
+      "title": "고검기담",
+      "youtubeId": "XvFCS1-ensk",
+      "videoTitle": "《古剑奇谭》电视剧片花MV超清版",
+      "channel": "iCNTV 最新华语电视预告 Official Channel",
+      "videoType": "clip",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/247445": {
+      "title": "도레미 프렌즈",
+      "youtubeId": "aSePqQdBYVM",
+      "videoTitle": "[예고편] 도레미프렌즈, EBS에서 만나요!",
+      "channel": "도레미프렌즈 - 키즈 교육 · 인기 동요",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/284359": {
+      "title": "바디캠",
+      "youtubeId": "2sVCJQXTYwY",
+      "videoTitle": "바디캠 1회 예고편 - 그 어디에서도 볼 수 없었던 영상",
+      "channel": "JTBC Entertainment",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/99989": {
+      "title": "아내의 맛",
+      "youtubeId": "czNGvJbCSUo",
+      "videoTitle": "액션~🎬 촬영 시작!! 오버 폭발한 홍현희ㅋㅋ | [아내의 맛] 114회 | TV CHOSUN 20200908 방송",
+      "channel": "TVCHOSUN - TV조선",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/77988": {
+      "title": "짠내투어",
+      "youtubeId": "LQZEd6IfAjE",
+      "videoTitle": "[티져] 한혜진 ′더 짠내투어′ 합류! 글로벌 모델의 입국십사 꿀팁? #원샷원킬! 더 짠내투어 Thrifters on Tour 2",
+      "channel": "tvN DRAMA",
+      "videoType": "teaser",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/91678": {
+      "title": "퀸덤",
+      "youtubeId": "pTv0x3UYnd4",
+      "videoTitle": "[Full CAM] ♬ LION - (여자)아이들((G)I-DLE) 4K 직캠 @ 퀸덤 FINAL 경연",
+      "channel": "Mnet K-POP",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/122871": {
+      "title": "터닝메카드 R",
+      "youtubeId": "_HP_Ubwbm68",
+      "videoTitle": "터닝메카드R 에반! 에반킹이 되다?!",
+      "channel": "브라보키즈",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/38933": {
+      "title": "하얀 거짓말",
+      "youtubeId": "sbb0bwkgePI",
+      "videoTitle": "Happy Time, White Lie #02, 하얀 거짓말 20090621",
+      "channel": "MBCentertainment",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/262247": {
+      "title": "가면라이더 포제",
+      "youtubeId": "I0AwiuDJs8s",
+      "videoTitle": "가면라이더 포제 하이라이트 1 - 가면라이더부 결성!",
+      "channel": "애니원",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/902": {
+      "title": "유희왕 듀얼몬스터즈",
+      "youtubeId": "k8oTiJP2L7M",
+      "videoTitle": "[SBS 예고편] 유희왕 듀얼몬스터즈 1,2기 - 더빙판 첫 방영 예고편 (2003년 12월)",
+      "channel": "현근채널",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/196553": {
+      "title": "타타와 쿠마",
+      "youtubeId": "xTZ7pe_i8JM",
+      "videoTitle": "대교어린이TV | 타타와 쿠마 | 7월 28일 목요일 오후 6시 첫 방송!",
+      "channel": "대교어린이TV / Kids TV",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/207276": {
+      "title": "한자로 통하는 삼국지",
+      "youtubeId": "Ye9hl1KZnWI",
+      "videoTitle": "EBS '한자로 통하는 삼국지' 31화",
+      "channel": "Korea actor Paul Lee 이바울",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/238841": {
+      "title": "히어로 인사이드",
+      "youtubeId": "Qa5TLh6Mu8I",
+      "videoTitle": "✨히어로 인사이드✨| 11월 8일(수) 저녁 8시 투니버스 첫 방송!📺",
+      "channel": "Tooniverse-투니버스",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/194524": {
+      "title": "MBC 다큐프라임",
+      "youtubeId": "8PR-V5ttFic",
+      "videoTitle": "친환경 제품디자인기업 아트임팩트 l #MBC다큐프라임 l EP.1-2",
+      "channel": "MBC every1",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/307979": {
+      "title": "T끌모아 해결",
+      "youtubeId": "af2Fz_LBDGg",
+      "videoTitle": "브라이언이 44세 되도록 노총각인(?) 이유｜T끌모아 해결｜JTBC 251210 방송",
+      "channel": "JTBC Voyage",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/73048": {
+      "title": "SNL 코리아",
+      "youtubeId": "yrygb3vjgvI",
+      "videoTitle": "[티브이데일리] tvn 'SNL코리아' 제작발표회 ★신동엽★.avi",
+      "channel": "티브이데일리",
+      "videoType": "featurette",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/315445": {
+      "title": "TV유치원: 꾹이랑 부릉부릉 씽씽",
+      "youtubeId": "4db7jSxU6Dk",
+      "videoTitle": "자동차를 번쩍 들어 올리는 힘 센 견인차🚨ㅣ견인차ㅣ꾹이랑 부릉부릉 씽씽ㅣ꾹TVㅣKBS 250115 방송",
+      "channel": "KBSKids",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/315447": {
+      "title": "TV유치원: 삐뽀삐뽀 몸속 탐험",
+      "youtubeId": "Uk1Pd2XQZBw",
+      "videoTitle": "아야야~ 이가 흔들려요!ㅣ몸속에 무슨 일이?ㅣ삐뽀삐뽀 몸속 탐험ㅣ도와줘 지지맨ㅣKBS 방송",
+      "channel": "KBSKids",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/5707": {
+      "title": "X맨",
+      "youtubeId": "6tot187-884",
+      "videoTitle": "춤으로 강호동 제압하는 법 #X맨 #이진 #shorts",
+      "channel": "SBS 옛날 예능 - 빽능",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/326076": {
+      "title": "골맛나는 응원전 월드컵 푸드트럭",
+      "youtubeId": "qIjEvg2Rn7o",
+      "videoTitle": "[국립군산대학교XJTBC] 골맛나는 응원전 월드컵 푸드트럭",
+      "channel": "국립군산대학교",
+      "videoType": "featurette",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/311624": {
+      "title": "예스맨",
+      "youtubeId": "T8ZVjU4S6x0",
+      "videoTitle": "예스맨 1회 예고편 - 대한민국 스포츠 스타들의 신개념 예능 도전기⚡ | 1/17(토) 저녁 7시 10분 첫 방송!",
+      "channel": "JTBC Entertainment",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
     }
   },
   "unavailablePreviewIds": [
