@@ -12,6 +12,7 @@ export const videoTypeLabels = {
   trailer: '예고편',
   teaser: '티저',
   clip: '클립',
+  episode: '공개 본편',
   featurette: '소개 영상',
   'behind the scenes': '메이킹',
   bloopers: '비하인드',
@@ -23,13 +24,15 @@ export function getVideoFallback(type, id, target, seasonNumber = 1, episodeNumb
   if (type !== 'movie' && type !== 'tv') return null;
 
   const video = candidates.videos[`${type}/${id}`];
-  if (!video?.targets.includes(target)) return null;
+  if (!video) return null;
+  if (target !== 'playbackFallback') return video.targets.includes(target) ? video : null;
 
-  if (target === 'playbackFallback' && type === 'tv') {
-    // The playback audit covered only the first episode for title-level sources.
-    const season = video.scope.seasonNumber ?? 1;
-    const episode = video.scope.episodeNumber ?? 1;
-    if (Number(seasonNumber) !== season || Number(episodeNumber) !== episode) return null;
+  if (unavailablePreviewIds.has(video.youtubeId) ||
+    !video.targets.some((use) => use === 'playbackFallback' || use === 'preview')) return null;
+
+  if (type === 'tv' && video.scope.type !== 'title') {
+    if (Number(seasonNumber) !== video.scope.seasonNumber) return null;
+    if (video.scope.type === 'episode' && Number(episodeNumber) !== video.scope.episodeNumber) return null;
   }
 
   return video;
@@ -39,12 +42,51 @@ function isYouTubeVideo(video) {
   return video?.site === 'YouTube' && /^[\w-]{11}$/.test(video.key || '');
 }
 
-export function selectYouTubeVideo(videos = []) {
-  if (!Array.isArray(videos)) return undefined;
-  return videos.find((video) => isYouTubeVideo(video) && video.type === 'Trailer') || videos.find(isYouTubeVideo);
+function rankWatchVideos(videos, preferredLanguage) {
+  return videos.filter(isYouTubeVideo).sort((a, b) =>
+    Number(b.iso_639_1 === preferredLanguage) - Number(a.iso_639_1 === preferredLanguage) ||
+    Number(b.type === 'Trailer') - Number(a.type === 'Trailer')
+  );
 }
 
-export function selectPreviewVideos(videos, fallback) {
+export function selectWatchVideo({
+  type, id, seasonNumber = 1, episodeNumber = 1, episodeVideos = [], titleVideos = [], failedSources = [],
+}) {
+  if (type !== 'movie' && type !== 'tv') return null;
+
+  const rankedEpisodes = rankWatchVideos(episodeVideos.filter((video) => !video?.fromSearch), 'en');
+  const rankedTitles = rankWatchVideos(titleVideos, type === 'movie' ? 'ko' : 'en');
+  const primary = rankedEpisodes[0] || rankedTitles[0];
+  const isAvailable = (key) => key && !unavailablePreviewIds.has(key) && !failedSources.includes(key);
+  const asSource = (video, supplemental, scope = 'title') => ({
+    key: video.key,
+    name: video.name,
+    videoType: video.type?.toLowerCase(),
+    scope: { type: scope },
+    supplemental,
+  });
+
+  const episodeVideo = rankedEpisodes.find((video) => isAvailable(video.key));
+  if (episodeVideo) return asSource(episodeVideo, episodeVideo !== primary, 'episode');
+
+  const fallback = getVideoFallback(type, id, 'playbackFallback', seasonNumber, episodeNumber);
+  const hasScopedFallback = fallback && fallback.scope.type !== 'title' && isAvailable(fallback.youtubeId);
+
+  if (isAvailable(primary?.key) && !hasScopedFallback) {
+    const laterEpisode = type === 'tv' && (Number(seasonNumber) !== 1 || Number(episodeNumber) !== 1);
+    return asSource(primary, laterEpisode);
+  }
+
+  if (isAvailable(fallback?.youtubeId)) {
+    return { ...fallback, key: fallback.youtubeId, name: fallback.videoTitle, supplemental: true };
+  }
+
+  const alternate = rankedTitles.find((video) => isAvailable(video.key)) ||
+    episodeVideos.find((video) => video?.fromSearch && isYouTubeVideo(video) && isAvailable(video.key));
+  return alternate ? asSource(alternate, true) : null;
+}
+
+export function selectPreviewVideos(videos, fallback, backup) {
   const sources = (Array.isArray(videos) ? videos : [])
     .filter((video) => isYouTubeVideo(video) && !unavailablePreviewIds.has(video.key) &&
       Object.hasOwn(videoTypeLabels, video.type?.toLowerCase()))
@@ -56,7 +98,8 @@ export function selectPreviewVideos(videos, fallback) {
     .map((video) => ({ youtubeId: video.key, videoType: video.type.toLowerCase() }));
 
   const unique = new Map();
-  for (const source of [fallback, ...sources]) {
+  const previewBackup = backup && { ...backup, endSeconds: backup.endSeconds ?? 30 };
+  for (const source of [fallback, ...sources.slice(0, 2), previewBackup, ...sources.slice(2)]) {
     if (source && !unavailablePreviewIds.has(source.youtubeId) && !unique.has(source.youtubeId)) {
       unique.set(source.youtubeId, source);
     }

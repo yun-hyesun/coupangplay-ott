@@ -11581,6 +11581,475 @@
       "targets": [
         "preview"
       ]
+    },
+    "tv/70123": {
+      "title": "신서유기",
+      "youtubeId": "OYA6azUr96s",
+      "videoTitle": "[#신서유기] 제 1차 거봉의 난 #신서유기레전드",
+      "channel": "tvN D ENT",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/128750": {
+      "title": "뉴이스트 로드",
+      "youtubeId": "F7nvPdKC09I",
+      "videoTitle": "[뉴이스트 로드] Ep.1(Full ver.) 완전체 뉴이스트의 첫 번째 여행, 지금 출발합니다! (ENG SUB)",
+      "channel": "M2",
+      "videoType": "episode",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "episode",
+        "seasonNumber": 1,
+        "episodeNumber": 1
+      },
+      "endSeconds": 30
+    },
+    "tv/74035": {
+      "title": "어서와~ 한국은 처음이지?",
+      "youtubeId": "8PkxcyquaiY",
+      "videoTitle": "[예고] 다시 돌아온 ＜어서와~한국은 처음이지?＞ 대망의 첫 번째 주인공은?",
+      "channel": "MBC every1",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/133914": {
+      "title": "오은영의 금쪽상담소",
+      "youtubeId": "QmoAm_RN5Sk",
+      "videoTitle": "[#에이팅] 이희문과 어머니 이야기 | 금쪽상담소 148회",
+      "channel": "채널에이드: 채널A Drama & Enjoy",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/89423": {
+      "title": "청설루",
+      "youtubeId": "l1pvCg3mV0Y",
+      "videoTitle": "“Listening Snow Tower” An Unexpected Surprise 听雪楼 Fantasy Wuxia Drama",
+      "channel": "Asian Drama News",
+      "videoType": "featurette",
+      "language": "en",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/95834": {
+      "title": "유비",
+      "youtubeId": "vdmrotKI-ms",
+      "videoTitle": "ENG SUB【有翡 Legend of Fei】“欢喜冤家”预告：十二月首支预告！赵丽颖王一博欢喜上线",
+      "channel": "腾讯视频 - Get the WeTV APP",
+      "videoType": "trailer",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/96121": {
+      "title": "헬로카봇",
+      "youtubeId": "MaBBbr3Ss78",
+      "videoTitle": "[헬로카봇 - 풀HD] 1화 내친구! 헬로 카봇",
+      "channel": "브라보키즈",
+      "videoType": "episode",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "episode",
+        "seasonNumber": 1,
+        "episodeNumber": 1
+      },
+      "endSeconds": 30
+    },
+    "tv/65503": {
+      "title": "아이엠스타!",
+      "youtubeId": "pIdtCHRY6_c",
+      "videoTitle": "【アイカツ！】第1話「私がアイドルになっても？」",
+      "channel": "アイカツ!チャンネル【公式】",
+      "videoType": "episode",
+      "language": "ja",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "episode",
+        "seasonNumber": 1,
+        "episodeNumber": 1
+      },
+      "endSeconds": 30
+    },
+    "tv/93009": {
+      "title": "미스트롯",
+      "youtubeId": "7GfY7af0w0I",
+      "videoTitle": "[풀버전] ※귀 호강 무대※ 송가인 '한 많은 대동강' ♪미스트롯 full ver",
+      "channel": "TVCHOSUN - TV조선",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/128979": {
+      "title": "돌싱글즈",
+      "youtubeId": "MuRRWSmVEUQ",
+      "videoTitle": "[돌싱글즈5] 랜덤데이트, 돌싱하우스에 변화가? | 5회 예고",
+      "channel": "MBN Entertainment",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "season",
+        "seasonNumber": 5
+      }
+    },
+    "tv/34960": {
+      "title": "슈퍼스타K",
+      "youtubeId": "NScoMe_vfzA",
+      "videoTitle": "Mnet [슈퍼스타K6] 최강의 TOP11 공개 영상!!!",
+      "channel": "Mnet K-POP",
+      "videoType": "featurette",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "season",
+        "seasonNumber": 6
+      }
+    },
+    "tv/134778": {
+      "title": "실화탐사대",
+      "youtubeId": "CSb6zs1Xq4s",
+      "videoTitle": "[#실화탐사대] 욱일기 차주의 충격적인 정체 | MBC240815방송",
+      "channel": "엠뚜루마뚜루 : MBC 공식 종합 채널",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/244885": {
+      "title": "탐정들의 영업비밀",
+      "youtubeId": "VLuLD6oeh50",
+      "videoTitle": "탐정들의 영업비밀 | 이름부터 자식까지 모든 게 가짜인 전처의 실체는?",
+      "channel": "채널아하: 채널A Health & Asset",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/78276": {
+      "title": "소사이어티 게임",
+      "youtubeId": "mNSHEczVWug",
+      "videoTitle": "[소사이어티 게임2] EP.5 김치찌개 사건의 전말",
+      "channel": "tvN Joy",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "season",
+        "seasonNumber": 2
+      }
+    },
+    "tv/92286": {
+      "title": "리틀 포레스트",
+      "youtubeId": "Gie-iWoj0Bk",
+      "videoTitle": "[리틀 포레스트] 이승기 x 이서진 '삼촌들의 빨래시간' / 'Little Forest' Clip",
+      "channel": "SBS",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/71170": {
+      "title": "패키지로 세계일주 - 뭉쳐야 뜬다",
+      "youtubeId": "hNwAFVOXOro",
+      "videoTitle": "뭉쳐야 뜬다 44회 예고편",
+      "channel": "JTBC Entertainment",
+      "videoType": "trailer",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/135933": {
+      "title": "진범인 플래그",
+      "youtubeId": "gERqR6cs8g4",
+      "videoTitle": "「真犯人フラグ」Huluで見逃し配信中！（主演：西島秀俊、企画・原案：秋元康）",
+      "channel": "Hulu Japan公式",
+      "videoType": "trailer",
+      "language": "ja",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/210757": {
+      "title": "광표",
+      "youtubeId": "FicZ1DDQ1Zo",
+      "videoTitle": "Official Trailer: The Knockout | 狂飙 | iQIYI",
+      "channel": "iQIYI 爱奇艺 - Get the iQIYI APP",
+      "videoType": "trailer",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/63248": {
+      "title": "쇼 미 어 히어로",
+      "youtubeId": "ZLuEPenuCd4",
+      "videoTitle": "Show Me A Hero - Trailer",
+      "channel": "HBO Nederland (HBO NL)",
+      "videoType": "trailer",
+      "language": "en",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/70030": {
+      "title": "대당영요",
+      "youtubeId": "Vz362oqVYvg",
+      "videoTitle": "[ENG SUB] 大唐荣耀 The Glory of Tang Dynasty Trailer",
+      "channel": "Tranzgeek",
+      "videoType": "trailer",
+      "language": "zh",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/68820": {
+      "title": "레고 프렌즈",
+      "youtubeId": "P84hpAIyFRQ",
+      "videoTitle": "New Girl in Town - LEGO Friends -Trailer",
+      "channel": "LEGO",
+      "videoType": "trailer",
+      "language": "en",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/87547": {
+      "title": "레고 프렌즈: 소녀들의 임무 수행",
+      "youtubeId": "fUJkRuULo_s",
+      "videoTitle": "LEGO® FRIENDS SEASON 4 COMPILATION! | Girls on a Mission",
+      "channel": "LEGO",
+      "videoType": "clip",
+      "language": "en",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "season",
+        "seasonNumber": 4
+      },
+      "endSeconds": 30
+    },
+    "tv/205990": {
+      "title": "로보카 폴리 쏭쏭뮤지엄",
+      "youtubeId": "NjNsR0_JEEY",
+      "videoTitle": "실을 감아요│로보카폴리 쏭쏭뮤지엄│연을 날려 볼까요",
+      "channel": "로보카폴리 - 인기 동요",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/146083": {
+      "title": "로보카 폴리: 엠버와 함께하는 생활안전 이야기",
+      "youtubeId": "s6EXiHp9bG4",
+      "videoTitle": "엠버와 함께하는 생활안전 이야기 | EP 11 | 로보카폴리",
+      "channel": "로보카폴리 TV",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/132615": {
+      "title": "시크릿 쥬쥬 별의 여신",
+      "youtubeId": "vBDCO2YpZSs",
+      "videoTitle": "시크릿 쥬쥬 별의 여신 시즌5 엔딩 [NEW SECRET JOUJU S5 ENDING]",
+      "channel": "시크릿 쥬쥬 Secret Jouju",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "season",
+        "seasonNumber": 5
+      }
+    },
+    "tv/59206": {
+      "title": "캐니멀",
+      "youtubeId": "pKSwC4OZiYI",
+      "videoTitle": "[CANIMALS] Canimals Trailer",
+      "channel": "VOOZCLUB",
+      "videoType": "trailer",
+      "language": "en",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
+    },
+    "tv/33238": {
+      "title": "런닝맨",
+      "youtubeId": "5wNtSynSBuA",
+      "videoTitle": "이광수 | 런닝맨 레전드 이광수 모음",
+      "channel": "런닝맨 - 스브스 공식 채널",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      },
+      "endSeconds": 30
+    },
+    "tv/146334": {
+      "title": "로보카 폴리: 폴리와 함께하는 교통안전 이야기",
+      "youtubeId": "CJXqsw_82Qw",
+      "videoTitle": "폴리와 함께하는 교통안전이야기 | 주제가",
+      "channel": "Robocar POLI TV",
+      "videoType": "clip",
+      "language": "ko",
+      "targets": [
+        "preview",
+        "playbackFallback"
+      ],
+      "tmdbOfficial": false,
+      "scope": {
+        "type": "title"
+      }
     }
   },
   "unavailablePreviewIds": [

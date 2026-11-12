@@ -16,9 +16,10 @@ const PREVIEW_START_TIMEOUT_MS = 6000;
 
 function HoverVideo({ mediaType, id, title, originalLanguage }) {
   const fallback = getVideoFallback(mediaType, id, 'preview');
+  const backup = fallback ? null : getVideoFallback(mediaType, id, 'playbackFallback');
   const [cachedVideos] = useState(() => getCachedPreviewVideos(mediaType, id, originalLanguage));
   const [attempt, setAttempt] = useState(() => ({
-    sources: selectPreviewVideos(cachedVideos, fallback),
+    sources: selectPreviewVideos(cachedVideos, fallback, cachedVideos && backup),
     index: 0,
     started: false,
   }));
@@ -28,18 +29,21 @@ function HoverVideo({ mediaType, id, title, originalLanguage }) {
     if (cachedVideos) return;
     let mounted = true;
 
+    const updateSources = (videos) => {
+      if (mounted) {
+        setAttempt((current) => ({ ...current, sources: selectPreviewVideos(videos, fallback, backup) }));
+      }
+    };
+
     loadPreviewVideos(mediaType, id, originalLanguage, import.meta.env.VITE_TMDB_API_KEY)
-      .then((videos) => {
-        if (mounted) {
-          setAttempt((current) => ({ ...current, sources: selectPreviewVideos(videos, fallback) }));
-        }
-      })
+      .then(updateSources)
       .catch((error) => {
+        updateSources([]);
         if (mounted && error.name !== 'TimeoutError') console.error('영상 불러오기 실패:', error);
       });
 
     return () => { mounted = false; };
-  }, [cachedVideos, fallback, id, mediaType, originalLanguage]);
+  }, [backup, cachedVideos, fallback, id, mediaType, originalLanguage]);
 
   const failPreview = useCallback((youtubeId, beforeStartOnly = false) => {
     setAttempt((current) => {
