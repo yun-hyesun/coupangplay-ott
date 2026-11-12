@@ -69,10 +69,12 @@ service cloud.firestore {
       allow delete: if false;
       match /members/{uid} {
         allow get: if signedIn() && request.auth.uid == uid;
-        allow list: if false;
+        allow list: if activeMember(sessionId);
         allow create: if signedIn() && request.auth.uid == uid
           && session(sessionId).data.status == 'active'
+          && request.resource.data.keys().hasOnly(['uid','name','role','joinedAt'])
           && request.resource.data.uid == uid
+          && request.resource.data.name is string && request.resource.data.name.size() <= 100
           && request.resource.data.role == (session(sessionId).data.hostId == uid ? 'host' : 'member')
           && request.resource.data.joinedAt == request.time;
         allow update, delete: if false;
