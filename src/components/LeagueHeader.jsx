@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { LeagueShortcutPopup } from "./LeagueShortcutPopup";
+import { TeamImage } from "./LeagueDetailShared";
 
 const LEAGUE_TABS = [
   ["home", "홈", null],
@@ -19,7 +20,7 @@ const LEAGUE_ICON_PATHS = {
   "tour-de-france": "/images/icon/DesignSystem_Icon08/icon-sport_racing.svg",
 };
 
-export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle = true, activeTab, onTabChange, isMyLeague, selectedLeagueCount = 0, selectedTeams = [], onToggleMyLeague, onOpenTeamSettings, isCompact }) {
+export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle = true, activeTab, onTabChange, isMyLeague, selectedLeagueCount = 0, selectedTeams = [], onToggleMyLeague, onOpenTeamSettings }) {
   const [isLeagueMenuOpen, setLeagueMenuOpen] = useState(false);
   const leagueMenuTriggerRef = useRef(null);
   const leagueMenuId = useId();
@@ -31,7 +32,7 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle
   const leagueCountLabel = selectedLeagueCount >= 9 ? "9+" : String(selectedLeagueCount);
 
   return (
-    <section className={"league-detail__hero" + (isCompact ? " is-compact" : "")} aria-label={league.name + " 리그 정보"}>
+    <section className="league-detail__hero" aria-label={league.name + " 리그 정보"}>
       <div className="league-detail__hero-inner">
         <div className="league-detail__hero-info">
           <div className="league-detail__league-mark-wrap">
@@ -88,18 +89,16 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle
             aria-label={isMyLeague ? `마이 리그, 등록된 리그 ${selectedLeagueCount}개` : "마이 리그"}
             onClick={onToggleMyLeague}
           >
-            <span className="league-detail__action-label">마이 리그</span>
-            {isMyLeague ? (
-              <>
-                <span className="league-detail__action-check" aria-hidden="true" />
-                {selectedLeagueCount > 0 && <span className="league-detail__count-badge" aria-hidden="true">{leagueCountLabel}</span>}
-              </>
-            ) : (
-              <span className="league-detail__action-plus" aria-hidden="true">＋</span>
-            )}
-            {!isMyLeague && (
-              <img className="league-detail__compact-plus" src="/images/sports/league-detail/detail-plus.svg" alt="" aria-hidden="true" />
-            )}
+            <span className="league-detail__action-content" aria-hidden="true">
+              <span className="league-detail__action-label"><span>마이 리그</span></span>
+              <span className={"league-detail__action-symbol" + (isMyLeague ? " league-detail__action-symbol--check" : "")}>
+                {isMyLeague ? <span className="league-detail__action-check" /> : <>
+                  <span className="league-detail__action-plus">＋</span>
+                  <img className="league-detail__compact-plus" src="/images/sports/league-detail/detail-plus.svg" alt="" />
+                </>}
+              </span>
+            </span>
+            {isMyLeague && selectedLeagueCount > 0 && <span className="league-detail__count-badge" aria-hidden="true">{leagueCountLabel}</span>}
           </button>
           <button
             type="button"
@@ -108,16 +107,18 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle
             aria-haspopup="dialog"
             aria-label={selectedTeams.length ? `마이 팀 설정, 선택된 팀 ${selectedTeams.length}개` : "마이 팀 설정"}
           >
-            <span className="league-detail__action-label">마이 팀</span>
-            {!selectedTeam && <span className="league-detail__action-chevron" aria-hidden="true" />}
-            {selectedTeam ? (
-              <>
-                <img className="league-detail__selected-team-logo" src={selectedTeam.logoPath || sportIconPath} alt="" aria-hidden="true" />
-                <span className="league-detail__count-badge" aria-hidden="true">{teamCountLabel}</span>
-              </>
-            ) : (
-              <img className="league-detail__action-team-icon" src={sportIconPath} alt="" aria-hidden="true" />
-            )}
+            <span className="league-detail__action-content" aria-hidden="true">
+              <span className="league-detail__action-label"><span>마이 팀</span></span>
+              <span className={"league-detail__action-symbol" + (selectedTeam ? " league-detail__action-symbol--team" : " league-detail__action-symbol--sport")}>
+                {selectedTeam
+                  ? <TeamImage className="league-detail__selected-team-logo" team={selectedTeam} leagueId={league.id} />
+                  : <>
+                    <span className="league-detail__action-chevron" />
+                    <img className="league-detail__action-team-icon" src={sportIconPath} alt="" />
+                  </>}
+              </span>
+            </span>
+            {selectedTeam && <span className="league-detail__count-badge" aria-hidden="true">{teamCountLabel}</span>}
           </button>
         </div>
       </div>

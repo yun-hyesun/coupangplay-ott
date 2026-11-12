@@ -1,33 +1,37 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useMatch, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
 import { SearchInput } from '../../page/search/components/SearchInput';
+import { SPORTS_LEAGUE_BY_ID } from '../../data/sportsLeagues';
+import { getLeagueHeaderStyle } from '../../data/leagueHeaderTheme';
 import './scss/header-footer.scss'
 
 export const Header = () => {
 
   // 메인 메뉴
   const mainMenu = [
-    { id: 1, menu: "스포츠", path: "/sports" },
-    { id: 2, menu: "드라마", path: "/drama" },
-    { id: 3, menu: "예능", path: "/entertainment" },
-    { id: 4, menu: "영화", path: "/movie" },
-    { id: 5, menu: "스토어", path: "/store" },
-    { id: 6, menu: "키즈", path: "/kids" },
+    { id: 1,menu: '스포츠',path: '/sports',class: 'sports',image: '/images/sports_menu.svg'},
+    { id: 2, menu: "드라마", path: "/drama", class: "drama" },
+    { id: 3, menu: "예능", path: "/entertainment", class: "entertainment" },
+    { id: 4, menu: "영화", path: "/movie", class: "movie" },
+    { id: 5, menu: "스토어", path: "/store", class: "store" },
+    { id: 6, menu: "키즈", path: "/kids", class: "kids" },
+    { id: 7, menu: "클립", path: "/wowclip", class: "wowclip" }
   ];
 
   const [isScroll, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const leagueRoute = useMatch('/sports/league/:leagueId');
+  const league = SPORTS_LEAGUE_BY_ID[leagueRoute?.params.leagueId];
 
   // 스크롤
   useEffect(() => {
     const handleScroll = () => {
-      console.log(window.scrollY);
       setIsScrolled(window.scrollY > 100)
     }
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
     // 서브페이지 이동후 home오면 스크롤 이벤트가 없어므로 위치값 재 체크를 위해
     handleScroll();
 
@@ -105,7 +109,10 @@ export const Header = () => {
   };
 
   return (
-    <header className={isScroll ? "header active" : "header"}>
+    <header
+      className={`header${isScroll ? ' active' : ''}${league ? ' header--league' : ''}`}
+      style={league ? getLeagueHeaderStyle(league) : undefined}
+    >
       <div className='inner'>
         <div className='header-left'>
           <h1 className='header-logo'>
@@ -115,10 +122,17 @@ export const Header = () => {
           <nav className='header-nav'>
             <ul className='header-nav-menu'>
               {mainMenu.map((menu) => (
-                <li className='nav-menu-list' key={menu.id}>
+                <li className={`nav-menu-list ${menu.class}`} key={menu.id}>
                   <NavLink
                     className={({ isActive }) => isActive ? 'active' : ''}
-                    to={menu.path}>{menu.menu}</NavLink>
+                    to={menu.path}
+                  >
+                    {menu.image ? (
+                      <img className="nav-menu-image" src={menu.image} alt={menu.menu} />
+                    ) : (
+                      menu.menu
+                    )}
+                  </NavLink>
                 </li>
               ))}
             </ul>
