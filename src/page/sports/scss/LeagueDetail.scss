@@ -5,6 +5,35 @@
   --league-surface: #0b1c2b;
   --league-surface-raised: #12283a;
   --league-border: rgba(185, 211, 235, .13);
+  --league-header-progress: 0;
+  --league-hero-expanded-height: 395px;
+  --league-hero-compact-height: 176px;
+  --league-hero-row-top: 140px;
+  --league-hero-row-compact-top: 0px;
+  --league-hero-row-height: 108px;
+  --league-hero-row-compact-height: 112px;
+  --league-logo-size: 110px;
+  --league-logo-gap: 16px;
+  --league-title-size: 36px;
+  --league-title-compact-size: 30px;
+  --league-action-width: 148px;
+  --league-action-height: 62px;
+  --league-action-compact-size: 76px;
+  --league-action-gap: 14px;
+  --league-action-compact-gap: 16px;
+  --league-action-content-gap: 10px;
+  --league-action-font-size: 18px;
+  --league-action-icon-size: 28px;
+  --league-action-team-size: 24px;
+  --league-action-team-height: 24px;
+  --league-action-compact-team-size: 28px;
+  --league-action-radius: 10px;
+  --league-action-compact-radius: 10px;
+  --league-action-padding: 12px;
+  --league-action-badge-size: 24px;
+  --league-action-compact-badge-size: 26px;
+  --league-action-badge-font-size: 12px;
+  --league-action-compact-badge-font-size: 14px;
   width: 100%;
   min-height: 100vh;
   padding-bottom: 104px;
@@ -29,28 +58,36 @@
   }
 
   &__hero {
-    position: relative;
-    z-index: 0;
-    height: 395px;
-    min-height: 395px;
+    position: fixed;
+    z-index: 999;
+    top: var(--global-header-height, 70px);
+    right: 0;
+    left: 0;
+    height: calc(var(--league-hero-expanded-height) - (var(--league-hero-expanded-height) - var(--league-hero-compact-height)) * var(--league-header-progress));
     padding: 0;
     overflow: hidden;
     isolation: isolate;
     background: var(--league-header-color, #203f5e);
+    background-image: var(--league-header-background-image);
+    background-position: center calc(-1 * var(--global-header-height, 70px));
+    background-repeat: no-repeat;
+    background-size: 100% var(--league-header-background-height, 465px);
+    box-shadow: 0 10px 24px rgb(0 0 0 / calc(.22 * var(--league-header-progress)));
   }
 
   &__hero-shell {
     position: relative;
-    height: 395px;
+    // Keep document geometry stable while the fixed header contracts over it.
+    height: var(--league-hero-expanded-height);
   }
 
   &__hero-inner {
     position: absolute;
-    top: 140px;
+    top: calc(var(--league-hero-row-top) + (var(--league-hero-row-compact-top) - var(--league-hero-row-top)) * var(--league-header-progress));
     right: 48px;
     left: 56px;
     display: flex;
-    height: 108px;
+    height: calc(var(--league-hero-row-height) + (var(--league-hero-row-compact-height) - var(--league-hero-row-height)) * var(--league-header-progress));
     align-items: center;
     justify-content: space-between;
     gap: 24px;
@@ -59,21 +96,23 @@
   &__hero-info {
     display: flex;
     min-width: 0;
+    flex: 1 1 auto;
     align-items: center;
-    gap: 16px;
+    gap: calc(var(--league-logo-gap) * (1 - var(--league-header-progress)));
   }
 
   &__league-mark-wrap {
     display: grid;
-    width: 110px;
-    height: 110px;
-    flex: 0 0 110px;
+    width: calc(var(--league-logo-size) * (1 - var(--league-header-progress)));
+    height: calc(var(--league-logo-size) * (1 - var(--league-header-progress)));
+    flex: 0 0 calc(var(--league-logo-size) * (1 - var(--league-header-progress)));
     place-items: center;
     overflow: hidden;
     border: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    opacity: clamp(0, calc(4 * (1 - var(--league-header-progress))), 1);
   }
 
   &__league-mark {
@@ -96,7 +135,7 @@
     min-width: 0;
     flex-direction: column;
     align-items: flex-start;
-    gap: 14px;
+    gap: calc(14px - 6px * var(--league-header-progress));
   }
 
   &__league-select-heading {
@@ -108,12 +147,12 @@
   &__league-select {
     position: relative;
     display: flex;
-    width: 259px;
+    max-width: 100%;
     height: 48px;
     align-items: center;
     justify-content: flex-start;
-    gap: 20px;
-    padding: 0 8px;
+    gap: calc(20px - 10px * var(--league-header-progress));
+    padding: 0 calc(8px * (1 - var(--league-header-progress)));
     border: 0;
     border-radius: 8px;
     background: transparent;
@@ -126,7 +165,7 @@
       flex: 0 1 auto;
       margin: 0;
       overflow: hidden;
-      font-size: 36px;
+      font-size: calc(var(--league-title-size) + (var(--league-title-compact-size) - var(--league-title-size)) * var(--league-header-progress));
       font-weight: $font-w-B-700;
       letter-spacing: 0;
       line-height: 48px;
@@ -175,32 +214,39 @@
       color: var(--league-score-color, var(--league-accent));
       background: #fff;
     }
+
+    &,
+    &.is-on {
+      width: calc(108px - 16px * var(--league-header-progress));
+      height: calc(46px - 10px * var(--league-header-progress));
+      font-size: calc(20px - 5px * var(--league-header-progress));
+    }
   }
 
   &__hero-actions {
     display: flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: 14px;
+    gap: calc(var(--league-action-gap) + (var(--league-action-compact-gap) - var(--league-action-gap)) * var(--league-header-progress));
 
     a,
     button {
       position: relative;
       display: inline-flex;
-      width: 148px;
-      height: 62px;
+      width: calc(var(--league-action-width) + (var(--league-action-compact-size) - var(--league-action-width)) * var(--league-header-progress));
+      height: calc(var(--league-action-height) + (var(--league-action-compact-size) - var(--league-action-height)) * var(--league-header-progress));
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 0 12px;
-      border: 1px solid color-mix(in srgb, var(--league-header-color, #203f5e) 68%, #fff);
-      border-radius: 10px;
+      padding: 0 calc(var(--league-action-padding) * (1 - var(--league-header-progress)));
+      border: calc(1px + .5px * var(--league-header-progress)) solid;
+      border-color: color-mix(in srgb, color-mix(in srgb, var(--league-header-color, #203f5e) 68%, #fff), rgba(255, 255, 255, .52) calc(var(--league-header-progress) * 100%));
+      border-radius: calc(var(--league-action-radius) + (var(--league-action-compact-radius) - var(--league-action-radius)) * var(--league-header-progress));
       color: #fff;
-      font-size: 18px;
+      font-size: var(--league-action-font-size);
       font-weight: $font-w-M-500;
       line-height: 28px;
       text-decoration: none;
-      background: rgba(25, 10, 36, .2);
+      background: color-mix(in srgb, rgba(25, 10, 36, .2), rgba(22, 10, 34, .38) calc(var(--league-header-progress) * 100%));
       transition: background-color .18s ease, border-color .18s ease;
       cursor: pointer;
     }
@@ -218,17 +264,71 @@
     button.is-selected:hover,
     button.has-selected-team:hover {
       border-color: #fff;
+      border-radius: calc(var(--league-action-radius) + (14px - var(--league-action-radius)) * var(--league-header-progress));
       color: var(--league-score-color, color-mix(in srgb, var(--league-accent) 72%, #000));
       background: #fff;
     }
 
+    .league-detail__action-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--league-action-content-gap) * (1 - var(--league-header-progress)));
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
     .league-detail__action-label {
+      display: block;
+      width: calc(var(--league-action-label-width, 4em) * (1 - var(--league-header-progress)));
+      flex: 0 0 auto;
+      overflow: hidden;
       color: currentColor;
       font-size: inherit;
+      opacity: calc(1 - var(--league-header-progress));
+
+      > span { display: inline-block; }
+    }
+
+    button:last-child .league-detail__action-label {
+      width: calc(var(--league-action-label-width, 3em) * (1 - var(--league-header-progress)));
+    }
+
+    .league-detail__action-symbol {
+      --league-action-symbol-width: 20px;
+      --league-action-symbol-height: 28px;
+      --league-action-symbol-compact-width: var(--league-action-icon-size);
+      --league-action-symbol-compact-height: var(--league-action-icon-size);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+      width: calc(var(--league-action-symbol-width) + (var(--league-action-symbol-compact-width) - var(--league-action-symbol-width)) * var(--league-header-progress));
+      height: calc(var(--league-action-symbol-height) + (var(--league-action-symbol-compact-height) - var(--league-action-symbol-height)) * var(--league-header-progress));
+      flex: 0 0 auto;
+      place-items: center;
+
+      > * { grid-area: 1 / 1; }
+    }
+
+    .league-detail__action-symbol--check {
+      --league-action-symbol-width: 15px;
+      --league-action-symbol-compact-width: 15px;
+    }
+
+    .league-detail__action-symbol--sport {
+      --league-action-symbol-width: 10px;
+    }
+
+    .league-detail__action-symbol--team {
+      --league-action-symbol-width: var(--league-action-team-size);
+      --league-action-symbol-height: var(--league-action-team-height);
+      --league-action-symbol-compact-width: var(--league-action-compact-team-size);
+      --league-action-symbol-compact-height: var(--league-action-compact-team-size);
     }
 
     .league-detail__action-plus {
       font-size: 20px;
+      opacity: calc(1 - var(--league-header-progress));
     }
 
     .league-detail__action-check {
@@ -251,34 +351,48 @@
       border-bottom: 2px solid currentColor;
       border-radius: 1px;
       transform: translateY(-2px) rotate(45deg);
+      opacity: calc(1 - var(--league-header-progress));
     }
 
     .league-detail__selected-team-logo {
       display: block;
-      width: 32px;
-      height: 36px;
-      flex: 0 0 32px;
+      min-width: 0;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
     }
 
     .league-detail__count-badge {
       position: absolute;
-      top: -8px;
-      right: -8px;
+      top: calc(-8px + 2px * var(--league-header-progress));
+      right: calc(-8px + 2px * var(--league-header-progress));
       display: inline-flex;
-      min-width: 24px;
-      height: 24px;
+      min-width: calc(var(--league-action-badge-size) + (var(--league-action-compact-badge-size) - var(--league-action-badge-size)) * var(--league-header-progress));
+      height: calc(var(--league-action-badge-size) + (var(--league-action-compact-badge-size) - var(--league-action-badge-size)) * var(--league-header-progress));
       align-items: center;
       justify-content: center;
       padding: 0 5px;
       border: 0;
       border-radius: 14px;
       color: #fff;
-      font-size: 12px;
+      font-size: calc(var(--league-action-badge-font-size) + (var(--league-action-compact-badge-font-size) - var(--league-action-badge-font-size)) * var(--league-header-progress));
       font-weight: $font-w-B-700;
       line-height: 20px;
       background: #d91f26;
       white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .league-detail__compact-plus,
+    .league-detail__action-team-icon {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: var(--league-header-progress);
       pointer-events: none;
     }
 
@@ -347,159 +461,10 @@
     --league-score-color: #946eac;
   }
 
-  &[data-league="PL"] .league-detail__hero:not(.is-compact) {
-    background-image: url("/images/sports/league-detail/detail-brand-veil.svg"), url("/images/sports/league-detail/detail-bg-panels.svg");
-    background-position: center, center;
-    background-repeat: no-repeat, no-repeat;
-    background-size: 100% 100%, 100% 100%;
-  }
-
-  &__hero.is-compact {
-    position: fixed;
-    z-index: 999;
-    top: 70px;
-    right: 0;
-    left: 0;
-    width: 100%;
-    height: 176px;
-    min-height: 176px;
-    overflow: hidden;
-    background-color: var(--league-header-color, #203f5e);
-    background-image:
-      linear-gradient(90deg, rgba(255, 255, 255, .06), transparent 38%, rgba(0, 0, 0, .1)),
-      linear-gradient(115deg,
-        color-mix(in srgb, var(--league-header-color, #203f5e) 88%, #fff 12%),
-        var(--league-header-color, #203f5e) 50%,
-        color-mix(in srgb, var(--league-header-color, #203f5e) 76%, #000 24%));
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, .22);
-
-    .league-detail__hero-inner {
-      top: 0;
-      right: 48px;
-      left: 56px;
-      height: 112px;
-    }
-
-    .league-detail__hero-info {
-      gap: 0;
-    }
-
-    .league-detail__league-mark-wrap {
-      display: none;
-    }
-
-    .league-detail__league-copy {
-      flex-direction: row;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .league-detail__league-select {
-      width: auto;
-      height: 48px;
-      gap: 10px;
-      padding: 0;
-    }
-
-    .league-detail__league-select .league-detail__league-name {
-      font-size: 30px;
-      line-height: 40px;
-    }
-
-    .league-detail__score-toggle,
-    .league-detail__score-toggle.is-on {
-      width: 102px;
-      height: 40px;
-      font-size: 17px;
-    }
-
-    .league-detail__hero-actions {
-      gap: 16px;
-    }
-
-    .league-detail__hero-actions a,
-    .league-detail__hero-actions button {
-      width: 76px;
-      height: 76px;
-      gap: 0;
-      padding: 0;
-      border: 1.5px solid rgba(255, 255, 255, .52);
-      border-radius: 10px;
-      background: rgba(22, 10, 34, .38);
-    }
-
-    .league-detail__hero-actions .league-detail__action-label,
-    .league-detail__hero-actions .league-detail__action-plus,
-    .league-detail__hero-actions .league-detail__action-chevron {
-      display: none;
-    }
-
-    .league-detail__hero-actions .league-detail__compact-plus,
-    .league-detail__hero-actions .league-detail__action-team-icon {
-      display: block;
-      width: 28px;
-      height: 28px;
-      object-fit: contain;
-    }
-
-    .league-detail__hero-actions button.is-selected,
-    .league-detail__hero-actions button.has-selected-team {
-      position: relative;
-      overflow: visible;
-      border-color: #fff;
-      border-radius: 14px;
-      background: #fff;
-    }
-
-    .league-detail__hero-actions .league-detail__selected-team-logo {
-      display: block;
-      width: 40px;
-      height: 40px;
-      flex-basis: 40px;
-      object-fit: contain;
-    }
-
-    .league-detail__hero-actions .league-detail__count-badge {
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      display: inline-flex;
-      min-width: 26px;
-      height: 26px;
-      align-items: center;
-      justify-content: center;
-      padding: 0 6px;
-      border-radius: 14px;
-      color: #fff;
-      font-size: 14px;
-      font-weight: $font-w-B-700;
-      line-height: 20px;
-      background: #d91f26;
-    }
-
-    .league-detail__tabs {
-      right: 48px;
-      left: 56px;
-      height: 64px;
-    }
-  }
-
-  &__compact-plus,
-  &__action-team-icon {
-    display: none;
-  }
-
   &__section {
     padding-inline: clamp(24px, 3.35vw, 64px);
     margin-top: 58px;
-    scroll-margin-top: 80px;
-  }
-
-  &.has-compact-header &__section {
-    scroll-margin-top: 260px;
+    scroll-margin-top: calc(var(--global-header-height, 70px) + var(--league-hero-compact-height) + 16px);
   }
 
   &__section-heading {
@@ -774,11 +739,13 @@
   }
 
   &__team-placeholder {
+    display: block;
     width: 30px;
     height: 30px;
-    flex: 0 0 30px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, .1);
+    flex-shrink: 0;
+    border-radius: 0;
+    background: transparent;
+    object-fit: contain;
   }
 
   &__match-center {
@@ -1665,37 +1632,26 @@
 
 @media (max-width: 850px) {
   .league-detail {
-    &__hero-shell {
-      height: 360px;
-    }
-
-    &__hero {
-      height: 360px;
-      min-height: 360px;
-    }
+    --league-hero-expanded-height: 360px;
+    --league-hero-row-top: 124px;
+    --league-logo-size: 86px;
+    --league-title-size: 30px;
+    --league-title-compact-size: 26px;
+    --league-action-width: 120px;
+    --league-action-height: 50px;
+    --league-action-compact-size: 64px;
+    --league-action-gap: 8px;
+    --league-action-compact-gap: 12px;
+    --league-action-font-size: 14px;
+    --league-action-padding: 8px;
 
     &__hero-inner {
-      top: 124px;
       right: 30px;
       left: 30px;
     }
 
-    &__league-mark-wrap {
-      width: 86px;
-      height: 86px;
-      flex-basis: 86px;
-    }
-
-    &__hero-info {
-      gap: 16px;
-    }
-
     &__league-select {
-      width: min(259px, 34vw);
-
-      .league-detail__league-name {
-        font-size: 30px;
-      }
+      max-width: 38vw;
     }
 
     &__score-toggle {
@@ -1709,22 +1665,10 @@
       height: 40px;
     }
 
-    &__hero-actions {
-      gap: 8px;
-
-      a,
-      button {
-        width: 120px;
-        height: 50px;
-        padding-inline: 8px;
-        font-size: 14px;
-      }
-    }
-
     &__tabs {
       right: 30px;
       left: 30px;
-      height: 56px;
+      height: calc(56px + 8px * var(--league-header-progress));
       gap: 24px;
 
       button {
@@ -1744,53 +1688,43 @@
       }
     }
 
-    &__hero.is-compact {
-      height: 176px;
-      min-height: 176px;
 
-      .league-detail__hero-inner {
-        right: 30px;
-        left: 30px;
-        height: 112px;
-      }
-
-      .league-detail__hero-actions {
-        gap: 12px;
-      }
-
-      .league-detail__hero-actions a,
-      .league-detail__hero-actions button {
-        width: 64px;
-        height: 64px;
-      }
-
-      .league-detail__tabs {
-        right: 30px;
-        left: 30px;
-        height: 64px;
-      }
-    }
   }
 }
 
 @media (max-width: 600px) {
   .league-detail {
+    --league-hero-expanded-height: 330px;
+    --league-hero-compact-height: 196px;
+    --league-hero-row-top: 84px;
+    --league-hero-row-compact-top: 8px;
+    --league-hero-row-height: 176px;
+    --league-hero-row-compact-height: 132px;
+    --league-logo-size: 62px;
+    --league-logo-gap: 10px;
+    --league-title-size: 24px;
+    --league-title-compact-size: 20px;
+    --league-action-width: 118px;
+    --league-action-height: 42px;
+    --league-action-compact-size: 44px;
+    --league-action-compact-gap: 7px;
+    --league-action-content-gap: 5px;
+    --league-action-font-size: 12px;
+    --league-action-icon-size: 22px;
+    --league-action-team-size: 20px;
+    --league-action-team-height: 20px;
+    --league-action-compact-team-size: 22px;
+    --league-action-compact-radius: 7px;
+    --league-action-padding: 7px;
+    --league-action-badge-size: 20px;
+    --league-action-compact-badge-size: 20px;
+    --league-action-badge-font-size: 10px;
+    --league-action-compact-badge-font-size: 10px;
     padding-bottom: 60px;
 
-    &__hero-shell {
-      height: 330px;
-    }
-
-    &__hero {
-      height: 330px;
-      min-height: 330px;
-    }
-
     &__hero-inner {
-      top: 84px;
       right: 18px;
       left: 18px;
-      height: 176px;
       align-items: flex-start;
       flex-direction: column;
       justify-content: flex-start;
@@ -1799,13 +1733,8 @@
 
     &__hero-info {
       align-items: center;
-      gap: 10px;
-    }
-
-    &__league-mark-wrap {
-      width: 62px;
-      height: 62px;
-      flex-basis: 62px;
+      flex: 0 0 auto;
+      width: 100%;
     }
 
     &__league-copy {
@@ -1813,13 +1742,12 @@
     }
 
     &__league-select {
-      width: min(240px, calc(100vw - 120px));
+      max-width: 100%;
       height: 36px;
       gap: 8px;
       padding-inline: 0;
 
       .league-detail__league-name {
-        font-size: 24px;
         line-height: 36px;
       }
     }
@@ -1839,18 +1767,7 @@
       position: absolute;
       right: 0;
       bottom: 0;
-      gap: 8px;
 
-      a,
-      button {
-        width: 118px;
-        height: 42px;
-        gap: 5px;
-        padding-inline: 7px;
-        font-size: 12px;
-      }
-
-      .league-detail__selected-team-logo { width: 24px; height: 28px; flex-basis: 24px; }
       .league-detail__count-badge { top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 4px; font-size: 10px; line-height: 16px; }
     }
 
@@ -1877,94 +1794,6 @@
       button:nth-child(4) {
         width: 52px;
         flex-basis: 52px;
-      }
-    }
-
-    &__hero.is-compact {
-      top: 70px;
-      height: 156px;
-      min-height: 156px;
-      background-position: center;
-      background-size: 100% 100%;
-
-      .league-detail__hero-inner {
-        right: 14px;
-        left: 14px;
-        height: 96px;
-        align-items: center;
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 5px;
-      }
-
-      .league-detail__league-select {
-        height: 38px;
-        gap: 5px;
-      }
-
-      .league-detail__league-select .league-detail__league-name {
-        max-width: 190px;
-        font-size: 20px;
-        line-height: 28px;
-      }
-
-      .league-detail__score-toggle,
-      .league-detail__score-toggle.is-on {
-        width: 78px;
-        height: 32px;
-        font-size: 12px;
-      }
-
-      .league-detail__league-copy {
-        gap: 7px;
-      }
-
-      .league-detail__hero-actions {
-        gap: 7px;
-      }
-
-      .league-detail__hero-actions {
-        position: static;
-      }
-
-      .league-detail__hero-actions a,
-      .league-detail__hero-actions button {
-        width: 44px;
-        height: 44px;
-        border-radius: 7px;
-      }
-
-      .league-detail__hero-actions .league-detail__compact-plus,
-      .league-detail__hero-actions .league-detail__action-team-icon {
-        width: 22px;
-        height: 22px;
-      }
-
-      .league-detail__hero-actions .league-detail__selected-team-logo { width: 28px; height: 28px; flex-basis: 28px; }
-      .league-detail__hero-actions .league-detail__count-badge { top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 4px; font-size: 10px; line-height: 16px; }
-
-      .league-detail__tabs {
-        right: 14px;
-        left: 14px;
-        height: 60px;
-        gap: 8px;
-        padding-left: 0;
-
-        button {
-          width: 66px;
-          flex-basis: 66px;
-          font-size: 14px;
-        }
-
-        button:nth-child(3) {
-          width: 98px;
-          flex-basis: 98px;
-        }
-
-        button:nth-child(4) {
-          width: 52px;
-          flex-basis: 52px;
-        }
       }
     }
 

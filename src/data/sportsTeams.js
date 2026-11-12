@@ -4,6 +4,10 @@ import { kleagueTeamNameKo } from "./kleagueTeamNameKo";
 import { nbaTeamNameKo } from "./nbaTeamNameKo";
 import { teamNameKo } from "./teamNameKo";
 
+export const SPORTS_TEAM_PLACEHOLDER = "data:image/svg+xml," + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path fill="#b2b2b2" d="M16 3.5C12.4 5.7 7.8 7 2.5 7.5l1.3 10C4.5 23.1 8.8 27 16 29.5c7.2-2.5 11.5-6.4 12.2-12l1.3-10C24.2 7 19.6 5.7 16 3.5Z"/></svg>',
+);
+
 const teamLogoPath = (slug) => {
   if (!slug) return "";
   const filename = /\.(png|jpe?g|svg|webp)$/i.test(slug) ? slug : `${slug}.png`;

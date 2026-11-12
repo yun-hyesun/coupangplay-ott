@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { SPORTS_LEAGUES } from "../data/sportsLeagues";
 import "./scss/LeagueShortcutPopup.scss";
 
-const CATEGORIES = ["전체", "축구", "농구", "레이싱", "일반"];
+const CATEGORIES = ["전체", ...new Set(SPORTS_LEAGUES.map((league) => league.sport))];
 
 export function LeagueShortcutPopup({ id, currentLeagueId, activeTab, triggerRef, onClose }) {
   const navigate = useNavigate();

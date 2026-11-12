@@ -1,6 +1,5 @@
 import { getEspnSeasonSchedule } from "./espnService";
 import { getKleagueScheduleMonth, normalizeKleagueMatch } from "./sportsService";
-import { getF1RacesForDate, getF1SeasonScheduleUnits } from "./f1Service";
 import { getSeasonRange } from "../data/leagueScheduleView";
 import { getScheduleGameDate } from "../data/leagueScheduleRange";
 
@@ -25,16 +24,8 @@ export async function getLeagueSeasonSchedule(leagueId, season, { signal, force 
       }
     }));
     data = { games: results.flatMap(result => result.games), errors: results.flatMap(result => result.errors) };
-  } else if (leagueId === "f1") {
-    const units = await getF1SeasonScheduleUnits(season);
-    const dates = [...new Set(units.map(getScheduleGameDate).filter(Boolean))];
-    const games = [];
-    for (const date of dates) {
-      if (signal?.aborted) break;
-      games.push(...await getF1RacesForDate(date));
-    }
-    data = { games, errors: [] };
-  } else {
+  }
+   else {
     const { from, to } = getSeasonRange(leagueId, season);
     data = await getEspnSeasonSchedule(leagueId, season, from, to, { signal });
   }

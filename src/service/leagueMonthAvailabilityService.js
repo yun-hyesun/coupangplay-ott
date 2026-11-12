@@ -3,7 +3,6 @@ import { ESPN_LEAGUE_PATHS } from "../data/espnLeagues";
 import { getScheduleGameDate } from "../data/leagueScheduleRange";
 import { getPublishedLeagueMonths, readEspnSeasonMonths } from "../data/leagueSeasonCalendar";
 import { getFootballDataSeason } from "./footballDataSeasonService";
-import { getF1SeasonScheduleUnits } from "./f1Service";
 import { getKleagueScheduleMonth } from "./sportsService";
 
 const SUPPORTED = new Set(SPORTS_LEAGUES.map(league => league.id));
@@ -56,7 +55,6 @@ async function loadKleagueMonth(leagueId, year, month) {
 
 export function createLeagueMonthService({
   football = loadFootballSeason, espn = loadEspnRange, kleague = loadKleagueMonth,
-  f1 = async year => ({ games: await getF1SeasonScheduleUnits(year), complete: true, source: "Jolpica" }),
   now = Date.now,
 } = {}) {
   const cache = new Map();
@@ -96,8 +94,6 @@ export function createLeagueMonthService({
         catch { packet = await espn(leagueId, year, first, last); }
         record(packet, first, last);
       });
-    } else if (leagueId === "f1") {
-      tasks.push(async () => record(await f1(year), 1, 12));
     } else if (leagueId.startsWith("kleague-")) {
       for (let month = 1; month <= 12; month++) tasks.push(async () => record(await kleague(leagueId, year, month), month, month));
     } else {

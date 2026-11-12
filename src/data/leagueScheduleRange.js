@@ -57,6 +57,18 @@ export function selectScheduleMatches(games, range, tab) {
     });
 }
 
+export function getNearestScheduleRange(games, today, tab) {
+  const range = getScheduleRange(today, tab);
+  if (selectScheduleMatches(games, range, tab).length) return range;
+  const dates = games.map(getScheduleGameDate).filter(Boolean).sort();
+  if (!dates.length) return range;
+  const searchRange = tab === "ended"
+    ? { from: dates[0], to: today }
+    : { from: today, to: dates.at(-1) };
+  const nearest = selectScheduleMatches(games, searchRange, tab)[0];
+  return nearest ? getScheduleRange(getScheduleGameDate(nearest), tab) : range;
+}
+
 // 날짜별 API의 동시 요청을 3개로 제한하고, 조회에 성공한 날짜는 유지합니다.
 export async function loadScheduleDates({ from, to, loadSchedule, signal }) {
   const dates = listScheduleDates(from, to);

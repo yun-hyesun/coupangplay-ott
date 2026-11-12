@@ -4,6 +4,29 @@
  // #################### header
 
 .header {min-height: 70px; padding: clamp(10px, 1.25vw, 18px) $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
+
+  &.header--league,
+  &.header--league.active {
+    background-color: var(--league-header-color);
+    background-image: var(--league-header-background-image);
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: 100% var(--league-header-background-height, 465px);
+    transition: none;
+
+    .header-nav-menu a {
+      color: #fff;
+      transition: background-color .18s ease;
+
+      &:hover,
+      &.active { background: rgba(255, 255, 255, .2); }
+    }
+
+    .inner .header-right .header-login {
+      border: 1px solid rgba(255, 255, 255, .5);
+      background: rgba(0, 0, 0, .16);
+    }
+  }
   &.active {background: $color-bg;}
   &.active .header-search:has(.is-open) {background: $color-border;}
 
