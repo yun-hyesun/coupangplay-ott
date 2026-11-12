@@ -10,14 +10,14 @@ import "swiper/css/navigation";
 import "./scss/MatchRelatedVideos.scss";
 
 export function MatchRelatedVideos({ game, id, initialVideos = [], returnTab }) {
-  const { competitionCode, matchday, scheduleSegment, raceName } = game;
+  const { competitionCode, matchday, scheduleSegment } = game;
   const homeName = game.home?.name;
   const awayName = game.away?.name;
   const kickoff = game.utcDate || game.startTime;
   const match = useMemo(() => ({
-    competitionCode, matchday, scheduleSegment, raceName, utcDate: kickoff,
+    competitionCode, matchday, scheduleSegment, utcDate: kickoff,
     home: { name: homeName }, away: { name: awayName },
-  }), [competitionCode, matchday, scheduleSegment, raceName, kickoff, homeName, awayName]);
+  }), [competitionCode, matchday, scheduleSegment, kickoff, homeName, awayName]);
   const [request, setRequest] = useState({ cursor: null, attempt: 0 });
   const [result, setResult] = useState({ videos: initialVideos, loading: true, error: "", nextCursor: null, incomplete: false });
 

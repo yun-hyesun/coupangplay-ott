@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useMatch, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
 import { SearchInput } from '../../page/search/components/SearchInput';
+import { SPORTS_LEAGUE_BY_ID } from '../../data/sportsLeagues';
+import { getLeagueHeaderStyle } from '../../data/leagueHeaderTheme';
 import './scss/header-footer.scss'
 
 export const Header = () => {
@@ -21,14 +23,15 @@ export const Header = () => {
   const [isScroll, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const leagueRoute = useMatch('/sports/league/:leagueId');
+  const league = SPORTS_LEAGUE_BY_ID[leagueRoute?.params.leagueId];
 
   // 스크롤
   useEffect(() => {
     const handleScroll = () => {
-      console.log(window.scrollY);
       setIsScrolled(window.scrollY > 100)
     }
-    window.addEventListener("scroll", handleScroll)
+    window.addEventListener("scroll", handleScroll, { passive: true })
     // 서브페이지 이동후 home오면 스크롤 이벤트가 없어므로 위치값 재 체크를 위해
     handleScroll();
 
@@ -106,7 +109,10 @@ export const Header = () => {
   };
 
   return (
-    <header className={isScroll ? "header active" : "header"}>
+    <header
+      className={`header${isScroll ? ' active' : ''}${league ? ' header--league' : ''}`}
+      style={league ? getLeagueHeaderStyle(league) : undefined}
+    >
       <div className='inner'>
         <div className='header-left'>
           <h1 className='header-logo'>

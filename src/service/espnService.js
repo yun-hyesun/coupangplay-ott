@@ -552,8 +552,19 @@ function findEspnTeam(leagueId, team = {}) {
     : leagueId === "nfl" ? espnTeamNames.nfl : espnTeamNames.soccer;
   const name = names[String(team.id)];
   // ESPN ID는 football-data/API Ninjas ID와 겹칠 수 있어 기존 ID 조회에 넘기지 않습니다.
-  // 번역이 확인된 팀만 사용하며 리그별 사용자 제공 명단을 다시 확인합니다.
-  return name ? findSportsTeam(leagueId, { name }) : null;
+  const localTeam = name ? findSportsTeam(leagueId, { name }) : null;
+  if (localTeam) return localTeam;
+  const sourceName = String(team.displayName || team.name || "").trim();
+  const sourceId = Number(team.id);
+  const placeholder = /^(?:TBD|TBC)\b|^to be (?:determined|confirmed)\b/i.test(sourceName);
+  const mlsAllStars = leagueId === "mls" && /\ball[- ]stars?\b/i.test(sourceName);
+  // 공식 축구 일정의 참가 팀은 로컬 명단/번역 유무와 관계없이 제공자 ID로 구분합니다.
+  // 양수 ID를 가진 미정 팀도 제외하며 NBA·NFL의 기존 팀 연결은 유지합니다.
+  if (ESPN_LEAGUE_PATHS[leagueId]?.startsWith("soccer/") && Number.isInteger(sourceId) && sourceId > 0
+    && sourceName && !placeholder && !mlsAllStars) {
+    return { id: `${leagueId}:espn:${team.id}`, name: name || sourceName };
+  }
+  return null;
 }
 
 function getStatus(status = {}) {
@@ -581,6 +592,7 @@ function getCrest(local, remote) {
 export function getScheduleStageLabel(value) {
   const slug = String(value || "").trim().toLowerCase().replace(/[ _]+/g, "-");
   const labels = {
+    "preliminary-round": "예선",
     "first-round": "1라운드",
     "round-one": "1라운드",
     "second-round": "2라운드",
@@ -920,11 +932,16 @@ export async function getEspnSeasonSchedule(leagueId, season, from, to, { signal
   if (!path) return { games: [], errors: [] };
   const start = new Date(`${from}T00:00:00Z`);
   start.setUTCDate(start.getUTCDate() - 1);
-  // MLS는 연간 날짜 범위 대신 연도(YYYY)로 조회해야 정상 응답합니다.
-  const dates = leagueId === "mls" ? String(season)
-    : `${start.toISOString().slice(0, 10).replaceAll("-", "")}-${to.replaceAll("-", "")}`;
-  const data = await espnFetch(`${path}/scoreboard`, { dates, limit: "1000" }, "events");
-  const games = data.events.map(event => normalizeEspnEvent(leagueId, event)).filter(Boolean)
+  // ESPN 축구 일정은 긴 기간 요청이 400을 반환하므로 연도별로 받아 한국 날짜로 필터링합니다.
+  // 유럽 대회처럼 두 해에 걸친 시즌과 1월 1일의 전날 UTC 경기까지 포함합니다.
+  const fromYear = Number(start.toISOString().slice(0, 4));
+  const toYear = Number(to.slice(0, 4));
+  const dates = leagueId === "mls" ? [String(season)]
+    : Array.from({ length: toYear - fromYear + 1 }, (_, index) => String(fromYear + index));
+  signal?.throwIfAborted();
+  const results = await Promise.all(dates.map(value => espnFetch(`${path}/scoreboard`, { dates: value, limit: "1000" }, "events")));
+  signal?.throwIfAborted();
+  const games = results.flatMap(data => data.events).map(event => normalizeEspnEvent(leagueId, event)).filter(Boolean)
     .filter(game => { const date = getSeoulDateKey(game.utcDate); return date >= from && date <= to; });
   if (leagueId === "mls") {
     try {

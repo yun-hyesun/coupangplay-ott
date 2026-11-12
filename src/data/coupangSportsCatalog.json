@@ -75,16 +75,6 @@
     "featured": true
   },
   {
-    "id": "f1",
-    "name": "F1",
-    "sport": "레이싱",
-    "scope": "해외",
-    "shortName": "F1",
-    "teams": [],
-    "logoPath": "/images/sports/icon/League_logo/F1.svg",
-    "featured": false
-  },
-  {
     "id": "PD",
     "name": "라리가",
     "sport": "축구",

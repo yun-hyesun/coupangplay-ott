@@ -54,7 +54,6 @@ export function getPromoMatchWatchlistContent(game) {
     homeLogo: game.home.crest || game.home.logoPath || null,
     awayLogo: game.away.crest || game.away.logoPath || null,
     thumbnail: game.broadcastThumbnail || game.thumbnail || null,
-    raceName: game.raceName || null,
     startTime: hasPromoKickoffTime(game) ? game.utcDate || game.startTime : null,
   };
 }

@@ -1,5 +1,5 @@
 import { LoginNoticePopup } from './common/LoginNoticePopup';
-import { SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
+import { SPORTS_TEAM_PLACEHOLDER, SPORTS_TEAMS_BY_LEAGUE } from "../data/sportsTeams";
 import { SPORTS_LEAGUE_BY_ID } from "../data/sportsLeagues";
 import { Link, useLocation } from "react-router-dom";
 import { getYouTubeVideoId } from "../data/youtubeVideoId";
@@ -85,8 +85,11 @@ export function findLeagueTeam(leagueId, candidate = {}) {
 export function TeamImage({ team, leagueId, className = "" }) {
   const localTeam = team ? findLeagueTeam(leagueId, team) : null;
   const image = team?.crest || team?.logoPath || localTeam?.logoPath;
-  if (!image) return <span className={"league-detail__team-placeholder " + className} aria-hidden="true" />;
-  return <img className={className} src={image} alt="" loading="lazy" />;
+  const [failedImage, setFailedImage] = useState(null);
+  const hasImage = Boolean(image && image !== failedImage);
+  return <img className={(hasImage ? "" : "league-detail__team-placeholder ") + className}
+    src={hasImage ? image : SPORTS_TEAM_PLACEHOLDER} alt="" loading="lazy"
+    onError={hasImage ? () => setFailedImage(image) : undefined} />;
 }
 
 export function EmptyMessage({ children }) {
@@ -104,15 +107,8 @@ export function LiveBadge({ label, className = "" }) {
 
 export function MatchCard({ game, leagueId, scoresOn }) {
   const status = getGameStatus(game.status);
-  const isRace = Boolean(game.raceName);
-
-  const homeName = isRace
-    ? game.raceName
-    : game.home?.name || "홈 팀";
-
-  const awayName = isRace
-    ? "그랑프리"
-    : game.away?.name || "원정 팀";
+  const homeName = game.home?.name || "홈 팀";
+  const awayName = game.away?.name || "원정 팀";
 
   const hasScore =
     scoresOn &&
@@ -157,7 +153,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
   const favoriteContent = {
     id: `${leagueId}_${matchId}`,
     media_type: "sports",
-    title: isRace ? homeName : `${homeName} vs ${awayName}`,
+    title: `${homeName} vs ${awayName}`,
     leagueId,
     sport: SPORTS_LEAGUE_BY_ID[leagueId]?.sport || game.sport || null,
     startTime: game.utcDate || game.startTime || null,
@@ -168,7 +164,6 @@ export function MatchCard({ game, leagueId, scoresOn }) {
     homeLogo: game.home?.crest || game.home?.logoPath || null,
     awayLogo: game.away?.crest || game.away?.logoPath || null,
     thumbnail: game.broadcastThumbnail || game.thumbnail || null,
-    raceName: game.raceName || null,
   };
 
   const currentUid = auth.currentUser?.uid || user?.uid;
@@ -278,9 +273,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
         </div>
 
         <div className="league-detail__match-team league-detail__match-team--away">
-          {!isRace && (
-            <TeamImage team={game.away} leagueId={leagueId} />
-          )}
+          <TeamImage team={game.away} leagueId={leagueId} />
           <span title={awayName}>{awayName}</span>
         </div>
       </div>
@@ -354,10 +347,7 @@ export function BroadcastCard({ game, leagueId, sport }) {
     return () => window.clearInterval(timer);
   }, [isLive, kickoff]);
   const thumbnail = isLive && (game.broadcastThumbnail || game.thumbnail);
-  const isRace = Boolean(game.raceName);
-  const heading = isRace
-    ? game.raceName
-    : (game.home?.name || "홈 팀") + " vs " + (game.away?.name || "원정 팀");
+  const heading = (game.home?.name || "홈 팀") + " vs " + (game.away?.name || "원정 팀");
   const Media = isLive ? Link : "div";
 
   return (
@@ -369,8 +359,8 @@ export function BroadcastCard({ game, leagueId, sport }) {
         <img className="league-detail__broadcast-bg" src={thumbnail || BROADCAST_BACKGROUNDS_BY_SPORT[sport] || DETAIL_BACKGROUND} alt="" />
         {!thumbnail && <div className="league-detail__broadcast-teams">
           <TeamImage team={game.home} leagueId={leagueId} />
-          {!isRace && <span>VS</span>}
-          {!isRace && <TeamImage team={game.away} leagueId={leagueId} />}
+          <span>VS</span>
+          <TeamImage team={game.away} leagueId={leagueId} />
         </div>}
         {isLive ? <>
           <LiveBadge label="라이브 중계" />

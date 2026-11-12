@@ -97,13 +97,6 @@ export default defineConfig({
           path.replace(/^\/espn/, "/apis/site/v2/sports"),
       },
 
-      "/jolpica": {
-        target: "https://api.jolpi.ca",
-        changeOrigin: true,
-        rewrite: (path) =>
-          path.replace(/^\/jolpica/, "/ergast"),
-      },
-
       "/kleague": {
         target: "https://www.kleague.com",
         changeOrigin: true,

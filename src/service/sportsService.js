@@ -232,7 +232,7 @@ export async function getNbaStandings() {
     .sort((a, b) => a.rank - b.rank);
 }
 
-// 해외 축구·NFL·NBA 일정은 ESPN, F1은 Jolpica, K리그 일정과 NBA 순위는 기존 연결을 사용합니다.
+// 해외 축구·NFL·NBA 일정은 ESPN, K리그 일정과 NBA 순위는 기존 연결을 사용합니다.
 export {
   getEspnScheduleForRange as getMatchesForRange,
   getEspnFootballMatches as getFootballMatches,
