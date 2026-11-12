@@ -1,10 +1,18 @@
 import { getScheduleGameDate, shiftScheduleDate } from "./leagueScheduleRange.js";
-import { getScheduleUnit } from "./leagueScheduleUnits.js";
+import { buildScheduleUnitOptions, getScheduleUnit } from "./leagueScheduleUnits.js";
 import { findSportsTeam } from "./sportsTeams";
 
 const CALENDAR_YEAR_LEAGUES = new Set(["f1", "mls", "kleague-1", "kleague-2"]);
 
 export const usesCalendarSeason = leagueId => CALENDAR_YEAR_LEAGUES.has(leagueId);
+
+export function getScheduleBrowseRange(today) {
+  return { from: "2010-01-01", to: `${today.slice(0, 4)}-12-31` };
+}
+
+export function isScheduleDateInRange(date, range) {
+  return Boolean(date && date >= range.from && date <= range.to);
+}
 
 export function getScheduleSeason(leagueId, dateKey) {
   const [year, month] = dateKey.split("-").map(Number);
@@ -14,10 +22,11 @@ export function getScheduleSeason(leagueId, dateKey) {
 export function getSeasonRange(leagueId, year) {
   return usesCalendarSeason(leagueId)
     ? { from: `${year}-01-01`, to: `${year}-12-31`, label: String(year) }
-    : { from: `${year}-07-01`, to: `${year + 1}-06-30`, label: `${year}-${String(year + 1).slice(-2)}` };
+    : { from: `${year}-07-01`, to: `${year + 1}-06-30`, label: `${year}-${year + 1}` };
 }
 
-export function getScheduleRounds(games) {
+export function getScheduleRounds(games, { currentOnly = false, now = Date.now() } = {}) {
+  if (currentOnly) return buildScheduleUnitOptions(games, now).options;
   const units = new Map();
   for (const game of games) {
     const unit = getScheduleUnit(game);

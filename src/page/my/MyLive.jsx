@@ -1,6 +1,11 @@
 
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { auth } from '../../firebase/firebase'
+import { useAuthStore } from '../../store/useAuthStore'
+import { useProfileStore } from '../../store/useProfileStore'
+import { getLiveReminderItems, useWatchlistStore } from '../../store/useWatchlistStore'
+import { SportsWatchlistThumbnail } from './components/LiveReminder'
 import './scss/MyLive.scss'
 
 // 상단 콘텐츠 탭
@@ -23,22 +28,33 @@ const genres = [
     '키즈'
 ];
 
-// 임시 데이터
-// 실제 예약 기능 연동 후 데이터로 교체
-const initialLiveData = [];
-
 export const MyLive = () => {
-    // 라이브 예약 목록
-    const [liveList, setLiveList] = useState(initialLiveData);
+    const user = useAuthStore((state) => state.user);
+    const authLoading = useAuthStore((state) => state.loading);
+    const currentProfile = useProfileStore((state) => state.currentProfile);
+    const { watchlist, ownerKey, loading, error, onLoadWatchlist, onRemoveWatchlist } = useWatchlistStore();
+    const currentOwnerKey = user?.uid && currentProfile?.id
+        ? `${user.uid}_${currentProfile.id}`
+        : null;
+    const isCurrentList = Boolean(!authLoading && currentOwnerKey && ownerKey === currentOwnerKey);
+    const liveList = isCurrentList ? getLiveReminderItems(watchlist) : [];
+
+    useEffect(() => {
+        if (!authLoading && currentOwnerKey) onLoadWatchlist();
+    }, [authLoading, currentOwnerKey, onLoadWatchlist]);
 
     // 선택한 장르
     const [activeGenre, setActiveGenre] = useState('전체');
 
     // 편집 모드
-    const [isEditing, setIsEditing] = useState(false);
+    const [editingOwnerKey, setEditingOwnerKey] = useState(null);
+    const isEditing = Boolean(currentOwnerKey && editingOwnerKey === currentOwnerKey);
 
     // 선택한 콘텐츠 ID
     const [selectedIds, setSelectedIds] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
+    const isBusy = authLoading || loading || isDeleting || !isCurrentList;
 
     // 장르 필터링
     const filteredLive = liveList.filter((item) =>
@@ -56,13 +72,14 @@ export const MyLive = () => {
 
     // 편집 시작
     const handleEdit = () => {
-        setIsEditing(true);
+        setEditingOwnerKey(currentOwnerKey);
         setSelectedIds([]);
+        setDeleteError('');
     };
 
     // 편집 완료
     const handleComplete = () => {
-        setIsEditing(false);
+        setEditingOwnerKey(null);
         setSelectedIds([]);
     };
 
@@ -86,8 +103,8 @@ export const MyLive = () => {
     };
 
     // 선택 삭제
-    const handleDelete = () => {
-        if (selectedIds.length === 0) return;
+    const handleDelete = async () => {
+        if (!isEditing || isBusy || selectedIds.length === 0) return;
 
         const confirmed = window.confirm(
             '선택한 라이브 예약 알림을 삭제하시겠습니까?'
@@ -95,12 +112,26 @@ export const MyLive = () => {
 
         if (!confirmed) return;
 
-        setLiveList((prev) =>
-            prev.filter((item) => !selectedIds.includes(item.id))
-        );
+        setIsDeleting(true);
+        setDeleteError('');
 
-        setSelectedIds([]);
-        setIsEditing(false);
+        try {
+            const selectedItems = liveList.filter((item) => selectedIds.includes(item.id));
+            for (const item of selectedItems) {
+                const profile = useProfileStore.getState().currentProfile;
+                const uid = auth.currentUser?.uid;
+                if (!uid || !profile?.id || `${uid}_${profile.id}` !== currentOwnerKey) {
+                    throw new Error('프로필이 변경되었습니다.');
+                }
+                if (!await onRemoveWatchlist(item)) throw new Error('예약 알림 삭제 실패');
+            }
+            setSelectedIds([]);
+            setEditingOwnerKey(null);
+        } catch {
+            setDeleteError('라이브 예약 알림을 삭제하지 못했습니다. 다시 시도해 주세요.');
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -151,6 +182,7 @@ export const MyLive = () => {
                             <button
                                 type="button"
                                 onClick={handleComplete}
+                                disabled={isBusy}
                             >
                                 완료
                             </button>
@@ -158,6 +190,7 @@ export const MyLive = () => {
                             <button
                                 type="button"
                                 onClick={handleEdit}
+                                disabled={isBusy}
                             >
                                 편집
                             </button>
@@ -187,6 +220,7 @@ export const MyLive = () => {
                                     setSelectedIds([]);
                                 }}
                                 aria-pressed={activeGenre === genre}
+                                disabled={isDeleting}
                             >
                                 {genre}
                             </button>
@@ -200,7 +234,7 @@ export const MyLive = () => {
                                     type="button"
                                     className="delete"
                                     onClick={handleDelete}
-                                    disabled={selectedIds.length === 0}
+                                    disabled={isBusy || selectedIds.length === 0}
                                 >
                                     선택 삭제 ({selectedIds.length})
                                 </button>
@@ -208,6 +242,7 @@ export const MyLive = () => {
                                 <button
                                     type="button"
                                     onClick={handleSelectAll}
+                                    disabled={isBusy}
                                 >
                                     전체 선택
                                 </button>
@@ -215,6 +250,7 @@ export const MyLive = () => {
                                 <button
                                     type="button"
                                     onClick={handleComplete}
+                                    disabled={isBusy}
                                 >
                                     완료
                                 </button>
@@ -223,6 +259,7 @@ export const MyLive = () => {
                             <button
                                 type="button"
                                 onClick={handleEdit}
+                                disabled={isBusy}
                             >
                                 편집
                             </button>
@@ -231,7 +268,20 @@ export const MyLive = () => {
                 </div>
 
                 {/* 라이브 예약 목록 */}
-                {filteredLive.length === 0 ? (
+                {deleteError && <p className="my-live-empty" role="alert">{deleteError}</p>}
+                {authLoading || (currentOwnerKey && loading && !isCurrentList) ? (
+                    <p className="my-live-empty">
+                        라이브 예약 알림을 불러오는 중입니다.
+                    </p>
+                ) : !currentOwnerKey ? (
+                    <p className="my-live-empty">
+                        프로필을 먼저 선택해 주세요.
+                    </p>
+                ) : error || !isCurrentList ? (
+                    <p className="my-live-empty">
+                        라이브 예약 알림을 불러오지 못했습니다.
+                    </p>
+                ) : filteredLive.length === 0 ? (
                     <p className="my-live-empty">
                         예약한 라이브 알림이 없습니다.
                     </p>
@@ -240,42 +290,31 @@ export const MyLive = () => {
                         {filteredLive.map((item) => {
                             const isSelected =
                                 selectedIds.includes(item.id);
+                            const Thumbnail = isEditing ? 'button' : Link;
 
                             return (
                                 <div
                                     className="my-live-item"
                                     key={item.id}
                                 >
-                                    <button
-                                        type="button"
+                                    <Thumbnail
                                         className="my-live-thumbnail"
-                                        onClick={() => {
-                                            if (isEditing) {
-                                                handleSelect(item.id);
-                                            }
-                                        }}
-                                        disabled={!isEditing}
+                                        {...(isEditing ? {
+                                            type: 'button',
+                                            onClick: () => handleSelect(item.id),
+                                            disabled: isBusy,
+                                        } : { to: item.path, state: item.state })}
                                         aria-label={
-                                            `${item.title} ${isSelected
+                                            isEditing ? `${item.title} ${isSelected
                                                 ? '선택 해제'
                                                 : '선택'
-                                            }`
+                                            }` : `${item.title} 경기 일정 보기`
                                         }
                                         aria-pressed={
                                             isEditing ? isSelected : undefined
                                         }
                                     >
-                                        {item.image ? (
-                                            <img
-                                                src={item.image}
-                                                alt=""
-                                                className="my-live-image"
-                                            />
-                                        ) : (
-                                            <span className="my-live-placeholder">
-                                                {item.title}
-                                            </span>
-                                        )}
+                                        <SportsWatchlistThumbnail item={item} />
 
                                         {/* 편집 모드 */}
                                         {isEditing && (
@@ -298,11 +337,11 @@ export const MyLive = () => {
                                                 />
                                             </span>
                                         )}
-                                    </button>
+                                    </Thumbnail>
 
                                     <div className="my-live-info">
                                         <h3>{item.title}</h3>
-                                        <p>{item.info}</p>
+                                        <p>{item.date}</p>
                                     </div>
                                 </div>
                             );
