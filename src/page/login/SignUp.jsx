@@ -1,11 +1,14 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
+import { getWatchInviteReturn } from '../watch/watchMedia'
 import './scss/Login.scss'
 
 export const Signup = () => {
   const { onEmailSignup, error } = useAuthStore();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const watchInvite = getWatchInviteReturn(state?.watchInvite);
 
   // 입력값 저장
   const [email, setEmail] = useState("");
@@ -37,7 +40,7 @@ export const Signup = () => {
       const user = await onEmailSignup(email, password);
 
       if (user) {
-        navigate("/profiles");
+        navigate("/profiles", { replace: Boolean(watchInvite), state: watchInvite ? { watchInvite } : undefined });
       }
     } finally {
       setIsSubmitting(false);
@@ -118,7 +121,7 @@ export const Signup = () => {
 
         <div className="signup-bottom">
           <p>이미 계정이 있으신가요?</p>
-          <Link to="/login">로그인</Link>
+          <Link to="/login" state={watchInvite ? { watchInvite } : undefined}>로그인</Link>
         </div>
       </div>
     </main>

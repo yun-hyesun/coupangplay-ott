@@ -9,7 +9,7 @@ const isLivePlayer = (player) => {
   try { return !!player?.getIframe()?.isConnected; } catch { return false; }
 };
 
-export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, onPosition, autoPlay = false, loop = false, compact = false, controls = true, muted: givenMuted, onMutedChange, onPlaybackChange, onFirstPlay }) => {
+export const ClipPlayer = ({ clip, onDuration, onUnavailable, preview = false, previewRequest, onPosition, autoPlay = false, loop = false, compact = false, controls = true, muted: givenMuted, onMutedChange, onPlaybackChange, onFirstPlay }) => {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const aliveRef = useRef(true);
@@ -34,12 +34,14 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
   const start = Math.max(0, clip.start);
   const end = Math.min(Math.max(start + 0.1, clip.end), duration || clip.end);
 
-  const resetPlayer = useCallback(() => {
+  const resetPlayer = useCallback((message = '영상을 불러오지 못했어요. 재생을 다시 눌러 주세요.') => {
     attemptRef.current++;
     playerRef.current = null;
     setPlaying(false); setReady(false); setMounted(false);
-    setError('영상을 불러오지 못했어요. 재생을 다시 눌러 주세요.');
-  }, []);
+    setDuration(0);
+    onUnavailable?.();
+    setError(message);
+  }, [onUnavailable]);
   const runPlayer = useCallback((action) => {
     const player = playerRef.current;
     if (!player) return;
@@ -48,12 +50,23 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
     try {
       if (!isLivePlayer(player)) {
         playerRef.current = null;
-        queueMicrotask(() => { if (aliveRef.current && attemptRef.current === token && !playerRef.current) setReady(false); });
+        queueMicrotask(() => {
+          if (!aliveRef.current || attemptRef.current !== token || playerRef.current) return;
+          setReady(false);
+          setDuration(0);
+          onUnavailable?.();
+        });
         return;
       }
       return action(player);
     } catch { recover(); }
-  }, [resetPlayer]);
+  }, [onUnavailable, resetPlayer]);
+  const syncDuration = (player) => {
+    const length = player.getDuration();
+    if (!(length > 0) || length === duration) return;
+    setDuration(length);
+    onDuration?.(length);
+  };
   useEffect(() => {
     aliveRef.current = true;
     return () => { aliveRef.current = false; playerRef.current = null; };
@@ -133,10 +146,21 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
     <div className="wowclip-player-visual"><div className="wowclip-media-window"><div className="wowclip-media-source" style={layout === 'portrait' ? { width: '316.049383%', left: sourceLeftPercent(cropX) + '%' } : undefined}>
       {!mounted && <img className="wowclip-player-poster" src={clipImage(clip)} alt="" />}
       {mounted && <YouTube key={attempt} videoId={clip.videoKey} title={clip.videoTitle || clip.title} className="wowclip-youtube" iframeClassName="wowclip-youtube-frame" opts={{ width: '100%', height: '100%', playerVars: { controls: 0, playsinline: 1, rel: 0, start: Math.floor(initialStart) } }}
-        onReady={({ target }) => { if (!aliveRef.current || attemptRef.current !== attempt || !isLivePlayer(target)) return; playerRef.current = target; setReady(true); runPlayer((player) => { const length = player.getDuration(); setDuration(length); onDuration?.(length); player.seekTo(preview ? pendingSeekRef.current : start, true); if (muted) player.mute(); if (desiredPlayingRef.current) player.playVideo(); }); }}
+        onReady={({ target }) => {
+          if (!aliveRef.current || attemptRef.current !== attempt || !isLivePlayer(target)) return;
+          playerRef.current = target;
+          setReady(true);
+          runPlayer((player) => {
+            syncDuration(player);
+            player.seekTo(preview ? pendingSeekRef.current : start, true);
+            if (muted) player.mute();
+            if (desiredPlayingRef.current) player.playVideo();
+          });
+        }}
         onStateChange={({ data, target }) => {
           if (!aliveRef.current || attemptRef.current !== attempt || target !== playerRef.current) return;
           runPlayer((player) => {
+          if (!duration) syncDuration(player);
           if (preview && data === 1 && !desiredPlayingRef.current) { player.pauseVideo(); setPlaying(false); }
           else {
             setPlaying(data === 1);
@@ -145,7 +169,16 @@ export const ClipPlayer = ({ clip, onDuration, preview = false, previewRequest, 
           }
           });
         }}
-        onError={() => { if (aliveRef.current && attemptRef.current === attempt) resetPlayer(); }} />}
+        onError={({ data }) => {
+          if (!aliveRef.current || attemptRef.current !== attempt) return;
+          if (preview && data === 100) {
+            resetPlayer('이 영상은 클립 기능이 제한돼 있어요. 원본 영상이 비공개이거나 삭제되었어요.');
+          } else if (preview && (data === 101 || data === 150)) {
+            resetPlayer('이 영상은 클립 기능이 제한돼 있어요. 원본 영상의 외부 재생이 허용되지 않아요.');
+          } else {
+            resetPlayer();
+          }
+        }} />}
     </div></div></div>
     {controls && <div className="wowclip-player-controls">
       {!preview && <label className="wowclip-seek"><span className="sr-only">클립 재생 위치</span><input type="range" min={start} max={end} step="0.1" value={Math.max(start, Math.min(end, position))} onChange={seek} disabled={!ready} /></label>}

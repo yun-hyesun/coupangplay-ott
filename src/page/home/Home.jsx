@@ -80,6 +80,7 @@ export const Home = () => {
           titleImage: '/images/channal11.svg',
           description: '다채로운 일본 드라마를 한곳에서 만나보세요',
           linkText: '채널 둘러보기',
+          to: '/channel/jplus',
         }}
       />
 

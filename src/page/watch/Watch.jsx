@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
 import WatchIcon from './WatchIcon';
 import WatchSettingsPanel from './WatchSettingsPanel';
 import WatchChatPanel from './WatchChatPanel';
+import { Popup } from '../../components/common/Popup';
 import { FullVideoClipButton } from '../wowclip/components/FullVideoClipButton';
 import { captureClipPlayback } from '../wowclip/utils/captureClipPlayback';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -12,15 +13,20 @@ import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchHistoryStore } from '../../store/useWatchHistoryStore';
 import './Watch.scss';
 import { auth } from '../../firebase/firebase';
-import { createWatchSession, joinWatchSession } from '../../service/sessionService';
+import { createWatchSession, joinWatchSession, trackWatchPresence, WATCH_PROFILE_KICKED } from '../../service/sessionService';
 import { subscribeSessionMessages, sendSessionMessage } from '../../service/chatService';
 import { communityError } from '../../data/communityData';
 import { selectWatchVideo, videoTypeLabels } from '../../data/videoFallback';
-import { getSportsLiveMatch, getWatchReturnDestination, resolveWatchMedia } from './watchMedia';
+import { getClipRestriction, getInviteEpisode, getSportsLiveMatch, getWatchInviteSession, getWatchReturnDestination, resolveWatchMedia } from './watchMedia';
 import { getLivePreviewVideo } from '../../service/matchRelatedVideosService';
 import { LiveBadge } from '../../components/LeagueDetailShared';
 
 const EMPTY = [];
+const applyYouTubeAudio = (player, volume, muted) => {
+  if (muted) player.mute();
+  player.setVolume(volume);
+  if (!muted) player.unMute();
+};
 const formatTime = (seconds) => {
   if (!Number.isFinite(seconds)) return '00:00';
   const minutes = Math.floor(seconds / 60);
@@ -35,17 +41,43 @@ export const Watch = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const uid = useAuthStore((value) => value.user?.uid);
+  const authLoading = useAuthStore((value) => value.loading);
   const profileId = useProfileStore((value) => value.currentProfile?.id);
+  const profileName = useProfileStore((value) => value.currentProfile?.name);
   const ownerKey = uid && profileId ? `${uid}_${profileId}` : null;
   const state = !location.state?.ownerKey || location.state.ownerKey === ownerKey
     ? location.state
     : null;
   const content = state?.content ?? {};
+  const hasTmdbId = /^[1-9]\d*$/.test(id ?? '');
+  const contentTitle = [content.title, content.name].find(
+    (value) => value && value !== '콘텐츠 제목'
+  );
+  const detail = useMovieStore((store) => store.contentDetails[`${type}-${id}`]);
+  const onFetchContentDetail = useMovieStore((store) => store.onFetchContentDetail);
+
+  useEffect(() => {
+    if (!hasTmdbId || (type !== 'tv' && type !== 'movie')) return;
+    if (contentTitle && content.poster_path && content.backdrop_path) return;
+
+    void onFetchContentDetail(type, id).catch((error) => {
+      console.error('시청내역용 작품 정보 조회 실패:', error);
+    });
+  }, [
+    type, id, hasTmdbId, contentTitle,
+    content.poster_path, content.backdrop_path, onFetchContentDetail,
+  ]);
+
   const resumeAt = Number(state?.resumeAt ?? 0);
   const clipTvDetails = useMovieStore(s => type === 'tv' ? s.tvDetails[id] : null);
-  const seasonNumber = state?.seasonNumber ?? 1;
-  const episodeNumber = state?.episodeNumber || 1;
+  const inviteParams = new URLSearchParams(location.search);
+  const invitedSessionId = type === 'tv' || type === 'movie' ? getWatchInviteSession(inviteParams) : null;
+  const returnToContentDetail = Boolean(invitedSessionId || state?.returnToContentDetail);
+  const inviteEpisode = type === 'tv' && invitedSessionId ? getInviteEpisode(inviteParams) : null;
+  const seasonNumber = inviteEpisode?.seasonNumber ?? state?.seasonNumber ?? 1;
+  const episodeNumber = inviteEpisode?.episodeNumber ?? (state?.episodeNumber || 1);
   const watchRequestKey = `${location.key}/${type}/${id}/${seasonNumber}/${episodeNumber}`;
+  const sessionScope = `${watchRequestKey}/${uid}/${profileId}`;
   const [settledLookup, setSettledLookup] = useState(null);
   const storedEpisodes = useMovieStore(s => s.episodes[`${id}-${seasonNumber}`] ?? EMPTY);
   const episodes = storedEpisodes.length ? storedEpisodes : (state?.episodes ?? []);
@@ -68,6 +100,7 @@ export const Watch = () => {
       replace: true,
       state: {
         ...state, episodes, seasonNumber, episodeNumber: nextNumber,
+        returnToContentDetail,
         videoSrc: nextVideoSrc, resumeAt: 0, youtubeKey: '', autoPlayNext, showNextEpisodeNotice: autoPlayNext,
       },
     });
@@ -125,11 +158,14 @@ export const Watch = () => {
     titleVideos: type === 'tv' ? tvVideos : movieVideos,
   }) : null;
   const { youtubeKey, videoSrc, title: mediaTitle } = resolveWatchMedia({ type, id, state, selectedVideo, liveVideo });
-  const activeFallback = selectedVideo?.supplemental ? selectedVideo : null;
-  const startAt = activeFallback || !Number.isFinite(resumeAt) ? 0 : Math.max(0, resumeAt);
+  const savedFallback = state?.youtubeKey && state.youtubeKey === content.youtubeKey
+    ? content.supplementalVideo
+    : null;
+  const activeFallback = selectedVideo?.supplemental ? selectedVideo : savedFallback;
+  const startAt = selectedVideo?.supplemental || !Number.isFinite(resumeAt) ? 0 : Math.max(0, resumeAt);
   const title = isLiveMode ? liveMatch.title : mediaTitle;
   const displayTitle = !content.title && !content.name && !state?.title ? activeFallback?.title || title : title;
-  const showEpisodeNumber = type === 'tv' && (!activeFallback || activeFallback.scope.type === 'episode');
+  const showEpisodeNumber = type === 'tv' && (!activeFallback || activeFallback.scope?.type === 'episode');
   const fallbackLabel = activeFallback ? videoTypeLabels[activeFallback.videoType] || '관련 영상' : '';
   // videoSrc는 사용 가능한 직접 재생 영상 파일(mp4/webm)의 URL입니다.
   // TMDB 유튜브 예고편 키는 HTML video src로 직접 사용할 수 없습니다.
@@ -140,17 +176,41 @@ export const Watch = () => {
   const [liveNeedsStart, setLiveNeedsStart] = useState(false);
   const [youtubePlaying, setYoutubePlaying] = useState(false);
   const autoPlayAttemptedRef = useRef(false);
-  const [nextEpisodeNotice, setNextEpisodeNotice] = useState(false);
+  const [dismissedEpisodeNotice, setDismissedEpisodeNotice] = useState(null);
+  const nextEpisodeNotice = state?.showNextEpisodeNotice && dismissedEpisodeNotice !== location.key;
   const [playing, setPlaying] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const controlsTimer = useRef(null);
+  const showControls = useCallback(() => {
+    window.clearTimeout(controlsTimer.current);
+    setControlsVisible(true);
+    if (playing) {
+      controlsTimer.current = window.setTimeout(() => {
+        setControlsVisible(false);
+      }, 2500);
+    }
+  }, [playing]);
+  useEffect(() => {
+    showControls();
+    return () => window.clearTimeout(controlsTimer.current);
+  }, [showControls]);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
-  const [volumeOpen, setVolumeOpen] = useState(false);
   const [volume, setVolume] = useState(100);
-  const [togetherMode, setTogetherMode] = useState(false);
+  const [volumeDismissed, setVolumeDismissed] = useState(false);
+  const [watchSession, setWatchSession] = useState(null);
+  const activeSession = watchSession?.scope === sessionScope ? watchSession : null;
+  const sessionId = activeSession?.id;
+  const togetherMode = Boolean(sessionId);
+  const currentSessionScope = useRef(null);
+  const sessionRequest = useRef(null);
+  const automaticJoinScope = useRef(null);
+  const [playerNotice, setPlayerNotice] = useState(null);
+  const [removedSessionScope, setRemovedSessionScope] = useState(null);
+  const [manualInvite, setManualInvite] = useState(null);
   const [chatDraft, setChatDraft] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
-  const [sessionId, setSessionId] = useState(null);
   const [chatError, setChatError] = useState('');
   const [sendingChat, setSendingChat] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -162,6 +222,9 @@ export const Watch = () => {
   const sourceKey = videoSrc || youtubeKey;
   const hasPlaybackError = sourceKey ? failedSources.includes(sourceKey) : failedSources.length > 0;
   const controlsDisabled = (!videoSrc && !youtubeKey) || hasPlaybackError;
+  const clipRestriction = getClipRestriction({ type, youtubeKey, videoSrc, hasPlaybackError, videoLookupPending, activeFallback });
+  const effectiveVolume = muted ? 0 : volume;
+  const visibleNotice = playerNotice?.scope === sessionScope ? playerNotice : null;
   const playbackKey = `${watchRequestKey}/${sourceKey}/${playbackAttempt}`;
   const currentPlayback = useRef(null);
 
@@ -169,6 +232,17 @@ export const Watch = () => {
     currentPlayback.current = playbackKey;
     return () => { currentPlayback.current = null; };
   }, [playbackKey]);
+
+  useLayoutEffect(() => {
+    currentSessionScope.current = sessionScope;
+    return () => { currentSessionScope.current = null; };
+  }, [sessionScope]);
+
+  useEffect(() => {
+    if (!playerNotice) return;
+    const timer = window.setTimeout(() => setPlayerNotice(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [playerNotice]);
 
   useEffect(() => {
     if (!isLiveMode) return undefined;
@@ -184,12 +258,8 @@ export const Watch = () => {
   // 같은 URL의 다음 회차로 이동해도 location.key 변경으로 알림을 갱신합니다.
   // 타이머는 페이지 전환/언마운트 시 정리해 이전 알림이 남지 않도록 합니다.
   useEffect(() => {
-    if (!state?.showNextEpisodeNotice) {
-      setNextEpisodeNotice(false);
-      return;
-    }
-    setNextEpisodeNotice(true);
-    const timer = window.setTimeout(() => setNextEpisodeNotice(false), 2500);
+    if (!state?.showNextEpisodeNotice) return;
+    const timer = window.setTimeout(() => setDismissedEpisodeNotice(location.key), 2500);
     return () => window.clearTimeout(timer);
   }, [location.key, state?.showNextEpisodeNotice]);
 
@@ -215,37 +285,112 @@ export const Watch = () => {
       setPlaying(false);
     }
   };
-  const setVideoVolume = (next) => {
-    setVolume(next); setMuted(next === 0);
-    if (videoRef.current) videoRef.current.volume = next / 100;
-    else if (youtubePlayer.current) {
-      youtubePlayer.current.setVolume(next);
-      if (next === 0) youtubePlayer.current.mute();
-      else youtubePlayer.current.unMute();
+  const updateAudio = (nextVolume, nextMuted) => {
+    setVolume(nextVolume);
+    setMuted(nextMuted);
+    if (videoRef.current) {
+      videoRef.current.muted = nextMuted;
+      videoRef.current.volume = nextVolume / 100;
+    } else if (youtubePlayer.current) {
+      applyYouTubeAudio(youtubePlayer.current, nextVolume, nextMuted);
     }
   };
-  // 같이 보기 해제 시 시청 세션 연결을 종료합니다.
-  // URL의 ?session=... 을 공유하면 같은 시청 세션에 참여할 수 있습니다.
+
+  const showNotice = (text, icon) => setPlayerNotice({ scope: sessionScope, text, icon });
+  const onKicked = useEffectEvent(() => {
+    setWatchSession(null);
+    setManualInvite(null);
+    setChatError('');
+    setPanel(current => current === 'chat' ? null : current);
+    setRemovedSessionScope(sessionScope);
+  });
+
   useEffect(() => {
-    if (!togetherMode || !sessionId) return;
-    setChatMessages([]);
-    return subscribeSessionMessages(sessionId, setChatMessages, err => setChatError(communityError(err)));
-  }, [togetherMode, sessionId]);
-  const toggleTogetherMode = async () => {
-    if (togetherMode) {
-      setTogetherMode(false);
-      setSessionId(null);
+    if (!sessionId || !profileId || auth.currentUser?.uid !== uid) return;
+    let kicked = false;
+    const reportError = error => { if (!kicked && currentSessionScope.current === sessionScope) setChatError(communityError(error)); };
+    const stopPresence = trackWatchPresence(sessionId, profileId, () => {
+      kicked = true;
+      if (currentSessionScope.current === sessionScope) onKicked();
+    }, reportError);
+    const stopMessages = subscribeSessionMessages(sessionId, setChatMessages, reportError);
+    return () => {
+      stopPresence();
+      stopMessages();
+    };
+  }, [sessionId, sessionScope, uid, profileId]);
+
+  const connectTogether = async () => {
+    if (sessionRequest.current === sessionScope) return;
+    if (!auth.currentUser) {
+      showNotice('같이 보기를 사용하려면 로그인해 주세요.');
       return;
     }
-    if (!auth.currentUser) { setChatError('같이 보기를 사용하려면 로그인해 주세요.'); setPanel('chat'); return; }
+    sessionRequest.current = sessionScope;
+    setWatchSession({ scope: sessionScope, pending: true });
+    setChatError('');
+    setChatMessages([]);
     try {
-      setChatError('');
-      const existing = new URLSearchParams(location.search).get('session');
-      const args = { type, contentId: id, season: seasonNumber, episode: episodeNumber };
-      const nextId = existing ? await joinWatchSession(existing, args) : await createWatchSession(args);
-      setSessionId(nextId);
-      setTogetherMode(true);
-    } catch (err) { setChatError(communityError(err)); setPanel('chat'); }
+      const args = { type, contentId: id, season: seasonNumber, episode: episodeNumber, profileId, memberName: profileName };
+      const nextId = invitedSessionId ? await joinWatchSession(invitedSessionId, args) : await createWatchSession(args);
+      if (currentSessionScope.current !== sessionScope) return;
+      setWatchSession({ scope: sessionScope, id: nextId });
+      setPanel('chat');
+      showNotice(invitedSessionId ? '같이 보기에 참여했어요.' : '같이 보기를 시작했어요.', 'check');
+    } catch (err) {
+      if (currentSessionScope.current !== sessionScope) return;
+      setWatchSession(null);
+      if (err?.code === WATCH_PROFILE_KICKED) setRemovedSessionScope(sessionScope);
+      else showNotice(communityError(err));
+    } finally {
+      if (sessionRequest.current === sessionScope) sessionRequest.current = null;
+    }
+  };
+
+  const joinFromInvite = useEffectEvent(() => {
+    if (automaticJoinScope.current === sessionScope) return;
+    automaticJoinScope.current = sessionScope;
+    void connectTogether();
+  });
+
+  useEffect(() => {
+    if (!invitedSessionId || authLoading) return;
+    if (!uid || !profileId) {
+      navigate(uid ? '/profiles' : '/login', { replace: true, state: { watchInvite: location.pathname + location.search } });
+      return;
+    }
+    joinFromInvite();
+  }, [authLoading, invitedSessionId, location.pathname, location.search, navigate, profileId, sessionScope, uid]);
+
+  const toggleTogetherMode = () => {
+    if (!togetherMode) {
+      void connectTogether();
+      return;
+    }
+    setWatchSession(null);
+    setManualInvite(null);
+    setChatError('');
+    showNotice('같이 보기를 껐어요.');
+  };
+
+  const copyInvite = async () => {
+    if (!sessionId) return;
+    const url = new URL(location.pathname, window.location.origin);
+    url.searchParams.set('session', sessionId);
+    if (type === 'tv') {
+      url.searchParams.set('season', seasonNumber);
+      url.searchParams.set('episode', episodeNumber);
+    }
+    try {
+      await navigator.clipboard.writeText(url.href);
+      if (currentSessionScope.current !== sessionScope) return;
+      setManualInvite(null);
+      showNotice('초대 링크를 복사했어요.', 'check');
+    } catch {
+      if (currentSessionScope.current !== sessionScope) return;
+      setManualInvite({ sessionId, url: url.href });
+      showNotice('초대 링크를 직접 복사해 주세요.');
+    }
   };
   const toggleCommunityPanel = () => {
     if (panel === 'chat') { setPanel(null); return; }
@@ -255,12 +400,12 @@ export const Watch = () => {
     event.preventDefault();
     if (!togetherMode || !sessionId || !chatDraft.trim() || sendingChat) return;
     setSendingChat(true);
-    try { setChatError(''); await sendSessionMessage(sessionId, chatDraft); setChatDraft(''); }
+    try { setChatError(''); await sendSessionMessage(sessionId, chatDraft, profileId); setChatDraft(''); }
     catch (err) { setChatError(communityError(err)); }
     finally { setSendingChat(false); }
   };
 
-  const togglePlay = async () => {
+  const togglePlay = useCallback(async () => {
     const video = videoRef.current;
     if (!video) {
       const player = youtubePlayer.current;
@@ -270,7 +415,34 @@ export const Watch = () => {
     if (video.paused) {
       try { await video.play(); } catch { setPlaying(false); }
     } else video.pause();
-  };
+  }, [youtubePlaying]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (
+        event.code !== 'Space' ||
+        event.repeat ||
+        event.defaultPrevented ||
+        controlsDisabled ||
+        isLiveMode
+      ) return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest('input, textarea, select, button, a, [role="button"]'))
+      ) return;
+
+      event.preventDefault();
+      showControls();
+      void togglePlay();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showControls, togglePlay, controlsDisabled, isLiveMode]);
+
   const seek = (seconds) => {
     if (isLiveMode) return;
     const video = videoRef.current;
@@ -283,6 +455,7 @@ export const Watch = () => {
   };
   const changeProgress = (e) => {
     if (isLiveMode) return;
+    showControls();
     const video = videoRef.current;
     if (video && duration) video.currentTime = Number(e.target.value);
     else if (youtubePlayer.current && duration) { youtubePlayer.current.seekTo(Number(e.target.value), true); setCurrentTime(Number(e.target.value)); }
@@ -293,38 +466,49 @@ export const Watch = () => {
   };
 
   const savePlayback = (position, total, completed = false, periodic = false) => {
-    if (isSports || activeFallback) return;
-    if (!ownerKey || !id || !['movie', 'tv'].includes(type)) {
-      console.warn('[시청내역] 저장 건너뜀', {
-        hasOwner: Boolean(ownerKey),
-        type,
-        id,
-      });
-      return;
-    }
+    if (isSports || (activeFallback && (!youtubeKey || (!completed && position <= 0)))) return;
+    if (!ownerKey || !hasTmdbId || !['movie', 'tv'].includes(type)) return;
+    if (!Number.isFinite(position) || !Number.isFinite(total) || total <= 0) return;
 
-    if (!Number.isFinite(position) || !Number.isFinite(total) || total <= 0) {
-      console.warn('[시청내역] 재생 시간 확인 불가', { position, total });
-      return;
-    }
+    const historyTitle = [detail?.title, detail?.name, contentTitle].find(
+      (value) => value && value !== '콘텐츠 제목'
+    );
+    if (!historyTitle) return;
 
     console.log('[시청내역] 저장 시도', { type, id, position, total });
 
     const now = Date.now();
-    if (periodic && lastSaved.current.route === location.key && now - lastSaved.current.at < 10000) return;
+    if (
+      periodic &&
+      lastSaved.current.route === location.key &&
+      now - lastSaved.current.at < 10000
+    ) return;
+
     lastSaved.current = { route: location.key, at: now };
 
     return onSaveHistory({
-      id, title, media_type: type, seasonNumber, episodeNumber,
-      backdrop_path: content.backdrop_path || '',
-      poster_path: content.poster_path || '',
+      id,
+      title: historyTitle,
+      media_type: type,
+      seasonNumber,
+      episodeNumber,
+      backdrop_path: content.backdrop_path || detail?.backdrop_path || content.poster_path || detail?.poster_path || '',
+      poster_path: content.poster_path || detail?.poster_path || '',
       position: Math.floor(position),
       duration: Math.floor(total),
       progress: completed ? 100 : Math.min(100, Math.round(position / total * 100)),
       completed,
       videoSrc,
       youtubeKey: videoSrc ? '' : youtubeKey,
-      info: type === 'tv' ? `시즌 ${seasonNumber} ${episodeNumber}화` : '영화',
+      ...(activeFallback ? {
+        supplementalVideo: {
+          name: activeFallback.name || '',
+          title: activeFallback.title || '',
+          videoType: activeFallback.videoType || '',
+          scope: { type: activeFallback.scope?.type || 'title' },
+        },
+      } : {}),
+      info: fallbackLabel || (type === 'tv' ? `시즌 ${seasonNumber} ${episodeNumber}화` : '영화'),
     }, ownerKey).then((saved) => {
       console.log('[시청내역] 저장 결과', saved);
       return saved;
@@ -351,12 +535,18 @@ export const Watch = () => {
       navigate(path, { replace: true, state: returnState });
       return;
     }
-    const video = videoRef.current;
-    const player = youtubePlayer.current;
-    if (video && !video.ended) await savePlayback(video.currentTime, video.duration);
-    if (!video && youtubePlaying && player) {
-      await savePlayback(player.getCurrentTime(), player.getDuration());
+    const savePosition = async () => {
+      const video = videoRef.current;
+      const player = youtubePlayer.current;
+      if (video && !video.ended) return savePlayback(video.currentTime, video.duration);
+      if (!video && youtubePlaying && player) return savePlayback(player.getCurrentTime(), player.getDuration());
+    };
+    if (returnToContentDetail) {
+      void savePosition().catch(error => console.error('시청내역 저장 오류:', error));
+      navigate(`/detail/${type}/${encodeURIComponent(id)}`, { replace: true });
+      return;
     }
+    await savePosition();
     navigate(-1);
   };
 
@@ -381,7 +571,15 @@ export const Watch = () => {
 
   return (
     <main className={`watch-page${isLiveMode ? ' watch-page--live' : ''}`} aria-label={displayTitle} data-player="shared">
-      <div className="watch-player">
+      {removedSessionScope === sessionScope && <Popup title="같이 보기에서 추방됐어요"
+        description="방장이 회원님을 내보냈어요. 이 프로필로는 이 방에 다시 참여할 수 없어요."
+        cancelText="확인" onClose={() => setRemovedSessionScope(null)} />}
+      <div
+        className={`watch-player${youtubeKey && !videoSrc && !isLiveMode ? ' watch-player--youtube' : ''
+          }`}
+        onPointerMove={showControls}
+        onPointerDown={showControls}
+      >
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
         {liveLoading ? <div className="watch-player__placeholder" role="status">같은 팀의 이전 경기 영상을 불러오는 중입니다.</div>
         : videoLookupPending ? <div className="watch-player__placeholder" role="status">재생 가능한 영상을 확인하고 있습니다.</div>
@@ -407,6 +605,7 @@ export const Watch = () => {
             }}
             onLoadedMetadata={(event) => {
               const video = event.currentTarget;
+              video.volume = volume / 100;
               setDuration(video.duration);
               if (startAt > 0 && startAt < video.duration) {
                 video.currentTime = startAt;
@@ -431,8 +630,7 @@ export const Watch = () => {
               youtubePlayer.current = target;
               const length = target.getDuration();
               setDuration(length);
-              target.setVolume(volume);
-              if (muted) target.mute();
+              applyYouTubeAudio(target, volume, muted);
               if (startAt > 0 && (length === 0 || startAt < length)) {
                 target.seekTo(startAt, true);
                 setCurrentTime(startAt);
@@ -479,10 +677,9 @@ export const Watch = () => {
               if (isLiveMode || currentPlayback.current !== playbackKey) return;
               setYoutubePlaying(false);
               setPlaying(false);
-              if (activeFallback) return;
               const total = event.target.getDuration();
               savePlayback(total, total, true);
-              goToNextEpisode();
+              if (!activeFallback) goToNextEpisode();
             }}
           />
         ) : <div className="watch-player__placeholder" role="status">{isSports ? '재생할 영상을 찾을 수 없습니다.' : '재생 가능한 예고편·클립이 없습니다.'}</div>}
@@ -491,22 +688,24 @@ export const Watch = () => {
           setLiveNeedsStart(false); youtubePlayer.current?.playVideo();
         }} aria-label="이전 경기 영상 재생 시작"><WatchIcon name="play" /><span>영상 재생 시작</span></button>}
 
-        {nextEpisodeNotice && (
-          <div className="watch-next-episode-notice" role="status" aria-live="polite">
-            <WatchIcon name="play" />
-            <span>다음 회차로 넘어갑니다.</span>
-          </div>
-        )}
-
         <header className="watch-player__header">
           <button className="watch-icon-button" type="button" onClick={goBack} aria-label="뒤로 가기"><WatchIcon name="back" /></button>
           <h1>{displayTitle}{showEpisodeNumber ? ` · ${episodeNumber}화` : ''}{fallbackLabel ? ` · ${fallbackLabel}` : ''}</h1>
-          {!isSports && <button className={`watch-together-toggle ${togetherMode ? 'is-active' : ''}`} type="button" onClick={toggleTogetherMode} aria-pressed={togetherMode}>
-            <WatchIcon name="together" /> 같이 보기 {togetherMode ? 'ON' : ''}
+          {!isSports && <button className={`watch-together-toggle ${togetherMode ? 'is-active' : ''}`} type="button" onClick={toggleTogetherMode} aria-pressed={togetherMode} disabled={authLoading || activeSession?.pending}>
+            <WatchIcon name="together" /> {activeSession?.pending ? '연결 중…' : togetherMode ? '같이 보기 ON' : '같이 보기'}
           </button>}
         </header>
 
-        <div className="watch-player__bottom">
+        {/* 하단 재생바 */}
+        <div
+          className={`watch-player__bottom${!isLiveMode && playing && !controlsVisible ? ' is-idle' : ''
+            }`}
+          onFocusCapture={showControls}
+          onPointerLeave={showControls}
+          onPointerUp={showControls}
+          onPointerEnter={showControls}
+          onPointerMove={showControls}
+        >
           {isLiveMode ? <>
             <div className="watch-player__live-status">
               <LiveBadge label="라이브 중계" className="watch-player__live-badge" />
@@ -524,11 +723,35 @@ export const Watch = () => {
               <button type="button" disabled={controlsDisabled} onClick={togglePlay} aria-label={playing ? '일시 정지' : '재생'}><WatchIcon name={playing ? 'pause' : 'play'} /></button>
               <button type="button" disabled={controlsDisabled} onClick={() => seek(-10)} aria-label="10초 뒤로"><WatchIcon name="replay" /></button>
               <button type="button" disabled={controlsDisabled} onClick={() => seek(10)} aria-label="10초 앞으로"><WatchIcon name="forward" /></button>
-              <div className="watch-volume"><button type="button" onClick={() => setVolumeOpen(open => !open)} aria-expanded={volumeOpen} aria-label="볼륨 조절"><WatchIcon name={muted || volume === 0 ? 'mute' : 'volume'} /></button>{volumeOpen && <div className="watch-volume__levels" aria-label="볼륨 조절"><input type="range" min="0" max="100" value={volume} onChange={e => setVideoVolume(Number(e.target.value))} aria-label="볼륨" style={{ '--volume-progress': `${volume}%` }} /><span>{volume}%</span></div>}</div>
+              <div className="watch-volume" data-dismissed={volumeDismissed || undefined}
+                onPointerEnter={() => setVolumeDismissed(false)}
+                onFocus={event => {
+                  if (event.target.type === 'range' || !event.currentTarget.contains(event.relatedTarget)) setVolumeDismissed(false);
+                }}
+                onKeyDown={event => {
+                  if (event.key !== 'Escape') return;
+                  event.currentTarget.querySelector('button').focus();
+                  setVolumeDismissed(true);
+                }}>
+                <button type="button" disabled={controlsDisabled} aria-label="음소거" aria-pressed={muted}
+                  onClick={event => {
+                    if (window.matchMedia('(hover: none)').matches) event.currentTarget.focus({ preventScroll: true });
+                    setVolumeDismissed(false);
+                    updateAudio(volume, !muted);
+                  }}><WatchIcon name={muted ? 'mute' : 'volume'} /></button>
+                {!controlsDisabled && <div className="watch-volume__levels">
+                  <input type="range" min="0" max="100" value={effectiveVolume} aria-label="음량"
+                    onChange={event => {
+                      const next = Number(event.target.value);
+                      updateAudio(next || volume, next === 0);
+                    }} style={{ '--volume-progress': `${effectiveVolume}%` }} />
+                  <span aria-hidden="true">{effectiveVolume}%</span>
+                </div>}
+              </div>
               <span className="watch-controls__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
             <div className="watch-controls__right">
-              {!isSports && <FullVideoClipButton disabled={!youtubeKey || !!videoSrc || hasPlaybackError || !!activeFallback} getSource={() => {
+              {!isSports && <FullVideoClipButton restriction={clipRestriction} onRestricted={showNotice} getSource={() => {
                 const player = youtubePlayer.current;
                 const source = {
                   content: { ...clipTvDetails, ...content, id, media_type: type, number_of_seasons: clipTvDetails?.number_of_seasons ?? content.number_of_seasons ?? null },
@@ -562,13 +785,22 @@ export const Watch = () => {
             if (tab === 'audio') setAudio(value);
           }}
         />}
-        {panel === 'chat' && <WatchChatPanel
-          togetherMode={togetherMode} sessionId={sessionId} messages={chatMessages}
-          draft={chatDraft} onDraftChange={setChatDraft} onSend={sendChat}
-          onClose={() => setPanel(null)} error={chatError} sending={sendingChat}
-          currentUid={auth.currentUser?.uid}
-          onCopyInvite={() => navigator.clipboard?.writeText(`${window.location.origin}${location.pathname}?session=${encodeURIComponent(sessionId)}`)}
-        />}
+        <div className="watch-player__community">
+          {panel === 'chat' && <WatchChatPanel
+            key={sessionId || 'inactive'}
+            togetherMode={togetherMode} sessionId={sessionId} messages={chatMessages}
+            draft={chatDraft} onDraftChange={setChatDraft} onSend={sendChat}
+            onClose={() => setPanel(null)} error={chatError} sending={sendingChat}
+            currentUid={uid} currentProfileId={profileId}
+            onCopyInvite={copyInvite} manualInviteUrl={togetherMode && manualInvite?.sessionId === sessionId ? manualInvite.url : ''}
+          />}
+          <div className="watch-player-notice" role="status" aria-atomic="true">
+            {visibleNotice ? <>
+              {visibleNotice.icon && <WatchIcon name={visibleNotice.icon} />}
+              <span>{visibleNotice.text}</span>
+            </> : nextEpisodeNotice && <><WatchIcon name="play" /><span>다음 회차로 넘어갑니다.</span></>}
+          </div>
+        </div>
         {panel === 'episodes' && <aside className="watch-side-panel" aria-label="회차 목록">
           <header className="watch-side-panel__header"><h2>회차</h2><button type="button" onClick={() => setPanel(null)} aria-label="회차 목록 닫기"><WatchIcon name="close" /></button></header>
           <div className="watch-side-panel__episodes">

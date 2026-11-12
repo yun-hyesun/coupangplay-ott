@@ -1,3 +1,4 @@
+import { useContentPurchase } from '../../hooks/useContentPurchase';
 import { SeasonSelect } from '../../components/common/SeasonSelect';
 import { toFivePointRating } from '../../utils/rating';
 import { LoginNoticePopup } from '../../components/common/LoginNoticePopup';
@@ -30,6 +31,11 @@ export const Detail = () => {
   const isStoreDetail =
     state?.fromStore === true ||
     new URLSearchParams(search).get('from') === 'store';
+
+  const { needsPurchase, purchasePending, purchaseError, purchasePath } =
+    useContentPurchase(type, id, {
+      knownPurchase: isStoreDetail || state?.content?.isPurchase === true,
+    });
 
   // 마이페이지에서 전달받은 리뷰 작성 대상
   const reviewRequest = new URLSearchParams(search);
@@ -333,14 +339,14 @@ export const Detail = () => {
             </p> */}
 
             <div className="detail-hero__actions">
-              {isStoreDetail ? (
-                <button
-                  className="detail-button detail-button--primary"
-                  type="button"
-                  onClick={() => alert('구매 기능은 아직 연결되지 않았습니다.')}
-                >
-                  구매하기
+              {purchasePending || purchaseError ? (
+                <button className="detail-button detail-button--primary" type="button" disabled>
+                  {purchasePending ? '구매 확인 중' : '구매 확인 실패'}
                 </button>
+              ) : needsPurchase ? (
+                <Link className="detail-button detail-button--primary" to={purchasePath}>
+                  구매하기
+                </Link>
               ) : (
                 <Link
                   className="detail-button detail-button--primary"
@@ -528,12 +534,16 @@ export const Detail = () => {
 
                       <Link
                         className="episode-item__thumbnail"
-                        to={`/watch/tv/${id}`}
-                        state={{
+                        to={needsPurchase ? purchasePath : `/watch/tv/${id}`}
+                        aria-disabled={purchasePending || purchaseError || undefined}
+                        onClick={(event) => {
+                          if (purchasePending || purchaseError) event.preventDefault();
+                        }}
+                        state={needsPurchase ? undefined : {
                           ...watchState,
                           episodeNumber: ep.episode_number
                         }}
-                        aria-label={`${ep.episode_number}화 재생`}
+                        aria-label={needsPurchase ? `${ep.episode_number}화 작품 구매` : `${ep.episode_number}화 재생`}
                       >
                         {ep.still_path ? (
                           <img
@@ -547,7 +557,7 @@ export const Detail = () => {
                         )}
 
                         <span className="episode-item__play">
-                          <CommonIcon name="play" size={20} />
+                          {needsPurchase ? '구매하기' : <CommonIcon name="play" size={20} />}
                         </span>
                       </Link>
 

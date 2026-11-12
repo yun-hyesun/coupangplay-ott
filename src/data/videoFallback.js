@@ -12,6 +12,7 @@ export const videoTypeLabels = {
   trailer: '예고편',
   teaser: '티저',
   clip: '클립',
+  film: '공개 본편',
   episode: '공개 본편',
   featurette: '소개 영상',
   'behind the scenes': '메이킹',

@@ -50,10 +50,19 @@ const HistoryList = ({ history, ownerKey }) => {
   const [selectedIds, setSelectedIds] = useState([]);
 
   // 장르별 필터링
-  const filteredHistory = history
-    .filter((item) => activeGenre === '전체' ||
-      (item.media_type === 'movie' ? '영화' : '시리즈') === activeGenre)
-    .map((item) => ({ ...item, id: item.docId }));
+  const filteredHistory = history.filter(
+    (item) => activeGenre === '전체' ||
+      (item.media_type === 'movie' ? '영화' : '시리즈') === activeGenre
+  );
+
+  console.table(
+    filteredHistory.map(({ docId, id, media_type, title }) => ({
+      docId,
+      id,
+      media_type,
+      title,
+    }))
+  );
 
   // 콘텐츠 선택 / 해제
   const handleSelect = (id) => {
@@ -78,7 +87,7 @@ const HistoryList = ({ history, ownerKey }) => {
 
   // 전체 선택 / 해제 (현재 필터 결과 기준)
   const handleSelectAll = () => {
-    const visibleIds = filteredHistory.map((item) => item.id);
+    const visibleIds = filteredHistory.map((item) => item.docId);
 
     const allSelected = visibleIds.length > 0 &&
       visibleIds.every((id) => selectedIds.includes(id));
@@ -235,7 +244,6 @@ const HistoryList = ({ history, ownerKey }) => {
             asGrid
             items={filteredHistory.map((item) => ({
               ...item,
-              id: item.contentId,
               resume: true,
               historyLayout: true,
               ownerKey,
