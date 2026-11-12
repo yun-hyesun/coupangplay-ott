@@ -83,13 +83,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 28px;
+  padding: 0.3em 0.9em;
   border: 1px solid #737373;
   border-radius: 8px;
   font-weight: 700;
   background: rgba(20, 20, 20, 0.65);
   color: #fff;
   text-decoration: none;
+  height: 45px;
 }
 .detail-button--primary {
   background: #0084ff;
@@ -165,7 +166,7 @@
   gap: 8px;
   max-height: 1092px;
   overflow-y: auto;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   align-content: start;
   scrollbar-width: thin;
   scrollbar-color: #555b63 #101113;
@@ -194,15 +195,6 @@
   margin: 0;
   font-size: 24px;
   line-height: 36px;
-}
-
-.detail-season-select select {
-  min-height: 44px;
-  border: 1px solid #404040;
-  border-radius: 8px;
-  background: #262626;
-  color: #fff;
-  padding: 8px 12px;
 }
 
 .episode-item {
@@ -466,7 +458,7 @@
   border-radius: 8px;
   padding: 12px;
 }
-.detail-review-popup__compose button {
+.detail-review-popup__compose > button {
   justify-self: end;
   padding: 12px 24px;
   border: 0;
@@ -499,6 +491,10 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.detail-button.detail-button--watchlist:disabled {
+  cursor: default;
 }
 
 @media (max-width: 1200px) {
@@ -594,7 +590,7 @@
 
 .detail-hero__actions .detail-button {
   gap: 8px;
-  min-height: 48px;
+  min-height: 45px;
 }
 
 .detail-hero__actions .detail-button.is-active {
@@ -780,7 +776,7 @@
   line-height: 24px;
 }
 
-.detail-review-popup__compose button {
+.detail-review-popup__compose > button {
   background: #262626;
   min-width: 176px;
   height: 48px;
@@ -789,7 +785,7 @@
   border-radius: 8px;
 }
 
-.detail-review-popup__compose button:hover:not(:disabled) {
+.detail-review-popup__compose > button:hover:not(:disabled) {
   background: #0084ff;
 }
 
@@ -967,4 +963,210 @@
 }
 .detail-hero__actions .detail-button--watchlist:disabled {
   cursor: wait;
+}
+
+.detail-review-popup__compose--draft {
+  padding: 20px;
+  border: 1px solid rgba(0, 132, 255, 0.4);
+  border-radius: 12px;
+  background: #1b2027;
+  box-shadow: 0 0 0 1px rgba(0, 132, 255, 0.06);
+}
+.detail-review-popup__compose--draft:focus-within {
+  border-color: #0084ff;
+  box-shadow: 0 0 0 3px rgba(0, 132, 255, 0.12);
+}
+.detail-review-popup__compose--draft .detail-review-popup__compose-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.detail-review-popup__compose--draft .detail-review-popup__compose-heading label {
+  color: #fff;
+  font-size: 16px;
+  line-height: 24px;
+}
+.detail-review-popup__compose--draft .detail-review-popup__compose-heading span {
+  color: #a3a3a3;
+  font-size: 12px;
+  line-height: 20px;
+}
+.detail-review-popup__compose--draft textarea {
+  min-height: 112px;
+  height: auto;
+  resize: vertical;
+  border: 1px solid #555b63;
+  background: #13161a;
+  color: #fff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.detail-review-popup__compose--draft textarea::placeholder {
+  color: #a3a3a3;
+}
+.detail-review-popup__compose--draft textarea:focus-visible {
+  outline: none;
+  border-color: #0084ff;
+  box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.18);
+}
+.detail-review-popup__compose--draft .detail-review-popup__compose-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.detail-review-popup__compose--draft .detail-review-popup__rating {
+  min-width: 0;
+  gap: 8px;
+}
+.detail-review-popup__compose--draft .detail-review-popup__submit {
+  flex-shrink: 0;
+  min-width: 144px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #424242;
+  color: #a3a3a3;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.detail-review-popup__compose--draft .detail-review-popup__submit:not(:disabled) {
+  background: #0084ff;
+  color: #fff;
+}
+.detail-review-popup__compose--draft .detail-review-popup__submit:hover:not(:disabled) {
+  background: #006bc6;
+}
+.detail-review-popup__compose--draft .detail-review-popup__submit:disabled {
+  cursor: not-allowed;
+}
+.detail-review-popup__compose--draft .detail-review-popup__submit:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.detail-review-popup__compose--draft .detail-review-popup__spoiler {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #d4d4d4;
+  font-weight: 400;
+  justify-self: start;
+}
+.detail-review-popup__compose--draft .detail-review-popup__spoiler input {
+  accent-color: #0084ff;
+  width: 16px;
+  height: 16px;
+}
+@media (max-width: 600px) {
+  .detail-review-popup__compose--draft {
+    padding: 16px;
+  }
+  .detail-review-popup__compose--draft .detail-review-popup__compose-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .detail-review-popup__compose--draft .detail-review-popup__submit {
+    margin-left: auto;
+    min-width: 128px;
+  }
+  .detail-review-popup__compose--draft .detail-review-popup__rating {
+    font-size: 14px;
+  }
+}
+
+.detail-review-popup,
+.detail-review-popup__list,
+.detail-review-popup__compose textarea,
+.episode-item__review-list {
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+}
+.detail-review-popup::-webkit-scrollbar,
+.detail-review-popup__list::-webkit-scrollbar,
+.detail-review-popup__compose textarea::-webkit-scrollbar,
+.episode-item__review-list::-webkit-scrollbar {
+  width: 6px;
+}
+.detail-review-popup::-webkit-scrollbar-track,
+.detail-review-popup__list::-webkit-scrollbar-track,
+.detail-review-popup__compose textarea::-webkit-scrollbar-track,
+.episode-item__review-list::-webkit-scrollbar-track {
+  background: #101113;
+}
+.detail-review-popup::-webkit-scrollbar-thumb,
+.detail-review-popup__list::-webkit-scrollbar-thumb,
+.detail-review-popup__compose textarea::-webkit-scrollbar-thumb,
+.episode-item__review-list::-webkit-scrollbar-thumb {
+  background: #555b63;
+  border-radius: 10px;
+}
+.detail-review-popup::-webkit-scrollbar-thumb:hover,
+.detail-review-popup__list::-webkit-scrollbar-thumb:hover,
+.detail-review-popup__compose textarea::-webkit-scrollbar-thumb:hover,
+.episode-item__review-list::-webkit-scrollbar-thumb:hover {
+  background: #777d85;
+}
+
+.detail-rating-stars {
+  line-height: 0;
+}
+.detail-rating-stars__star {
+  display: block;
+  position: relative;
+  line-height: 0;
+  padding: 0;
+}
+.detail-rating-stars__star > img, .detail-rating-stars__fill > img {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+}
+.detail-rating-stars__fill {
+  display: block;
+  line-height: 0;
+}
+
+.detail-review-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #555b63;
+  border-radius: 6px;
+  background: transparent;
+  color: #a3a3a3;
+  font: inherit;
+  line-height: 20px;
+  cursor: pointer;
+}
+.detail-review-like:hover:not(:disabled) {
+  color: #fff;
+  border-color: #0084ff;
+  background: rgba(0, 132, 255, 0.1);
+}
+.detail-review-like.is-liked {
+  color: #5d9eff;
+  border-color: #0084ff;
+  background: rgba(0, 132, 255, 0.12);
+}
+.detail-review-like:disabled {
+  cursor: default;
+}
+.detail-review-like:focus-visible {
+  outline: 2px solid #0084ff;
+  outline-offset: 3px;
+}
+
+.detail-review-item p.detail-review-like-error {
+  color: #ffb3b3;
+  font-size: 13px;
+  line-height: 20px;
 }
