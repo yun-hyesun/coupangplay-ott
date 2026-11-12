@@ -41,7 +41,17 @@ export function selectBroadcastGames(games, now = Date.now()) {
 }
 
 // 오늘 경기가 끝났더라도 다음 2주 안의 가까운 중계 일정을 채웁니다.
-export async function loadLeagueBroadcasts({ dateKey, loadSchedule, signal, now = Date.now() }) {
+export async function loadLeagueBroadcasts({ dateKey, loadSchedule, loadSeasonSchedule, signal, now = Date.now() }) {
+  if (signal?.aborted) return { games: [], loading: false, errors: [] };
+  // 라운드 사이의 휴식기가 긴 컵 대회는 시즌 일정에서 가까운 중계를 선택합니다.
+  if (loadSeasonSchedule) {
+    try {
+      const result = await loadSeasonSchedule();
+      return { games: signal?.aborted ? [] : selectBroadcastGames(result.games, now), loading: false, errors: result.errors || [] };
+    } catch (error) {
+      return { games: [], loading: false, errors: signal?.aborted ? [] : [error?.message || "중계 일정을 불러오지 못했습니다."] };
+    }
+  }
   const games = [], errors = [];
   const date = new Date(`${dateKey}T00:00:00Z`);
   for (let offset = 0; offset < 14 && !signal?.aborted; offset += 1) {

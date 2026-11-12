@@ -26,10 +26,14 @@
     &[aria-expanded='true'] .sports-calendar__year-month-chevron { transform: rotate(180deg); }
   }
   &__year-month-chevron { width: 0; height: 0; border-right: 5px solid transparent; border-left: 5px solid transparent; border-top: 6px solid currentColor; }
-  &__year-month-picker { display: grid; height: 392px; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+  &__year-month-picker { display: grid; height: 392px; grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: minmax(0,1fr); gap: 16px; }
   &__year-month-picker--video { height: 360px; }
-  &__year-month-column { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 8px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
-    &::-webkit-scrollbar { display: none; }
+  &__year-month-column { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 8px; padding-right: 6px; overflow-x: hidden; overflow-y: scroll; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #707986 #252b34;
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-track { border-radius: 6px; background: #252b34; }
+    &::-webkit-scrollbar-thumb { border-radius: 6px; background: #707986;
+      &:hover { background: #939daa; }
+    }
     > button { display: flex; height: 48px; flex: 0 0 48px; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 12px; border-radius: 8px; font-size: 16px; text-align: left;
       &:hover { background: #31353c; }
       &[aria-pressed='true'] { color: #fff; background: #373b40; }

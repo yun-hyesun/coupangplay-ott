@@ -2,7 +2,7 @@ import { getScheduleGameDate, shiftScheduleDate } from "./leagueScheduleRange.js
 import { buildScheduleUnitOptions, getScheduleUnit } from "./leagueScheduleUnits.js";
 import { findSportsTeam } from "./sportsTeams";
 
-const CALENDAR_YEAR_LEAGUES = new Set(["f1", "mls", "kleague-1", "kleague-2"]);
+const CALENDAR_YEAR_LEAGUES = new Set(["mls", "kleague-1", "kleague-2", "concacaf-champions-cup"]);
 
 export const usesCalendarSeason = leagueId => CALENDAR_YEAR_LEAGUES.has(leagueId);
 
@@ -48,8 +48,6 @@ export function findScheduleMatch(games, target, leagueId) {
   if (byId) return byId;
   const date = getScheduleGameDate(target);
   if (!date) return null;
-  if (target.raceName) return games.find(game => game.raceName === target.raceName
-    && getScheduleGameDate(game) === date && (game.utcDate || game.startTime) === (target.utcDate || target.startTime)) || null;
   const home = target.home && findSportsTeam(leagueId, target.home);
   const away = target.away && findSportsTeam(leagueId, target.away);
   if (!home || !away) return null;

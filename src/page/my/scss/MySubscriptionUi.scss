@@ -376,6 +376,45 @@ $my-control: #292d33;
 
 }
 
+.my-pass-checkout--complete {
+    min-height: 70vh;
+    display: grid;
+    place-items: center;
+    padding: 32px 20px;
+}
+
+.my-pass-complete {
+    width: min(100%, 480px);
+    display: grid;
+    gap: 16px;
+    text-align: center;
+    overflow-wrap: anywhere;
+
+    h1 {
+        font-size: clamp(24px, 3vw, 32px);
+        line-height: 1.4;
+    }
+
+    p {
+        color: $color-text-sec1;
+    }
+}
+
+.my-pass-complete__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+
+    .my-pass-button {
+        flex: 1 1 145px;
+        min-width: 0;
+        min-height: 50px;
+        font-size: 16px;
+    }
+}
+
 @media(max-width:1279px) {
     .my-pass-inner {
         padding: 40px 40px 80px;

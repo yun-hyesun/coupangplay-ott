@@ -4,6 +4,29 @@
  // #################### header
 
 .header {min-height: 70px; padding: clamp(10px, 1.25vw, 18px) $padding-main; font-size: 16px; font-weight: $font-w-M-500; position: sticky; top: 0; left: 0; z-index: 1000; @include trans();
+
+  &.header--league,
+  &.header--league.active {
+    background-color: var(--league-header-color);
+    background-image: var(--league-header-background-image);
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: 100% var(--league-header-background-height, 465px);
+    transition: none;
+
+    .header-nav-menu a {
+      color: #fff;
+      transition: background-color .18s ease;
+
+      &:hover,
+      &.active { background: rgba(255, 255, 255, .2); }
+    }
+
+    .inner .header-right .header-login {
+      border: 1px solid rgba(255, 255, 255, .5);
+      background: rgba(0, 0, 0, .16);
+    }
+  }
   &.active {background: $color-bg;}
   &.active .header-search:has(.is-open) {background: $color-border;}
 
@@ -21,8 +44,31 @@
       }
       
       .header-nav-menu {@include flex-center();
-        a {display: block; padding: 8px 15px; border-radius: 10px;}
-        .active {background: rgba(255,255,255,.2);}
+        a {display: block; padding: 8px 15px; border-radius: 10px; color: rgba(255,255,255,.8);
+        
+          &:hover {color: #fff;}
+        }
+        .active {background: rgba(255,255,255,.2); color: #fff;}
+
+        // 스포츠
+        .sports a { height: 40px; opacity: .8;
+        
+          &:hover {opacity: 1;}
+          &.active {opacity: 1;}
+        }
+
+        .wowclip {margin-left: .7em;
+          a {@include flex-center($gap: .2em); background: rgba(255,255,255,.9); border-radius: 20px; padding: .4em .5em .3em; color: #222; font-family: $font-title; font-size: 14px; line-height: .5em;
+          
+            &::before {content: ''; width: 50px; height: 20px; background: url(/images/wow.svg) no-repeat center / contain; margin-bottom: .1em;}
+
+            &:hover {background: #fff;}
+            &.active {background: $color-pri; color: #fff;
+            
+              &::before {background-image: url(/images/wow_w.svg);}
+            }
+          }
+        }
       }
 
       @include tablet {

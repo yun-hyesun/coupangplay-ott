@@ -282,10 +282,6 @@
       background: #174d9c;
     }
 
-    &--f1 {
-      background: #e60012;
-    }
-
     &--laliga {
       background: #ff515d;
     }
@@ -641,6 +637,11 @@
       color: #d7e0e8;
       font-size: 24px;
       background: transparent;
+
+      &:disabled {
+        opacity: .35;
+        cursor: not-allowed;
+      }
     }
 
     strong {
@@ -664,7 +665,19 @@
       display: inline-flex;
       align-items: center;
       gap: 12px;
+      padding: 6px 8px;
+      border: 0;
+      border-radius: 8px;
       white-space: nowrap;
+
+      &:hover {
+        background: rgba(255, 255, 255, .06);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $color-pri;
+        outline-offset: 2px;
+      }
     }
 
     .sports-calendar-icon {
@@ -800,6 +813,10 @@
         font-size: 31px;
         font-weight: $font-w-B-700;
         width: 80px;
+      }
+
+      >strong.is-loser {
+        color: #a3a3a3;
       }
 
       >span {
@@ -2555,11 +2572,11 @@
   flex: 0 0 36px;
   place-items: center;
   overflow: hidden;
-  border-radius: 50%;
+  border-radius: 0;
   color: #fff;
   font-size: 14px;
   font-weight: 700;
-  background: #343b47;
+  background: transparent;
 
   &--image {
     overflow: visible;
@@ -2979,6 +2996,11 @@
     width: 32px;
     height: 48px;
     font-size: 26px;
+
+    &:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
   }
 }
 

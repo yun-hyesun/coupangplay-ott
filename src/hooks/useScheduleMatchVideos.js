@@ -8,7 +8,7 @@ export function useScheduleMatchVideos(games, dateKey) {
   const queryKey = JSON.stringify([dateKey, games.map(game => ({
     gameId: game.gameId, competitionCode: game.competitionCode,
     utcDate: game.utcDate || game.startTime, matchday: game.matchday,
-    scheduleSegment: game.scheduleSegment, raceName: game.raceName,
+    scheduleSegment: game.scheduleSegment,
     home: { name: game.home?.name }, away: { name: game.away?.name },
   }))]);
 

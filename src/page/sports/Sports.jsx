@@ -22,17 +22,18 @@ import {
 import { SportsBanner } from "./components/SportsBanner";
 import { SportsPromo } from "./components/SportsPromo";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
+import { SportsScheduleCalendar } from "./components/SportsScheduleCalendar";
 import { MatchRelatedVideos } from "../../components/MatchRelatedVideos";
-import { LiveBadge } from "../../components/LeagueDetailShared";
+import { LiveBadge, TeamImage } from "../../components/LeagueDetailShared";
 import { useHorizontalDragScroll } from "../../hooks/useHorizontalDragScroll";
 import { useScheduleMatchVideos } from "../../hooks/useScheduleMatchVideos";
 import { getScheduleUnitLabel } from "../../data/leagueScheduleUnits";
 import { getYouTubeVideoId } from "../../data/youtubeVideoId";
 import { getSportsLiveWatchDestination } from "../watch/watchMedia";
 import { getMatchVideoKey } from "../../data/matchRelatedVideos";
+import { getScheduleBrowseRange, isScheduleDateInRange } from "../../data/leagueScheduleView";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
 import { useAuthStore } from "../../store/useAuthStore";
-import { getF1RacesForDate } from "../../service/f1Service";
 import { auth } from "../../firebase/firebase";
 import { useProfileStore } from "../../store/useProfileStore";
 import { useWatchlistStore } from "../../store/useWatchlistStore";
@@ -154,8 +155,7 @@ function SectionTitle({ id, title, action }) {
 }
 
 function TeamCrest({ team }) {
-  if (!team?.crest) return null;
-  return <img src={team.crest} alt="" loading="lazy" />;
+  return <TeamImage team={team} />;
 }
 
 function SportsVideoCard({ card, badge, live = false }) {
@@ -175,11 +175,11 @@ function SportsVideoCard({ card, badge, live = false }) {
         <img src={card.image} alt="" loading="lazy" />
         {badge && (
           <span className={"sports-video-card__badge" + (live ? " is-live" : "")}>
-            {live ? <span aria-hidden="true">●</span> : <span aria-hidden="true">▶</span>}
+            {live ? <span aria-hidden="true">●</span> : videoId && <span aria-hidden="true">▶</span>}
             {badge}
           </span>
         )}
-        <span className="sports-video-card__play" aria-hidden="true" />
+        {videoId && <span className="sports-video-card__play" aria-hidden="true" />}
         {card.duration && (
           <span className="sports-video-card__duration">{card.duration}</span>
         )}
@@ -260,18 +260,17 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
   const favoriteContent = {
     id: `${favoriteLeagueId}_${matchId}`,
     media_type: "sports",
-    title: game.raceName || `${game.home?.name || "홈 팀"} vs ${game.away?.name || "원정 팀"}`,
+    title: `${game.home?.name || "홈 팀"} vs ${game.away?.name || "원정 팀"}`,
     leagueId: favoriteLeagueId,
     sport: SPORTS_LEAGUES.find((league) => league.id === favoriteLeagueId)?.sport || game.sport || null,
     startTime: game.utcDate || game.startTime || null,
-    homeName: game.raceName || game.home?.name || "홈 팀",
-    awayName: game.raceName ? "그랑프리" : game.away?.name || "원정 팀",
+    homeName: game.home?.name || "홈 팀",
+    awayName: game.away?.name || "원정 팀",
     homeTeamId: game.home?.teamId ?? game.home?.id ?? null,
     awayTeamId: game.away?.teamId ?? game.away?.id ?? null,
     homeLogo: game.home?.crest || game.home?.logoPath || null,
     awayLogo: game.away?.crest || game.away?.logoPath || null,
     thumbnail: game.broadcastThumbnail || game.thumbnail || null,
-    raceName: game.raceName || null,
   };
 
   const currentOwnerKey =
@@ -334,6 +333,8 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
     status.modifier !== "scheduled" &&
     game.home.score != null &&
     game.away.score != null;
+  const homeLost = hasScore && isEnded && Number(game.home.score) < Number(game.away.score);
+  const awayLost = hasScore && isEnded && Number(game.away.score) < Number(game.home.score);
 
   return (
     <div className={"sports-fixture-wrap" + (isEnded ? " sports-fixture-wrap--ended" : "") + (detailsExpanded ? " is-expanded" : "")}>
@@ -366,12 +367,12 @@ function ScheduleMatch({ game, scoresOn, expanded, onToggle, relatedVideos }) {
         <div className="sports-fixture__center">
           {hasScore ? (
             <div className="sports-fixture__score">
-              <strong>{game.home.score}</strong>
+              <strong className={homeLost ? "is-loser" : undefined}>{game.home.score}</strong>
               <span>
                 {formatGameTime(game.utcDate || game.startTime)}
                 {scheduleSubLabel && <small>{scheduleSubLabel}</small>}
               </span>
-              <strong>{game.away.score}</strong>
+              <strong className={awayLost ? "is-loser" : undefined}>{game.away.score}</strong>
             </div>
           ) : (
             <div className="sports-fixture__time">
@@ -476,6 +477,7 @@ export const Sports = () => {
   const featuredRailRef = useRef(null);
   const [featuredRailNavigation, setFeaturedRailNavigation] = useState({ prev: false, next: false });
   const calendarRailRef = useRef(null);
+  const calendarTriggerRef = useRef(null);
   const scrollRail = (ref, direction) => {
     const element = ref.current;
     if (!element) return;
@@ -500,6 +502,8 @@ export const Sports = () => {
     }
   });
   const [selectedDate, setSelectedDate] = useState(() => getSeoulDateKey());
+  const scheduleBrowseRange = getScheduleBrowseRange(getSeoulDateKey());
+  const [isScheduleCalendarOpen, setIsScheduleCalendarOpen] = useState(false);
   const [scoresOn, setScoresOn] = useState(false);
   const [showAllSchedule, setShowAllSchedule] = useState(false);
   const SCHEDULE_PREVIEW_COUNT = 10;
@@ -652,6 +656,7 @@ export const Sports = () => {
 
     async function loadSchedule() {
       if (isLoading) return;
+      if (!isScheduleDateInRange(selectedDate, getScheduleBrowseRange(getSeoulDateKey()))) return;
       isLoading = true;
       setScheduleState((prev) => ({
       ...prev,
@@ -662,7 +667,6 @@ export const Sports = () => {
         getFootballScheduleForDate(selectedDate),
         getNbaGamesForSeoulDate(selectedDate),
         getKleagueMatchesForDate(selectedDate),
-        getF1RacesForDate(selectedDate),
       ]);
       isLoading = false;
 
@@ -670,7 +674,7 @@ export const Sports = () => {
 
       const games = [];
       const errors = [];
-      const providers = ["해외 축구·NFL", "NBA", "K리그", "F1"];
+      const providers = ["해외 축구·NFL", "NBA", "K리그"];
 
       results.forEach((result, index) => {
         if (result.status === "fulfilled") {
@@ -847,21 +851,30 @@ export const Sports = () => {
 
   const [monthSlideDirection, setMonthSlideDirection] = useState(0);
 
-  const changeSelectedMonth = (amount) => {
-    setMonthSlideDirection(amount > 0 ? 1 : -1);
-    setSelectedDate((current) => {
-      const [year, month] = current.split("-").map(Number);
-      const target = new Date(Date.UTC(year, month - 1 + amount, 1));
-      return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, "0")}-01`;
-    });
+  const selectScheduleDate = (date) => {
+    if (!isScheduleDateInRange(date, scheduleBrowseRange)) return;
+    setSelectedDate(date);
     setExpandedGameIds([]);
     setShowAllSchedule(false);
+    setMonthSlideDirection(0);
+  };
+
+  const closeScheduleCalendar = () => {
+    setIsScheduleCalendarOpen(false);
+    window.requestAnimationFrame(() => calendarTriggerRef.current?.focus({ preventScroll: true }));
+  };
+
+  const changeSelectedMonth = (amount) => {
+    const [year, month] = selectedDate.split("-").map(Number);
+    const target = new Date(Date.UTC(year, month - 1 + amount, 1));
+    const nextDate = `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, "0")}-01`;
+    if (!isScheduleDateInRange(nextDate, scheduleBrowseRange)) return;
+    selectScheduleDate(nextDate);
+    setMonthSlideDirection(amount > 0 ? 1 : -1);
   };
 
   const changeSelectedDate = (amount) => {
-    setSelectedDate((date) => shiftDate(date, amount));
-    setExpandedGameIds([]);
-    setShowAllSchedule(false);
+    selectScheduleDate(shiftDate(selectedDate, amount));
   };
 
   return (
@@ -1051,7 +1064,7 @@ export const Sports = () => {
           </div>
         </div>
         <p className="sports-schedule-note">
-          {formatDateForNote(selectedDate)} 기준 · 한국 시간 (KST) · 축구, NFL, NBA, K리그, F1 일정
+          {formatDateForNote(selectedDate)} 기준 · 한국 시간 (KST) · 축구, NFL, NBA, K리그
         </p>
 
         <div className="sports-calendar-month">
@@ -1059,11 +1072,20 @@ export const Sports = () => {
             type="button"
             className="sports-calendar-previous"
             aria-label="이전 달 1일로 이동"
+            disabled={selectedDate.slice(0, 7) <= scheduleBrowseRange.from.slice(0, 7)}
             onClick={() => changeSelectedMonth(-1)}
           >
             ‹
           </button>
-          <span className="sports-calendar-date">
+          <button
+            type="button"
+            className="sports-calendar-date"
+            ref={calendarTriggerRef}
+            aria-label="경기 일정 달력 열기"
+            aria-haspopup="dialog"
+            aria-expanded={isScheduleCalendarOpen}
+            onClick={() => setIsScheduleCalendarOpen(true)}
+          >
             <strong>{formatMonth(selectedDate)}</strong>
             <img
               className="sports-calendar-icon"
@@ -1071,12 +1093,13 @@ export const Sports = () => {
               alt=""
               aria-hidden="true"
             />
-          </span>
+          </button>
           <div className="sports-calendar-tools">
             <button
               type="button"
               className="sports-calendar-next"
               aria-label="다음 달 1일로 이동"
+              disabled={selectedDate.slice(0, 7) >= scheduleBrowseRange.to.slice(0, 7)}
               onClick={() => changeSelectedMonth(1)}
             >
               ›
@@ -1084,7 +1107,7 @@ export const Sports = () => {
             <button
               type="button"
               className="sports-calendar-recent"
-              onClick={() => { setSelectedDate(getSeoulDateKey()); setShowAllSchedule(false); setExpandedGameIds([]); }}
+              onClick={() => selectScheduleDate(getSeoulDateKey())}
             >
               최근
             </button>
@@ -1092,26 +1115,27 @@ export const Sports = () => {
         </div>
 
         <div className="sports-rail-shell sports-rail-shell--calendar" role="group" aria-label="경기 날짜 선택">
-          <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 날짜 보기" onClick={() => changeSelectedDate(-1)}>‹</button>
+          <button type="button" className="sports-rail-nav sports-rail-nav--prev" aria-label="이전 날짜 보기" disabled={selectedDate <= scheduleBrowseRange.from} onClick={() => changeSelectedDate(-1)}>‹</button>
           <div className={"sports-calendar-days" + (monthSlideDirection ? (monthSlideDirection > 0 ? " is-month-next" : " is-month-prev") : "")} ref={calendarRailRef} aria-label="선택 날짜를 중심으로 표시" onAnimationEnd={() => setMonthSlideDirection(0)}>
           {calendarDays.map((dateKey) => {
             const date = dateFromKey(dateKey);
             const weekday = WEEKDAYS[date.getUTCDay()];
             const beforeMonthStart = dateKey < selectedDate.slice(0, 7) + "-01";
+            const unavailable = beforeMonthStart || !isScheduleDateInRange(dateKey, scheduleBrowseRange);
             return (
               <button
                 type="button"
                 key={dateKey}
                 data-date={dateKey}
-                disabled={beforeMonthStart}
-                aria-disabled={beforeMonthStart}
+                disabled={unavailable}
+                aria-disabled={unavailable}
                 className={
                   "sports-calendar-day" +
                   (selectedDate === dateKey ? " is-selected" : "") +
-                  (beforeMonthStart ? " is-unavailable" : "")
+                  (unavailable ? " is-unavailable" : "")
                 }
                 aria-pressed={selectedDate === dateKey}
-                onClick={() => { setSelectedDate(dateKey); setShowAllSchedule(false); setExpandedGameIds([]); }}
+                onClick={() => selectScheduleDate(dateKey)}
               >
                 <span>{dateKey === getSeoulDateKey() ? "오늘" : weekday}</span>
                 <strong>{date.getUTCDate()}</strong>
@@ -1119,10 +1143,18 @@ export const Sports = () => {
             );
           })}
           </div>
-          <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 날짜 보기" onClick={() => changeSelectedDate(1)}>›</button>
+          <button type="button" className="sports-rail-nav sports-rail-nav--next" aria-label="다음 날짜 보기" disabled={selectedDate >= scheduleBrowseRange.to} onClick={() => changeSelectedDate(1)}>›</button>
         </div>
 
         {renderSchedule()}
+        {isScheduleCalendarOpen && (
+          <SportsScheduleCalendar
+            date={selectedDate}
+            today={getSeoulDateKey()}
+            onSelect={selectScheduleDate}
+            onClose={closeScheduleCalendar}
+          />
+        )}
       </section>
 
       <VideoSection
