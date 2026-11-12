@@ -17,7 +17,7 @@ export const Header = () => {
     { id: 4, menu: "영화", path: "/movie", class: "movie" },
     { id: 5, menu: "스토어", path: "/store", class: "store" },
     { id: 6, menu: "키즈", path: "/kids", class: "kids" },
-    { id: 7, menu: "와우 클립", path: "/wowclip", class: "wowclip" }
+    { id: 7, menu: "클립", path: "/wowclip", class: "wowclip" }
   ];
 
   const [isScroll, setIsScrolled] = useState(false);

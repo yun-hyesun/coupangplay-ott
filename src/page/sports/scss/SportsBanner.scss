@@ -74,6 +74,14 @@
     bottom: clamp(56px, 7vw, 130px);
     max-width: min(620px, 70%);
     color: #fff;
+
+    opacity: 0;
+    transform: translateY(30%);
+    @include trans($s:.5s);
+  }
+
+  .swiper-slide-active {
+    .sports-banner__content {opacity: 1; transform: translateY(0);}
   }
 
   &__eyebrow {
