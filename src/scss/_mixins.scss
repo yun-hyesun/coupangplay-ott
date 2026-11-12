@@ -76,6 +76,15 @@
   transition: $t $s $m;
 }
 
+$card-hover-lift: 15px;
+
+@mixin card-hover-lift($surface) {
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    > #{$surface} { @include trans($t: transform); }
+    &:hover > #{$surface} { transform: translateY(-$card-hover-lift); }
+  }
+}
+
 @mixin pos-abs-center-scale-s($s:0) {
   position: absolute;
   top: 50%;
