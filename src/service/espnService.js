@@ -228,41 +228,70 @@ async function getMlsSeasonId(year) {
   return data.seasons?.find((season) => Number(season.season) === Number(year))?.season_id || null;
 }
 
-function getMlsMatchKey(date, homeCode, awayCode) {
+function getMlsMatchKey(date, homeCode, awayCode, dateOnly = false) {
   const timestamp = new Date(date).getTime();
   if (!Number.isFinite(timestamp) || !homeCode || !awayCode) return "";
-  return `${timestamp}|${String(homeCode).trim().toUpperCase()}|${String(awayCode).trim().toUpperCase()}`;
+  return `${dateOnly ? getSeoulDateKey(date) : timestamp}|${String(homeCode).trim().toUpperCase()}|${String(awayCode).trim().toUpperCase()}`;
 }
 
-async function getMlsMatchdayMaps(seoulDate) {
-  const year = Number(seoulDate.slice(0, 4));
+async function getMlsMatchdayMaps(from, to = from, { signal } = {}) {
+  signal?.throwIfAborted();
+  const year = Number(from.slice(0, 4));
   const seasonId = await getMlsSeasonId(year);
-  if (!seasonId) return { byDateAndTeams: new Map(), byTeams: new Map() };
-
-  const [dateFrom, dateTo] = getQueryDates(seoulDate);
-  const data = await mlsApiFetch(`matches/seasons/${seasonId}`, {
-    "match_date[gte]": dateFrom,
-    "match_date[lte]": dateTo,
-    per_page: "100",
-  });
-  if (!Array.isArray(data.schedule)) {
-    throw new Error("MLS 경기 응답 형식이 올바르지 않습니다.");
-  }
-
   const byDateAndTeams = new Map();
-  const byTeams = new Map();
-  data.schedule.forEach((match) => {
-    const matchday = match.match_day ?? match.matchday;
-    const homeCode = match.home_team_three_letter_code;
-    const awayCode = match.away_team_three_letter_code;
-    if (matchday == null || !homeCode || !awayCode) return;
-    const kickoff = match.planned_kickoff_time || match.start_date;
-    const dateAndTeams = getMlsMatchKey(kickoff, homeCode, awayCode);
-    const teams = `${String(homeCode).trim().toUpperCase()}|${String(awayCode).trim().toUpperCase()}`;
-    if (dateAndTeams) byDateAndTeams.set(dateAndTeams, matchday);
-    byTeams.set(teams, matchday);
+  const byDayAndTeams = new Map();
+  if (!seasonId) return { byDateAndTeams, byDayAndTeams };
+
+  const [dateFrom] = getQueryDates(from);
+  let token = "";
+  const seen = new Set();
+  do {
+    signal?.throwIfAborted();
+    const data = await mlsApiFetch(`matches/seasons/${seasonId}`, {
+      "match_date[gte]": dateFrom,
+      "match_date[lte]": to,
+      competition_id: MLS_COMPETITION_ID,
+      per_page: "100",
+      ...(token ? { page_token: token } : {}),
+    });
+    if (!Array.isArray(data.schedule)) {
+      throw new Error("MLS 경기 응답 형식이 올바르지 않습니다.");
+    }
+    data.schedule.forEach((match) => {
+      if (match.competition_id !== MLS_COMPETITION_ID) return;
+      const matchday = match.match_day ?? match.matchday;
+      const homeCode = match.home_team_three_letter_code;
+      const awayCode = match.away_team_three_letter_code;
+      if (matchday == null || !homeCode || !awayCode) return;
+      const kickoff = match.planned_kickoff_time || match.start_date;
+      const dateAndTeams = getMlsMatchKey(kickoff, homeCode, awayCode);
+      const dayAndTeams = getMlsMatchKey(kickoff, homeCode, awayCode, true);
+      if (dateAndTeams) byDateAndTeams.set(dateAndTeams, matchday);
+      if (dayAndTeams) byDayAndTeams.set(dayAndTeams, matchday);
+    });
+    token = data.next_page_token || "";
+    if (token && seen.has(token)) throw new Error("MLS 경기 목록의 다음 페이지를 확인할 수 없습니다.");
+    seen.add(token);
+  } while (token);
+  signal?.throwIfAborted();
+  return { byDateAndTeams, byDayAndTeams };
+}
+
+async function addMlsMatchdays(games, from, to = from, options = {}) {
+  const needsMatchday = game => (game.matchday == null || game.matchday === "")
+    && (!game.seasonPhase || /regular.?season/i.test(game.seasonPhase));
+  if (!games.some(needsMatchday)) return games;
+  const matchdays = await getMlsMatchdayMaps(from, to, options);
+  return games.map(game => {
+    if (!needsMatchday(game)) return game;
+    const homeCode = game.home.sourceTeamCode;
+    const awayCode = game.away.sourceTeamCode;
+    const key = getMlsMatchKey(game.utcDate, homeCode, awayCode);
+    // 같은 대진의 재경기를 다른 라운드로 덮어쓰지 않도록 경기 날짜도 비교합니다.
+    const dayKey = getMlsMatchKey(game.utcDate, homeCode, awayCode, true);
+    const matchday = matchdays.byDateAndTeams.get(key) ?? matchdays.byDayAndTeams.get(dayKey);
+    return matchday == null ? game : { ...game, matchday };
   });
-  return { byDateAndTeams, byTeams };
 }
 
 async function getOpenLigaBl2MatchdayMaps(seoulDate) {
@@ -622,8 +651,12 @@ export function getEspnScheduleUnitFields(leagueId, event) {
   const afcMatchday = ["acle", "acl2"].includes(leagueId) ? getAfcMatchday(event, competition, status) : "";
   const week = event.week?.number ?? competition.week?.number ?? "";
   const phase = event.season?.slug || "";
-  let segment = getScheduleStageLabel(phase);
-  if (leagueId === "mls" && segment && !/regular|pre.?season/.test(phase)) segment = `플레이오프 ${segment}`;
+  const mlsPlayoff = leagueId === "mls" ? phase.match(/^(?:eastern|western)-conference-playoffs-+(.+)$/i)?.[1] : null;
+  const stagePhase = mlsPlayoff === "final" ? "conference-finals"
+    : mlsPlayoff === "semifinals" ? "conference-semifinals" : mlsPlayoff || phase;
+  let segment = getScheduleStageLabel(stagePhase);
+  if (leagueId === "mls" && phase === "mls-cup") segment = "MLS컵 결승";
+  else if (leagueId === "mls" && segment && !/regular|pre.?season/.test(phase)) segment = `플레이오프 ${segment}`;
   return {
     competitionCode: leagueId,
     matchday: event.week?.number ?? competition.week?.number ?? event.week?.text ?? competition.week?.text ?? afcMatchday,
@@ -721,25 +754,8 @@ async function getEspnLeagueSchedule(leagueId, seoulDate) {
     }
   }
   if (leagueId === "mls") {
-    // MLS is optional regular-season round enrichment. Empty dates and playoffs
-    // must not query the regular-season feed (which returns 404 for those gaps).
-    const needsMatchday = (game) => (game.matchday == null || game.matchday === "")
-      && (!game.seasonPhase || /regular.?season/i.test(game.seasonPhase));
-    if (!unique.some(needsMatchday)) return { games: unique, errors };
     try {
-      const matchdays = await getMlsMatchdayMaps(seoulDate);
-      return {
-        games: unique.map((game) => {
-          if (!needsMatchday(game)) return game;
-          const homeCode = game.home.sourceTeamCode;
-          const awayCode = game.away.sourceTeamCode;
-          const key = getMlsMatchKey(game.utcDate, homeCode, awayCode);
-          const teamKey = `${String(homeCode).trim().toUpperCase()}|${String(awayCode).trim().toUpperCase()}`;
-          const matchday = matchdays.byDateAndTeams.get(key) ?? matchdays.byTeams.get(teamKey);
-          return matchday == null ? game : { ...game, matchday };
-        }),
-        errors,
-      };
+      return { games: await addMlsMatchdays(unique, seoulDate), errors };
     } catch {
       // ESPN 일정은 그대로 표시하고, MLS API 회차 데이터가 조회될 때만 라운드를 덧붙입니다.
       return { games: unique, errors };
@@ -904,10 +920,20 @@ export async function getEspnSeasonSchedule(leagueId, season, from, to, { signal
   if (!path) return { games: [], errors: [] };
   const start = new Date(`${from}T00:00:00Z`);
   start.setUTCDate(start.getUTCDate() - 1);
-  const dates = `${start.toISOString().slice(0, 10).replaceAll("-", "")}-${to.replaceAll("-", "")}`;
+  // MLS는 연간 날짜 범위 대신 연도(YYYY)로 조회해야 정상 응답합니다.
+  const dates = leagueId === "mls" ? String(season)
+    : `${start.toISOString().slice(0, 10).replaceAll("-", "")}-${to.replaceAll("-", "")}`;
   const data = await espnFetch(`${path}/scoreboard`, { dates, limit: "1000" }, "events");
   const games = data.events.map(event => normalizeEspnEvent(leagueId, event)).filter(Boolean)
     .filter(game => { const date = getSeoulDateKey(game.utcDate); return date >= from && date <= to; });
+  if (leagueId === "mls") {
+    try {
+      return { games: uniqueGames(await addMlsMatchdays(games, from, to, { signal })), errors: [] };
+    } catch (error) {
+      if (signal?.aborted) throw error;
+      return { games: uniqueGames(games), errors: [error.message || "MLS 라운드를 불러오지 못했습니다."] };
+    }
+  }
   return { games: uniqueGames(games), errors: [] };
 }
 

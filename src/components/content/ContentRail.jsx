@@ -126,7 +126,7 @@ export const ContentRail = ({
       {railKey && showMore && (
         <Link
           className={intro ? 'contentRail-intro-link button' : 'contentRail-more'}
-          to={`/more?rail=${encodeURIComponent(railKey)}`}
+          to={intro?.to ?? `/more?rail=${encodeURIComponent(railKey)}`}
           state={{ from: location.pathname }}
         >
           {intro?.linkText ?? '더보기'}

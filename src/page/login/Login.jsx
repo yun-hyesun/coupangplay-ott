@@ -1,11 +1,14 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
+import { getWatchInviteReturn } from '../watch/watchMedia'
 import './scss/Login.scss'
 
 export const Login = () => {
   const { onEmailLogin, onGoogleLogin, error } = useAuthStore();
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const watchInvite = getWatchInviteReturn(state?.watchInvite);
 
   // 입력값 저장
   const [email, setEmail] = useState("");
@@ -20,7 +23,7 @@ export const Login = () => {
     try {
       const user = await onEmailLogin(email, password);
       if (user) {
-        navigate("/profiles");
+        navigate("/profiles", { replace: Boolean(watchInvite), state: watchInvite ? { watchInvite } : undefined });
       }
     } finally {
       setIsSubmitting(false);
@@ -34,7 +37,7 @@ export const Login = () => {
     try {
       const user = await onGoogleLogin();
       if (user) {
-        navigate("/profiles");
+        navigate("/profiles", { replace: Boolean(watchInvite), state: watchInvite ? { watchInvite } : undefined });
       }
     } finally {
       setIsSubmitting(false);
@@ -100,7 +103,7 @@ export const Login = () => {
 
         <div className="login-bottom">
           <p>아직 계정이 없으신가요?</p>
-          <Link to="/signup">회원가입</Link>
+          <Link to="/signup" state={watchInvite ? { watchInvite } : undefined}>회원가입</Link>
         </div>
       </div>
     </main>

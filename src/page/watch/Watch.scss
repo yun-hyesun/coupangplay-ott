@@ -84,8 +84,18 @@ $surface: #262626;
   gap: 20px;
   padding: 100px 24px 150px;
   text-align: center;
-  p { margin: 0; }
-  button { min-height: 44px; padding: 10px 20px; border-radius: 8px; background: $surface; font-size: 16px; }
+
+  p {
+    margin: 0;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: $surface;
+    font-size: 16px;
+  }
 }
 
 .watch-player__header {
@@ -168,8 +178,14 @@ $surface: #262626;
 }
 
 .watch-page--live {
-  .watch-player__youtube { pointer-events: none; }
-  .watch-player__bottom { padding-block: 12px; }
+  .watch-player__youtube {
+    pointer-events: none;
+  }
+
+  .watch-player__bottom {
+    padding-block: 12px;
+  }
+
   .watch-player__bottom::before {
     position: absolute;
     z-index: -1;
@@ -187,7 +203,7 @@ $surface: #262626;
   margin-bottom: 14px;
 }
 
-.watch-player__live-status > .watch-player__live-badge.live {
+.watch-player__live-status>.watch-player__live-badge.live {
   position: static;
   flex-shrink: 0;
 }
@@ -220,7 +236,11 @@ $surface: #262626;
   border-radius: 12px;
   background: rgba(0, 0, 0, .75) !important;
   transform: translate(-50%, -50%);
-  svg { width: 32px; height: 32px; }
+
+  svg {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 .watch-player__progress-label {
@@ -274,11 +294,19 @@ $surface: #262626;
 }
 
 .watch-volume {
+  --volume-trigger-width: 44px;
+  position: relative;
   display: flex;
   align-items: center;
 }
 
 .watch-volume__levels {
+  --volume-popover-gap: 36px;
+  position: absolute;
+  bottom: calc(100% + var(--volume-popover-gap));
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -287,6 +315,37 @@ $surface: #262626;
   padding: 0 12px;
   border-radius: 8px;
   background: #08090a;
+
+  &::after {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: var(--volume-trigger-width);
+    height: var(--volume-popover-gap);
+    content: '';
+  }
+}
+
+.watch-volume:not([data-dismissed]) {
+  > button:focus-visible + .watch-volume__levels,
+  .watch-volume__levels:focus-within {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @media (hover: hover) {
+    &:hover .watch-volume__levels {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  @media (hover: none) {
+    &:focus-within .watch-volume__levels {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
 }
 
 .watch-volume__levels input {
@@ -434,6 +493,10 @@ $surface: #262626;
   box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
 }
 
+.watch-side-panel.watch-side-panel--chat {
+  top: 80px; // 기존 58px에서 22px 아래로
+}
+
 .watch-side-panel__header {
   display: flex;
   align-items: flex-start;
@@ -476,17 +539,110 @@ $surface: #262626;
   height: 20px;
 }
 
-.watch-side-panel__invite {
-  align-self: flex-start;
+.watch-side-panel__session-actions {
   margin: 12px 24px 0;
-  padding: 8px 12px;
-  border: 1px solid #525252 !important;
-  border-radius: 6px;
-  font-size: 12px !important;
 }
 
-.watch-side-panel__invite:hover {
-  background: #383838;
+.watch-side-panel__action-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+
+  > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid #525252;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  > button:hover,
+  > button[aria-expanded='true'] {
+    background: #383838;
+  }
+
+  img {
+    max-width: 16px;
+    max-height: 16px;
+  }
+}
+
+.watch-side-panel__members {
+  position: absolute;
+  z-index: 1;
+  inset: calc(100% + 8px) 0 auto;
+  max-height: min(184px, 35dvh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 8px;
+  background: #303136;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .14), 0 8px 18px rgba(0, 0, 0, .22);
+  font-size: 13px;
+
+  ul {
+    margin: 0;
+    padding: 4px 12px;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 40px;
+    padding-block: 4px;
+    overflow-wrap: anywhere;
+  }
+
+  li + li {
+    border-top: 1px solid #383838;
+  }
+
+  small, p {
+    color: $muted;
+  }
+
+  small, .watch-side-panel__kick {
+    flex-shrink: 0;
+    padding-inline: 10px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+  }
+
+  p { margin: 0; padding: 10px 12px; }
+}
+
+.watch-side-panel__members .watch-side-panel__kick {
+  min-height: 32px;
+  border-radius: 6px;
+  color: #ffb0b0;
+
+  &:hover { background: rgba(255, 176, 176, .1); }
+}
+
+.watch-side-panel__invite-url {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+
+  input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #525252;
+    border-radius: 6px;
+    background: #191919;
+    color: inherit;
+    font: inherit;
+  }
 }
 
 .watch-side-panel__error {
@@ -503,6 +659,26 @@ $surface: #262626;
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #101113;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #555b63;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #777d85;
+  }
 }
 
 .watch-side-panel__empty {
@@ -561,6 +737,10 @@ $surface: #262626;
   background: $blue;
   font-size: 14px;
   font-weight: 600;
+
+  &:disabled {
+    cursor: default;
+  }
 }
 
 .watch-side-panel__episodes {
@@ -568,8 +748,11 @@ $surface: #262626;
   min-height: 0;
   overflow-y: auto;
   padding: 16px 24px;
+}
 
-  // Chrome, Edge, Safari: 회차 목록에만 적용
+.watch-side-panel__episodes,
+.watch-side-panel__messages,
+.watch-side-panel__members {
   scrollbar-width: thin;
   scrollbar-color: #555b63 #101113;
 
@@ -657,14 +840,23 @@ $surface: #262626;
   overflow: hidden;
 }
 
-.watch-next-episode-notice {
+.watch-player__community {
+  display: contents;
+
+  .watch-side-panel { top: 76px; }
+}
+
+.watch-player-notice {
   position: absolute;
   z-index: 8;
   left: 50%;
   bottom: 130px;
   transform: translateX(-50%);
   display: flex;
+  width: max-content;
+  max-width: calc(100% - 32px);
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 12px 20px;
   border: 1px solid #404040;
@@ -672,12 +864,87 @@ $surface: #262626;
   background: $surface;
   font-size: 16px;
   font-weight: 600;
-  white-space: nowrap;
+  text-align: center;
+  overflow-wrap: anywhere;
   pointer-events: none;
+
+  &:empty {
+    padding: 0;
+    border: 0;
+  }
+
+  img {
+    max-width: 20px;
+    max-height: 20px;
+  }
 }
 
-.watch-next-episode-notice svg {
-  color: $blue;
+@media (min-width: 1201px) {
+  .watch-player__community:has(.watch-side-panel) .watch-player-notice {
+    max-width: calc(100% - 960px);
+  }
+}
+
+@media (max-width: 1200px) {
+  .watch-player__community:has(.watch-side-panel) {
+    position: absolute;
+    z-index: 8;
+    inset: 76px 64px 118px;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+
+    .watch-side-panel {
+      position: relative;
+      inset: auto;
+      width: min(400px, 100%);
+      align-self: flex-end;
+      flex: 1;
+      pointer-events: auto;
+    }
+
+    .watch-player-notice {
+      position: static;
+      align-self: center;
+      flex-shrink: 0;
+      max-width: 100%;
+      transform: none;
+
+      &:not(:empty) { margin-top: 8px; }
+    }
+  }
+}
+
+.watch-player--youtube {
+  --youtube-controls-height: 80px;
+  background: #000;
+
+  .watch-player__youtube {
+    height: calc(100% - var(--youtube-controls-height));
+  }
+
+  .watch-player__bottom {
+    bottom: 0;
+    height: var(--youtube-controls-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.watch-player__bottom {
+  opacity: 1;
+  transition: opacity 220ms ease;
+
+  &.is-idle {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watch-player__bottom {
+    transition: none;
+  }
 }
 
 @media (max-width: 800px) {
@@ -716,8 +983,12 @@ $surface: #262626;
     font-size: 11px;
   }
 
+  .watch-volume {
+    --volume-trigger-width: 36px;
+  }
+
   .watch-volume__levels {
-    width: min(170px, 30vw);
+    width: 170px;
   }
 
   .watch-settings-popup {
@@ -736,10 +1007,14 @@ $surface: #262626;
     padding: 6px 10px;
   }
 
-  .watch-next-episode-notice {
+  .watch-player-notice {
     bottom: 112px;
     padding: 10px 14px;
     font-size: 14px;
+  }
+
+  .watch-player__community:has(.watch-side-panel) {
+    inset: 64px 16px 104px;
   }
 }
 
@@ -756,11 +1031,17 @@ $surface: #262626;
     padding: 16px;
   }
 
+  .watch-side-panel__session-actions {
+    margin-inline: 16px;
+  }
+
   .watch-side-panel__compose {
     padding: 12px 16px 16px;
   }
+}
 
-  .watch-volume__levels {
-    width: 110px;
+@media (max-width: 440px) {
+  .watch-player__community:has(.watch-side-panel) {
+    bottom: 132px;
   }
 }

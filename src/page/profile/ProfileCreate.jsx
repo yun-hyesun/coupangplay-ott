@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useProfileStore } from '../../store/useProfileStore';
 import { ProfileForm } from './components/ProfileForm';
 import { GenreSelect } from './components/GenreSelect';
@@ -9,6 +9,7 @@ import './scss/Profile.scss';
 
 export const ProfileCreate = () => {
     const navigate = useNavigate();
+    const { state } = useLocation();
 
     const { onAddProfile, onUpdateProfile, loading, error } = useProfileStore();
 
@@ -66,7 +67,7 @@ export const ProfileCreate = () => {
         });
 
         if (result) {
-            navigate('/profiles');
+            navigate('/profiles', { state });
         }
     };
 
@@ -92,7 +93,7 @@ export const ProfileCreate = () => {
                         initialAdultVerified={profileData.isAdultVerified}
                         initialPin={profileData.pin}
                         onSubmit={handleProfileNext}
-                        onCancel={() => navigate('/profiles')}
+                        onCancel={() => navigate('/profiles', { state })}
                         submitText="다음"
                         loading={loading}
                     />
