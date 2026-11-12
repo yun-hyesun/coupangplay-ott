@@ -1,5 +1,5 @@
 import {
-  addDoc, collection, collectionGroup, deleteDoc, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where
+  runTransaction, addDoc, collection, collectionGroup, deleteDoc, doc, limit, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { contentKey, displayName, episodeKey, toDate } from '../data/communityData';
@@ -11,7 +11,7 @@ export const subscribeEpisodeReviews = (type, contentId, season, episode, onData
   const q = query(reviewCollection(type, contentId, season, episode), orderBy('createdAt', 'desc'), limit(100));
   return onSnapshot(q, snapshot => onData(snapshot.docs.map(item => {
     const data = item.data();
-    return { ...data, id: item.id, author: data.authorName || '사용자', content: data.text, createdAt: toDate(data.createdAt), updatedAt: toDate(data.updatedAt) };
+    return { ...data, id: item.id, documentPath: item.ref.path, author: data.authorName || '사용자', content: data.text, createdAt: toDate(data.createdAt), updatedAt: toDate(data.updatedAt) };
   })), onError);
 };
 
@@ -98,4 +98,35 @@ export const subscribeMyReviews = (userId, onData, onError) => {
     },
     onError
   );
+};
+
+// 좋아요 기록은 계정 uid를 문서 ID로 사용하여 리뷰당 1회만 허용합니다.
+const getReviewRef = (documentPath) => {
+  if (!/^contents\/(movie|tv)-[^/]+\/episodes\/[^/]+\/reviews\/[^/]+$/.test(documentPath || '')) {
+    throw new Error('리뷰 경로가 올바르지 않습니다.');
+  }
+  return doc(db, documentPath);
+};
+
+export const subscribeReviewLike = (documentPath, uid, onData, onError) => {
+  if (!uid) { onData(false); return () => {}; }
+  return onSnapshot(doc(getReviewRef(documentPath), 'likes', uid), snapshot => onData(snapshot.exists()), onError);
+};
+
+export const likeReviewOnce = async (documentPath) => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('좋아요를 누르려면 로그인해 주세요.');
+  const reviewRef = getReviewRef(documentPath);
+  const likeRef = doc(reviewRef, 'likes', user.uid);
+  return runTransaction(db, async transaction => {
+    const review = await transaction.get(reviewRef);
+    const previous = await transaction.get(likeRef);
+    if (!review.exists()) throw new Error('삭제되었거나 존재하지 않는 리뷰입니다.');
+    if (previous.exists()) return false;
+    const count = review.data().likes;
+    if (!Number.isInteger(count) || count < 0) throw new Error('리뷰의 좋아요 수를 확인할 수 없습니다.');
+    transaction.set(likeRef, { uid: user.uid, createdAt: serverTimestamp() });
+    transaction.update(reviewRef, { likes: count + 1 });
+    return true;
+  });
 };

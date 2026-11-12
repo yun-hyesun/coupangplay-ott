@@ -10,16 +10,20 @@
   padding: 80px 64px 140px;
   box-sizing: border-box;
 }
-.policy-page *, .policy-page *::before, .policy-page *::after {
+.policy-page *,
+.policy-page *::before,
+.policy-page *::after {
   box-sizing: border-box;
 }
-.policy-page button, .policy-page a {
+.policy-page button,
+.policy-page a {
   font-family: inherit;
 }
 .policy-page button {
   cursor: pointer;
 }
-.policy-page button:focus-visible, .policy-page a:focus-visible {
+.policy-page button:focus-visible,
+.policy-page a:focus-visible {
   outline: 2px solid #0084FF;
   outline-offset: 3px;
 }
@@ -61,7 +65,7 @@
   padding: 16px 12px;
   text-align: center;
   color: #a3a3a3;
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 600;
   line-height: 24px;
   text-decoration: none;
@@ -124,6 +128,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 48px;
   padding: 12px 24px;
   background: #262626;
@@ -153,39 +158,56 @@
 .policy-page__overlay {
   position: fixed;
   inset: 0;
-  z-index: 2000;
-  background: rgba(0, 0, 0, 0.78);
+  z-index: 9999;
   display: flex;
-  justify-content: center;
   align-items: center;
-  padding: 24px;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.7);
 }
 .policy-page__modal {
-  width: min(1440px, 100%);
-  max-height: min(1000px, 100vh - 48px);
-  padding: 30px 78px 70px;
-  background: #0f1114;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-radius: 16px;
+  width: 100%;
+  max-width: 1440px;
+  min-height: min(340px, 100dvh - 40px);
+  max-height: min(1000px, 100dvh - 40px);
+  padding: 30px;
+  background: #24272c;
+  border: 0;
+  border-radius: 12px;
+  color: #FFFFFF;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
 }
 .policy-page__modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 24px;
+  margin-bottom: 24px;
+  flex-shrink: 0;
 }
 .policy-page__modal-header h2 {
-  font-size: 28px;
-  line-height: 36px;
-  font-weight: 700;
+  margin: 0;
+  font-family: "Pretendard", sans-serif;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
 }
 .policy-page__modal-header .policy-page__button {
-  width: 128px;
+  width: auto;
+  min-width: 64px;
   flex-shrink: 0;
+  padding: 0 4px;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 24px;
+}
+.policy-page__modal-header .policy-page__button:hover {
+  background: #0084FF;
 }
 .policy-page__modal-description {
   color: #a3a3a3;
@@ -224,7 +246,7 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .policy-page__modal {
-    padding: 28px 36px 36px;
+    padding: 30px;
   }
 }
 @media (max-width: 680px) {
@@ -257,13 +279,18 @@
     line-height: 26px;
   }
   .policy-page__overlay {
-    padding: 12px;
+    padding: 20px;
   }
   .policy-page__modal {
-    padding: 24px 18px;
-    max-height: calc(100vh - 24px);
+    padding: 20px;
+    max-height: calc(100dvh - 40px);
+  }
+  .policy-page__modal-header {
+    gap: 12px;
   }
   .policy-page__modal-header h2 {
+    min-width: 0;
+    overflow-wrap: anywhere;
     font-size: 20px;
     line-height: 28px;
   }

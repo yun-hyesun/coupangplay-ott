@@ -455,3 +455,54 @@
     font-size: 12px;
   }
 }
+.my-subscription .subscription-empty--passes {
+  min-height: clamp(360px, 100svh - 180px, 930px);
+  padding: 48px 16px;
+  gap: 24px;
+  box-sizing: border-box;
+  font-family: "Pretendard", sans-serif;
+}
+.my-subscription .subscription-empty--passes h2 {
+  margin: 0;
+  color: #FFFFFF;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 36px;
+}
+.my-subscription .subscription-empty--passes p {
+  margin: 0;
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+.my-subscription .subscription-empty--passes .subscription-empty__browse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  color: #5d9eff;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  transition: color 0.2s ease;
+  border-radius: 4px;
+}
+.my-subscription .subscription-empty--passes .subscription-empty__browse:hover {
+  color: #FFFFFF;
+  text-decoration: none;
+}
+.my-subscription .subscription-empty--passes .subscription-empty__browse:focus-visible {
+  outline: 2px solid #0084FF;
+  outline-offset: 4px;
+}
+@media (max-width: 767px) {
+  .my-subscription .subscription-empty--passes {
+    min-height: 400px;
+  }
+  .my-subscription .subscription-empty--passes h2 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}
