@@ -3,23 +3,19 @@ import { getLeagueVideoPage } from "./leagueVideosService";
 import { getMyTeamVideoCatalogPage } from "./myTeamVideoCatalogService";
 import { findSportsTeam } from "../data/sportsTeams";
 import { LEAGUE_VIDEO_QUERIES } from "../data/leagueVideoQueries";
-import { getCurrentVideoMonth } from "../data/leagueVideoGroups";
 
 export async function getLivePreviewVideo(game, { signal } = {}) {
   const league = game.competitionCode;
   if (!Object.hasOwn(LEAGUE_VIDEO_QUERIES, league)) throw new Error("이 경기의 영상 조회를 지원하지 않습니다.");
   const teams = [...new Set([findSportsTeam(league, game.home)?.name, findSportsTeam(league, game.away)?.name].filter(Boolean))];
-  if (!teams.length && league !== "f1") throw new Error("경기 팀 정보를 확인하지 못했습니다.");
+  if (!teams.length) throw new Error("경기 팀 정보를 확인하지 못했습니다.");
   const videos = [];
-  if (teams.length) {
-    const pages = await Promise.allSettled(teams.map(team => getMyTeamVideoCatalogPage({ league, team }, { signal })));
-    signal?.throwIfAborted();
-    for (const page of pages) if (page.status === "fulfilled") videos.push(...page.value.videos);
-    const savedVideo = selectLivePreviewVideo(game, videos);
-    if (savedVideo) return savedVideo;
-  }
-  const queries = teams.length ? teams.map(team => ({ league, scope: "team", team }))
-    : [{ league, scope: "month", month: getCurrentVideoMonth() }];
+  const savedPages = await Promise.allSettled(teams.map(team => getMyTeamVideoCatalogPage({ league, team }, { signal })));
+  signal?.throwIfAborted();
+  for (const page of savedPages) if (page.status === "fulfilled") videos.push(...page.value.videos);
+  const savedVideo = selectLivePreviewVideo(game, videos);
+  if (savedVideo) return savedVideo;
+  const queries = teams.map(team => ({ league, scope: "team", team }));
   const pages = await Promise.allSettled(queries.map(query => getLeagueVideoPage(query, { signal })));
   signal?.throwIfAborted();
   for (const page of pages) if (page.status === "fulfilled") videos.push(...page.value.videos);

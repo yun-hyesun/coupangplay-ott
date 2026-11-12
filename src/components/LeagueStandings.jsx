@@ -1,13 +1,15 @@
 import { Fragment } from "react";
-import { EmptyMessage } from "./LeagueDetailShared";
+import { EmptyMessage, TeamImage } from "./LeagueDetailShared";
 import { selectLeagueStandings } from "../data/leagueStandingsView";
 
 export function LeagueStandings({ league, standingsState, tableRows, tableNote, tableColumns, isBasketball, fullPage = false, onShowAll }) {
   const limit = 20;
   const isNfl = league.id === "nfl";
-  const tables = isNfl ? ["AFC", "NFC"].map(conference => ({
-    conference,
-    rows: selectLeagueStandings(tableRows.filter(row => row.conference === conference), fullPage ? 16 : 10),
+  const conferenceLabels = isNfl ? { AFC: "AFC", NFC: "NFC" }
+    : league.id === "mls" ? { East: "동부 컨퍼런스", West: "서부 컨퍼런스" } : null;
+  const tables = conferenceLabels ? Object.entries(conferenceLabels).map(([conference, label]) => ({
+    conference: label,
+    rows: selectLeagueStandings(tableRows.filter(row => row.conference === conference), fullPage ? (isNfl ? 16 : 15) : 10),
   })).filter(table => table.rows.length) : [{
     conference: "",
     rows: selectLeagueStandings(tableRows, limit, { allowUnranked: !fullPage }),
@@ -33,7 +35,7 @@ export function LeagueStandings({ league, standingsState, tableRows, tableNote, 
                 <tr key={row.teamId || row.teamName || index}>
                   <td>{row.rank ?? "—"}</td>
                   <td className="league-detail__table-team">
-                    {row.logoPath && <img src={row.logoPath} alt="" loading="lazy" />}
+                    <TeamImage team={row} leagueId={league.id} />
                     <span>{row.teamName}</span>
                   </td>
                   {isNfl ? (

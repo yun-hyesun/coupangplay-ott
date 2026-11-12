@@ -63,6 +63,10 @@
     object-position: center;
   }
 
+  &__slide--nfl &__image {
+    object-position: right center;
+  }
+
   &__content {
     position: absolute;
     z-index: 2;
@@ -70,6 +74,14 @@
     bottom: clamp(56px, 7vw, 130px);
     max-width: min(620px, 70%);
     color: #fff;
+
+    opacity: 0;
+    transform: translateY(30%);
+    @include trans($s:.5s);
+  }
+
+  .swiper-slide-active {
+    .sports-banner__content {opacity: 1; transform: translateY(0);}
   }
 
   &__eyebrow {
@@ -80,22 +92,34 @@
   }
 
   &__heading {
+    --sports-logo-height: clamp(56px, 4.6vw, 76px);
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: clamp(16px, 1.25vw, 24px);
     margin: 14px 0 12px;
   }
 
   &__logo {
-    width: clamp(50px, 5vw, 90px);
-    height: clamp(50px, 5vw, 90px);
-    object-fit: contain;
+    position: relative;
+    display: block;
+    width: calc(var(--sports-logo-height) * var(--sports-logo-ratio));
+    height: var(--sports-logo-height);
+    overflow: hidden;
     flex-shrink: 0;
+
+    img {
+      position: absolute;
+      top: var(--sports-logo-image-top);
+      left: var(--sports-logo-image-left);
+      width: var(--sports-logo-image-width);
+      max-width: none;
+      height: auto;
+    }
   }
 
   &__title {
     margin: 0;
-    font-size: clamp(36px, 4.5vw, 76px);
+    font-size: clamp(30px, 3.2vw, 52px);
     line-height: 1.12;
     font-weight: 800;
   }
@@ -189,16 +213,12 @@
     }
 
     &__heading {
-      gap: 10px;
-    }
-
-    &__logo {
-      width: 48px;
-      height: 48px;
+      --sports-logo-height: 44px;
+      gap: 12px;
     }
 
     &__title {
-      font-size: clamp(28px, 7vw, 42px);
+      font-size: clamp(24px, 6vw, 32px);
     }
 
     .sports-banner__prev {

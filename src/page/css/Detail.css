@@ -497,6 +497,18 @@
   cursor: default;
 }
 
+.detail-button.detail-button--purchase {
+  background: #FF6E00;
+  border-color: #FF6E00;
+}
+
+.detail-button__purchase-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
 @media (max-width: 1200px) {
   .detail-page__inner {
     padding-inline: 32px;

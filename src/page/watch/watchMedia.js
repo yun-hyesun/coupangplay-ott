@@ -36,12 +36,12 @@ export function getClipRestriction({ type, youtubeKey, videoSrc, hasPlaybackErro
 export function getSportsLiveWatchDestination(game, { leagueId = game.competitionCode || game.leagueId, returnTo = '/sports', returnTab = 'home' } = {}) {
   const params = new URLSearchParams(Object.entries({
     league: leagueId, match: game.gameId ?? game.id, home: game.home?.name,
-    away: game.away?.name, kickoff: game.utcDate || game.startTime, race: game.raceName,
+    away: game.away?.name, kickoff: game.utcDate || game.startTime,
   }).filter(([, value]) => value != null && value !== ''));
   return {
     to: `/watch/sports/live?${params}`,
     state: {
-      title: game.raceName || `${game.home?.name || '홈 팀'} vs ${game.away?.name || '원정 팀'}`,
+      title: `${game.home?.name || '홈 팀'} vs ${game.away?.name || '원정 팀'}`,
       returnTo, returnTab,
       ...(returnTab === 'schedule' ? { returnScheduleMatch: { ...game, competitionCode: leagueId }, expandScheduleMatch: false } : {}),
     },
@@ -50,14 +50,13 @@ export function getSportsLiveWatchDestination(game, { leagueId = game.competitio
 
 export function getSportsLiveMatch(search) {
   const params = new URLSearchParams(search);
-  const raceName = params.get('race') || '';
   const homeName = params.get('home') || '';
   const awayName = params.get('away') || '';
   return {
     competitionCode: params.get('league') || '', gameId: params.get('match') || '',
-    utcDate: params.get('kickoff') || null, raceName,
+    utcDate: params.get('kickoff') || null,
     home: { name: homeName }, away: { name: awayName },
-    title: raceName || `${homeName || '홈 팀'} vs ${awayName || '원정 팀'}`,
+    title: `${homeName || '홈 팀'} vs ${awayName || '원정 팀'}`,
   };
 }
 

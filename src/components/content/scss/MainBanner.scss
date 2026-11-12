@@ -7,7 +7,7 @@
       .banner-slide-list {width: 100%; height: 100%; border-radius: 30px; border: 2px solid rgba(255,255,255,.1); overflow: hidden;
         
         .slide-list-image {width: 100%; height: 100%; object-fit: cover; object-position: center top;}
-        .slide-list-info {@include pos-abs($b:10%, $l:50px); width: 100%; text-shadow: 0 0 20px rgba(0,0,0,0.2); opacity: 0; transform: translateY(50%); @include trans($s:.5s);
+        .slide-list-info {@include pos-abs($b:10%, $l:50px); width: 100%; text-shadow: 0 0 20px rgba(0,0,0,0.2); opacity: 0; transform: translateY(30%); @include trans($s:.5s);
         
           .info-title {font-family: $font-title; line-height: 1; font-size: 55px; font-weight: $font-w-B-700; margin-bottom: 30px;
           
@@ -41,8 +41,6 @@
             }
           }
 
-
-           
         }
       }
 

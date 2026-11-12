@@ -16,7 +16,7 @@ import { formatBroadcastDate } from '../data/leagueBroadcasts';
 
 // 경기 찜 데이터를 기존 라이브 예약 알림 목록 형식으로 표시합니다.
 export const getLiveReminderItems = (watchlist) => watchlist
-    .filter((item) => item.media_type === 'sports')
+    .filter((item) => item.media_type === 'sports' && item.leagueId !== 'f1')
     .map((item) => {
         const league = SPORTS_LEAGUE_BY_ID[item.leagueId];
         const prefix = `${item.leagueId}_`;
@@ -37,7 +37,6 @@ export const getLiveReminderItems = (watchlist) => watchlist
                     utcDate: item.startTime || null,
                     home: { id: item.homeTeamId, name: item.homeName, crest: item.homeLogo },
                     away: { id: item.awayTeamId, name: item.awayName, crest: item.awayLogo },
-                    raceName: item.raceName || (league.sport === '레이싱' ? item.homeName || item.title : undefined),
                 },
             } : undefined,
         };
@@ -185,7 +184,6 @@ export const useWatchlistStore = create((set, get) => ({
                         homeLogo: content.homeLogo || null,
                         awayLogo: content.awayLogo || null,
                         thumbnail: content.thumbnail || null,
-                        raceName: content.raceName || null,
                     } : {}),
                     createdAt: serverTimestamp()
                 }

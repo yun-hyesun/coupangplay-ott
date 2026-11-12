@@ -1,6 +1,5 @@
 import { getEspnScheduleForRange, getEspnScheduleUnitFields, getScheduleStageLabel } from "./espnService";
 import { getKleagueScheduleMonth, getKleagueScheduleUnitFields } from "./sportsService";
-import { getF1SeasonScheduleUnits } from "./f1Service";
 import { getVideoDateKey } from "../data/leagueVideoGroups";
 import { buildScheduleUnitOptions, hasMatchStarted } from "../data/leagueScheduleUnits";
 import { ESPN_LEAGUE_PATHS } from "../data/espnLeagues";
@@ -160,7 +159,6 @@ async function loadRoundData(leagueId, now) {
     return { matches: data.matches.filter(game => (!season || !game.season?.startDate || game.season.startDate.startsWith(season)) && (!game.stage || game.stage === "REGULAR_SEASON")), source: "Football-Data", field: "matchday / utcDate / status", seasonYear: season };
   }
   if (leagueId === "nba" || leagueId === "nfl") return loadWeeks(leagueId, now);
-  if (leagueId === "f1") return { matches: await getF1SeasonScheduleUnits(Number(getVideoDateKey(now).slice(0, 4))), source: "Jolpica", field: "round / date / time" };
   if (leagueId.startsWith("kleague-")) return loadKleague(leagueId, now);
   if (leagueId === "BL2") return loadBl2(now);
   if (leagueId === "mls") return loadMls(now);

@@ -6,7 +6,6 @@ const SCHEDULE_API_LEAGUE_IDS = new Set([
   ...Object.keys(ESPN_LEAGUE_PATHS),
   "kleague-1",
   "kleague-2",
-  "f1", // Jolpica F1 일정 API
 ]);
 
 // 표시 순서는 기존 카탈로그를 따르고 API 일정이 연결된 리그만 포함합니다.
@@ -21,7 +20,7 @@ const AVAILABLE_NON_FOOTBALL_CATEGORIES = [...new Set(
   SPORTS_LEAGUES.map((league) => league.sport).filter((sport) => sport !== "축구"),
 )];
 export const SPORTS_CATEGORIES = ["전체", "축구", "해외축구", ...AVAILABLE_NON_FOOTBALL_CATEGORIES];
-export const DEFAULT_SELECTED_LEAGUE_IDS = ["PL", "nba", "f1", "PD", "kleague-1", "nfl"];
+export const DEFAULT_SELECTED_LEAGUE_IDS = ["PL", "nba",  "PD", "kleague-1", "nfl"];
 
 export const SPORTS_BANNERS = [
   {
@@ -30,14 +29,14 @@ export const SPORTS_BANNERS = [
     alt: "프리미어리그",
   },
   {
-    id: "formula-one",
-    image: "/images/sports/campaign/hero-f1.png",
-    alt: "F1",
-  },
-  {
     id: "laliga",
     image: "/images/sports/campaign/hero-laliga-clean.png",
     alt: "라리가",
+  },
+  {
+    id: "nfl",
+    image: "/images/sports/campaign/hero-nfl.png",
+    alt: "NFL",
   },
 ];
 

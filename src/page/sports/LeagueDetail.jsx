@@ -12,6 +12,8 @@ import { LeagueVideoFeed } from "../../components/LeagueVideoFeed";
 import { findLeagueTeam, normalizeSportsText } from "../../components/LeagueDetailShared";
 import { SportsSettingsModal } from "./components/SportsSettingsModal";
 import { SPORTS_LEAGUE_BY_ID } from "../../data/sportsLeagues";
+import { getLeagueHeaderStyle, getLeagueTheme } from "../../data/leagueHeaderTheme";
+import { useLeagueHeaderScroll } from "../../hooks/useLeagueHeaderScroll";
 import { SPORTS_TEAMS_BY_LEAGUE } from "../../data/sportsTeams";
 import {
   SPORTS_HIGHLIGHTS,
@@ -33,12 +35,11 @@ import {
   getFootballStandings,
   supportsFootballStandings,
 } from "../../service/sportsService";
-import { getF1RacesForDate } from "../../service/f1Service";
 import { getLeagueSeasonSchedule } from "../../service/leagueScheduleService";
 import { getScheduleSeason } from "../../data/leagueScheduleView";
 import { useAuthStore } from "../../store/useAuthStore";
 import { loadLeagueBroadcasts } from "../../data/leagueBroadcasts";
-import { getScheduleGameDate, getScheduleRange, loadScheduleDates, selectScheduleMatches } from "../../data/leagueScheduleRange";
+import { getNearestScheduleRange, getScheduleGameDate, getScheduleRange, loadScheduleDates, selectScheduleMatches } from "../../data/leagueScheduleRange";
 
 const LEAGUE_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-leagues";
 const MAX_LEAGUE_SUBSCRIPTIONS = 10;
@@ -46,12 +47,7 @@ const TEAM_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-teams";
 const SEOUL_TIME_ZONE = "Asia/Seoul";
 const EMPTY_SCHEDULE = { games: [], loading: true, errors: [] };
 const EMPTY_STANDINGS = { rows: [], loading: true, error: "" };
-const SEASON_FIXTURE_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC"]);
-function getCompactHeaderScrollThreshold() {
-  if (window.innerWidth <= 600) return 174;
-  if (window.innerWidth <= 850) return 184;
-  return 219;
-}
+const SEASON_FIXTURE_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC", "carabao"]);
 const VIDEO_LIBRARY = [
   ...SPORTS_HIGHLIGHTS,
   ...SPORTS_TOGETHER,
@@ -77,7 +73,7 @@ async function loadLeagueSchedule(league, dateKey) {
     const data = await getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, dateKey));
     return { ...data, games: data.games.filter(game => getScheduleGameDate(game) === dateKey) };
   }
-  if (league.id === "f1") return { games: await getF1RacesForDate(dateKey), errors: [] };
+
   if (league.id === "nba") return { games: await getNbaGamesForSeoulDate(dateKey), errors: [] };
 
   if (league.id === "kleague-1" || league.id === "kleague-2") {
@@ -141,42 +137,9 @@ function readSubscribedLeagueIds() {
   }
 }
 
-const LEAGUE_HEADER_COLORS = {
-  PL: "#321852",
-  nba: "#174d9c",
-  f1: "#e60012",
-  PD: "#ff515d",
-  "kleague-1": "#ff80b4",
-  "kleague-2": "#315da7",
-  BL1: "#d71920",
-  BL2: "#d71920",
-  mls: "#000000",
-  nfl: "#d11322",
-  FL1: "#075ce5",
-  ELC: "#47246f",
-  FAC: "#d80b22",
-  carabao: "#d91f32",
-  dfb: "#00bb75",
-  "copa-del-rey": "#ff4b00",
-  "coupe-de-france": "#2549a1",
-  "concacaf-champions-cup": "#263a65",
-  acle: "#cf1833",
-  acl2: "#315da7",
-  "super-lig": "#df2433",
-  PD2: "#ff515d",
-};
-
-function getLeagueTheme(league) {
-  if (league.accent) return league.accent;
-  if (LEAGUE_HEADER_COLORS[league.id]) return LEAGUE_HEADER_COLORS[league.id];
-  if (league.sport === "농구") return "#173c68";
-  if (league.sport === "레이싱") return "#3a1720";
-  if (league.sport === "미식축구" || league.sport === "일반") return "#1b314d";
-  return "#391548";
-}
-
 export const LeagueDetail = () => {
   const { leagueId } = useParams();
+  const pageRef = useLeagueHeaderScroll(leagueId);
   const location = useLocation();
   useEffect(() => {
     if (location.hash !== "#league-detail-schedule-title") return;
@@ -193,7 +156,6 @@ export const LeagueDetail = () => {
   const navigationTab = ["home", "videos", "schedule", "standings"].includes(location.state?.leagueTab) ? location.state.leagueTab : "home";
   const activeTab = tabSelection?.key === location.key ? tabSelection.tab : navigationTab;
   const [activeFixtureTab, setActiveFixtureTab] = useState("upcoming");
-  const [isCompactHeader, setIsCompactHeader] = useState(false);
   const [scoresOn, setScoresOn] = useState(true);
   const [isTeamSettingsOpen, setIsTeamSettingsOpen] = useState(false);
   const [scheduleResult, setScheduleResult] = useState(null);
@@ -209,20 +171,6 @@ export const LeagueDetail = () => {
   useEffect(() => {
     const timer = window.setInterval(() => setToday(getSeoulDateKey()), 60000);
     return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const updateCompactHeader = () => {
-      setIsCompactHeader(window.scrollY >= getCompactHeaderScrollThreshold());
-    };
-
-    updateCompactHeader();
-    window.addEventListener("scroll", updateCompactHeader, { passive: true });
-    window.addEventListener("resize", updateCompactHeader, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", updateCompactHeader);
-      window.removeEventListener("resize", updateCompactHeader);
-    };
   }, []);
 
   useEffect(() => {
@@ -248,7 +196,7 @@ export const LeagueDetail = () => {
     const sameSeason = getScheduleSeason(league.id, from) === getScheduleSeason(league.id, to);
     const request = SEASON_FIXTURE_LEAGUES.has(league.id) && sameSeason
       ? getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, from), { signal: controller.signal })
-      : league.id === "f1" || league.id.startsWith("kleague-")
+      : league.id.startsWith("kleague-")
         ? loadScheduleDates({ from, to, signal: controller.signal, loadSchedule: (date) => loadLeagueSchedule(league, date) })
         : getMatchesForRange(league.id, from, to, { signal: controller.signal });
     request
@@ -306,6 +254,9 @@ export const LeagueDetail = () => {
         const result = await loadLeagueBroadcasts({
           dateKey: today,
           loadSchedule: (dateKey) => loadLeagueSchedule(league, dateKey),
+          loadSeasonSchedule: league.id === "carabao"
+            ? () => getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, today), { signal: controller.signal })
+            : undefined,
           signal: controller.signal,
         });
         if (!controller.signal.aborted) setBroadcastState({ ...result, leagueId: league.id });
@@ -324,7 +275,10 @@ export const LeagueDetail = () => {
     () => leagueTeams.filter((team) => subscribedTeamIds.includes(team.id)),
     [leagueTeams, subscribedTeamIds],
   );
-  const visibleMatches = useMemo(() => selectScheduleMatches(scheduleState.games, scheduleRange, activeFixtureTab), [activeFixtureTab, scheduleState.games, scheduleRange]);
+  const visibleScheduleRange = useMemo(() => leagueId === "carabao" && !scheduleState.loading
+    ? getNearestScheduleRange(scheduleState.games, today, activeFixtureTab) : scheduleRange,
+  [leagueId, scheduleState.loading, scheduleState.games, today, activeFixtureTab, scheduleRange]);
+  const visibleMatches = useMemo(() => selectScheduleMatches(scheduleState.games, visibleScheduleRange, activeFixtureTab), [activeFixtureTab, scheduleState.games, visibleScheduleRange]);
 
   if (!league) {
     return (
@@ -410,6 +364,8 @@ export const LeagueDetail = () => {
   const tableRows = standingsRows.length ? standingsRows : fallbackTeams;
   const tableNote = standingsRows.length && league.id === "nfl"
     ? `ESPN 기준 ${standingsRows[0].season || "현재"} 시즌 AFC·NFC 컨퍼런스 순위`
+    : standingsRows.length && league.id === "mls"
+    ? `ESPN 기준 ${standingsRows[0].season} 시즌 동부·서부 컨퍼런스 순위`
     : standingsRows.length && supportsFootballStandings(league.id)
     ? `${standingsRows[0].sourceProvider === "espn" ? "ESPN" : "Football-Data"} 기준 현재 시즌 종합 순위`
     : (fallbackTeams.length ? "순위 통계가 연결되기 전까지 프로젝트에 저장된 팀 목록을 표시합니다." : "");
@@ -424,7 +380,7 @@ export const LeagueDetail = () => {
   };
 
   return (
-    <main className={"league-detail" + (isCompactHeader ? " has-compact-header" : "")} data-sport={league.sport} data-league={league.id} style={{ "--league-accent": accent, "--league-header-color": accent }}>
+    <main ref={pageRef} className="league-detail" data-sport={league.sport} data-league={league.id} style={{ "--league-accent": accent, ...getLeagueHeaderStyle(league) }}>
       <div className="league-detail__hero-shell">
         <LeagueHeader
           league={league}
@@ -436,7 +392,6 @@ export const LeagueDetail = () => {
           onOpenTeamSettings={handleOpenTeamSettings}
           selectedLeagueCount={user ? subscribedLeagueIds.length : 0}
           selectedTeams={user ? selectedTeams : []}
-          isCompact={isCompactHeader}
           activeTab={activeTab}
           onTabChange={changeTab}
         />
@@ -458,7 +413,7 @@ export const LeagueDetail = () => {
       <LeagueHome league={league} scheduleState={broadcastState.leagueId === league.id ? broadcastState : { games: [], loading: true, errors: [] }} />
       <LeagueSchedule
         league={league}
-        dateRange={scheduleRange}
+        dateRange={visibleScheduleRange}
         scoresOn={scoresOn}
         scheduleState={scheduleState}
         visibleMatches={visibleMatches}

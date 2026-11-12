@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SPORTS_LEAGUES } from "../../../data/sportsLeagues";
-import { mergeSportsTeamDetails } from "../../../data/sportsTeams";
+import { mergeSportsTeamDetails, SPORTS_TEAM_PLACEHOLDER } from "../../../data/sportsTeams";
 import { getFootballTeams } from "../../../service/sportsService";
 
 const MAX_SUBSCRIPTIONS = 10;
@@ -56,16 +56,12 @@ function TeamImage({ team }) {
       className={"sports-settings-team-logo" + (hasImage ? " sports-settings-team-logo--image" : "")}
       aria-hidden="true"
     >
-      {hasImage ? (
         <img
-          src={imageSource}
+          src={hasImage ? imageSource : SPORTS_TEAM_PLACEHOLDER}
           alt=""
           loading="lazy"
-          onError={() => setFailedImageSource(imageSource)}
+          onError={hasImage ? () => setFailedImageSource(imageSource) : undefined}
         />
-      ) : (
-        <span>{team.name.slice(0, 1)}</span>
-      )}
     </span>
   );
 }

@@ -21,6 +21,8 @@ const video = (number, title, category, duration, meta, rating) => ({
   rating,
 });
 
+// F1 콘텐츠는 기존 이미지만 표시하며 재생 식별자를 연결하지 않습니다.
+
 export const SPORTS_HIGHLIGHTS = [
   // 2026-11-05 쿠팡플레이 스포츠 공식 유튜브 채널 최신순 경기 하이라이트.
   // 기존 카드 속성은 유지하고 썸네일·표시 제목·시안용 임의 별점만 교체합니다.
@@ -85,7 +87,7 @@ export const SPORTS_TOGETHER = [
     image: "/images/sports/together/youtube-njLxrBGrNmQ.jpg",
   },
   {
-    ...video(43, "LA 클리퍼스 vs 골든스테이트 · 렌더버그 주요장면", "F1", "08:09", "2026.10.29", "4.7"),
+    ...video(43, "LA 클리퍼스 vs 골든스테이트 · 렌더버그 주요장면", "NBA", "08:09", "2026.10.29", "4.7"),
     videoId: "d2EKeByAhNY",
     image: "/images/sports/together/youtube-d2EKeByAhNY.jpg",
   },
@@ -101,7 +103,6 @@ export const SPORTS_MOMENTS = [
   // 기존 카드 속성·추천영상 배지는 유지하고 썸네일·제목·별점만 교체합니다.
   {
     ...video(50, "스무 살 챔피언, F1의 새 역사", "라리가", "07:57", "2026.10.12", "4.9"),
-    videoId: "OoQTUevOBFc",
     image: "/images/sports/moments/youtube-OoQTUevOBFc.jpg",
   },
   {
@@ -174,7 +175,6 @@ export const SPORTS_PASS_CONTENT = [
     rating: "4.7",
   },
   {
-    videoId: "CPXWcy8gwSM",
     image: "/images/sports/pass/youtube-CPXWcy8gwSM.jpg",
     title: "F1 · 키미 안토넬리 스토리",
     category: "F1",
@@ -232,7 +232,6 @@ export const SPORTS_RECOMMENDATIONS = [
     rating: "4.5",
   },
   {
-    videoId: "fXDn3HY83kY",
     image: "/images/sports/recommendations/youtube-fXDn3HY83kY.jpg",
     title: "영화보다 재밌는 F1 입문 가이드",
     category: "F1",
@@ -259,7 +258,6 @@ export const SPORTS_RECOMMENDATIONS = [
     rating: "4.4",
   },
   {
-    videoId: "X3T-0hkQ3cc",
     image: "/images/sports/recommendations/youtube-X3T-0hkQ3cc.jpg",
     title: "코마츠 아야오 · F1과 아시아 시장 이야기",
     category: "F1",
