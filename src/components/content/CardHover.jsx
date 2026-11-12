@@ -1,12 +1,90 @@
 import { formatFivePointRating } from '../../utils/rating';
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import { useCallback, useEffect, useState, useContext, useRef } from 'react';
+import YouTube from 'react-youtube';
 import { useNavigate, Link } from 'react-router-dom';
 import { useProfileStore } from '../../store/useProfileStore';
 import { useWatchlistStore } from '../../store/useWatchlistStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { subscribeMyPurchases } from '../../service/purchaseService';
 import { ChannelSubscriptionContext } from '../../page/channel/components/ChannelSubscriptionGate';
+import { getCachedPreviewVideos, getVideoFallback, loadPreviewVideos, selectPreviewVideos, videoTypeLabels } from '../../data/videoFallback';
+import { prepareVisiblePreview } from './previewPrefetch';
 import './scss/CordHover.scss';
+
+const PREVIEW_START_TIMEOUT_MS = 6000;
+
+function HoverVideo({ mediaType, id, title, originalLanguage }) {
+  const fallback = getVideoFallback(mediaType, id, 'preview');
+  const [cachedVideos] = useState(() => getCachedPreviewVideos(mediaType, id, originalLanguage));
+  const [attempt, setAttempt] = useState(() => ({
+    sources: selectPreviewVideos(cachedVideos, fallback),
+    index: 0,
+    started: false,
+  }));
+  const preview = attempt.sources[attempt.index];
+
+  useEffect(() => {
+    if (cachedVideos) return;
+    let mounted = true;
+
+    loadPreviewVideos(mediaType, id, originalLanguage, import.meta.env.VITE_TMDB_API_KEY)
+      .then((videos) => {
+        if (mounted) {
+          setAttempt((current) => ({ ...current, sources: selectPreviewVideos(videos, fallback) }));
+        }
+      })
+      .catch((error) => {
+        if (mounted && error.name !== 'TimeoutError') console.error('영상 불러오기 실패:', error);
+      });
+
+    return () => { mounted = false; };
+  }, [cachedVideos, fallback, id, mediaType, originalLanguage]);
+
+  const failPreview = useCallback((youtubeId, beforeStartOnly = false) => {
+    setAttempt((current) => {
+      if (current.sources[current.index]?.youtubeId !== youtubeId) return current;
+      if (beforeStartOnly && current.started) return current;
+      return { ...current, index: current.index + 1, started: false };
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!preview || attempt.started) return;
+    const timer = window.setTimeout(() => failPreview(preview.youtubeId, true), PREVIEW_START_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [attempt.started, failPreview, preview]);
+
+  if (!preview) return null;
+
+  return (
+    <YouTube
+      key={preview.youtubeId}
+      videoId={preview.youtubeId}
+      title={`${title} ${videoTypeLabels[preview.videoType] || '미리보기'}`}
+      className="preview-player"
+      style={{ opacity: attempt.started ? 1 : 0 }}
+      opts={{
+        playerVars: {
+          autoplay: 1, mute: 1, controls: 0, loop: 1, playlist: preview.youtubeId,
+          playsinline: 1, disablekb: 1, fs: 0,
+          ...(preview.endSeconds ? { end: preview.endSeconds } : {}),
+        },
+      }}
+      onReady={({ target }) => {
+        target.getIframe().tabIndex = -1;
+        target.mute();
+        target.playVideo();
+      }}
+      onPlay={() => {
+        setAttempt((current) => {
+          if (current.sources[current.index]?.youtubeId !== preview.youtubeId || current.started) return current;
+          return { ...current, started: true };
+        });
+      }}
+      onError={() => failPreview(preview.youtubeId)}
+    />
+  );
+}
 
 export const CardHover = ({
   item,
@@ -14,9 +92,6 @@ export const CardHover = ({
   isHover,
   fromStore = false,
 }) => {
-  const [videoKey, setVideoKey] = useState(null);
-  const [isVideoReady, setIsVideoReady] = useState(false);
-
   const uid = useAuthStore((state) => state.user?.uid);
   const navigate = useNavigate();
   const profileId = useProfileStore((state) => state.currentProfile?.id);
@@ -34,6 +109,18 @@ export const CardHover = ({
 
   const mediaType =
     type === 'movie' || type === 'tv' ? type : item.media_type;
+  const previewCardRef = useRef(null);
+  const { id, original_language: originalLanguage } = item;
+
+  useEffect(() => {
+    return prepareVisiblePreview(
+      previewCardRef.current?.parentElement,
+      mediaType,
+      id,
+      originalLanguage,
+      import.meta.env.VITE_TMDB_API_KEY,
+    );
+  }, [id, mediaType, originalLanguage]);
 
   const isSaved =
     Boolean(currentOwnerKey) &&
@@ -187,103 +274,22 @@ export const CardHover = ({
   const buttonBlocked =
     subscriptionPending || Boolean(subscriptionError);
 
-  // TMDB 예고편 가져오기
-  useEffect(() => {
-    setVideoKey(null);
-    setIsVideoReady(false);
-
-    if (!isHover) return;
-
-    const controller = new AbortController();
-
-    const fetchVideo = async () => {
-      try {
-        const apiKey = import.meta.env.VITE_TMDB_API_KEY;
-
-        const response = await fetch(
-          `https://api.themoviedb.org/3/${type}/${item.id}/videos?api_key=${apiKey}&language=ko-KR`,
-          { signal: controller.signal }
-        );
-
-        if (!response.ok) {
-          throw new Error('영상 요청 실패');
-        }
-
-        const data = await response.json();
-
-        // 유튜브 예고편 우선 선택
-        let video =
-          data.results?.find(
-            (video) =>
-              video.site === 'YouTube' &&
-              video.type === 'Trailer'
-          ) ||
-          data.results?.find(
-            (video) => video.site === 'YouTube'
-          );
-
-        // 한국어 영상이 없으면 영어 영상 조회
-        if (!video) {
-          const enResponse = await fetch(
-            `https://api.themoviedb.org/3/${type}/${item.id}/videos?api_key=${apiKey}&language=en-US`,
-            { signal: controller.signal }
-          );
-
-          if (!enResponse.ok) {
-            throw new Error('영어 영상 요청 실패');
-          }
-
-          const enData = await enResponse.json();
-
-          video =
-            enData.results?.find(
-              (video) =>
-                video.site === 'YouTube' &&
-                video.type === 'Trailer'
-            ) ||
-            enData.results?.find(
-              (video) => video.site === 'YouTube'
-            );
-        }
-
-        if (!controller.signal.aborted) {
-          setVideoKey(video?.key || null);
-        }
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('영상 불러오기 실패:', error);
-        }
-      }
-    };
-
-    fetchVideo();
-
-    return () => controller.abort();
-  }, [isHover, item.id, type]);
+  const posterPath = item.backdrop_path || item.poster_path;
+  const previewPoster = posterPath ? `https://image.tmdb.org/t/p/w780${posterPath}` : item.imageUrl;
 
   return (
-    <div className="card-hover-content">
+    <div className="card-hover-content" ref={previewCardRef}>
       <div className="preview-video-cover">
         {/* 영상이 준비되기 전까지 포스터 표시 */}
-        <img
-          className={`preview-poster ${
-            isVideoReady ? 'hide' : ''
-          }`}
-          src={`https://image.tmdb.org/t/p/w780${
-            item.backdrop_path || item.poster_path
-          }`}
-          alt={name}
-        />
+        {previewPoster && <img className="preview-poster" src={previewPoster} alt={name} />}
 
-        {isHover && videoKey && (
-          <iframe
-            key={`${item.id}-${videoKey}`}
-            className="preview-video"
-            src={`https://www.youtube.com/embed/${videoKey}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoKey}&playsinline=1&disablekb=1&fs=0`}
-            title={`${name} 예고편`}
-            allow="autoplay; encrypted-media"
-            onLoad={() => setIsVideoReady(true)}
-            tabIndex={-1}
+        {isHover && (
+          <HoverVideo
+            key={`${mediaType}/${item.id}/${item.original_language || ''}`}
+            mediaType={mediaType}
+            id={item.id}
+            title={name}
+            originalLanguage={item.original_language}
           />
         )}
       </div>
