@@ -186,6 +186,7 @@
   width: 145px;
   height: 45px;
   flex-shrink: 0;
+  padding: 0.3em 0.9em;
   background: #3c3c3c;
   border: none;
   border-radius: 5px;

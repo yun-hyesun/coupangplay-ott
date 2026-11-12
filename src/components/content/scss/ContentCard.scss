@@ -12,7 +12,7 @@
 
         .contentRail-titleArea {@include pos-abs($t:0, $l:0); width: 100%; height: 100%; text-align: center;
           .contentRail-tit-logo {max-width: 70%; max-height: 36%; @include pos-abs-centerX($b:10%); filter: drop-shadow(0 0 10px rgba(0,0,0,.3));}
-          .contentRail-tit {@include pos-abs-centerX($b:5%); filter: drop-shadow(0 0 10px rgba(0,0,0,.5)); font-size: clamp(20px, 2.08vw, 30px); font-family: $font-number; font-weight: $font-w-B-700; word-break: keep-all; width: 80%; line-height: 1.1;}
+          .contentRail-tit {@include pos-abs-centerX($b:5%); filter: drop-shadow(0 0 10px rgba(0,0,0,.5)); font-size: clamp(20px, 2.08vw, 30px); font-family: $font-number; font-weight: $font-w-B-700; word-break: keep-all; width: 80%; line-height: 1.1; font-family: $font-title;}
         }
       }
     }
@@ -22,10 +22,7 @@
       .contentRail-visual {aspect-ratio: 2 / 3;}
     }
 
-    .youtube-card {@include trans();
-
-        &:hover {transform: translateY(-15px);}
-      }
+    @include card-hover-lift('.youtube-card');
 
     &-sportsTitle {
       margin-top: 8px;

@@ -9,6 +9,17 @@ export const MyPasses = [
     ['moa-pass', 'MOA', 6900, 5500, '최신 중드를 더 빠르게'],
     ['jplus-pass', 'JPlus', 6900, 5500, '보고 싶은 일본 콘텐츠'],
 ].map(([id, name, price, wowPrice, description]) => ({ id, name, price, wowPrice, description }));
+
+export const subscriptionLogos = {
+    'sports-pass': '/images/mypage/pass/sports-logo.svg',
+    'moa-pass': '/images/mypage/pass/moa-logo.svg',
+    'jplus-pass': '/images/mypage/pass/jplus-logo.svg',
+    'ebs-pass': '/images/mypage/pass/ebs-logo.svg',
+    'kids-pass': '/images/mypage/pass/kids-logo.svg',
+    'paramount-pass': '/images/mypage/pass/paramount-logo.svg',
+    'sony-pass': '/images/mypage/pass/sony-logo.svg',
+    'crunchyroll-pass': '/images/mypage/pass/crunchyroll-logo.svg',
+};
 export const MyMembership = { id: 'wow-membership', name: '와우 멤버십', price: 7890 };
 export const MyMoney = value => new Intl.NumberFormat('ko-KR').format(value) + '원';
 export const MyNotices = [

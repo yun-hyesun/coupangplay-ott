@@ -3,22 +3,25 @@
   .swiper {width: 100%; height: 100%;
     
     .swiper-slide {position: relative; pointer-events: none; overflow: hidden; border-radius: 30px;
-      &::after {content: ''; @include pos-abs($t:0, $l:0); width: 100%; height: 100%; background: rgba(0,0,0,0.4);}
-      &-active {pointer-events: auto;
-        
-        &::after {content: none;}
-      }
     
       .banner-slide-list {width: 100%; height: 100%; border-radius: 30px; border: 2px solid rgba(255,255,255,.1); overflow: hidden;
         
         .slide-list-image {width: 100%; height: 100%; object-fit: cover; object-position: center top;}
-        .slide-list-info {@include pos-abs($b:10%, $l:50px); width: 100%; text-shadow: 0 0 20px rgba(0,0,0,0.3);
+        .slide-list-info {@include pos-abs($b:10%, $l:50px); width: 100%; text-shadow: 0 0 20px rgba(0,0,0,0.2); opacity: 0; transform: translateY(50%); @include trans($s:.5s);
         
-          .info-title {font-size: 55px; font-weight: $font-w-B-700; margin-bottom: 20px;
+          .info-title {font-family: $font-title; line-height: 1; font-size: 55px; font-weight: $font-w-B-700; margin-bottom: 30px;
           
             @include tablet {
               font-size: clamp(25px , 3.75vw, 45px);
             }
+
+          }
+
+          .info-title-logo {
+            display: block;
+            max-width: min(70%, clamp(150px, 43vw, 620px));
+            max-height: clamp(150px, 10.1vw, 260px);
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.2));
           }
 
           .info-description {
@@ -37,7 +40,19 @@
               font-size: clamp(18px , 1.66vw, 20px);
             }
           }
+
+
+           
         }
+      }
+
+      // swiper-slide
+      &::after {content: ''; @include pos-abs($t:0, $l:0); width: 100%; height: 100%; background: rgba(0,0,0,0.4);}
+      &-active {pointer-events: auto;
+        
+        &::after {content: none;}
+
+        .slide-list-info {opacity: 1 !important; transform: translateY(0) !important;}
       }
     }
 
