@@ -4,15 +4,23 @@
   width: 100%;
   min-width: 0;
   aspect-ratio: 2 / 3;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 10px;
-  isolation: isolate;
-  background: #16181c;
+  background: transparent;
   color: #fff;
   text-align: left;
 }
 
-.wowclip-card--short::after {
+.wowclip-card-surface {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  isolation: isolate;
+  background: #16181c;
+}
+
+.wowclip-card-surface::after {
   position: absolute;
   z-index: 1;
   inset: 35% 0 0;
@@ -102,14 +110,18 @@
   font-variant-numeric: tabular-nums;
 }
 
-.wowclip-card--short:hover {
+.wowclip-card--short:hover:not(:focus-visible) {
   outline: 1px solid rgba(255, 255, 255, .4);
   outline-offset: -1px;
 }
 
 .wowclip-card--short:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
+  outline: none;
+
+  > .wowclip-card-surface {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
 }
 
 .wowclip-card--short .wowclip-spoiler-cover {
