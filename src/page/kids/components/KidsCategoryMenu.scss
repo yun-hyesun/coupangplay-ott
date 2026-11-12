@@ -9,7 +9,7 @@
 
     a { color: #bfc5ce; text-decoration: none; white-space: nowrap; }
   }
-  .swiper-slide { width: 210px; }
+  .swiper-slide { width: clamp(100px, 14.5vw, 210px); }
   .swiper-slide a { display: block; border-radius: 8px; overflow: hidden; }
   .swiper-slide img { display: block; width: 100%; aspect-ratio: 210 / 119; object-fit: cover; }
   a:focus-visible { outline: 2px solid #0084ff; outline-offset: 3px; }

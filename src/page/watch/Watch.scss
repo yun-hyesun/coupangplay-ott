@@ -84,8 +84,18 @@ $surface: #262626;
   gap: 20px;
   padding: 100px 24px 150px;
   text-align: center;
-  p { margin: 0; }
-  button { min-height: 44px; padding: 10px 20px; border-radius: 8px; background: $surface; font-size: 16px; }
+
+  p {
+    margin: 0;
+  }
+
+  button {
+    min-height: 44px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: $surface;
+    font-size: 16px;
+  }
 }
 
 .watch-player__header {
@@ -168,8 +178,14 @@ $surface: #262626;
 }
 
 .watch-page--live {
-  .watch-player__youtube { pointer-events: none; }
-  .watch-player__bottom { padding-block: 12px; }
+  .watch-player__youtube {
+    pointer-events: none;
+  }
+
+  .watch-player__bottom {
+    padding-block: 12px;
+  }
+
   .watch-player__bottom::before {
     position: absolute;
     z-index: -1;
@@ -187,7 +203,7 @@ $surface: #262626;
   margin-bottom: 14px;
 }
 
-.watch-player__live-status > .watch-player__live-badge.live {
+.watch-player__live-status>.watch-player__live-badge.live {
   position: static;
   flex-shrink: 0;
 }
@@ -220,7 +236,11 @@ $surface: #262626;
   border-radius: 12px;
   background: rgba(0, 0, 0, .75) !important;
   transform: translate(-50%, -50%);
-  svg { width: 32px; height: 32px; }
+
+  svg {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 .watch-player__progress-label {
@@ -473,6 +493,10 @@ $surface: #262626;
   box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
 }
 
+.watch-side-panel.watch-side-panel--chat {
+  top: 80px; // 기존 58px에서 22px 아래로
+}
+
 .watch-side-panel__header {
   display: flex;
   align-items: flex-start;
@@ -635,6 +659,26 @@ $surface: #262626;
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #101113;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #555b63;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #777d85;
+  }
 }
 
 .watch-side-panel__empty {
@@ -693,6 +737,10 @@ $surface: #262626;
   background: $blue;
   font-size: 14px;
   font-weight: 600;
+
+  &:disabled {
+    cursor: default;
+  }
 }
 
 .watch-side-panel__episodes {
@@ -864,6 +912,38 @@ $surface: #262626;
 
       &:not(:empty) { margin-top: 8px; }
     }
+  }
+}
+
+.watch-player--youtube {
+  --youtube-controls-height: 80px;
+  background: #000;
+
+  .watch-player__youtube {
+    height: calc(100% - var(--youtube-controls-height));
+  }
+
+  .watch-player__bottom {
+    bottom: 0;
+    height: var(--youtube-controls-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.watch-player__bottom {
+  opacity: 1;
+  transition: opacity 220ms ease;
+
+  &.is-idle {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .watch-player__bottom {
+    transition: none;
   }
 }
 

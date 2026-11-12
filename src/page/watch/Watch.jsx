@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
@@ -49,6 +49,25 @@ export const Watch = () => {
     ? location.state
     : null;
   const content = state?.content ?? {};
+  const hasTmdbId = /^[1-9]\d*$/.test(id ?? '');
+  const contentTitle = [content.title, content.name].find(
+    (value) => value && value !== '콘텐츠 제목'
+  );
+  const detail = useMovieStore((store) => store.contentDetails[`${type}-${id}`]);
+  const onFetchContentDetail = useMovieStore((store) => store.onFetchContentDetail);
+
+  useEffect(() => {
+    if (!hasTmdbId || (type !== 'tv' && type !== 'movie')) return;
+    if (contentTitle && content.poster_path && content.backdrop_path) return;
+
+    void onFetchContentDetail(type, id).catch((error) => {
+      console.error('시청내역용 작품 정보 조회 실패:', error);
+    });
+  }, [
+    type, id, hasTmdbId, contentTitle,
+    content.poster_path, content.backdrop_path, onFetchContentDetail,
+  ]);
+
   const resumeAt = Number(state?.resumeAt ?? 0);
   const clipTvDetails = useMovieStore(s => type === 'tv' ? s.tvDetails[id] : null);
   const inviteParams = new URLSearchParams(location.search);
@@ -139,11 +158,14 @@ export const Watch = () => {
     titleVideos: type === 'tv' ? tvVideos : movieVideos,
   }) : null;
   const { youtubeKey, videoSrc, title: mediaTitle } = resolveWatchMedia({ type, id, state, selectedVideo, liveVideo });
-  const activeFallback = selectedVideo?.supplemental ? selectedVideo : null;
-  const startAt = activeFallback || !Number.isFinite(resumeAt) ? 0 : Math.max(0, resumeAt);
+  const savedFallback = state?.youtubeKey && state.youtubeKey === content.youtubeKey
+    ? content.supplementalVideo
+    : null;
+  const activeFallback = selectedVideo?.supplemental ? selectedVideo : savedFallback;
+  const startAt = selectedVideo?.supplemental || !Number.isFinite(resumeAt) ? 0 : Math.max(0, resumeAt);
   const title = isLiveMode ? liveMatch.title : mediaTitle;
   const displayTitle = !content.title && !content.name && !state?.title ? activeFallback?.title || title : title;
-  const showEpisodeNumber = type === 'tv' && (!activeFallback || activeFallback.scope.type === 'episode');
+  const showEpisodeNumber = type === 'tv' && (!activeFallback || activeFallback.scope?.type === 'episode');
   const fallbackLabel = activeFallback ? videoTypeLabels[activeFallback.videoType] || '관련 영상' : '';
   // videoSrc는 사용 가능한 직접 재생 영상 파일(mp4/webm)의 URL입니다.
   // TMDB 유튜브 예고편 키는 HTML video src로 직접 사용할 수 없습니다.
@@ -157,6 +179,21 @@ export const Watch = () => {
   const [dismissedEpisodeNotice, setDismissedEpisodeNotice] = useState(null);
   const nextEpisodeNotice = state?.showNextEpisodeNotice && dismissedEpisodeNotice !== location.key;
   const [playing, setPlaying] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const controlsTimer = useRef(null);
+  const showControls = useCallback(() => {
+    window.clearTimeout(controlsTimer.current);
+    setControlsVisible(true);
+    if (playing) {
+      controlsTimer.current = window.setTimeout(() => {
+        setControlsVisible(false);
+      }, 2500);
+    }
+  }, [playing]);
+  useEffect(() => {
+    showControls();
+    return () => window.clearTimeout(controlsTimer.current);
+  }, [showControls]);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [muted, setMuted] = useState(false);
@@ -368,7 +405,7 @@ export const Watch = () => {
     finally { setSendingChat(false); }
   };
 
-  const togglePlay = async () => {
+  const togglePlay = useCallback(async () => {
     const video = videoRef.current;
     if (!video) {
       const player = youtubePlayer.current;
@@ -378,7 +415,34 @@ export const Watch = () => {
     if (video.paused) {
       try { await video.play(); } catch { setPlaying(false); }
     } else video.pause();
-  };
+  }, [youtubePlaying]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (
+        event.code !== 'Space' ||
+        event.repeat ||
+        event.defaultPrevented ||
+        controlsDisabled ||
+        isLiveMode
+      ) return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest('input, textarea, select, button, a, [role="button"]'))
+      ) return;
+
+      event.preventDefault();
+      showControls();
+      void togglePlay();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showControls, togglePlay, controlsDisabled, isLiveMode]);
+
   const seek = (seconds) => {
     if (isLiveMode) return;
     const video = videoRef.current;
@@ -391,6 +455,7 @@ export const Watch = () => {
   };
   const changeProgress = (e) => {
     if (isLiveMode) return;
+    showControls();
     const video = videoRef.current;
     if (video && duration) video.currentTime = Number(e.target.value);
     else if (youtubePlayer.current && duration) { youtubePlayer.current.seekTo(Number(e.target.value), true); setCurrentTime(Number(e.target.value)); }
@@ -401,38 +466,49 @@ export const Watch = () => {
   };
 
   const savePlayback = (position, total, completed = false, periodic = false) => {
-    if (isSports || activeFallback) return;
-    if (!ownerKey || !id || !['movie', 'tv'].includes(type)) {
-      console.warn('[시청내역] 저장 건너뜀', {
-        hasOwner: Boolean(ownerKey),
-        type,
-        id,
-      });
-      return;
-    }
+    if (isSports || (activeFallback && (!youtubeKey || (!completed && position <= 0)))) return;
+    if (!ownerKey || !hasTmdbId || !['movie', 'tv'].includes(type)) return;
+    if (!Number.isFinite(position) || !Number.isFinite(total) || total <= 0) return;
 
-    if (!Number.isFinite(position) || !Number.isFinite(total) || total <= 0) {
-      console.warn('[시청내역] 재생 시간 확인 불가', { position, total });
-      return;
-    }
+    const historyTitle = [detail?.title, detail?.name, contentTitle].find(
+      (value) => value && value !== '콘텐츠 제목'
+    );
+    if (!historyTitle) return;
 
     console.log('[시청내역] 저장 시도', { type, id, position, total });
 
     const now = Date.now();
-    if (periodic && lastSaved.current.route === location.key && now - lastSaved.current.at < 10000) return;
+    if (
+      periodic &&
+      lastSaved.current.route === location.key &&
+      now - lastSaved.current.at < 10000
+    ) return;
+
     lastSaved.current = { route: location.key, at: now };
 
     return onSaveHistory({
-      id, title, media_type: type, seasonNumber, episodeNumber,
-      backdrop_path: content.backdrop_path || '',
-      poster_path: content.poster_path || '',
+      id,
+      title: historyTitle,
+      media_type: type,
+      seasonNumber,
+      episodeNumber,
+      backdrop_path: content.backdrop_path || detail?.backdrop_path || content.poster_path || detail?.poster_path || '',
+      poster_path: content.poster_path || detail?.poster_path || '',
       position: Math.floor(position),
       duration: Math.floor(total),
       progress: completed ? 100 : Math.min(100, Math.round(position / total * 100)),
       completed,
       videoSrc,
       youtubeKey: videoSrc ? '' : youtubeKey,
-      info: type === 'tv' ? `시즌 ${seasonNumber} ${episodeNumber}화` : '영화',
+      ...(activeFallback ? {
+        supplementalVideo: {
+          name: activeFallback.name || '',
+          title: activeFallback.title || '',
+          videoType: activeFallback.videoType || '',
+          scope: { type: activeFallback.scope?.type || 'title' },
+        },
+      } : {}),
+      info: fallbackLabel || (type === 'tv' ? `시즌 ${seasonNumber} ${episodeNumber}화` : '영화'),
     }, ownerKey).then((saved) => {
       console.log('[시청내역] 저장 결과', saved);
       return saved;
@@ -498,7 +574,12 @@ export const Watch = () => {
       {removedSessionScope === sessionScope && <Popup title="같이 보기에서 추방됐어요"
         description="방장이 회원님을 내보냈어요. 이 프로필로는 이 방에 다시 참여할 수 없어요."
         cancelText="확인" onClose={() => setRemovedSessionScope(null)} />}
-      <div className="watch-player">
+      <div
+        className={`watch-player${youtubeKey && !videoSrc && !isLiveMode ? ' watch-player--youtube' : ''
+          }`}
+        onPointerMove={showControls}
+        onPointerDown={showControls}
+      >
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
         {liveLoading ? <div className="watch-player__placeholder" role="status">같은 팀의 이전 경기 영상을 불러오는 중입니다.</div>
         : videoLookupPending ? <div className="watch-player__placeholder" role="status">재생 가능한 영상을 확인하고 있습니다.</div>
@@ -596,10 +677,9 @@ export const Watch = () => {
               if (isLiveMode || currentPlayback.current !== playbackKey) return;
               setYoutubePlaying(false);
               setPlaying(false);
-              if (activeFallback) return;
               const total = event.target.getDuration();
               savePlayback(total, total, true);
-              goToNextEpisode();
+              if (!activeFallback) goToNextEpisode();
             }}
           />
         ) : <div className="watch-player__placeholder" role="status">{isSports ? '재생할 영상을 찾을 수 없습니다.' : '재생 가능한 예고편·클립이 없습니다.'}</div>}
@@ -616,7 +696,16 @@ export const Watch = () => {
           </button>}
         </header>
 
-        <div className="watch-player__bottom">
+        {/* 하단 재생바 */}
+        <div
+          className={`watch-player__bottom${!isLiveMode && playing && !controlsVisible ? ' is-idle' : ''
+            }`}
+          onFocusCapture={showControls}
+          onPointerLeave={showControls}
+          onPointerUp={showControls}
+          onPointerEnter={showControls}
+          onPointerMove={showControls}
+        >
           {isLiveMode ? <>
             <div className="watch-player__live-status">
               <LiveBadge label="라이브 중계" className="watch-player__live-badge" />
