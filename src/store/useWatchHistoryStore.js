@@ -143,6 +143,8 @@ export const useWatchHistoryStore = create((set, get) => ({
         const user = auth.currentUser;
         const profile = useProfileStore.getState().currentProfile;
 
+        
+
         if (!user || !profile) return false;
 
         if (expectedOwner && expectedOwner !== `${user.uid}_${profile.id}`) return false;
@@ -152,6 +154,7 @@ export const useWatchHistoryStore = create((set, get) => ({
             : 'tv';
 
         const contentId = String(content.id);
+        if (!/^[1-9]\d*$/.test(contentId)) return false;
 
         const historyDoc = doc(
             getHistoryRef(user.uid, profile.id),
