@@ -22,10 +22,7 @@
       .contentRail-visual {aspect-ratio: 2 / 3;}
     }
 
-    .youtube-card {@include trans();
-
-        &:hover {transform: translateY(-15px);}
-      }
+    @include card-hover-lift('.youtube-card');
 
     &-sportsTitle {
       margin-top: 8px;

@@ -69,7 +69,6 @@
 .my-subscription .subscription-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
   padding-top: 32px;
 }
 .my-subscription .subscription-card {
@@ -194,7 +193,7 @@
 .my-subscription .subscription-dropdown button {
   display: block;
   width: 100%;
-  padding: 12px 16px;
+  padding: 0.3em 0.9em;
   background: transparent;
   border: none;
   text-align: left;
@@ -230,7 +229,7 @@
   padding: 20px;
 }
 .my-subscription .subscription-dev-controls button {
-  padding: 10px 16px;
+  padding: 0.3em 0.9em;
   background: #303030;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
@@ -334,6 +333,12 @@
   font-size: 14px;
   color: #aaa;
 }
+.my-subscription .payment-history-note {
+  margin: 16px 0 0;
+  color: #a0a0a0;
+  font-size: 14px;
+  line-height: 1.5;
+}
 
 @media (max-width: 767px) {
   .my-subscription .subscription-card-top {
@@ -364,7 +369,6 @@
     font-size: 22px;
   }
   .my-subscription .subscription-list {
-    gap: 16px;
     padding-top: 24px;
   }
   .my-subscription .subscription-card.cancel-pending {
@@ -411,7 +415,7 @@
     width: 160px;
   }
   .my-subscription .subscription-dropdown button {
-    padding: 10px 12px;
+    padding: 0.3em 0.9em;
     font-size: 14px;
   }
   .my-subscription .subscription-empty {
@@ -458,12 +462,13 @@
 .my-subscription .subscription-empty--passes {
   min-height: clamp(360px, 100svh - 180px, 930px);
   padding: 48px 16px;
-  gap: 24px;
+  gap: 12px;
   box-sizing: border-box;
   font-family: "Pretendard", sans-serif;
 }
 .my-subscription .subscription-empty--passes h2 {
   margin: 0;
+  margin-bottom: 12px;
   color: #FFFFFF;
   font-size: 28px;
   font-weight: 700;
@@ -481,9 +486,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: 32px;
   color: #5d9eff;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 400;
   line-height: 24px;
   transition: color 0.2s ease;
