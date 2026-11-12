@@ -6,20 +6,22 @@
     .card-hover-content {opacity: 1; visibility: visible; @include pos-abs-center-scale-n(); @include trans();}
   } 
 
-  &--ver .card-hover-content {width: auto; min-width: 120%; min-height: 100%;}
+  &--ver .card-hover-content {width: auto; min-width: min(120%, var(--hover-max-width, calc(100vw - 24px))); min-height: 100%;}
   
 }
-.card-hover-content {@include pos-abs-center-scale-s($s:.5); background: $color-bg2; color: #fff; min-width: 110%; border-radius: $card-radius; overflow: hidden; z-index: 100; opacity: 0; visibility: hidden;  box-shadow: 0 0 30px rgba(0, 0, 0, .2);
+.card-hover-content {@include pos-abs-center-scale-s($s:.5); background: $color-bg2; color: #fff; min-width: min(110%, var(--hover-max-width, calc(100vw - 24px))); border-radius: $card-radius; overflow: hidden; z-index: 100; opacity: 0; visibility: hidden;  box-shadow: 0 0 30px rgba(0, 0, 0, .2);
+
+  max-width: var(--hover-max-width, calc(100vw - 24px));
+  translate: var(--hover-offset-x, 0px) 0;
 
   .preview-video-cover {width: 100%; overflow: hidden; aspect-ratio: 2/1; position: relative;
-    .preview-player { position: absolute; inset: 0; pointer-events: none; }
     
     iframe {width: 100%; height: 150%; pointer-events: none; @include pos-abs-center();}
   }
 
   .content {padding: clamp(16px, 2.08vw, 30px) clamp(8px , 1.38vw, 20px); @include flexCol($gap: .3em);
 
-    .content-title {font-size: clamp(15px, 1.52vw ,22px); font-weight: $font-w-B-700;}
+    .content-title {font-size: clamp(15px, 1.52vw ,22px); font-weight: $font-w-B-700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
     
     .content-info {@include flex-center($jc: flex-start, $gap: 10px); color: $color-text-sec1; font-size: clamp(12px, 1.11vw, 16px);
     

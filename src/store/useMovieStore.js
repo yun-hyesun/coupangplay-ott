@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { railConfig } from '../data/railConfig';
+import { channelRailConfig } from '../data/channelRailConfig';
 import { makeParams } from '../data/contentQuery';
 
 const TMDB_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -736,6 +737,63 @@ const fetchRailPage = async (type, query = {}, page = 1) => {
 };
 
 const purchaseRequests = new Set();
+const fetchRailPreview = async (type, params) => {
+  const works = new Map();
+  let hasNext = true;
+
+  for (let page = 1; works.size < 20 && hasNext && page <= 6; page += 1) {
+    const result = await fetchMorePage(type, params, page);
+    for (const item of result.results) {
+      works.set(`${item.media_type}-${item.id}`, item);
+    }
+    hasNext = result.hasNext;
+  }
+
+  return [...works.values()].slice(0, 20);
+};
+
+const channelBadgeRules = [
+  ['EBS ON', channelRailConfig['ebs-popular']],
+  ['SONY', channelRailConfig['sony-popular']],
+  ['Paramount+', channelRailConfig['paramount-popular']],
+  ['JPlus', channelRailConfig['jplus-popular']],
+];
+
+export const isMoaChannelWork = (item) => moaChannelTitles.some(([title, year]) =>
+  item?.original_name === title && item.first_air_date?.startsWith(String(year))
+);
+
+const getContentChannelBadges = (type, detail) => {
+  const genres = (detail.genres ?? []).map(({ id }) => String(id));
+  const badges = channelBadgeRules.filter(([, config]) => {
+    if (config.type !== type) return false;
+    if (config.country && !detail.origin_country?.includes(config.country)) return false;
+    if (config.network && !detail.networks?.some(({ id }) => String(id) === config.network)) return false;
+    if (config.companies && !detail.production_companies?.some(({ id }) =>
+      config.companies.split('|').includes(String(id)))) return false;
+    if (config.genre && !config.genre.split('|').some((id) => genres.includes(id))) return false;
+    return !config.excludeGenres?.split('|').some((id) => genres.includes(id));
+  }).map(([label]) => label);
+
+  if (type === 'tv' && isMoaChannelWork(detail)) badges.push('MOA');
+  return badges;
+};
+
+const channelBadgeRequests = new Set();
+const channelBadgeQueue = [];
+let activeChannelBadgeRequests = 0;
+
+const runChannelBadgeQueue = () => {
+  while (activeChannelBadgeRequests < 4 && channelBadgeQueue.length) {
+    const request = channelBadgeQueue.shift();
+    activeChannelBadgeRequests += 1;
+    void request().finally(() => {
+      activeChannelBadgeRequests -= 1;
+      runChannelBadgeQueue();
+    });
+  }
+};
+
 export const useMovieStore = create((set, get) => ({
 
   // =========================
@@ -859,6 +917,29 @@ export const useMovieStore = create((set, get) => ({
   },
 
 
+  channelBadges: {},
+
+  onCheckContentChannelBadges: (type, id) => {
+    if (!id || (type !== 'movie' && type !== 'tv')) return;
+
+    const key = `${type}-${id}`;
+    if (get().channelBadges[key] !== undefined || channelBadgeRequests.has(key)) return;
+
+    channelBadgeRequests.add(key);
+    channelBadgeQueue.push(async () => {
+      try {
+        const detail = get().contentDetails[key] ?? await requestTmdb(`/${type}/${id}`);
+        const badges = getContentChannelBadges(type, detail);
+        set((state) => ({ channelBadges: { ...state.channelBadges, [key]: badges } }));
+      } catch {
+        // 다음 페이지 진입 시 실패한 작품만 다시 조회할 수 있다.
+      } finally {
+        channelBadgeRequests.delete(key);
+      }
+    });
+    runChannelBadgeQueue();
+  },
+
   // 레일 이름마다 데이터와 요청 상태를 따로 저장합니다.
   rails: {},
   railLoading: {},
@@ -886,22 +967,7 @@ export const useMovieStore = create((set, get) => ({
           params.with_watch_monetization_types === 'buy' ||
           (params.kidsOnly && (params.with_companies || params.useTving === false))
         ) {
-          const works = new Map();
-          let page = 1;
-          let hasNext = true;
-
-          while (works.size < 20 && hasNext && page <= 6) {
-            const result = await fetchMorePage(type, params, page);
-
-            for (const item of result.results) {
-              works.set(`${item.media_type}-${item.id}`, item);
-            }
-
-            hasNext = result.hasNext;
-            page += 1;
-          }
-
-          items = [...works.values()].slice(0, 20);
+          items = await fetchRailPreview(type, params);
         } else if (type === 'all') {
           const [movies, tvs] = await Promise.all([
             fetchCoupangList('movie', params),

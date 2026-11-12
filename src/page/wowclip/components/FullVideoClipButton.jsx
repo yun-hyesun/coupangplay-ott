@@ -14,7 +14,7 @@ export const FullVideoClipButton = (props) => {
 };
 
 // 로그아웃·계정 전환 시 편집 상태와 해당 구독을 함께 정리합니다.
-const ClipCreationSession = ({ getSource, disabled = false, user }) => {
+const ClipCreationSession = ({ getSource, restriction, onRestricted, user }) => {
   const [source, setSource] = useState(null);
   const navigate = useNavigate();
   const authLoading = useAuthStore((state) => state.loading);
@@ -33,7 +33,8 @@ const ClipCreationSession = ({ getSource, disabled = false, user }) => {
     navigate(`/wowclip?clip=${encodeURIComponent(clip.id)}`, { state: { createdClipId: clip.id, notice } });
   };
   return <>
-    <button type="button" aria-label="클립 만들기" title={user ? '클립 만들기' : '로그인 후 클립 만들기'} disabled={disabled || authLoading} onClick={() => {
+    <button type="button" aria-label="클립 만들기" title={restriction || (user ? '클립 만들기' : '로그인 후 클립 만들기')} disabled={authLoading && !restriction} onClick={() => {
+      if (restriction) { onRestricted(restriction); return; }
       if (!user) { navigate('/login'); return; }
       const original = getSource();
       if (original?.videoKey) setSource({ ...original, fullVideo: true });

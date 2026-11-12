@@ -44,8 +44,17 @@
       }
       
       .header-nav-menu {@include flex-center();
-        a {display: block; padding: 8px 15px; border-radius: 10px;}
-        .active {background: rgba(255,255,255,.2);}
+        a {display: block; padding: 8px 15px; border-radius: 10px; color: rgba(255,255,255,.8);
+        
+          &:hover {color: #fff;}
+        }
+        .active:not(:first-of-type) {background: rgba(255,255,255,.2); color: #fff;}
+
+        .sports a { height: 40px; opacity: .8;
+        
+          &:hover {opacity: 1;}
+          &.active {opacity: 1;}
+        }
       }
 
       @include tablet {

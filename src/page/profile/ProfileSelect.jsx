@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useProfileStore } from '../../store/useProfileStore'
 import { ProfileCard } from './components/ProfileCard'
+import { getWatchInviteReturn } from '../watch/watchMedia'
 import './scss/Profile.scss'
 import './scss/ProfilePinModal.scss';
 
 export const ProfileSelect = () => {
     const navigate = useNavigate();
+    const { state } = useLocation();
+    const watchInvite = getWatchInviteReturn(state?.watchInvite);
     const [lockedProfile, setLockedProfile] = useState(null);
     const [unlockPin, setUnlockPin] = useState('');
     const [pinError, setPinError] = useState('');
@@ -27,17 +30,19 @@ export const ProfileSelect = () => {
         if (authLoading) return;
 
         if (!user) {
-            navigate('/login', { replace: true });
+            navigate('/login', { replace: true, state: watchInvite ? { watchInvite } : undefined });
             return;
         }
 
         onLoadProfiles();
-    }, [user, authLoading, navigate, onLoadProfiles]);
+    }, [user, authLoading, navigate, onLoadProfiles, watchInvite]);
+
+    const enterSelectedProfile = () => navigate(watchInvite || '/', { replace: Boolean(watchInvite) });
 
     // 프로필 클릭
     const handleProfileClick = async (profileId) => {
         if (isEditMode) {
-            navigate(`/profiles/edit/${profileId}`);
+            navigate(`/profiles/edit/${profileId}`, { state: watchInvite ? { watchInvite } : undefined });
             return;
         }
 
@@ -53,7 +58,7 @@ export const ProfileSelect = () => {
         const selected = await onSelectProfile(profileId);
 
         if (selected) {
-            navigate('/');
+            enterSelectedProfile();
         }
     };
 
@@ -107,6 +112,7 @@ export const ProfileSelect = () => {
                             {!isEditMode && (
                                 <Link
                                     to="/profiles/create"
+                                    state={watchInvite ? { watchInvite } : undefined}
                                     className="profile-add"
                                     aria-label="새 프로필 추가"
                                 >
@@ -202,7 +208,7 @@ export const ProfileSelect = () => {
 
                                     if (selected) {
                                         setLockedProfile(null);
-                                        navigate('/');
+                                        enterSelectedProfile();
                                     } else {
                                         setPinError('PIN 번호가 일치하지 않습니다.');
                                     }
