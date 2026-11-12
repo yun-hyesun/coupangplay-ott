@@ -344,7 +344,15 @@ export const Detail = () => {
                   {purchasePending ? '구매 확인 중' : '구매 확인 실패'}
                 </button>
               ) : needsPurchase ? (
-                <Link className="detail-button detail-button--primary" to={purchasePath}>
+                <Link
+                  className="detail-button detail-button--primary detail-button--purchase"
+                  to={purchasePath}
+                >
+                  <img
+                    className="detail-button__purchase-icon"
+                    src="/images/icon/Lock.svg"
+                    alt=""
+                  />
                   구매하기
                 </Link>
               ) : (

@@ -7,6 +7,16 @@ import { MyPasses, MyMembership, MyMoney } from './MySubscriptionData';
 import { MySubscriptionButton } from './components/MySubscriptionButton';
 import './scss/MySubscriptionUi.scss';
 
+const passHomePaths = {
+    'ebs-pass': '/channel/ebs',
+    'sony-pass': '/channel/sony',
+    'paramount-pass': '/channel/paramount',
+    'moa-pass': '/channel/moa',
+    'jplus-pass': '/channel/jplus',
+    'sports-pass': '/sports',
+    'kids-pass': '/kids',
+};
+
 export const MySubscriptionCheckout = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
@@ -22,6 +32,8 @@ export const MySubscriptionCheckout = () => {
     const plan = [...MyPasses, MyMembership].find(
         (item) => item.id === params.get('plan')
     );
+
+    const channelHomePath = passHomePaths[plan?.id];
 
     const [agreed, setAgreed] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -102,33 +114,35 @@ export const MySubscriptionCheckout = () => {
 
     return (
         <main className="my-pass-page">
-            <div className="my-pass-checkout">
+            <div className={`my-pass-checkout${order ? ' my-pass-checkout--complete' : ''}`}>
 
                 {order ? (
-                    // 구독 완료 화면
-                    <>
-                        <h1>구독이 완료되었습니다</h1>
+                    <section
+                        className="my-pass-complete"
+                        aria-labelledby="subscription-complete-title"
+                    >
+                        <h1 id="subscription-complete-title">구독이 완료되었습니다</h1>
+                        <h2>{plan.name}</h2>
+                        <p>시연용 주문 번호 {order.orderId}</p>
+                        <p>실제 결제는 발생하지 않았습니다.</p>
 
-                        <div className="my-pass-info">
-                            <h2>{plan.name}</h2>
+                        <div className="my-pass-complete__actions">
+                            <MySubscriptionButton
+                                secondary
+                                onClick={() => navigate('/my/subscription', { replace: true })}
+                            >
+                                내 구독내역 확인하기
+                            </MySubscriptionButton>
 
-                            <p>
-                                시연용 주문 번호 {order.orderId}
-                            </p>
-
-                            <p>
-                                실제 결제는 발생하지 않았습니다.
-                            </p>
+                            {channelHomePath && (
+                                <MySubscriptionButton
+                                    onClick={() => navigate(channelHomePath, { replace: true })}
+                                >
+                                    채널 홈으로 이동하기
+                                </MySubscriptionButton>
+                            )}
                         </div>
-
-                        <MySubscriptionButton
-                            onClick={() =>
-                                navigate('/my/subscription')
-                            }
-                        >
-                            내 구독내역 확인하기
-                        </MySubscriptionButton>
-                    </>
+                    </section>
                 ) : (
                     // 구독 결제 정보 화면
                     <>
