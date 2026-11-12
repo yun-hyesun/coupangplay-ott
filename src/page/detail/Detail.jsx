@@ -353,7 +353,7 @@ export const Detail = () => {
 
               {/* Firebase 찜하기 버튼 */}
               <button
-                className={`detail-button detail-button--outline${liked ? ' is-active' : ''}`}
+                className={`detail-button detail-button--outline detail-button--watchlist${liked ? ' is-active' : ''}`}
                 type="button"
                 aria-pressed={liked}
                 onClick={handleToggleWatchlist}
@@ -363,7 +363,13 @@ export const Detail = () => {
                   (!isCurrentList || watchlistLoading)
                 }
               >
-                <ActionIcon name={liked ? 'liked' : 'like'} />
+                <img
+                  src={liked ? '/images/icon/Check_blue.svg' : '/images/icon/Plus.svg'}
+                  alt=""
+                  width={20}
+                  height={20}
+                  style={{ flexShrink: 0 }}
+                />
                 {liked ? '찜 완료' : '찜하기'}
               </button>
 
@@ -618,13 +624,13 @@ export const Detail = () => {
       {shareOpen && <SharePopup title={title} type={type}
         url={new URL(`/detail/${type}/${id}`, window.location.origin).href}
         onClose={() => setShareOpen(false)} />}
-      {popupEpisode && <ReviewPopup episode={popupEpisode} 
-      reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY} 
-      onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)} 
-      onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)} 
-      onDelete={reviewId => removeReview(popupEpisode, reviewId)} 
-      error={reviewError} 
-      onClose={() => setPopupEpisode(null)} />}
+      {popupEpisode && <ReviewPopup episode={popupEpisode}
+        reviews={type === 'movie' ? movieReviews : reviewsByEpisode[popupEpisode.id] ?? EMPTY}
+        onSave={(text, rating, spoiler) => saveReview(popupEpisode, text, rating, spoiler)}
+        onEdit={(reviewId, text) => editReview(popupEpisode, reviewId, text)}
+        onDelete={reviewId => removeReview(popupEpisode, reviewId)}
+        error={reviewError}
+        onClose={() => setPopupEpisode(null)} />}
     </main>
   );
 };

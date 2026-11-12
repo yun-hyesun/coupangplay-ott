@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMovieStore } from '../../store/useMovieStore';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import YouTube from 'react-youtube';
@@ -15,6 +15,7 @@ import { auth } from '../../firebase/firebase';
 import { createWatchSession, joinWatchSession } from '../../service/sessionService';
 import { subscribeSessionMessages, sendSessionMessage } from '../../service/chatService';
 import { communityError } from '../../data/communityData';
+import { getVideoFallback, selectYouTubeVideo, videoTypeLabels } from '../../data/videoFallback';
 import { getSportsLiveMatch, getWatchReturnDestination, resolveWatchMedia } from './watchMedia';
 import { getLivePreviewVideo } from '../../service/matchRelatedVideosService';
 import { LiveBadge } from '../../components/LeagueDetailShared';
@@ -41,10 +42,11 @@ export const Watch = () => {
     : null;
   const content = state?.content ?? {};
   const resumeAt = Number(state?.resumeAt ?? 0);
-  const startAt = Number.isFinite(resumeAt) ? Math.max(0, resumeAt) : 0;
   const clipTvDetails = useMovieStore(s => type === 'tv' ? s.tvDetails[id] : null);
   const seasonNumber = state?.seasonNumber ?? 1;
   const episodeNumber = state?.episodeNumber || 1;
+  const watchRequestKey = `${location.key}/${type}/${id}/${seasonNumber}/${episodeNumber}`;
+  const [settledLookup, setSettledLookup] = useState(null);
   const storedEpisodes = useMovieStore(s => s.episodes[`${id}-${seasonNumber}`] ?? EMPTY);
   const episodes = storedEpisodes.length ? storedEpisodes : (state?.episodes ?? []);
   const movieVideos = useMovieStore(s => s.popVideo[id] ?? EMPTY);
@@ -83,17 +85,29 @@ export const Watch = () => {
   };
 
   useEffect(() => {
-    if (!id) return;
-    if (type === 'movie') onFetchVideo(id);
+    if (!id || (type !== 'movie' && type !== 'tv')) return;
+
+    let active = true;
+    const requests = type === 'movie'
+      ? [onFetchVideo(id)]
+      : [onFetchTvVideo(id), onFetchEpisodeVideo(id, seasonNumber, episodeNumber)];
+
     if (type === 'tv') {
-      onFetchTvVideo(id);
-      onFetchSeason(id);
-      onFetchEpisode(id, seasonNumber);
-      onFetchEpisodeVideo(id, seasonNumber, episodeNumber);
+      onFetchSeason(id).catch((error) => console.error('시즌 조회 실패:', error));
+      onFetchEpisode(id, seasonNumber).catch((error) => console.error('회차 조회 실패:', error));
     }
-  }, [id, type, seasonNumber, episodeNumber, onFetchVideo, onFetchTvVideo, onFetchSeason, onFetchEpisode, onFetchEpisodeVideo]);
+    Promise.allSettled(requests).then((results) => {
+      if (!active) return;
+      for (const result of results) {
+        if (result.status === 'rejected') console.error('영상 조회 실패:', result.reason);
+      }
+      setSettledLookup(watchRequestKey);
+    });
+
+    return () => { active = false; };
+  }, [id, type, seasonNumber, episodeNumber, watchRequestKey, onFetchVideo, onFetchTvVideo, onFetchSeason, onFetchEpisode, onFetchEpisodeVideo]);
   const availableVideos = type === 'tv' ? [...episodeVideos, ...tvVideos] : movieVideos;
-  const selectedVideo = availableVideos.find(v => v.site === 'YouTube' && v.key && v.type === 'Trailer') || availableVideos.find(v => v.site === 'YouTube' && v.key);
+  const selectedVideo = selectYouTubeVideo(availableVideos);
   const liveMatch = useMemo(() => isLiveMode ? getSportsLiveMatch(location.search) : null, [isLiveMode, location.search]);
   const [liveVideoResult, setLiveVideoResult] = useState(null);
   const [liveAttempt, setLiveAttempt] = useState(0);
@@ -101,8 +115,19 @@ export const Watch = () => {
   const liveResult = liveVideoResult?.key === liveRequestKey ? liveVideoResult : null;
   const liveVideo = liveResult?.video;
   const liveLoading = isLiveMode && !liveResult;
-  const { youtubeKey, videoSrc, title: mediaTitle } = resolveWatchMedia({ type, id, state, selectedVideo, liveVideo });
+  const { youtubeKey: primaryYoutubeKey, videoSrc, title: mediaTitle } = resolveWatchMedia({ type, id, state, selectedVideo, liveVideo });
+  const [failedPlayback, setFailedPlayback] = useState(null);
+  const [playbackAttempt, setPlaybackAttempt] = useState(0);
+  const failedSources = failedPlayback?.request === watchRequestKey ? failedPlayback.sources : EMPTY;
+  const fallback = videoSrc || state?.youtubeKey ? null : getVideoFallback(type, id, 'playbackFallback', seasonNumber, episodeNumber);
+  const activeFallback = fallback && settledLookup === watchRequestKey && fallback.youtubeId !== primaryYoutubeKey &&
+    (!primaryYoutubeKey || failedSources.includes(primaryYoutubeKey)) ? fallback : null;
+  const youtubeKey = activeFallback?.youtubeId || primaryYoutubeKey;
+  const startAt = activeFallback || !Number.isFinite(resumeAt) ? 0 : Math.max(0, resumeAt);
   const title = isLiveMode ? liveMatch.title : mediaTitle;
+  const displayTitle = activeFallback && !content.title && !content.name && !state?.title ? activeFallback.title : title;
+  const showEpisodeNumber = type === 'tv' && (!activeFallback || activeFallback.scope.type === 'episode');
+  const fallbackLabel = activeFallback ? videoTypeLabels[activeFallback.videoType] : '';
   // videoSrc는 사용 가능한 직접 재생 영상 파일(mp4/webm)의 URL입니다.
   // TMDB 유튜브 예고편 키는 HTML video src로 직접 사용할 수 없습니다.
   const videoRef = useRef(null);
@@ -131,11 +156,16 @@ export const Watch = () => {
   const [quality, setQuality] = useState('1080');
   const [subtitle, setSubtitle] = useState('한국어');
   const [audio, setAudio] = useState('한국어');
-  const [failedSource, setFailedSource] = useState(null);
-  const [playbackAttempt, setPlaybackAttempt] = useState(0);
   const sourceKey = videoSrc || youtubeKey;
-  const hasPlaybackError = Boolean(sourceKey) && failedSource === sourceKey;
+  const hasPlaybackError = Boolean(sourceKey) && failedSources.includes(sourceKey);
   const controlsDisabled = (!videoSrc && !youtubeKey) || hasPlaybackError;
+  const playbackKey = `${watchRequestKey}/${sourceKey}/${playbackAttempt}`;
+  const currentPlayback = useRef(null);
+
+  useLayoutEffect(() => {
+    currentPlayback.current = playbackKey;
+    return () => { currentPlayback.current = null; };
+  }, [playbackKey]);
 
   useEffect(() => {
     if (!isLiveMode) return undefined;
@@ -171,7 +201,7 @@ export const Watch = () => {
     setYoutubePlaying(false);
     setLiveNeedsStart(false);
     return () => window.clearTimeout(liveAutoplayTimer.current);
-  }, [videoSrc, youtubeKey, episodeNumber]);
+  }, [playbackKey]);
 
   const handleVideoReady = async (event) => {
     if ((!state?.autoPlayNext && !isSports) || autoPlayAttemptedRef.current) return;
@@ -260,7 +290,7 @@ export const Watch = () => {
   };
 
   const savePlayback = (position, total, completed = false, periodic = false) => {
-    if (isSports) return;
+    if (isSports || activeFallback) return;
     if (!ownerKey || !id || !['movie', 'tv'].includes(type)) {
       console.warn('[시청내역] 저장 건너뜀', {
         hasOwner: Boolean(ownerKey),
@@ -328,13 +358,18 @@ export const Watch = () => {
   };
 
   const handlePlaybackError = () => {
-    setFailedSource(sourceKey);
+    if (!sourceKey || currentPlayback.current !== playbackKey) return;
+    currentPlayback.current = null;
+    setFailedPlayback((previous) => ({
+      request: watchRequestKey,
+      sources: [...new Set([...(previous?.request === watchRequestKey ? previous.sources : EMPTY), sourceKey])],
+    }));
     setPlaying(false);
     setYoutubePlaying(false);
     youtubePlayer.current = null;
   };
   const retryPlayback = () => {
-    setFailedSource(null);
+    setFailedPlayback(null);
     setPlaybackAttempt(value => value + 1);
     setCurrentTime(0);
     setDuration(0);
@@ -342,17 +377,18 @@ export const Watch = () => {
   };
 
   return (
-    <main className={`watch-page${isLiveMode ? ' watch-page--live' : ''}`} aria-label={title} data-player="shared">
+    <main className={`watch-page${isLiveMode ? ' watch-page--live' : ''}`} aria-label={displayTitle} data-player="shared">
       <div className="watch-player">
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
         {liveLoading ? <div className="watch-player__placeholder" role="status">같은 팀의 이전 경기 영상을 불러오는 중입니다.</div>
+        : fallback && !sourceKey && settledLookup !== watchRequestKey ? <div className="watch-player__placeholder" role="status">재생 가능한 영상을 확인하고 있습니다.</div>
         : isLiveMode && liveResult?.error ? <div className="watch-player__placeholder watch-player__error" role="status">
           <p>{liveResult.error}</p><button type="button" onClick={retryPlayback}>다시 시도</button>
         </div> : hasPlaybackError ? <div className="watch-player__placeholder watch-player__error" role="status">
           <p>영상을 재생하지 못했습니다. 다시 시도해 주세요.</p>
           <button type="button" onClick={retryPlayback}>다시 시도</button>
         </div> : videoSrc ? (
-          <video ref={videoRef} className="watch-player__video" src={videoSrc} key={`${id}-${seasonNumber}-${episodeNumber}-${videoSrc}-${playbackAttempt}`}
+          <video ref={videoRef} className="watch-player__video" src={videoSrc} key={playbackKey}
             playsInline muted={muted}
             onPlay={() => setPlaying(true)}
             onPause={(event) => {
@@ -382,12 +418,13 @@ export const Watch = () => {
           />
         ) : youtubeKey ? (
           <YouTube
-            key={`${youtubeKey}-${episodeNumber}-${playbackAttempt}`}
+            key={playbackKey}
             videoId={youtubeKey}
-            title={title}
+            title={activeFallback?.videoTitle || displayTitle}
             className="watch-player__youtube"
             iframeClassName="watch-player__youtube-frame"
             onReady={({ target }) => {
+              if (currentPlayback.current !== playbackKey) return;
               youtubePlayer.current = target;
               const length = target.getDuration();
               setDuration(length);
@@ -409,12 +446,14 @@ export const Watch = () => {
               }
             }}
             onPlay={(event) => {
+              if (currentPlayback.current !== playbackKey) return;
               youtubePlayer.current = event.target;
               setYoutubePlaying(true);
               setPlaying(true);
               if (isLiveMode) { window.clearTimeout(liveAutoplayTimer.current); setLiveNeedsStart(false); }
             }}
             onPause={(event) => {
+              if (currentPlayback.current !== playbackKey) return;
               setYoutubePlaying(false);
               setPlaying(false);
               savePlayback(event.target.getCurrentTime(), event.target.getDuration());
@@ -428,15 +467,16 @@ export const Watch = () => {
                 autoplay: 1,
                 controls: 0,
                 rel: 0,
-                start: isLiveMode ? 0 : Math.max(0, Math.floor(state?.resumeAt || 0)),
+                start: isLiveMode ? 0 : Math.floor(startAt),
                 playsinline: 1,
                 ...(isLiveMode ? { disablekb: 1, fs: 0, loop: 1, playlist: youtubeKey } : {}),
               },
             }}
             onEnd={(event) => {
-              if (isLiveMode) return;
+              if (isLiveMode || currentPlayback.current !== playbackKey) return;
               setYoutubePlaying(false);
               setPlaying(false);
+              if (activeFallback) return;
               const total = event.target.getDuration();
               savePlayback(total, total, true);
               goToNextEpisode();
@@ -457,7 +497,7 @@ export const Watch = () => {
 
         <header className="watch-player__header">
           <button className="watch-icon-button" type="button" onClick={goBack} aria-label="뒤로 가기"><WatchIcon name="back" /></button>
-          <h1>{title}{type === 'tv' ? ` · ${episodeNumber}화` : ''}</h1>
+          <h1>{displayTitle}{showEpisodeNumber ? ` · ${episodeNumber}화` : ''}{fallbackLabel ? ` · ${fallbackLabel}` : ''}</h1>
           {!isSports && <button className={`watch-together-toggle ${togetherMode ? 'is-active' : ''}`} type="button" onClick={toggleTogetherMode} aria-pressed={togetherMode}>
             <WatchIcon name="together" /> 같이 보기 {togetherMode ? 'ON' : ''}
           </button>}
@@ -485,7 +525,7 @@ export const Watch = () => {
               <span className="watch-controls__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
             <div className="watch-controls__right">
-              {!isSports && <FullVideoClipButton disabled={!youtubeKey || !!videoSrc || hasPlaybackError} getSource={() => {
+              {!isSports && <FullVideoClipButton disabled={!youtubeKey || !!videoSrc || hasPlaybackError || !!activeFallback} getSource={() => {
                 const player = youtubePlayer.current;
                 const source = {
                   content: { ...clipTvDetails, ...content, id, media_type: type, number_of_seasons: clipTvDetails?.number_of_seasons ?? content.number_of_seasons ?? null },
