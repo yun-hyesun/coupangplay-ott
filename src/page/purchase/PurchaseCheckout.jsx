@@ -359,19 +359,25 @@ export const PurchaseCheckout = () => {
                             <button
                                 type="button"
                                 className="purchase-checkout__button purchase-checkout__button--secondary"
-                                onClick={() => navigate('/store', { replace: true })}
+                                onClick={() => navigate('/my/purchases', { replace: true })}
                             >
-                                스토어로 돌아가기
+                                구매내역 확인하기
                             </button>
 
                             <button
                                 type="button"
                                 className="purchase-checkout__button"
                                 onClick={() =>
-                                    navigate('/my/purchases', { replace: true })
+                                    navigate(`/watch/${type}/${id}`, {
+                                        replace: true,
+                                        state: {
+                                            content,
+                                            title: content?.title || content?.name,
+                                        },
+                                    })
                                 }
                             >
-                                구매내역 확인하기
+                                재생하기
                             </button>
                         </div>
                     </div>
