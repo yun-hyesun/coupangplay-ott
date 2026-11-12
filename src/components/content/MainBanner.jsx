@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import {
-  Autoplay,
   Navigation,
   Pagination,
   A11y,
@@ -35,6 +34,8 @@ export const MainBanner = ({ type = 'all' }) => {
   const onFetchBanner = useMovieStore(
     (state) => state.onFetchBanner
   );
+
+  const purchaseAvailability = useMovieStore((state) => state.purchaseAvailability);
 
   useEffect(() => {
     onFetchBanner(type);
@@ -83,6 +84,13 @@ export const MainBanner = ({ type = 'all' }) => {
       >
         {bannerContents.map((item, index) => {
           const title = item.title || item.name;
+          const isPurchase = item.isPurchase ||
+            purchaseAvailability[`${item.media_type}-${item.id}`] === true;
+          const label = [
+            `${title} 상세보기`,
+            item.isCoupangSeries && '쿠팡플레이 시리즈',
+            isPurchase && '개별구매',
+          ].filter(Boolean).join(', ');
 
           return (
             <SwiperSlide
@@ -92,7 +100,7 @@ export const MainBanner = ({ type = 'all' }) => {
                 className="main-banner-link"
                 to={`/detail/${item.media_type}/${item.id}${type === "purchase" ? "?from=store" : ""}`}
                 state={type === 'purchase' ? { fromStore: true } : undefined}
-                aria-label={`${title} 상세보기`}
+                aria-label={label}
               >
                 <div className="banner-slide-list">
                   <img
@@ -103,7 +111,26 @@ export const MainBanner = ({ type = 'all' }) => {
                   />
 
                   <div className="slide-list-info">
-                    <h2 className="info-title">{title}</h2>
+                    {(item.isCoupangSeries || isPurchase) && (
+                      <div className="info-badges" aria-hidden="true">
+                        {item.isCoupangSeries && (
+                          <span className="info-badge info-badge--series"><i></i>시리즈</span>
+                        )}
+                        {isPurchase && (
+                          <span className="info-badge info-badge--purchase">개별구매</span>
+                        )}
+                      </div>
+                    )}
+                    <h2 className="info-title">
+                      {item.logo_path ? (
+                        <img
+                          className="info-title-logo"
+                          src={`https://image.tmdb.org/t/p/original${item.logo_path}`}
+                          alt={title}
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                        />
+                      ) : title}
+                    </h2>
 
                     {item.overview && (
                       <p className="info-description">
