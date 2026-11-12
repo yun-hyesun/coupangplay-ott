@@ -22,7 +22,7 @@ export const railBreakpoints = {
     0: { slidesPerView: 2.2, spaceBetween: 5 },
     600: { slidesPerView: 3.2, spaceBetween: 8 },
     767: { slidesPerView: 4.1, spaceBetween: 8 },
-    1800: { slidesPerView: 5.1, spaceBetween: 10 },
+    1800: { slidesPerView: 5.1, spaceBetween: 50 },
     1920: { slidesPerView: 6.1, spaceBetween: 70 },
   },
 
