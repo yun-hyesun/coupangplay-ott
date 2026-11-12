@@ -16,7 +16,7 @@ export const StoreChannelPasses = () => (
                 to="/my/subscription/passes"
                 className="store-channel-passes__more"
             >
-                구독패스 살펴보기
+                구독채널 둘러보기
             </Link>
         </div>
 

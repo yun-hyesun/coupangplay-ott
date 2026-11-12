@@ -906,3 +906,27 @@
     transition: none;
   }
 }
+
+// 리뷰 목록·작성·수정 영역의 스크롤바 통일
+.my-review textarea {
+
+  scrollbar-width: thin;
+  scrollbar-color: #555b63 #101113;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #101113;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #555b63;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #777d85;
+  }
+}

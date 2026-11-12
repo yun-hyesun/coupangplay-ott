@@ -17,6 +17,7 @@ import { subscribeSessionMessages, sendSessionMessage } from '../../service/chat
 import { communityError } from '../../data/communityData';
 import { getSportsLiveMatch, getWatchReturnDestination, resolveWatchMedia } from './watchMedia';
 import { getLivePreviewVideo } from '../../service/matchRelatedVideosService';
+import { LiveBadge } from '../../components/LeagueDetailShared';
 
 const EMPTY = [];
 const formatTime = (seconds) => {
@@ -465,7 +466,7 @@ export const Watch = () => {
         <div className="watch-player__bottom">
           {isLiveMode ? <>
             <div className="watch-player__live-status">
-              <span className="watch-player__live-badge"><i aria-hidden="true" />LIVE</span>
+              <LiveBadge label="라이브 중계" className="watch-player__live-badge" />
               <span className="watch-player__live-source" title={liveVideo?.title}>이전 경기 영상{liveVideo?.title ? ` · ${liveVideo.title}` : ''}</span>
             </div>
             <div className="watch-player__live-track" aria-hidden="true" />
