@@ -1,7 +1,7 @@
 import WatchIcon from './WatchIcon';
 
 export default function WatchChatPanel({ togetherMode, sessionId, messages, draft, onDraftChange, onSend, onClose, error, sending, currentUid, onCopyInvite }) {
-  return <aside className="watch-side-panel" aria-label="실시간 채팅">
+  return <aside className="watch-side-panel watch-side-panel--chat" aria-label="실시간 채팅">
     <header className="watch-side-panel__header">
       <div><h2>실시간 채팅</h2><p>{togetherMode ? '같이 보기 참여자와 대화해 보세요.' : '같이 보기를 켜고 대화에 참여해 보세요.'}</p></div>
       <button type="button" onClick={onClose} aria-label="채팅 닫기"><WatchIcon name="close" /></button>
