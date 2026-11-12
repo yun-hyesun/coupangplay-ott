@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { findLeagueTeam, formatGameDate, formatGameTime, getGameStatus, TeamImage } from "./LeagueDetailShared";
 import { MatchRelatedVideos } from "./MatchRelatedVideos";
 import { SportsCalendarDialog, SportsCalendarNavButton } from "./SportsCalendarDialog";
-import { findScheduleMatch, getCalendarDays, getRecentScheduleGame, getRoundWindow, getScheduleDateWindow, getScheduleRounds, getScheduleSeason, getSeasonRange, groupScheduleGames } from "../data/leagueScheduleView";
+import { findScheduleMatch, getCalendarDays, getRecentScheduleGame, getRoundWindow, getScheduleBrowseRange, getScheduleDateWindow, getScheduleRounds, getScheduleSeason, getSeasonRange, groupScheduleGames, isScheduleDateInRange } from "../data/leagueScheduleView";
 import { getScheduleGameDate } from "../data/leagueScheduleRange";
 import { getScheduleUnit } from "../data/leagueScheduleUnits";
 import { getMatchVideoKey } from "../data/matchRelatedVideos";
@@ -60,20 +60,51 @@ function findWatchlistedMatch(watchlist, game, leagueId) {
 }
 
 function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasError, onSelect, onClose }) {
-  const [month, setMonth] = useState(date.slice(0, 7));
+  const range = getScheduleBrowseRange(today);
+  const minMonth = range.from.slice(0, 7);
+  const maxMonth = range.to.slice(0, 7);
+  const [selectedMonth, setMonth] = useState(date.slice(0, 7));
+  const month = selectedMonth < minMonth ? minMonth : selectedMonth > maxMonth ? maxMonth : selectedMonth;
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [draftMonth, setDraftMonth] = useState(month);
+  const monthPickerId = useId();
+  const yearListRef = useRef(null);
+  const monthListRef = useRef(null);
   const [seasonResults, setSeasonResults] = useState({});
   const [attempt, setAttempt] = useState(0);
   const [year, number] = month.split("-").map(Number);
+  const [draftYear, draftNumber] = draftMonth.split("-").map(Number);
   const days = getCalendarDays(month);
-  const seasons = [...new Set(days.map(day => getScheduleSeason(leagueId, day)))];
+  const seasons = [...new Set(days.filter(day => isScheduleDateInRange(day, range)).map(day => getScheduleSeason(leagueId, day)))];
   const extraSeasons = seasons.filter(value => value !== season);
   const requestKey = JSON.stringify([leagueId, extraSeasons, attempt]);
   const daysWithGames = new Set(seasons.flatMap(value => value === season ? games : seasonResults[`${leagueId}:${value}`]?.games || [])
     .map(getScheduleGameDate).filter(Boolean));
   const calendarLoading = seasons.includes(season) && loading || extraSeasons.some(value => !seasonResults[`${leagueId}:${value}`]);
   const calendarError = seasons.includes(season) && hasError || extraSeasons.some(value => seasonResults[`${leagueId}:${value}`]?.error);
-  const currentYear = Number(today.slice(0, 4));
-  const shiftMonth = offset => setMonth(new Date(Date.UTC(year, number - 1 + offset, 1)).toISOString().slice(0, 7));
+  const minYear = Number(range.from.slice(0, 4));
+  const currentYear = Number(range.to.slice(0, 4));
+  const selectMonth = value => { if (value >= minMonth && value <= maxMonth) setMonth(value); };
+  const shiftMonth = offset => selectMonth(new Date(Date.UTC(year, number - 1 + offset, 1)).toISOString().slice(0, 7));
+  const toggleMonthPicker = () => {
+    if (monthPickerOpen) selectMonth(draftMonth);
+    else setDraftMonth(month);
+    setMonthPickerOpen(value => !value);
+  };
+  const chooseMonth = value => {
+    selectMonth(`${draftYear}-${String(value).padStart(2, "0")}`);
+    setMonthPickerOpen(false);
+  };
+
+  useEffect(() => {
+    if (!monthPickerOpen) return;
+    for (const list of [yearListRef.current, monthListRef.current]) {
+      const selected = list?.querySelector('[aria-pressed="true"]');
+      if (selected) list.scrollTop += selected.getBoundingClientRect().top - list.getBoundingClientRect().top
+        - (list.clientHeight - selected.clientHeight) / 2;
+    }
+  }, [monthPickerOpen]);
+
   useEffect(() => {
     const controller = new AbortController();
     const [calendarLeagueId, requiredSeasons, retry] = JSON.parse(requestKey);
@@ -93,17 +124,31 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
   return (
     <SportsCalendarDialog label="경기 일정 날짜 선택" onClose={onClose}>
         <div className="sports-calendar__heading">
-          <SportsCalendarNavButton previous label="달력 이전 달" disabled={month <= "2010-01"} onClick={() => shiftMonth(-1)} />
-          <div className="sports-calendar__month">
-            <select aria-label="달력 연도" value={year} onChange={event => setMonth(`${event.target.value}-${String(number).padStart(2, "0")}`)}>
-              {Array.from({ length: currentYear - 2010 + 2 }, (_, index) => currentYear + 1 - index).map(value => <option key={value} value={value}>{value}년</option>)}
-            </select>
-            <select aria-label="달력 월" value={number} onChange={event => setMonth(`${year}-${event.target.value.padStart(2, "0")}`)}>
-              {Array.from({ length: 12 }, (_, index) => index + 1).map(value => <option key={value} value={value}>{value}월</option>)}
-            </select>
+          {monthPickerOpen ? <span className="sports-calendar__nav" aria-hidden="true" /> : <SportsCalendarNavButton previous label="달력 이전 달" disabled={month <= minMonth} onClick={() => shiftMonth(-1)} />}
+          <div className="sports-calendar__month sports-calendar__month--date">
+            <button type="button" className="sports-calendar__year-month-toggle" aria-label="연도와 월 선택" aria-expanded={monthPickerOpen} aria-controls={monthPickerId} onClick={toggleMonthPicker}>
+              <span>{monthPickerOpen ? draftYear : year}년 {monthPickerOpen ? draftNumber : number}월</span>
+              <span className="sports-calendar__year-month-chevron" aria-hidden="true" />
+            </button>
           </div>
-          <SportsCalendarNavButton label="달력 다음 달" disabled={month >= `${currentYear + 1}-12`} onClick={() => shiftMonth(1)} />
+          {monthPickerOpen ? <span className="sports-calendar__nav" aria-hidden="true" /> : <SportsCalendarNavButton label="달력 다음 달" disabled={month >= maxMonth} onClick={() => shiftMonth(1)} />}
         </div>
+        {monthPickerOpen ? (
+          <div className="sports-calendar__year-month-picker" id={monthPickerId} role="group" aria-label="연도와 월 목록">
+            <div className="sports-calendar__year-month-column" role="group" aria-label="연도 선택" ref={yearListRef}>
+              {Array.from({ length: currentYear - minYear + 1 }, (_, index) => currentYear - index).map(value => <button type="button" key={value} aria-pressed={draftYear === value}
+                onClick={() => setDraftMonth(`${value}-${String(draftNumber).padStart(2, "0")}`)}>
+                <span>{value}년</span>{draftYear === value && <span className="sports-calendar__selection-check" aria-hidden="true" />}
+              </button>)}
+            </div>
+            <div className="sports-calendar__year-month-column" role="group" aria-label="월 선택" ref={monthListRef}>
+              {Array.from({ length: 12 }, (_, index) => 12 - index).map(value => <button type="button" key={value} aria-pressed={draftNumber === value}
+                onClick={() => chooseMonth(value)}>
+                <span>{value}월</span>{draftNumber === value && <span className="sports-calendar__selection-check" aria-hidden="true" />}
+              </button>)}
+            </div>
+          </div>
+        ) : <>
         <p className="sports-calendar__notice" role="status">
           {calendarLoading ? "경기 일정이 있는 날짜를 확인하고 있습니다." : calendarError ? "일부 일정을 확인하지 못했습니다. 확인된 경기 날짜만 선택할 수 있습니다." : "경기가 있는 날짜만 선택할 수 있습니다."}
           {calendarError && extraSeasons.some(value => seasonResults[`${leagueId}:${value}`]?.error) && <button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button>}
@@ -111,12 +156,69 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
         <div className="sports-calendar__grid" aria-busy={calendarLoading}>
           {WEEKDAYS.map(day => <span className="sports-calendar__weekday" key={day}>{day}</span>)}
           {days.map(day => {
-            const hasGames = daysWithGames.has(day);
+            const hasGames = isScheduleDateInRange(day, range) && daysWithGames.has(day);
             return <button type="button" key={day} disabled={!hasGames} aria-label={`${day}, ${hasGames ? "경기 있음" : "선택 불가"}`} aria-pressed={hasGames && day === date}
               aria-current={day === today ? "date" : undefined} className={(day.slice(0, 7) !== month ? "is-outside " : "") + (hasGames ? "has-games" : "")}
               onClick={() => { if (hasGames) { onSelect(day, getScheduleSeason(leagueId, day)); onClose(); } }}>{Number(day.slice(-2))}</button>;
           })}
         </div>
+        </>}
+    </SportsCalendarDialog>
+  );
+}
+
+function ScheduleUnitPicker({ leagueId, today, season, round, unitName, sourceResult, sourceLoading, onSelect, onClose }) {
+  const range = getScheduleBrowseRange(today);
+  const minYear = getScheduleSeason(leagueId, range.from);
+  const maxYear = getScheduleSeason(leagueId, range.to);
+  const [selectedYear, setYear] = useState(season);
+  const year = Math.min(maxYear, Math.max(minYear, selectedYear));
+  const [result, setResult] = useState(null);
+  const [attempt, setAttempt] = useState(0);
+  const key = `${leagueId}:${year}:${attempt}`;
+  const useCurrentSeason = year === season && attempt === 0;
+  const loading = useCurrentSeason ? sourceLoading : result?.key !== key;
+  const data = useCurrentSeason ? sourceResult : result?.key === key ? result : null;
+  const games = useMemo(() => loading ? EMPTY_GAMES : (data?.games || []).filter(game =>
+    isScheduleDateInRange(getScheduleGameDate(game), { from: range.from, to: range.to })), [loading, data, range.from, range.to]);
+  const options = useMemo(() => getScheduleRounds(games, { currentOnly: leagueId === "mls" }), [games, leagueId]);
+  const hasError = Boolean(data?.errors?.length || data?.warning);
+  const selectYear = value => { if (value >= minYear && value <= maxYear) setYear(value); };
+
+  useEffect(() => {
+    if (useCurrentSeason) return;
+    const controller = new AbortController();
+    getLeagueSeasonSchedule(leagueId, year, { signal: controller.signal, force: attempt > 0 }).then(value => {
+      if (!controller.signal.aborted) setResult({ ...value, key });
+    }).catch(() => {
+      if (!controller.signal.aborted) setResult({ key, games: [], errors: [`경기 ${unitName}를 불러오지 못했습니다.`] });
+    });
+    return () => controller.abort();
+  }, [leagueId, year, attempt, useCurrentSeason, key, unitName]);
+
+  const selectUnit = value => {
+    if (loading || !options.some(option => option.value === value)) return;
+    onSelect(year, value, data);
+    onClose();
+  };
+
+  return (
+    <SportsCalendarDialog label={`경기 일정 연도·${unitName} 선택`} onClose={onClose}>
+      <div className="sports-calendar__heading">
+        <SportsCalendarNavButton previous label="이전 연도" disabled={year <= minYear} onClick={() => selectYear(year - 1)} />
+        <div className="sports-calendar__month">
+          <strong className="sports-calendar__period-label" aria-live="polite">{getSeasonRange(leagueId, year).label} 시즌</strong>
+        </div>
+        <SportsCalendarNavButton label="다음 연도" disabled={year >= maxYear} onClick={() => selectYear(year + 1)} />
+      </div>
+      <p className="sports-calendar__notice" role="status">
+        {loading ? `경기 ${unitName}를 확인하고 있습니다.` : hasError ? `일부 일정을 확인하지 못했습니다. 확인된 경기 구분만 선택할 수 있습니다.` : options.length ? `조회할 ${unitName} 또는 경기 구분을 선택해 주세요.` : `선택한 연도에 조회된 경기 ${unitName}가 없습니다.`}
+        {!loading && hasError && <button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button>}
+      </p>
+      <div className="sports-calendar__grid sports-calendar__grid--units" role="group" aria-label={`${unitName} 목록`} aria-busy={loading}>
+        {!loading && options.map(option => <button type="button" key={option.value} aria-pressed={year === season && round === option.value}
+          onClick={() => selectUnit(option.value)}>{option.label}</button>)}
+      </div>
     </SportsCalendarDialog>
   );
 }
@@ -195,6 +297,7 @@ function ScheduleMatchRow({ game, league, scoresOn, selectedTeamIds, saved, savi
 }
 
 export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = [], initialMatch = null, expandInitialMatch = true }) {
+  const unitName = ["nfl", "nba"].includes(league.id) ? "주차" : "라운드";
   const user = useAuthStore(state => state.user);
   const authLoading = useAuthStore(state => state.loading);
   const currentProfile = useProfileStore(state => state.currentProfile);
@@ -204,30 +307,39 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
   const isCurrentWatchlist = Boolean(!authLoading && currentOwnerKey && ownerKey === currentOwnerKey);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const browseRange = getScheduleBrowseRange(today);
+  const minSeason = getScheduleSeason(league.id, browseRange.from);
+  const maxSeason = getScheduleSeason(league.id, browseRange.to);
   const currentSeason = getScheduleSeason(league.id, today);
-  const initialDate = initialMatch && getScheduleGameDate(initialMatch);
+  const savedMatchDate = initialMatch && getScheduleGameDate(initialMatch);
+  const initialDate = isScheduleDateInRange(savedMatchDate, browseRange) ? savedMatchDate : null;
   const initialSeason = initialDate ? getScheduleSeason(league.id, initialDate) : currentSeason;
   const [season, setSeason] = useState(initialSeason);
   const [mode, setMode] = useState(initialMatch ? "date" : "round");
   const [selection, setSelection] = useState(null);
-  const [followingInitialMatch, setFollowingInitialMatch] = useState(Boolean(initialMatch));
+  const [followingInitialMatch, setFollowingInitialMatch] = useState(Boolean(initialDate));
   const [roundOffset, setRoundOffset] = useState(0);
   const [result, setResult] = useState(null);
   const [attempt, setAttempt] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const key = `${league.id}:${season}:${attempt}`;
   const loading = result?.key !== key;
-  const scheduleGames = loading ? EMPTY_GAMES : result.games;
-  const focusedGame = useMemo(() => followingInitialMatch && initialMatch ? findScheduleMatch(scheduleGames, initialMatch, league.id) || (initialDate && initialMatch.status ? initialMatch : null) : null,
+  const scheduleGames = useMemo(() => loading ? EMPTY_GAMES : result.games.filter(game => isScheduleDateInRange(getScheduleGameDate(game), { from: browseRange.from, to: browseRange.to })),
+    [loading, result, browseRange.from, browseRange.to]);
+  const focusedGame = useMemo(() => followingInitialMatch && initialDate && initialMatch ? findScheduleMatch(scheduleGames, initialMatch, league.id) || (initialMatch.status ? initialMatch : null) : null,
     [scheduleGames, initialMatch, initialDate, league.id, followingInitialMatch]);
   const games = useMemo(() => focusedGame && !scheduleGames.includes(focusedGame) ? [...scheduleGames, focusedGame] : scheduleGames,
     [scheduleGames, focusedGame]);
-  const rounds = useMemo(() => getScheduleRounds(games), [games]);
+  const rounds = useMemo(() => getScheduleRounds(games, { currentOnly: league.id === "mls" }), [games, league.id]);
   const recentGame = useMemo(() => getRecentScheduleGame(games, today), [games, today]);
   const currentSelection = selection?.season === season ? selection : null;
   const initialGameDate = followingInitialMatch ? getScheduleGameDate(focusedGame || {}) || initialDate : null;
-  const round = currentSelection?.round || getScheduleUnit(followingInitialMatch && focusedGame || recentGame || {})?.value || rounds[0]?.value || "";
-  const requestedDate = currentSelection?.date || initialGameDate || (season === currentSeason ? today : getScheduleGameDate(recentGame || {}) || getSeasonRange(league.id, season).from);
+  const preferredRound = getScheduleUnit(followingInitialMatch && focusedGame || recentGame || {})?.value;
+  const round = rounds.some(option => option.value === currentSelection?.round) ? currentSelection.round
+    : rounds.some(option => option.value === preferredRound) ? preferredRound
+    : (league.id === "mls" ? rounds.at(-1) : rounds[0])?.value || "";
+  const selectedDate = currentSelection?.date || initialGameDate || (season === currentSeason ? today : getScheduleGameDate(recentGame || {}) || getSeasonRange(league.id, season).from);
+  const requestedDate = selectedDate < browseRange.from ? browseRange.from : selectedDate > browseRange.to ? browseRange.to : selectedDate;
   const dateWindow = useMemo(() => getScheduleDateWindow(games, requestedDate), [games, requestedDate]);
   const dateKey = initialGameDate && !currentSelection ? initialGameDate : dateWindow.selectedDate || requestedDate;
   const dateOnly = !loading && games.length > 0 && !rounds.length;
@@ -258,6 +370,7 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
   }, [authLoading, currentOwnerKey, onLoadWatchlist]);
 
   function selectDate(date, year = getScheduleSeason(league.id, date)) {
+    if (!isScheduleDateInRange(date, browseRange) || year < minSeason || year > maxSeason) return;
     setFollowingInitialMatch(false);
     const game = games.find(game => getScheduleGameDate(game) === date);
     setSeason(year);
@@ -266,9 +379,33 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
     if (viewMode === "round" && !game) setMode("date");
   }
 
-  function shiftPeriod(offset) {
+  function selectRound(year, value, data) {
+    if (year < minSeason || year > maxSeason) return;
+    const game = data.games.find(game => isScheduleDateInRange(getScheduleGameDate(game), browseRange)
+      && getScheduleUnit(game)?.value === value);
+    if (!game) return;
     setFollowingInitialMatch(false);
-    if (viewMode === "round") { setSeason(value => value + offset); setSelection(null); setRoundOffset(0); }
+    setSeason(year);
+    setMode("round");
+    setSelection({ season: year, date: getScheduleGameDate(game), round: value });
+    setRoundOffset(0);
+    setResult({ ...data, key: `${league.id}:${year}:${attempt}` });
+  }
+
+  function selectMode(value) {
+    setCalendarOpen(false);
+    setMode(value);
+  }
+
+  function shiftPeriod(offset) {
+    if (viewMode === "round") {
+      const nextSeason = season + offset;
+      if (nextSeason < minSeason || nextSeason > maxSeason) return;
+      setFollowingInitialMatch(false);
+      setSeason(nextSeason);
+      setSelection(null);
+      setRoundOffset(0);
+    }
     else {
       const date = new Date(`${dateKey}T00:00:00Z`);
       date.setUTCMonth(date.getUTCMonth() + offset, 1);
@@ -315,29 +452,29 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
       <h2 className="league-schedule__sr-only" id="league-schedule-page-title">{league.name} 경기 일정</h2>
       <div className="league-schedule__toolbar">
         <div className="league-schedule__modes" role="group" aria-label="경기 일정 조회 방식">
-          <button type="button" aria-pressed={viewMode === "date"} onClick={() => setMode("date")}>날짜별</button>
-          <button type="button" aria-pressed={viewMode === "round"} disabled={dateOnly} onClick={() => setMode("round")}>라운드별</button>
+          <button type="button" aria-pressed={viewMode === "date"} onClick={() => selectMode("date")}>날짜별</button>
+          <button type="button" aria-pressed={viewMode === "round"} disabled={dateOnly} onClick={() => selectMode("round")}>{unitName}별</button>
         </div>
         <div className="league-schedule__period">
-          <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "이전 시즌" : "이전 달"} disabled={season <= 2010} onClick={() => shiftPeriod(-1)}><ScheduleArrow direction="previous" /></button>
+          <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "이전 시즌" : "이전 달"} disabled={viewMode === "round" ? season <= minSeason : dateKey.slice(0, 7) <= browseRange.from.slice(0, 7)} onClick={() => shiftPeriod(-1)}><ScheduleArrow direction="previous" /></button>
           <h3 aria-live="polite">{label}</h3>
-          <button className="league-schedule__icon-button" type="button" aria-label="경기 날짜 선택" aria-haspopup="dialog" onClick={() => setCalendarOpen(true)}><img src={ASSETS + "calendar.svg"} alt="" /></button>
-          <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "다음 시즌" : "다음 달"} disabled={season > currentSeason} onClick={() => shiftPeriod(1)}><ScheduleArrow /></button>
+          <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "date" ? "경기 날짜 선택" : `경기 연도·${unitName} 선택`} aria-haspopup="dialog" aria-expanded={calendarOpen} onClick={() => setCalendarOpen(true)}><img src={ASSETS + "calendar.svg"} alt="" /></button>
+          <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "다음 시즌" : "다음 달"} disabled={viewMode === "round" ? season >= maxSeason : dateKey.slice(0, 7) >= browseRange.to.slice(0, 7)} onClick={() => shiftPeriod(1)}><ScheduleArrow /></button>
         </div>
         <div className="league-schedule__recent-wrap"><button className="league-schedule__recent" type="button" onClick={() => { setFollowingInitialMatch(false); setSeason(currentSeason); setSelection(null); setRoundOffset(0); }}>최근</button></div>
       </div>
-      <div className="league-schedule__selector" role="group" aria-label={viewMode === "round" ? "라운드 선택" : "날짜 선택"}>
-        <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "이전 라운드 묶음" : "이전 경기 날짜 묶음"} disabled={viewMode === "round" ? !roundWindow.hasPrevious : !dateWindow.hasPrevious}
+      <div className="league-schedule__selector" role="group" aria-label={viewMode === "round" ? `${unitName} 선택` : "날짜 선택"}>
+        <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? `이전 ${unitName} 묶음` : "이전 경기 날짜 묶음"} disabled={viewMode === "round" ? !roundWindow.hasPrevious : !dateWindow.hasPrevious}
           onClick={() => viewMode === "round" ? setRoundOffset(value => value - 5) : dateWindow.previousDate && selectDate(dateWindow.previousDate)}><ScheduleArrow direction="previous" /></button>
         <div className="league-schedule__options">
           {viewMode === "round" ? (roundWindow.items.length ? roundWindow.items.map(option => <button type="button" key={option.value} aria-label={option.label} aria-pressed={round === option.value}
             onClick={() => { setFollowingInitialMatch(false); setSelection({ season, date: dateKey, round: option.value }); setRoundOffset(0); }}><strong>{option.kind === "round" ? `${option.number}R` : option.label}</strong><span>{option.kind === "round" ? "정규 리그" : "경기 일정"}</span></button>)
-            : <span className="league-schedule__selector-loading">{loading ? "경기 라운드를 불러오는 중입니다." : "조회된 라운드가 없습니다."}</span>)
+            : <span className="league-schedule__selector-loading">{loading ? `경기 ${unitName}를 불러오는 중입니다.` : `조회된 ${unitName}가 없습니다.`}</span>)
             : dateWindow.items.length ? dateWindow.items.map(date => <button type="button" key={date} aria-label={date} aria-pressed={date === dateKey} aria-current={date === today ? "date" : undefined} onClick={() => selectDate(date)}>
               <strong>{Number(date.slice(-2))}</strong><span>{date === today ? "오늘" : WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()]}</span></button>)
               : <span className="league-schedule__selector-loading">{loading ? "경기 날짜를 불러오는 중입니다." : "조회된 경기 날짜가 없습니다."}</span>}
         </div>
-        <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? "다음 라운드 묶음" : "다음 경기 날짜 묶음"} disabled={viewMode === "round" ? !roundWindow.hasNext : !dateWindow.hasNext}
+        <button className="league-schedule__icon-button" type="button" aria-label={viewMode === "round" ? `다음 ${unitName} 묶음` : "다음 경기 날짜 묶음"} disabled={viewMode === "round" ? !roundWindow.hasNext : !dateWindow.hasNext}
           onClick={() => viewMode === "round" ? setRoundOffset(value => value + 5) : dateWindow.nextDate && selectDate(dateWindow.nextDate)}><ScheduleArrow /></button>
       </div>
       <p className="league-schedule__timezone">한국시간 기준</p>
@@ -355,7 +492,9 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
         {!loading && followingInitialMatch && !focusedGame && <p className="league-schedule__empty" role="status">선택한 경기의 최신 일정을 찾지 못했습니다. 경기 일정이 변경되었거나 아직 공개되지 않았을 수 있습니다.</p>}
         {!loading && (result.errors.length > 0 || result.warning) && <div className="league-schedule__error" role="status"><p>{result.warning || (games.length ? "일부 경기 일정을 불러오지 못했습니다." : "현재 경기 일정을 확인할 수 없습니다. 잠시 후 다시 조회해 주세요.")}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button></div>}
       </div>
-      {calendarOpen && <ScheduleCalendar date={dateKey} today={today} leagueId={league.id} games={games} season={season} loading={loading} hasError={!loading && result.errors.length > 0} onSelect={selectDate} onClose={() => setCalendarOpen(false)} />}
+      {calendarOpen && (viewMode === "date"
+        ? <ScheduleCalendar date={dateKey} today={today} leagueId={league.id} games={games} season={season} loading={loading} hasError={!loading && result.errors.length > 0} onSelect={selectDate} onClose={() => setCalendarOpen(false)} />
+        : <ScheduleUnitPicker leagueId={league.id} today={today} season={season} round={round} unitName={unitName} sourceResult={result} sourceLoading={loading} onSelect={selectRound} onClose={() => setCalendarOpen(false)} />)}
     </section>
   );
 }

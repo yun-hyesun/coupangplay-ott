@@ -1,6 +1,5 @@
 import { SPORTS_TEAMS_BY_LEAGUE, findSportsTeam } from "./sportsTeams";
-import { sportsTeamAliases } from "./sportsTeamAliases";
-import { matchesVideoLeague } from "./leagueVideoQueries";
+import { getVideoTeamAliases, matchesVideoLeague } from "./leagueVideoQueries";
 import { matchesScheduleUnit } from "./leagueScheduleUnits";
 
 const normalize = value => String(value || "").normalize("NFKC").replace(/[\s.·_–-]/g, "").toLowerCase();
@@ -25,7 +24,7 @@ export function formatVideoDate(dateKey) {
 function teamMentions(leagueId, text, last = false) {
   const normalized = normalize(text);
   return (SPORTS_TEAMS_BY_LEAGUE[leagueId] || []).flatMap(team => {
-    const aliases = [team.name, ...Object.entries(sportsTeamAliases).filter(([, name]) => name === team.name).map(([alias]) => alias)];
+    const aliases = getVideoTeamAliases(team.name);
     const indexes = aliases.map(alias => last ? normalized.lastIndexOf(normalize(alias)) : normalized.indexOf(normalize(alias))).filter(index => index >= 0);
     return indexes.length ? [{ team, index: last ? Math.max(...indexes) : Math.min(...indexes), length: normalize(team.name).length }] : [];
   }).sort((a, b) => a.index - b.index || b.length - a.length).filter((entry, index, all) => !all.slice(0, index).some(previous => previous.index === entry.index));

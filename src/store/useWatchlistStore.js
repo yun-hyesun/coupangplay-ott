@@ -11,6 +11,37 @@ import {
 
 import { auth, db } from '../firebase/firebase';
 import { useProfileStore } from './useProfileStore';
+import { SPORTS_LEAGUE_BY_ID } from '../data/sportsLeagues';
+import { formatBroadcastDate } from '../data/leagueBroadcasts';
+
+// 경기 찜 데이터를 기존 라이브 예약 알림 목록 형식으로 표시합니다.
+export const getLiveReminderItems = (watchlist) => watchlist
+    .filter((item) => item.media_type === 'sports')
+    .map((item) => {
+        const league = SPORTS_LEAGUE_BY_ID[item.leagueId];
+        const prefix = `${item.leagueId}_`;
+        const savedId = String(item.id);
+
+        return {
+            ...item,
+            genre: '스포츠',
+            image: item.thumbnail || '',
+            date: formatBroadcastDate(item.startTime),
+            path: league ? `/sports/league/${encodeURIComponent(item.leagueId)}` : '/sports',
+            state: league ? {
+                leagueTab: 'schedule',
+                expandScheduleMatch: false,
+                scheduleMatch: {
+                    gameId: savedId.startsWith(prefix) ? savedId.slice(prefix.length) : savedId,
+                    competitionCode: item.leagueId,
+                    utcDate: item.startTime || null,
+                    home: { id: item.homeTeamId, name: item.homeName, crest: item.homeLogo },
+                    away: { id: item.awayTeamId, name: item.awayName, crest: item.awayLogo },
+                    raceName: item.raceName || (league.sport === '레이싱' ? item.homeName || item.title : undefined),
+                },
+            } : undefined,
+        };
+    });
 
 // 선택된 프로필의 찜 목록 컬렉션
 const getWatchlistRef = (uid, profileId) => {
