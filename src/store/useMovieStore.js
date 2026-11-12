@@ -54,7 +54,7 @@ const featuredBannerLineups = {
 //   .then(data => console.table("쿠팡드라마",data.results));
 
 // TMDB 공통 요청
-const requestTmdb = async (path, query = {}) => {
+const requestTmdb = async (path, query = {}, options) => {
   const params = new URLSearchParams({
     api_key: TMDB_KEY,
     language: 'ko-KR',
@@ -62,7 +62,8 @@ const requestTmdb = async (path, query = {}) => {
   });
 
   const res = await fetch(
-    `https://api.themoviedb.org/3${path}?${params}`
+    `https://api.themoviedb.org/3${path}?${params}`,
+    options
   );
 
   if (!res.ok) {
@@ -127,6 +128,13 @@ const fetchBannerArtwork = async (item) => {
     return item;
   }
 };
+
+const requestTmdbVideos = (path, language) => requestTmdb(path, {
+  language,
+  include_video_language: 'ko,en',
+}, { signal: AbortSignal.timeout(5000) });
+
+const normalizeVideoTitle = (title) => (title ?? '').normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
 // 드라마 세부 카테고리의 키워드 ID 조회
 const categoryKeywordCache = new Map();
@@ -1143,7 +1151,7 @@ export const useMovieStore = create((set, get) => ({
   onFetchVideo: async (id) => {
     if (get().popVideo[id]) return;
 
-    const data = await requestTmdb(`/movie/${id}/videos`);
+    const data = await requestTmdbVideos(`/movie/${id}/videos`, 'ko-KR');
 
     set((state) => ({
       popVideo: {
@@ -1170,9 +1178,7 @@ export const useMovieStore = create((set, get) => ({
   onFetchTvVideo: async (id) => {
     if (get().tvVideo[id]) return;
 
-    const data = await requestTmdb(`/tv/${id}/videos`, {
-      language: 'en-US',
-    });
+    const data = await requestTmdbVideos(`/tv/${id}/videos`, 'en-US');
 
     set((state) => ({
       tvVideo: {
@@ -1241,9 +1247,9 @@ export const useMovieStore = create((set, get) => ({
 
     // 1. TMDB에서 에피소드 영상 검색
     try {
-      const data = await requestTmdb(
+      const data = await requestTmdbVideos(
         `/tv/${id}/season/${season}/episode/${episode}/videos`,
-        { language: 'en-US' }
+        'en-US'
       );
 
       videos = (data.results ?? []).filter(
@@ -1270,7 +1276,8 @@ export const useMovieStore = create((set, get) => ({
           (item) => item.episode_number === episode
         );
 
-        if (tvName) {
+        const normalizedTvName = normalizeVideoTitle(tvName);
+        if (normalizedTvName) {
           const searchText =
             `${tvName} 시즌 ${season} ${episode}화 ` +
             `${episodeInfo?.name || ''} 하이라이트`;
@@ -1286,7 +1293,8 @@ export const useMovieStore = create((set, get) => ({
           });
 
           const res = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?${params.toString()}`
+            `https://www.googleapis.com/youtube/v3/search?${params.toString()}`,
+            { signal: AbortSignal.timeout(4000) }
           );
 
           if (!res.ok) {
@@ -1296,12 +1304,13 @@ export const useMovieStore = create((set, get) => ({
           const data = await res.json();
 
           videos = (data.items ?? [])
-            .filter((item) => item.id?.videoId)
+            .filter((item) => item.id?.videoId && normalizeVideoTitle(item.snippet?.title).includes(normalizedTvName))
             .map((item) => ({
               key: item.id.videoId,
               name: item.snippet.title,
               site: 'YouTube',
               type: 'Clip',
+              fromSearch: true,
             }));
         }
       } catch (error) {
