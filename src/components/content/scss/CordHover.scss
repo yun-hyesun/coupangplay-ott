@@ -21,7 +21,7 @@
 
   .content {padding: clamp(16px, 2.08vw, 30px) clamp(8px , 1.38vw, 20px); @include flexCol($gap: .3em);
 
-    .content-title {font-size: clamp(15px, 1.52vw ,22px); font-weight: $font-w-B-700;}
+    .content-title {font-size: clamp(15px, 1.52vw ,22px); font-weight: $font-w-B-700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
     
     .content-info {@include flex-center($jc: flex-start, $gap: 10px); color: $color-text-sec1; font-size: clamp(12px, 1.11vw, 16px);
     

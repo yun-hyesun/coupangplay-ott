@@ -9,12 +9,13 @@ export const Header = () => {
 
   // 메인 메뉴
   const mainMenu = [
-    { id: 1, menu: "스포츠", path: "/sports" },
-    { id: 2, menu: "드라마", path: "/drama" },
-    { id: 3, menu: "예능", path: "/entertainment" },
-    { id: 4, menu: "영화", path: "/movie" },
-    { id: 5, menu: "스토어", path: "/store" },
-    { id: 6, menu: "키즈", path: "/kids" },
+    { id: 1,menu: '스포츠',path: '/sports',class: 'sports',image: '/images/sports_menu.svg'},
+    { id: 2, menu: "드라마", path: "/drama", class: "drama" },
+    { id: 3, menu: "예능", path: "/entertainment", class: "entertainment" },
+    { id: 4, menu: "영화", path: "/movie", class: "movie" },
+    { id: 5, menu: "스토어", path: "/store", class: "store" },
+    { id: 6, menu: "키즈", path: "/kids", class: "kids" },
+    { id: 7, menu: "와우 클립", path: "/wowclip", class: "wowclip" }
   ];
 
   const [isScroll, setIsScrolled] = useState(false);
@@ -115,10 +116,17 @@ export const Header = () => {
           <nav className='header-nav'>
             <ul className='header-nav-menu'>
               {mainMenu.map((menu) => (
-                <li className='nav-menu-list' key={menu.id}>
+                <li className={`nav-menu-list ${menu.class}`} key={menu.id}>
                   <NavLink
                     className={({ isActive }) => isActive ? 'active' : ''}
-                    to={menu.path}>{menu.menu}</NavLink>
+                    to={menu.path}
+                  >
+                    {menu.image ? (
+                      <img className="nav-menu-image" src={menu.image} alt={menu.menu} />
+                    ) : (
+                      menu.menu
+                    )}
+                  </NavLink>
                 </li>
               ))}
             </ul>
