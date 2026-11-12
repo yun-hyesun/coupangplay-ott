@@ -8,7 +8,8 @@ import {
     setDoc,
     deleteDoc,
     updateDoc,
-    serverTimestamp
+    serverTimestamp,
+    runTransaction
 } from 'firebase/firestore';
 
 import { auth, db } from '../firebase/firebase';
@@ -169,14 +170,29 @@ export const useSubscriptionStore = create((set, get) => ({
         try {
             // 동일한 이용권이 이미 등록되어 있는지 확인
             const subscriptionRef = getSubscriptionRef(uid, plan.id);
-            const existing = await getDoc(subscriptionRef);
+            const orderId = `MOCK-${plan.id}-${Date.now()}`;
 
-            if (existing.exists() &&
-                existing.data().status === 'active') {
-                throw new Error('이미 구독 중인 이용권입니다.');
-            }
+            await runTransaction(db, async (transaction) => {
+                const existing = await transaction.get(subscriptionRef);
+                const previous = existing.data();
 
-            await setDoc(subscriptionRef, subscriptionData);
+                if (previous?.status === 'active') {
+                    throw new Error('이미 구독 중인 이용권입니다.');
+                }
+
+                transaction.set(subscriptionRef, {
+                    ...subscriptionData,
+                    paymentHistory: [
+                        ...(previous?.paymentHistory ?? []),
+                        {
+                            id: orderId,
+                            paidAt: today.toISOString(),
+                            amount: plan.price,
+                            status: 'mock_paid',
+                        },
+                    ],
+                });
+            });
 
             if (auth.currentUser?.uid !== uid) {
                 return null;
@@ -185,7 +201,7 @@ export const useSubscriptionStore = create((set, get) => ({
             await get().onLoadSubscriptions();
 
             return {
-                orderId: `MOCK-${plan.id}-${Date.now()}`,
+                orderId,
                 status: 'mock_paid',
                 planId: plan.id
             };
