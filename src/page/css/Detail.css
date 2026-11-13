@@ -959,21 +959,21 @@
   pointer-events: none;
 }
 
-.detail-hero__actions .detail-button--watchlist {
+.detail-hero__actions .detail-button--watchlist, .detail-hero__actions .detail-button--share {
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
-.detail-hero__actions .detail-button--watchlist img {
+.detail-hero__actions .detail-button--watchlist img, .detail-hero__actions .detail-button--share img {
   transition: transform 0.2s;
 }
-.detail-hero__actions .detail-button--watchlist:hover:not(:disabled), .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled) {
+.detail-hero__actions .detail-button--watchlist:hover:not(:disabled), .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled), .detail-hero__actions .detail-button--share:hover:not(:disabled), .detail-hero__actions .detail-button--share:focus-visible:not(:disabled) {
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--detail-blue);
 }
-.detail-hero__actions .detail-button--watchlist:hover:not(:disabled) img, .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled) img {
+.detail-hero__actions .detail-button--watchlist:hover:not(:disabled) img, .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled) img, .detail-hero__actions .detail-button--share:hover:not(:disabled) img, .detail-hero__actions .detail-button--share:focus-visible:not(:disabled) img {
   transform: scale(1.1);
 }
-.detail-hero__actions .detail-button--watchlist:disabled {
+.detail-hero__actions .detail-button--watchlist:disabled, .detail-hero__actions .detail-button--share:disabled {
   cursor: wait;
 }
 
