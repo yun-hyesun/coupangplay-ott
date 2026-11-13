@@ -1,0 +1,53 @@
+.scroll-top-button {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 250ms ease, visibility 250ms, background 200ms ease;
+}
+.scroll-top-button__icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  transform: rotate(90deg);
+}
+.scroll-top-button.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.scroll-top-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.scroll-top-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+@media (max-width: 767px) {
+  .scroll-top-button {
+    right: 16px;
+    bottom: 16px;
+    width: 48px;
+    height: 48px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-top-button {
+    transition: none;
+  }
+}
