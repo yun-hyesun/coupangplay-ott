@@ -86,16 +86,6 @@
     line-height: 1.15;
   }
 
-  // &__description {
-  //   font-size: 18px;
-  //   line-height: 1.7;
-  //   color: #d4d4d4;
-  //   display: -webkit-box;
-  //   -webkit-box-orient: vertical;
-  //   -webkit-line-clamp: 3;
-  //   overflow: hidden;
-  // }
-
   &__actions {
     display: flex;
     flex-wrap: wrap;
@@ -535,7 +525,7 @@
       padding: 12px;
     }
 
-    > button {
+    >button {
       justify-self: end;
       padding: 12px 24px;
       border: 0;
@@ -574,7 +564,7 @@
 }
 
 .detail-button.detail-button--watchlist:disabled {
-    cursor: default;
+  cursor: default;
 }
 
 .detail-button.detail-button--purchase {
@@ -876,7 +866,7 @@
 }
 
 // 헤더 아래 24px 간격과 입력 영역의 위 여백이 중복되지 않도록 합니다.
-.detail-review-popup > .detail-review-popup__compose {
+.detail-review-popup>.detail-review-popup__compose {
   margin-top: 0;
 }
 
@@ -897,7 +887,7 @@
   line-height: 24px;
 }
 
-.detail-review-popup__compose > button {
+.detail-review-popup__compose>button {
   background: #262626;
   min-width: 176px;
   height: 48px;
@@ -906,7 +896,7 @@
   border-radius: 8px;
 }
 
-.detail-review-popup__compose > button:hover:not(:disabled) {
+.detail-review-popup__compose>button:hover:not(:disabled) {
   background: #0084ff;
 }
 
@@ -1112,6 +1102,7 @@
     cursor: wait;
   }
 }
+
 // 리뷰 입력 강조 및 평점/등록 버튼 한 행 정렬
 .detail-review-popup__compose--draft {
   padding: 20px;
@@ -1120,36 +1111,128 @@
   background: #1b2027;
   box-shadow: 0 0 0 1px rgba(0, 132, 255, .06);
 
-  &:focus-within { border-color: #0084ff; box-shadow: 0 0 0 3px rgba(0, 132, 255, .12); }
-  .detail-review-popup__compose-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .detail-review-popup__compose-heading label { color: #fff; font-size: 16px; line-height: 24px; }
-  .detail-review-popup__compose-heading span { color: #a3a3a3; font-size: 12px; line-height: 20px; }
+  &:focus-within {
+    border-color: #0084ff;
+    box-shadow: 0 0 0 3px rgba(0, 132, 255, .12);
+  }
+
+  .detail-review-popup__compose-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .detail-review-popup__compose-heading label {
+    color: #fff;
+    font-size: 16px;
+    line-height: 24px;
+  }
+
+  .detail-review-popup__compose-heading span {
+    color: #a3a3a3;
+    font-size: 12px;
+    line-height: 20px;
+  }
+
   textarea {
-    min-height: 112px; height: auto; resize: vertical;
-    border: 1px solid #555b63; background: #13161a; color: #fff;
+    min-height: 112px;
+    height: auto;
+    resize: vertical;
+    border: 1px solid #555b63;
+    background: #13161a;
+    color: #fff;
     transition: border-color .2s, box-shadow .2s;
-    &::placeholder { color: #a3a3a3; }
-    &:focus-visible { outline: none; border-color: #0084ff; box-shadow: 0 0 0 2px rgba(0,132,255,.18); }
+
+    &::placeholder {
+      color: #a3a3a3;
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: #0084ff;
+      box-shadow: 0 0 0 2px rgba(0, 132, 255, .18);
+    }
   }
-  .detail-review-popup__compose-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .detail-review-popup__rating { min-width: 0; gap: 8px; }
+
+  .detail-review-popup__compose-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .detail-review-popup__rating {
+    min-width: 0;
+    gap: 8px;
+  }
+
   .detail-review-popup__submit {
-    flex-shrink: 0; min-width: 144px; min-height: 44px; padding: 10px 16px;
-    border: 0; border-radius: 8px; background: #424242; color: #a3a3a3;
-    font-size: 16px; font-weight: 600; line-height: 24px; cursor: pointer;
+    flex-shrink: 0;
+    min-width: 144px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #424242;
+    color: #a3a3a3;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    cursor: pointer;
     transition: background-color .2s, color .2s;
-    &:not(:disabled) { background: #0084ff; color: #fff; }
-    &:hover:not(:disabled) { background: #006bc6; }
-    &:disabled { cursor: not-allowed; }
-    &:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+    &:not(:disabled) {
+      background: #0084ff;
+      color: #fff;
+    }
+
+    &:hover:not(:disabled) {
+      background: #006bc6;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 3px;
+    }
   }
-  .detail-review-popup__spoiler { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #d4d4d4; font-weight: 400; justify-self: start; }
-  .detail-review-popup__spoiler input { accent-color: #0084ff; width: 16px; height: 16px; }
+
+  .detail-review-popup__spoiler {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #d4d4d4;
+    font-weight: 400;
+    justify-self: start;
+  }
+
+  .detail-review-popup__spoiler input {
+    accent-color: #0084ff;
+    width: 16px;
+    height: 16px;
+  }
+
   @media (max-width: 600px) {
     padding: 16px;
-    .detail-review-popup__compose-toolbar { flex-wrap: wrap; gap: 12px; }
-    .detail-review-popup__submit { margin-left: auto; min-width: 128px; }
-    .detail-review-popup__rating { font-size: 14px; }
+
+    .detail-review-popup__compose-toolbar {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .detail-review-popup__submit {
+      margin-left: auto;
+      min-width: 128px;
+    }
+
+    .detail-review-popup__rating {
+      font-size: 14px;
+    }
   }
 }
 
@@ -1183,18 +1266,67 @@
 // 작은 평점에서도 외곽선과 채움 별을 같은 좌표에 겹칩니다.
 .detail-rating-stars {
   line-height: 0;
-  &__star { display: block; position: relative; line-height: 0; padding: 0; }
-  &__star > img,
-  &__fill > img { display: block; position: absolute; top: 0; left: 0; margin: 0; }
-  &__fill { display: block; line-height: 0; }
+
+  &__star {
+    display: block;
+    position: relative;
+    line-height: 0;
+    padding: 0;
+  }
+
+  &__star>img,
+  &__fill>img {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 0;
+  }
+
+  &__fill {
+    display: block;
+    line-height: 0;
+  }
 }
+
 .detail-review-like {
-  display: inline-flex; align-items: center; gap: 4px;
-  min-height: 32px; padding: 4px 8px; border: 1px solid #555b63; border-radius: 6px;
-  background: transparent; color: #a3a3a3; font: inherit; line-height: 20px; cursor: pointer;
-  &:hover:not(:disabled) { color: #fff; border-color: #0084ff; background: rgba(0,132,255,.1); }
-  &.is-liked { color: #5d9eff; border-color: #0084ff; background: rgba(0,132,255,.12); }
-  &:disabled { cursor: default; }
-  &:focus-visible { outline: 2px solid #0084ff; outline-offset: 3px; }
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #555b63;
+  border-radius: 6px;
+  background: transparent;
+  color: #a3a3a3;
+  font: inherit;
+  line-height: 20px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: #fff;
+    border-color: #0084ff;
+    background: rgba(0, 132, 255, .1);
+  }
+
+  &.is-liked {
+    color: #5d9eff;
+    border-color: #0084ff;
+    background: rgba(0, 132, 255, .12);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0084ff;
+    outline-offset: 3px;
+  }
 }
-.detail-review-item p.detail-review-like-error { color: #ffb3b3; font-size: 13px; line-height: 20px; }
+
+.detail-review-item p.detail-review-like-error {
+  color: #ffb3b3;
+  font-size: 13px;
+  line-height: 20px;
+}
