@@ -802,7 +802,7 @@
 }
 
 .detail-review-popup__list {
-  height: 320px;
+  height: 240px;
   margin-top: 24px;
   padding: 16px;
   background: #262626;
@@ -1006,7 +1006,7 @@
 }
 .detail-review-popup__compose--draft textarea {
   min-height: 112px;
-  height: auto;
+  max-height: 240px;
   resize: vertical;
   border: 1px solid #555b63;
   background: #13161a;
@@ -1181,4 +1181,21 @@
   color: #ffb3b3;
   font-size: 13px;
   line-height: 20px;
+}
+
+.detail-review-popup > .detail-review-popup__list {
+  margin-top: 0;
+}
+
+.detail-review-popup > .detail-review-popup__compose--draft {
+  margin-top: 24px;
+}
+
+.detail-review-popup__compose--draft textarea {
+  box-sizing: border-box;
+  height: 112px;
+  min-height: 112px;
+  max-height: none;
+  resize: none;
+  overflow-y: hidden;
 }

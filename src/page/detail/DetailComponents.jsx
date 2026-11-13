@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { auth } from '../../firebase/firebase';
 import { useAuthStore } from '../../store/useAuthStore';
 import { likeReviewOnce, subscribeReviewLike } from '../../service/reviewService';
@@ -66,16 +66,37 @@ const sortReviews = (reviews, sort) => [...reviews].sort((a, b) => sort === 'pop
   ? (Number(b.likes) || 0) - (Number(a.likes) || 0) || (Number(b.rating) || 0) - (Number(a.rating) || 0)
   : new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
+// 좋아요 등 기존 리뷰의 값만 바뀌면 항목을 추가하거나 현재 순서를 바꾸지 않습니다.
+const reconcileReviewOrder = (reviews, sort, previous, resetKey) => {
+  const byId = new Map(reviews.map(review => [review.documentPath || review.id, review]));
+  const sameItems = previous?.ids.length === byId.size && previous.ids.every(id => byId.has(id));
+  const ids = previous?.resetKey === resetKey && sameItems
+    ? previous.ids
+    : sortReviews([...byId.values()], sort).map(review => review.documentPath || review.id);
+  return { ids, resetKey, items: ids.map(id => byId.get(id)) };
+};
+
+const useReviewOrder = (reviews, sort, spoilerHidden, revision) => {
+  const previous = useRef(null);
+  return useMemo(() => {
+    const visible = reviews.filter(review => !spoilerHidden || !review.spoiler);
+    const result = reconcileReviewOrder(visible, sort, previous.current, `${sort}:${spoilerHidden}:${revision}`);
+    previous.current = result;
+    return result.items;
+  }, [reviews, sort, spoilerHidden, revision]);
+};
+
 // 회차별 리뷰
 const EpisodeReviews = ({ episode, reviews, onOpenPopup }) => {
   const [sort, setSort] = useState('popular');
+  const [sortRevision, setSortRevision] = useState(0);
   const [spoilerHidden, setSpoilerHidden] = useState(true);
-  const visible = sortReviews(reviews.filter(review => !spoilerHidden || !review.spoiler), sort);
+  const visible = useReviewOrder(reviews, sort, spoilerHidden, sortRevision);
 
   return <div className="episode-item__reviews" id={`episode-reviews-${episode.id}`}>
     <div className="episode-item__reviews-head">
       <h4>{episode.episode_number}화 리뷰 {reviews.length}</h4>
-      <ReviewSort sort={sort} onSort={setSort} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} />
+      <ReviewSort sort={sort} onSort={value => { setSort(value); setSortRevision(previous => previous + 1); }} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} />
     </div>
     {visible.length ? <div className="episode-item__review-list">{visible.slice(0, 3).map(review => <ReviewItem key={review.id} review={review} />)}</div> : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}
     <button className="detail-review-action" type="button" onClick={onOpenPopup}>리뷰 전체보기 <Chevron /></button>
@@ -128,22 +149,47 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
     <div className="detail-review-item__meta"><button type="button" className={`detail-review-like${liked ? ' is-liked' : ''}`}
       aria-pressed={liked} aria-label={`좋아요 ${review.likes ?? 0}개${liked ? ', 이미 참여함' : ''}`}
       disabled={liking || liked || !path || (!!uid && (!currentLike || !likeState.ready))}
-      onClick={handleLike}>좋아요 <span>{review.likes ?? 0}</span></button><span aria-hidden="true">·</span><span>평점</span><RatingStars value={rating} size={14} /><span>{rating.toFixed(1)} / 5</span></div>
-    {likeError && <p className="detail-review-like-error" role="alert">{likeError}</p>}
+      title={likeError || (liked ? '이미 좋아요를 눌렀습니다.' : '좋아요')}
+      onClick={event => { event.stopPropagation(); handleLike(); }}>좋아요 <span>{review.likes ?? 0}</span></button><span aria-hidden="true">·</span><span>평점</span><RatingStars value={rating} size={14} /><span>{rating.toFixed(1)} / 5</span></div>
+    <span role="status" aria-live="polite" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>{likeError}</span>
   </article>;
 };
 
 // 리뷰 팝업
 const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, error }) => {
   const [sort, setSort] = useState('popular');
+  const [sortRevision, setSortRevision] = useState(0);
   const [spoilerHidden, setSpoilerHidden] = useState(true);
   const [draft, setDraft] = useState('');
+  const draftRef = useRef(null);
   const [rating, setRating] = useState(5);
   const [spoiler, setSpoiler] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteReviewId, setDeleteReviewId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
-  const sorted = useMemo(() => sortReviews(reviews.filter(review => !spoilerHidden || !review.spoiler), sort), [reviews, sort, spoilerHidden]);
+  const sorted = useReviewOrder(reviews, sort, spoilerHidden, sortRevision);
+
+  // 빈 입력은 112px로 고정하고, 내용이 넘칠 때만 필요한 높이로 확장합니다.
+  useLayoutEffect(() => {
+    const input = draftRef.current;
+    if (!input) return;
+    const fitHeight = () => {
+      input.style.height = '112px';
+      if (!draft.length) return;
+      const style = window.getComputedStyle(input);
+      const border = (parseFloat(style.borderTopWidth) || 0) + (parseFloat(style.borderBottomWidth) || 0);
+      input.style.height = `${Math.max(112, input.scrollHeight + border)}px`;
+    };
+    fitHeight();
+    const container = input.parentElement;
+    let width = container.clientWidth;
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => {
+      if (container.clientWidth !== width) { width = container.clientWidth; fitHeight(); }
+    }) : null;
+    observer?.observe(container);
+    window.addEventListener('resize', fitHeight);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', fitHeight); };
+  }, [draft]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -156,13 +202,14 @@ const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, erro
 
   return <div className="detail-review-overlay" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="detail-review-popup" role="dialog" aria-modal="true" aria-labelledby="detail-review-popup-title">
-      <div className="detail-review-popup__head"><h2 id="detail-review-popup-title">{episode.reviewTitle || `${episode.episode_number}화 리뷰`}</h2><ReviewSort sort={sort} onSort={setSort} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} /></div>
+      <div className="detail-review-popup__head"><h2 id="detail-review-popup-title">{episode.reviewTitle || `${episode.episode_number}화 리뷰`}</h2><ReviewSort sort={sort} onSort={value => { setSort(value); setSortRevision(previous => previous + 1); }} spoilerHidden={spoilerHidden} onToggleSpoiler={() => setSpoilerHidden(v => !v)} /></div>
+      <div className="detail-review-popup__list" tabIndex="0">{sorted.length ? sorted.slice(0, 5).map(review => <ReviewItem key={review.id} review={review} onEdit={onEdit} onDelete={reviewId => { setDeleteError(''); setDeleteReviewId(reviewId); }} />) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}</div>
       <div className={`detail-review-popup__compose detail-review-popup__compose--draft${draft.trim() ? ' has-content' : ''}`}>
         <div className="detail-review-popup__compose-heading">
           <label htmlFor="detail-review-draft">리뷰 작성</label>
           <span id="detail-review-count">{draft.length} / 2,000자</span>
         </div>
-        <textarea id="detail-review-draft" aria-describedby="detail-review-count" value={draft} maxLength={2000}
+        <textarea ref={draftRef} id="detail-review-draft" aria-describedby="detail-review-count" value={draft} maxLength={2000}
           onChange={event => setDraft(event.target.value)} disabled={saving}
           placeholder={episode.reviewPlaceholder || '이 회차에 대한 감상을 남겨주세요.'} rows={3} />
         <div className="detail-review-popup__compose-toolbar">
@@ -180,7 +227,6 @@ const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, erro
         <label className="detail-review-popup__spoiler"><input type="checkbox" checked={spoiler} disabled={saving} onChange={e => setSpoiler(e.target.checked)} /> 스포일러 포함</label>
       </div>
       {error && <p className="detail-empty" role="alert">{error}</p>}
-      <div className="detail-review-popup__list" tabIndex="0">{sorted.length ? sorted.slice(0, 5).map(review => <ReviewItem key={review.id} review={review} onEdit={onEdit} onDelete={reviewId => { setDeleteError(''); setDeleteReviewId(reviewId); }} />) : <p className="detail-empty">등록된 리뷰가 없습니다.</p>}</div>
       <button className="detail-review-popup__close" type="button" onClick={onClose}>닫기</button>
     </section>
     {deleteReviewId !== null && <Popup title="리뷰를 삭제하시겠습니까?"
