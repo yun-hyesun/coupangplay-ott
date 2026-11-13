@@ -1,5 +1,36 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/kleague/getScheduleList.do",
+      "destination": "https://www.kleague.com/getScheduleList.do"
+    },
+    {
+      "source": "/espn-standings/:path*",
+      "destination": "https://site.api.espn.com/apis/v2/sports/:path*"
+    },
+    {
+      "source": "/espn-core/:path*",
+      "destination": "https://sports.core.api.espn.com/v2/:path*"
+    },
+    {
+      "source": "/espn/:path*",
+      "destination": "https://site.api.espn.com/apis/site/v2/sports/:path*"
+    },
+    {
+      "source": "/mls-api/:path*",
+      "destination": "https://stats-api.mlssoccer.com/:path*"
+    },
+    {
+      "source": "/openliga/:path*",
+      "destination": "https://api.openligadb.de/:path*"
+    },
+    {
+      "source": "/football-data/competitions/:leagueId/:resource",
+      "destination": "/api/football-data?leagueId=:leagueId&resource=:resource"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
