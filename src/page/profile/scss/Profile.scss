@@ -109,7 +109,7 @@
         padding: 0.3em 0.9em;
 
         border: none;
-        border-radius: 5px;
+        border-radius: 8px;
         background: #3c3c3c;
         color: #fff;
 
@@ -203,7 +203,7 @@
             margin-top: 24px;
             padding: 0.3em 0.9em;
             border: 1px solid #666;
-            border-radius: 5px;
+            border-radius: 8px;
             background: transparent;
             color: $color-text-sec1;
             font-family: $font-main;
@@ -274,7 +274,7 @@
         padding: 16px;
 
         border: 1px solid #555;
-        border-radius: 5px;
+        border-radius: 8px;
         background: #292929;
         color: $color-text-pri;
 
@@ -312,7 +312,7 @@
             flex-shrink: 0;
 
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             background: #3c3c3c;
             color: $color-text-pri;
 
@@ -323,7 +323,7 @@
             cursor: pointer;
             transition: background 0.2s;
 
-            &:first-child {
+            &.step-primary {
                 background: $color-pri;
             }
 
@@ -487,7 +487,7 @@
             flex-shrink: 0;
 
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             background: #3c3c3c;
             color: $color-text-pri;
 
@@ -498,7 +498,7 @@
             cursor: pointer;
             transition: background 0.2s;
 
-            &:first-child {
+            &.step-primary {
                 background: $color-pri;
             }
 
