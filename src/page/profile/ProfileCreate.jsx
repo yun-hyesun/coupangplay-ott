@@ -11,7 +11,13 @@ export const ProfileCreate = () => {
     const navigate = useNavigate();
     const { state } = useLocation();
 
-    const { onAddProfile, onUpdateProfile, loading, error } = useProfileStore();
+    const {
+        onAddProfile,
+        onUpdateProfile,
+        onSelectProfile,
+        loading,
+        error,
+    } = useProfileStore();
 
     const [step, setStep] = useState(1);
 
@@ -66,8 +72,12 @@ export const ProfileCreate = () => {
             }))
         });
 
-        if (result) {
-            navigate('/profiles', { state });
+        if (!result) return;
+
+        const profile = await onSelectProfile(profileId);
+
+        if (profile) {
+            navigate('/', { replace: true });
         }
     };
 
@@ -104,7 +114,10 @@ export const ProfileCreate = () => {
                 <div className="profile-create-inner">
                     <GenreSelect
                         selectedGenres={selectedGenres}
-                        onChange={setSelectedGenres}
+                        onChange={(genres) => {
+                            setSelectedGenres(genres);
+                            setSelectedContents([]);
+                        }}
                         onNext={handleGenreNext}
                         onPrev={() => setStep(1)}
                     />
@@ -118,6 +131,7 @@ export const ProfileCreate = () => {
                         onChange={setSelectedContents}
                         onNext={handleContentNext}
                         onPrev={() => setStep(2)}
+                        selectedGenres={selectedGenres}
                     />
                 </div>
             )}
