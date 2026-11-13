@@ -247,7 +247,7 @@
             padding: 0.3em 0.9em;
             background: #3c3c3c;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
 
             font-family: $font-main;
             font-size: 16px;
@@ -256,7 +256,7 @@
             cursor: pointer;
             transition: background 0.2s;
 
-            &:first-child {
+            &[type='submit'] {
                 background: $color-pri;
             }
 

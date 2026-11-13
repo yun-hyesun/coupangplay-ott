@@ -250,3 +250,39 @@
     padding: 20px 12px;
   }
 }
+.my-support .support-faq .support-answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.my-support .support-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+.my-support .support-pagination button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: #21252B;
+  color: #FFFFFF;
+  font: inherit;
+  cursor: pointer;
+}
+.my-support .support-pagination button[aria-current=page] {
+  background: #0084FF;
+  border-color: #0084FF;
+}
+.my-support .support-pagination button:focus-visible {
+  outline: 2px solid #0084FF;
+  outline-offset: 2px;
+}
+.my-support .support-pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

@@ -202,7 +202,7 @@
 
             background: transparent;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
 
             color: $color-text-pri;
             cursor: pointer;
@@ -288,7 +288,7 @@
             padding: 0.3em 0.9em;
             background: #303030;
             border: 1px solid $color-border-light;
-            border-radius: 6px;
+            border-radius: 8px;
             color: #fff;
             cursor: pointer;
         }
@@ -644,7 +644,7 @@
         font-weight: $font-w-R-400;
         line-height: 24px;
         transition: color 0.2s ease;
-        border-radius: 4px;
+        border-radius: 8px;
 
         &:hover {
             color: $color-text-pri;

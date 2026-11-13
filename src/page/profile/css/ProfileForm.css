@@ -189,14 +189,14 @@
   padding: 0.3em 0.9em;
   background: #3c3c3c;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   font-family: "Pretendard", sans-serif;
   font-size: 16px;
   color: #FFFFFF;
   cursor: pointer;
   transition: background 0.2s;
 }
-.profile-form .profile-form-buttons button:first-child {
+.profile-form .profile-form-buttons button[type=submit] {
   background: #0084FF;
 }
 .profile-form .profile-form-buttons button:hover {
