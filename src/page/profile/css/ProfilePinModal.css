@@ -42,7 +42,7 @@
   padding: 0 16px;
   background: #303030;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 5px;
+  border-radius: 8px;
   font-family: "Pretendard", sans-serif;
   font-size: 18px;
   color: #FFFFFF;
@@ -87,7 +87,7 @@
   height: 45px;
   flex-shrink: 0;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   padding: 0.3em 0.9em;
   font-family: "Pretendard", sans-serif;
   font-size: 16px;

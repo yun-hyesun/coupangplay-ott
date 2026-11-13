@@ -12,6 +12,25 @@
   z-index: 1000;
   transition: 0.3s ease-in-out;
 }
+.header.header--league, .header.header--league.active {
+  background-color: var(--league-header-color);
+  background-image: var(--league-header-background-image);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 100% var(--league-header-background-height, 465px);
+  transition: none;
+}
+.header.header--league .header-nav-menu a, .header.header--league.active .header-nav-menu a {
+  color: #fff;
+  transition: background-color 0.18s ease;
+}
+.header.header--league .header-nav-menu a:hover, .header.header--league .header-nav-menu a.active, .header.header--league.active .header-nav-menu a:hover, .header.header--league.active .header-nav-menu a.active {
+  background: rgba(255, 255, 255, 0.2);
+}
+.header.header--league .inner .header-right .header-login, .header.header--league.active .inner .header-right .header-login {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.16);
+}
 .header.active {
   background: #080B12;
 }
@@ -52,9 +71,57 @@
   display: block;
   padding: 8px 15px;
   border-radius: 10px;
+  color: rgba(255, 255, 255, 0.8);
+}
+.header .inner .header-left .header-nav-menu a:hover {
+  color: #fff;
 }
 .header .inner .header-left .header-nav-menu .active {
   background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.header .inner .header-left .header-nav-menu .sports a {
+  height: 40px;
+  opacity: 0.8;
+}
+.header .inner .header-left .header-nav-menu .sports a:hover {
+  opacity: 1;
+}
+.header .inner .header-left .header-nav-menu .sports a.active {
+  opacity: 1;
+}
+.header .inner .header-left .header-nav-menu .wowclip {
+  margin-left: 0.7em;
+}
+.header .inner .header-left .header-nav-menu .wowclip a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2em;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 0.4em 0.5em 0.3em;
+  color: #222;
+  font-family: "GMarketSans", sans-serif;
+  font-size: 14px;
+  line-height: 0.5em;
+}
+.header .inner .header-left .header-nav-menu .wowclip a::before {
+  content: "";
+  width: 50px;
+  height: 20px;
+  background: url(/images/wow.svg) no-repeat center/contain;
+  margin-bottom: 0.1em;
+}
+.header .inner .header-left .header-nav-menu .wowclip a:hover {
+  background: #fff;
+}
+.header .inner .header-left .header-nav-menu .wowclip a.active {
+  background: #0084FF;
+  color: #fff;
+}
+.header .inner .header-left .header-nav-menu .wowclip a.active::before {
+  background-image: url(/images/wow_w.svg);
 }
 @media (max-width: 1199px) {
   .header .inner .header-left {

@@ -31,9 +31,8 @@ export const GenreSelect = ({
                     <button
                         key={genre}
                         type="button"
-                        className={`genre-item ${
-                            selectedGenres.includes(genre) ? 'active' : ''
-                        }`}
+                        className={`genre-item ${selectedGenres.includes(genre) ? 'active' : ''
+                            }`}
                         onClick={() => handleGenreClick(genre)}
                         aria-pressed={selectedGenres.includes(genre)}
                     >
@@ -43,16 +42,17 @@ export const GenreSelect = ({
             </div>
 
             <div className="genre-buttons">
+                <button type="button" className="step-back" onClick={onPrev}>
+                    이전
+                </button>
+
                 <button
                     type="button"
+                    className="step-primary"
                     onClick={onNext}
                     disabled={selectedGenres.length === 0}
                 >
                     다음
-                </button>
-
-                <button type="button" onClick={onPrev}>
-                    이전
                 </button>
             </div>
         </div>

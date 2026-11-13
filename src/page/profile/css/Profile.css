@@ -87,7 +87,7 @@
   margin-top: 48px;
   padding: 0.3em 0.9em;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   background: #3c3c3c;
   color: #fff;
   font-family: "Pretendard", sans-serif;
@@ -159,7 +159,7 @@
   margin-top: 24px;
   padding: 0.3em 0.9em;
   border: 1px solid #666;
-  border-radius: 5px;
+  border-radius: 8px;
   background: transparent;
   color: #D4D4D4;
   font-family: "Pretendard", sans-serif;
@@ -209,7 +209,7 @@
   height: 100%;
   padding: 16px;
   border: 1px solid #555;
-  border-radius: 5px;
+  border-radius: 8px;
   background: #292929;
   color: #FFFFFF;
   font-family: "Pretendard", sans-serif;
@@ -238,7 +238,7 @@
   padding: 0.3em 0.9em;
   flex-shrink: 0;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   background: #3c3c3c;
   color: #FFFFFF;
   font-family: "Pretendard", sans-serif;
@@ -247,7 +247,7 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-.profile-page .genre-buttons button:first-child {
+.profile-page .genre-buttons button.step-primary {
   background: #0084FF;
 }
 .profile-page .genre-buttons button:hover:not(:disabled) {
@@ -370,7 +370,7 @@
   padding: 0.3em 0.9em;
   flex-shrink: 0;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   background: #3c3c3c;
   color: #FFFFFF;
   font-family: "Pretendard", sans-serif;
@@ -379,7 +379,7 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-.profile-page .content-buttons button:first-child {
+.profile-page .content-buttons button.step-primary {
   background: #0084FF;
 }
 .profile-page .content-buttons button:hover:not(:disabled) {
