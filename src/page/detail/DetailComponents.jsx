@@ -169,7 +169,7 @@ const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, erro
   const [deleteError, setDeleteError] = useState('');
   const sorted = useReviewOrder(reviews, sort, spoilerHidden, sortRevision);
 
-  // 빈 입력은 112px로 고정하고, 내용이 넘칠 때만 필요한 높이로 확장합니다.
+  // 빈 입력은 112px, 작성 중에는 최대 240px까지 확장하고 이후 내부 스크롤을 사용합니다.
   useLayoutEffect(() => {
     const input = draftRef.current;
     if (!input) return;
@@ -178,7 +178,7 @@ const ReviewPopup = ({ episode, reviews, onClose, onSave, onEdit, onDelete, erro
       if (!draft.length) return;
       const style = window.getComputedStyle(input);
       const border = (parseFloat(style.borderTopWidth) || 0) + (parseFloat(style.borderBottomWidth) || 0);
-      input.style.height = `${Math.max(112, input.scrollHeight + border)}px`;
+      input.style.height = `${Math.min(240, Math.max(112, input.scrollHeight + border))}px`;
     };
     fitHeight();
     const container = input.parentElement;

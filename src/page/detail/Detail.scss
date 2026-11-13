@@ -1351,7 +1351,7 @@
   box-sizing: border-box;
   height: 112px;
   min-height: 112px;
-  max-height: none;
+  max-height: 240px;
   resize: none;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
