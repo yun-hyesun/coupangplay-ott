@@ -308,7 +308,7 @@ export function MatchCard({ game, leagueId, scoresOn }) {
             aria-label={`${homeName} vs ${awayName} 경기 일정 및 관련 영상 보기`}
           >
             <span className="league-detail__match-action-icon" aria-hidden="true">
-              <img src="/images/sports/league-detail/schedule-play.svg" alt="" />
+              <img src="/images/sports/league-detail/schedule/next.svg" alt="" />
             </span>
           </Link>
         ) : (

@@ -20,7 +20,7 @@ const LEAGUE_ICON_PATHS = {
   "tour-de-france": "/images/icon/DesignSystem_Icon08/icon-sport_racing.svg",
 };
 
-export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle = true, activeTab, onTabChange, isMyLeague, selectedLeagueCount = 0, selectedTeams = [], onToggleMyLeague, onOpenTeamSettings }) {
+export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle = true, showStandings = true, activeTab, onTabChange, isMyLeague, selectedLeagueCount = 0, selectedTeams = [], onToggleMyLeague, onOpenTeamSettings }) {
   const [isLeagueMenuOpen, setLeagueMenuOpen] = useState(false);
   const leagueMenuTriggerRef = useRef(null);
   const leagueMenuId = useId();
@@ -123,7 +123,7 @@ export function LeagueHeader({ league, scoresOn, onToggleScores, showScoreToggle
         </div>
       </div>
       <nav className="league-detail__tabs" aria-label="리그 상세 메뉴">
-        {LEAGUE_TABS.map(([tabId, label, targetId]) => (
+        {LEAGUE_TABS.filter(([tabId]) => tabId !== "standings" || showStandings).map(([tabId, label, targetId]) => (
           <button
             type="button"
             key={tabId}
