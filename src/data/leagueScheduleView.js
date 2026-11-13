@@ -6,8 +6,10 @@ const CALENDAR_YEAR_LEAGUES = new Set(["mls", "kleague-1", "kleague-2", "concaca
 
 export const usesCalendarSeason = leagueId => CALENDAR_YEAR_LEAGUES.has(leagueId);
 
-export function getScheduleBrowseRange(today) {
-  return { from: "2010-01-01", to: `${today.slice(0, 4)}-12-31` };
+export function getScheduleBrowseRange(today, leagueId) {
+  const currentYear = Number(today.slice(0, 4));
+  const lastYear = leagueId === "concacaf-champions-cup" ? Math.max(currentYear, 2027) : currentYear;
+  return { from: "2010-01-01", to: `${lastYear}-12-31` };
 }
 
 export function isScheduleDateInRange(date, range) {

@@ -59,7 +59,7 @@ function findWatchlistedMatch(watchlist, game, leagueId) {
 }
 
 function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasError, onSelect, onClose }) {
-  const range = getScheduleBrowseRange(today);
+  const range = getScheduleBrowseRange(today, leagueId);
   const minMonth = range.from.slice(0, 7);
   const maxMonth = range.to.slice(0, 7);
   const [selectedMonth, setMonth] = useState(date.slice(0, 7));
@@ -151,7 +151,7 @@ function ScheduleCalendar({ date, today, leagueId, games, season, loading, hasEr
 }
 
 function ScheduleUnitPicker({ leagueId, today, season, round, unitName, sourceResult, sourceLoading, onSelect, onClose }) {
-  const range = getScheduleBrowseRange(today);
+  const range = getScheduleBrowseRange(today, leagueId);
   const minYear = getScheduleSeason(leagueId, range.from);
   const maxYear = getScheduleSeason(leagueId, range.to);
   const [selectedYear, setYear] = useState(season);
@@ -290,7 +290,7 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
   const isCurrentWatchlist = Boolean(!authLoading && currentOwnerKey && ownerKey === currentOwnerKey);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
-  const browseRange = getScheduleBrowseRange(today);
+  const browseRange = getScheduleBrowseRange(today, league.id);
   const minSeason = getScheduleSeason(league.id, browseRange.from);
   const maxSeason = getScheduleSeason(league.id, browseRange.to);
   const currentSeason = getScheduleSeason(league.id, today);
@@ -471,7 +471,7 @@ export function LeagueSchedulePage({ league, scoresOn, today, selectedTeams = []
               return <ScheduleMatchRow key={game.gameId} game={game} league={league} scoresOn={scoresOn} selectedTeamIds={selectedTeamIds} saved={saved} saving={authLoading || watchlistLoading || saving} onToggleSaved={toggleSaved} relatedVideos={scheduleMatchVideos[getMatchVideoKey(game)]} focused={focused} autoExpand={focused && expandInitialMatch} />;
             })}
           </section>)}
-        {!loading && !groups.length && <p className="league-schedule__empty" role="status">{result.errors.length ? "경기 일정을 불러오지 못했습니다." : "선택한 조건에 등록된 경기가 없습니다."}</p>}
+        {!loading && !groups.length && <p className="league-schedule__empty" role="status">{result.errors.length ? "경기 일정을 불러오지 못했습니다." : season > currentSeason && !games.length ? `${season}년 경기 일정이 아직 등록되지 않았습니다.` : "선택한 조건에 등록된 경기가 없습니다."}</p>}
         {!loading && followingInitialMatch && !focusedGame && <p className="league-schedule__empty" role="status">선택한 경기의 최신 일정을 찾지 못했습니다. 경기 일정이 변경되었거나 아직 공개되지 않았을 수 있습니다.</p>}
         {!loading && (result.errors.length > 0 || result.warning) && <div className="league-schedule__error" role="status"><p>{result.warning || (games.length ? "일부 경기 일정을 불러오지 못했습니다." : "현재 경기 일정을 확인할 수 없습니다. 잠시 후 다시 조회해 주세요.")}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>다시 조회</button></div>}
       </div>

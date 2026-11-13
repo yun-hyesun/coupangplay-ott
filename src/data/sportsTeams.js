@@ -284,6 +284,7 @@ const extraFootballLogos = {
 
 // 같은 도시명이나 축약명을 쓰는 다른 구단의 로고와 섞이지 않게 리그별로 지정합니다.
 const footballLogosByLeague = {
+  ELC: { "스완지": "swansea-city-light" },
   mls: {
     "댈러스": "fc-dallas",
     "미네소타": "minnesota-united-fc",
