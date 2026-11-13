@@ -417,32 +417,6 @@ export const Watch = () => {
     } else video.pause();
   }, [youtubePlaying]);
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (
-        event.code !== 'Space' ||
-        event.repeat ||
-        event.defaultPrevented ||
-        controlsDisabled ||
-        isLiveMode
-      ) return;
-
-      const target = event.target;
-      if (
-        target instanceof HTMLElement &&
-        (target.isContentEditable ||
-          target.closest('input, textarea, select, button, a, [role="button"]'))
-      ) return;
-
-      event.preventDefault();
-      showControls();
-      void togglePlay();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showControls, togglePlay, controlsDisabled, isLiveMode]);
-
   const seek = (seconds) => {
     if (isLiveMode) return;
     const video = videoRef.current;
@@ -453,6 +427,36 @@ export const Watch = () => {
       player.seekTo(next, true); setCurrentTime(next);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const isSpace = event.code === 'Space';
+      const isLeft = event.key === 'ArrowLeft';
+      const isRight = event.key === 'ArrowRight';
+
+      if (!isSpace && !isLeft && !isRight) return;
+      if (event.repeat || event.defaultPrevented || controlsDisabled || isLiveMode) return;
+
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        if (target.isContentEditable || target.closest('input, textarea, select')) return;
+        if (isSpace && target.closest('button, a, [role="button"]')) return;
+      }
+
+      event.preventDefault();
+      showControls();
+
+      if (isSpace) {
+        void togglePlay();
+      } else {
+        seek(isLeft ? -10 : 10);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showControls, togglePlay, seek, controlsDisabled, isLiveMode]);
+
   const changeProgress = (e) => {
     if (isLiveMode) return;
     showControls();
@@ -582,107 +586,107 @@ export const Watch = () => {
       >
         {/* 영상 영역: 실제 파일 연결 전에는 빈 플레이어가 표시됩니다. */}
         {liveLoading ? <div className="watch-player__placeholder" role="status">같은 팀의 이전 경기 영상을 불러오는 중입니다.</div>
-        : videoLookupPending ? <div className="watch-player__placeholder" role="status">재생 가능한 영상을 확인하고 있습니다.</div>
-        : isLiveMode && liveResult?.error ? <div className="watch-player__placeholder watch-player__error" role="status">
-          <p>{liveResult.error}</p><button type="button" onClick={retryPlayback}>다시 시도</button>
-        </div> : hasPlaybackError ? <div className="watch-player__placeholder watch-player__error" role="status">
-          <p>영상을 재생하지 못했습니다. 다시 시도해 주세요.</p>
-          <button type="button" onClick={retryPlayback}>다시 시도</button>
-        </div> : videoSrc ? (
-          <video ref={videoRef} className="watch-player__video" src={videoSrc} key={playbackKey}
-            playsInline muted={muted}
-            onPlay={() => setPlaying(true)}
-            onPause={(event) => {
-              setPlaying(false);
-              if (!event.currentTarget.ended) {
-                savePlayback(event.currentTarget.currentTime, event.currentTarget.duration);
-              }
-            }}
-            onTimeUpdate={(event) => {
-              const video = event.currentTarget;
-              setCurrentTime(video.currentTime);
-              if (!video.paused) savePlayback(video.currentTime, video.duration, false, true);
-            }}
-            onLoadedMetadata={(event) => {
-              const video = event.currentTarget;
-              video.volume = volume / 100;
-              setDuration(video.duration);
-              if (startAt > 0 && startAt < video.duration) {
-                video.currentTime = startAt;
-              }
-            }}
-            onCanPlay={handleVideoReady}
-            onError={handlePlaybackError}
-            onEnded={(event) => {
-              savePlayback(event.currentTarget.duration, event.currentTarget.duration, true);
-              goToNextEpisode();
-            }}
-          />
-        ) : youtubeKey ? (
-          <YouTube
-            key={playbackKey}
-            videoId={youtubeKey}
-            title={activeFallback?.name || displayTitle}
-            className="watch-player__youtube"
-            iframeClassName="watch-player__youtube-frame"
-            onReady={({ target }) => {
-              if (currentPlayback.current !== playbackKey) return;
-              youtubePlayer.current = target;
-              const length = target.getDuration();
-              setDuration(length);
-              applyYouTubeAudio(target, volume, muted);
-              if (startAt > 0 && (length === 0 || startAt < length)) {
-                target.seekTo(startAt, true);
-                setCurrentTime(startAt);
-              } else {
-                setCurrentTime(target.getCurrentTime());
-              }
-              if (isLiveMode) {
-                target.getIframe().tabIndex = -1;
-                target.playVideo();
-                window.clearTimeout(liveAutoplayTimer.current);
-                liveAutoplayTimer.current = window.setTimeout(() => {
-                  if (youtubePlayer.current === target && [-1, 2, 5].includes(target.getPlayerState())) setLiveNeedsStart(true);
-                }, 2000);
-              }
-            }}
-            onPlay={(event) => {
-              if (currentPlayback.current !== playbackKey) return;
-              youtubePlayer.current = event.target;
-              setYoutubePlaying(true);
-              setPlaying(true);
-              if (isLiveMode) { window.clearTimeout(liveAutoplayTimer.current); setLiveNeedsStart(false); }
-            }}
-            onPause={(event) => {
-              if (currentPlayback.current !== playbackKey) return;
-              setYoutubePlaying(false);
-              setPlaying(false);
-              savePlayback(event.target.getCurrentTime(), event.target.getDuration());
-              if (isLiveMode) setLiveNeedsStart(true);
-            }}
-            onError={handlePlaybackError}
-            opts={{
-              width: '100%',
-              height: '100%',
-              playerVars: {
-                autoplay: 1,
-                controls: 0,
-                rel: 0,
-                start: isLiveMode ? 0 : Math.floor(startAt),
-                playsinline: 1,
-                ...(isLiveMode ? { disablekb: 1, fs: 0, loop: 1, playlist: youtubeKey } : {}),
-              },
-            }}
-            onEnd={(event) => {
-              if (isLiveMode || currentPlayback.current !== playbackKey) return;
-              setYoutubePlaying(false);
-              setPlaying(false);
-              const total = event.target.getDuration();
-              savePlayback(total, total, true);
-              if (!activeFallback) goToNextEpisode();
-            }}
-          />
-        ) : <div className="watch-player__placeholder" role="status">{isSports ? '재생할 영상을 찾을 수 없습니다.' : '재생 가능한 예고편·클립이 없습니다.'}</div>}
+          : videoLookupPending ? <div className="watch-player__placeholder" role="status">재생 가능한 영상을 확인하고 있습니다.</div>
+            : isLiveMode && liveResult?.error ? <div className="watch-player__placeholder watch-player__error" role="status">
+              <p>{liveResult.error}</p><button type="button" onClick={retryPlayback}>다시 시도</button>
+            </div> : hasPlaybackError ? <div className="watch-player__placeholder watch-player__error" role="status">
+              <p>영상을 재생하지 못했습니다. 다시 시도해 주세요.</p>
+              <button type="button" onClick={retryPlayback}>다시 시도</button>
+            </div> : videoSrc ? (
+              <video ref={videoRef} className="watch-player__video" src={videoSrc} key={playbackKey}
+                playsInline muted={muted}
+                onPlay={() => setPlaying(true)}
+                onPause={(event) => {
+                  setPlaying(false);
+                  if (!event.currentTarget.ended) {
+                    savePlayback(event.currentTarget.currentTime, event.currentTarget.duration);
+                  }
+                }}
+                onTimeUpdate={(event) => {
+                  const video = event.currentTarget;
+                  setCurrentTime(video.currentTime);
+                  if (!video.paused) savePlayback(video.currentTime, video.duration, false, true);
+                }}
+                onLoadedMetadata={(event) => {
+                  const video = event.currentTarget;
+                  video.volume = volume / 100;
+                  setDuration(video.duration);
+                  if (startAt > 0 && startAt < video.duration) {
+                    video.currentTime = startAt;
+                  }
+                }}
+                onCanPlay={handleVideoReady}
+                onError={handlePlaybackError}
+                onEnded={(event) => {
+                  savePlayback(event.currentTarget.duration, event.currentTarget.duration, true);
+                  goToNextEpisode();
+                }}
+              />
+            ) : youtubeKey ? (
+              <YouTube
+                key={playbackKey}
+                videoId={youtubeKey}
+                title={activeFallback?.name || displayTitle}
+                className="watch-player__youtube"
+                iframeClassName="watch-player__youtube-frame"
+                onReady={({ target }) => {
+                  if (currentPlayback.current !== playbackKey) return;
+                  youtubePlayer.current = target;
+                  const length = target.getDuration();
+                  setDuration(length);
+                  applyYouTubeAudio(target, volume, muted);
+                  if (startAt > 0 && (length === 0 || startAt < length)) {
+                    target.seekTo(startAt, true);
+                    setCurrentTime(startAt);
+                  } else {
+                    setCurrentTime(target.getCurrentTime());
+                  }
+                  if (isLiveMode) {
+                    target.getIframe().tabIndex = -1;
+                    target.playVideo();
+                    window.clearTimeout(liveAutoplayTimer.current);
+                    liveAutoplayTimer.current = window.setTimeout(() => {
+                      if (youtubePlayer.current === target && [-1, 2, 5].includes(target.getPlayerState())) setLiveNeedsStart(true);
+                    }, 2000);
+                  }
+                }}
+                onPlay={(event) => {
+                  if (currentPlayback.current !== playbackKey) return;
+                  youtubePlayer.current = event.target;
+                  setYoutubePlaying(true);
+                  setPlaying(true);
+                  if (isLiveMode) { window.clearTimeout(liveAutoplayTimer.current); setLiveNeedsStart(false); }
+                }}
+                onPause={(event) => {
+                  if (currentPlayback.current !== playbackKey) return;
+                  setYoutubePlaying(false);
+                  setPlaying(false);
+                  savePlayback(event.target.getCurrentTime(), event.target.getDuration());
+                  if (isLiveMode) setLiveNeedsStart(true);
+                }}
+                onError={handlePlaybackError}
+                opts={{
+                  width: '100%',
+                  height: '100%',
+                  playerVars: {
+                    autoplay: 1,
+                    controls: 0,
+                    rel: 0,
+                    start: isLiveMode ? 0 : Math.floor(startAt),
+                    playsinline: 1,
+                    ...(isLiveMode ? { disablekb: 1, fs: 0, loop: 1, playlist: youtubeKey } : {}),
+                  },
+                }}
+                onEnd={(event) => {
+                  if (isLiveMode || currentPlayback.current !== playbackKey) return;
+                  setYoutubePlaying(false);
+                  setPlaying(false);
+                  const total = event.target.getDuration();
+                  savePlayback(total, total, true);
+                  if (!activeFallback) goToNextEpisode();
+                }}
+              />
+            ) : <div className="watch-player__placeholder" role="status">{isSports ? '재생할 영상을 찾을 수 없습니다.' : '재생 가능한 예고편·클립이 없습니다.'}</div>}
 
         {isLiveMode && liveNeedsStart && !hasPlaybackError && <button type="button" className="watch-player__live-start" onClick={() => {
           setLiveNeedsStart(false); youtubePlayer.current?.playVideo();
@@ -718,56 +722,56 @@ export const Watch = () => {
               onChange={changeProgress} disabled={controlsDisabled || !duration}
               style={{ '--progress': `${duration ? currentTime / duration * 100 : 0}%` }} />
           </label>
-          <div className="watch-controls">
-            <div className="watch-controls__left">
-              <button type="button" disabled={controlsDisabled} onClick={togglePlay} aria-label={playing ? '일시 정지' : '재생'}><WatchIcon name={playing ? 'pause' : 'play'} /></button>
-              <button type="button" disabled={controlsDisabled} onClick={() => seek(-10)} aria-label="10초 뒤로"><WatchIcon name="replay" /></button>
-              <button type="button" disabled={controlsDisabled} onClick={() => seek(10)} aria-label="10초 앞으로"><WatchIcon name="forward" /></button>
-              <div className="watch-volume" data-dismissed={volumeDismissed || undefined}
-                onPointerEnter={() => setVolumeDismissed(false)}
-                onFocus={event => {
-                  if (event.target.type === 'range' || !event.currentTarget.contains(event.relatedTarget)) setVolumeDismissed(false);
-                }}
-                onKeyDown={event => {
-                  if (event.key !== 'Escape') return;
-                  event.currentTarget.querySelector('button').focus();
-                  setVolumeDismissed(true);
-                }}>
-                <button type="button" disabled={controlsDisabled} aria-label="음소거" aria-pressed={muted}
-                  onClick={event => {
-                    if (window.matchMedia('(hover: none)').matches) event.currentTarget.focus({ preventScroll: true });
-                    setVolumeDismissed(false);
-                    updateAudio(volume, !muted);
-                  }}><WatchIcon name={muted ? 'mute' : 'volume'} /></button>
-                {!controlsDisabled && <div className="watch-volume__levels">
-                  <input type="range" min="0" max="100" value={effectiveVolume} aria-label="음량"
-                    onChange={event => {
-                      const next = Number(event.target.value);
-                      updateAudio(next || volume, next === 0);
-                    }} style={{ '--volume-progress': `${effectiveVolume}%` }} />
-                  <span aria-hidden="true">{effectiveVolume}%</span>
-                </div>}
+            <div className="watch-controls">
+              <div className="watch-controls__left">
+                <button type="button" disabled={controlsDisabled} onClick={togglePlay} aria-label={playing ? '일시 정지' : '재생'}><WatchIcon name={playing ? 'pause' : 'play'} /></button>
+                <button type="button" disabled={controlsDisabled} onClick={() => seek(-10)} aria-label="10초 뒤로"><WatchIcon name="replay" /></button>
+                <button type="button" disabled={controlsDisabled} onClick={() => seek(10)} aria-label="10초 앞으로"><WatchIcon name="forward" /></button>
+                <div className="watch-volume" data-dismissed={volumeDismissed || undefined}
+                  onPointerEnter={() => setVolumeDismissed(false)}
+                  onFocus={event => {
+                    if (event.target.type === 'range' || !event.currentTarget.contains(event.relatedTarget)) setVolumeDismissed(false);
+                  }}
+                  onKeyDown={event => {
+                    if (event.key !== 'Escape') return;
+                    event.currentTarget.querySelector('button').focus();
+                    setVolumeDismissed(true);
+                  }}>
+                  <button type="button" disabled={controlsDisabled} aria-label="음소거" aria-pressed={muted}
+                    onClick={event => {
+                      if (window.matchMedia('(hover: none)').matches) event.currentTarget.focus({ preventScroll: true });
+                      setVolumeDismissed(false);
+                      updateAudio(volume, !muted);
+                    }}><WatchIcon name={muted ? 'mute' : 'volume'} /></button>
+                  {!controlsDisabled && <div className="watch-volume__levels">
+                    <input type="range" min="0" max="100" value={effectiveVolume} aria-label="음량"
+                      onChange={event => {
+                        const next = Number(event.target.value);
+                        updateAudio(next || volume, next === 0);
+                      }} style={{ '--volume-progress': `${effectiveVolume}%` }} />
+                    <span aria-hidden="true">{effectiveVolume}%</span>
+                  </div>}
+                </div>
+                <span className="watch-controls__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
               </div>
-              <span className="watch-controls__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
+              <div className="watch-controls__right">
+                {!isSports && <FullVideoClipButton restriction={clipRestriction} onRestricted={showNotice} getSource={() => {
+                  const player = youtubePlayer.current;
+                  const source = {
+                    content: { ...clipTvDetails, ...content, id, media_type: type, number_of_seasons: clipTvDetails?.number_of_seasons ?? content.number_of_seasons ?? null },
+                    seasonNumber: type === 'tv' ? seasonNumber : undefined,
+                    episodeNumber: type === 'tv' ? episodeNumber : undefined,
+                    videoKey: youtubeKey, videoTitle: selectedVideo?.name || title,
+                    ...captureClipPlayback(player, { currentTime, duration }),
+                  };
+                  return source;
+                }} />}
+                {!isSports && <button type="button" aria-label="회차 목록" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}><WatchIcon name="episodes" /></button>}
+                {!isSports && <button type="button" aria-label="실시간 채팅" aria-expanded={panel === 'chat'} onClick={toggleCommunityPanel}><WatchIcon name="chat" /></button>}
+                <button type="button" aria-label="설정" onClick={() => { setPanel(panel === 'settings' ? null : 'settings'); setSettingsTab('main'); }}><WatchIcon name="settings" /></button>
+                <button type="button" aria-label="전체 화면" onClick={toggleFullscreen}><WatchIcon name="fullscreen" /></button>
+              </div>
             </div>
-            <div className="watch-controls__right">
-              {!isSports && <FullVideoClipButton restriction={clipRestriction} onRestricted={showNotice} getSource={() => {
-                const player = youtubePlayer.current;
-                const source = {
-                  content: { ...clipTvDetails, ...content, id, media_type: type, number_of_seasons: clipTvDetails?.number_of_seasons ?? content.number_of_seasons ?? null },
-                  seasonNumber: type === 'tv' ? seasonNumber : undefined,
-                  episodeNumber: type === 'tv' ? episodeNumber : undefined,
-                  videoKey: youtubeKey, videoTitle: selectedVideo?.name || title,
-                  ...captureClipPlayback(player, { currentTime, duration }),
-                };
-                return source;
-              }} />}
-              {!isSports && <button type="button" aria-label="회차 목록" onClick={() => setPanel(panel === 'episodes' ? null : 'episodes')}><WatchIcon name="episodes" /></button>}
-              {!isSports && <button type="button" aria-label="실시간 채팅" aria-expanded={panel === 'chat'} onClick={toggleCommunityPanel}><WatchIcon name="chat" /></button>}
-              <button type="button" aria-label="설정" onClick={() => { setPanel(panel === 'settings' ? null : 'settings'); setSettingsTab('main'); }}><WatchIcon name="settings" /></button>
-              <button type="button" aria-label="전체 화면" onClick={toggleFullscreen}><WatchIcon name="fullscreen" /></button>
-            </div>
-          </div>
           </>}
         </div>
 

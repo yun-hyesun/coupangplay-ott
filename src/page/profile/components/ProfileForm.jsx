@@ -431,16 +431,16 @@ export const ProfileForm = ({
 
             {/* 완료 / 취소 버튼 */}
             <div className="profile-form-buttons">
-                <button type="submit" disabled={loading}>
-                    {loading ? '저장 중...' : submitText}
-                </button>
-
                 <button
                     type="button"
                     onClick={onCancel}
                     disabled={loading}
                 >
                     취소
+                </button>
+
+                <button type="submit" disabled={loading}>
+                    {loading ? '저장 중...' : submitText}
                 </button>
             </div>
 
