@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { A11y, Navigation } from 'swiper/modules';
 import { ContentTitle } from '../../../components/content/ContentTitle';
-import { railBreakpoints } from '../../../data/railBreakpoints';
 import { ClipCard } from '../../wowclip/components/ClipCard';
 import { useWowClipLibrary } from '../../wowclip/hooks/useWowClipLibrary';
 import { useSpoilerAccess } from '../../wowclip/hooks/useSpoilerAccess';
@@ -13,9 +12,14 @@ import '../../../components/content/scss/ContentRail.scss';
 import '../../wowclip/scss/WowClip.scss';
 import '../scss/WowClipSection.scss';
 
-const clipBreakpoints = Object.fromEntries(
-  Object.entries(railBreakpoints.horizontal).map(([width, { spaceBetween }]) => [width, { spaceBetween }]),
-);
+const clipBreakpoints = {
+  0: { slidesPerView: 2, spaceBetween: 8 },
+  600: { slidesPerView: 3, spaceBetween: 10 },
+  900: { slidesPerView: 4, spaceBetween: 12 },
+  1200: { slidesPerView: 5, spaceBetween: 12 },
+  1600: { slidesPerView: 6, spaceBetween: 16 },
+  1920: { slidesPerView: 7, spaceBetween: 16 },
+};
 
 export const WowClipSection = ({ history }) => {
   const navigate = useNavigate();
@@ -34,7 +38,7 @@ export const WowClipSection = ({ history }) => {
       : publicClips.length ? <Swiper
           className="home-wowclip-slider"
           modules={[Navigation, A11y]}
-          slidesPerView="auto"
+          slidesPerView={clipBreakpoints[0].slidesPerView}
           spaceBetween={clipBreakpoints[0].spaceBetween}
           breakpoints={clipBreakpoints}
           navigation
