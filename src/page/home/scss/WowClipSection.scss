@@ -5,18 +5,18 @@
     $focus-gutter: 5px;
     margin: -$focus-gutter;
     padding: $focus-gutter;
-    overflow: hidden;
+    overflow: initial;
 
     .swiper-wrapper { flex-wrap: nowrap; align-items: stretch; }
-    .swiper-slide { flex-shrink: 0; width: min(282px, calc(100vw - 80px)); height: auto; }
+    .swiper-slide { flex-shrink: 0; min-width: 0; height: auto; }
     .swiper-button-prev { left: $focus-gutter; }
     .swiper-button-next { right: $focus-gutter; }
     :is(.swiper-button-prev, .swiper-button-next):focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
     @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-      overflow: visible;
+      // overflow: visible;
       // Leave room for the lifted card while keeping offscreen slides clipped.
-      clip-path: inset(-$card-hover-lift 0 0);
+      // clip-path: inset(-$card-hover-lift 0 0);
     }
 
     .wowclip-card--short {

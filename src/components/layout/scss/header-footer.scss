@@ -44,28 +44,41 @@
       }
       
       .header-nav-menu {@include flex-center();
-        a {display: block; padding: 8px 15px; border-radius: 10px; color: rgba(255,255,255,.8);
+        li {flex-shrink: 0;}
+        a {display: block; padding: .4em 1em; border-radius: 10px; color: rgba(255,255,255,.8); white-space: nowrap; 
         
           &:hover {color: #fff;}
+
+          @include mobile(620px) {
+            font-size: clamp(12px, 2.25vw, 14px);
+          }
         }
         .active {background: rgba(255,255,255,.2); color: #fff;}
 
         // 스포츠
-        .sports a { height: 40px; opacity: .8;
+        .sports a { opacity: .8; padding: .6em 1em;
+          img {display: block; width: auto; height: .7lh;}
         
           &:hover {opacity: 1;}
           &.active {opacity: 1;}
+
         }
 
         .wowclip {margin-left: .7em;
-          a {@include flex-center($gap: .2em); background: rgba(255,255,255,.9); border-radius: 20px; padding: .4em .5em .3em; color: #222; font-family: $font-title; font-size: 14px; line-height: .5em;
+          a {@include flex-center($gap: .2em); border-radius: 20px; padding: .4em .7em .2em; color: #fff; font-family: $font-title; font-size: 14px; line-height: .5em; border: 1px solid #fff; font-weight: 300; opacity: .7;
           
-            &::before {content: ''; width: 50px; height: 20px; background: url(/images/wow.svg) no-repeat center / contain; margin-bottom: .1em;}
+            &::before {content: ''; width: 45px; height: 20px; background: url(/images/wow_w.svg) no-repeat center / contain; margin-bottom: .1em;}
 
-            &:hover {background: #fff;}
-            &.active {background: $color-pri; color: #fff;
+            &:hover {opacity: 1;}
+            &.active {background: $color-pri; border: 1px solid $color-pri; opacity: 1;
             
               &::before {background-image: url(/images/wow_w.svg);}
+            }
+
+            @include mobile(620px) {
+              font-size: clamp(12px, 2.25vw, 14px);
+
+              &::before {width: clamp(30px, 7.25vw, 45px);}
             }
           }
         }

@@ -41,7 +41,7 @@ export function LeagueVideos({ league, allLeagueVideos, selectedTeams, onOpenTea
         )}
       </section>
 
-      <LeagueMyTeamVideos league={league} selectedTeams={selectedTeams} onOpenTeamSettings={onOpenTeamSettings} />
+      {selectedTeams.length > 0 && <LeagueMyTeamVideos league={league} selectedTeams={selectedTeams} onOpenTeamSettings={onOpenTeamSettings} />}
     </>
   );
 }

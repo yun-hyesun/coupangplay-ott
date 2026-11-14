@@ -7,6 +7,7 @@ import { LeagueHome } from "../../components/LeagueHome";
 import { LeagueSchedule } from "../../components/LeagueSchedule";
 import { LeagueSchedulePage } from "../../components/LeagueSchedulePage";
 import { LeagueStandings } from "../../components/LeagueStandings";
+import { LeagueTournamentBracket } from "../../components/LeagueTournamentBracket";
 import { LeagueVideos } from "../../components/LeagueVideos";
 import { LeagueVideoFeed } from "../../components/LeagueVideoFeed";
 import { findLeagueTeam, normalizeSportsText } from "../../components/LeagueDetailShared";
@@ -35,8 +36,9 @@ import {
   getFootballStandings,
   supportsFootballStandings,
 } from "../../service/sportsService";
-import { getLeagueSeasonSchedule } from "../../service/leagueScheduleService";
-import { getScheduleSeason } from "../../data/leagueScheduleView";
+import { getLeagueSeasonSchedule, getLeagueSeasonsSchedule } from "../../service/leagueScheduleService";
+import { getScheduleBrowseRange, getScheduleSeason } from "../../data/leagueScheduleView";
+import { isKnockoutLeague } from "../../data/leagueTournamentBracket";
 import { useAuthStore } from "../../store/useAuthStore";
 import { loadLeagueBroadcasts } from "../../data/leagueBroadcasts";
 import { getNearestScheduleRange, getScheduleGameDate, getScheduleRange, loadScheduleDates, selectScheduleMatches } from "../../data/leagueScheduleRange";
@@ -47,7 +49,8 @@ const TEAM_SUBSCRIPTIONS_STORAGE_KEY = "coupangplay:sports:subscribed-teams";
 const SEOUL_TIME_ZONE = "Asia/Seoul";
 const EMPTY_SCHEDULE = { games: [], loading: true, errors: [] };
 const EMPTY_STANDINGS = { rows: [], loading: true, error: "" };
-const SEASON_FIXTURE_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC", "carabao"]);
+const SEASON_FIXTURE_LEAGUES = new Set(["PL", "PD", "BL1", "FL1", "DED", "ELC", "carabao", "dfb", "concacaf-champions-cup"]);
+const NEAREST_FIXTURE_LEAGUES = new Set(["carabao", "dfb", "concacaf-champions-cup"]);
 const VIDEO_LIBRARY = [
   ...SPORTS_HIGHLIGHTS,
   ...SPORTS_TOGETHER,
@@ -93,6 +96,14 @@ async function loadLeagueSchedule(league, dateKey) {
   }
 
   return { games: await getFootballMatches(league.id, dateKey), errors: [] };
+}
+
+function loadHomeSeasonSchedule(leagueId, dateKey, options) {
+  const season = getScheduleSeason(leagueId, dateKey);
+  if (leagueId !== "concacaf-champions-cup") return getLeagueSeasonSchedule(leagueId, season, options);
+  const lastSeason = getScheduleSeason(leagueId, getScheduleBrowseRange(dateKey, leagueId).to);
+  const seasons = Array.from({ length: lastSeason - season + 1 }, (_, index) => season + index);
+  return getLeagueSeasonsSchedule(leagueId, seasons, options);
 }
 
 function getLeagueVideos(league) {
@@ -151,10 +162,16 @@ export const LeagueDetail = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const league = SPORTS_LEAGUE_BY_ID[leagueId];
+  const leagueTeams = useMemo(() => SPORTS_TEAMS_BY_LEAGUE[leagueId] || [], [leagueId]);
+  const showBracket = isKnockoutLeague(leagueId);
+  const showStandings = leagueTeams.length !== 1 && !showBracket;
+  const showTournamentStandings = leagueId === "carabao";
+  const showStandingsTab = showStandings || showTournamentStandings;
   const [today, setToday] = useState(() => getSeoulDateKey());
   const [tabSelection, setTabSelection] = useState(null);
   const navigationTab = ["home", "videos", "schedule", "standings"].includes(location.state?.leagueTab) ? location.state.leagueTab : "home";
-  const activeTab = tabSelection?.key === location.key ? tabSelection.tab : navigationTab;
+  const requestedTab = tabSelection?.key === location.key ? tabSelection.tab : navigationTab;
+  const activeTab = requestedTab === "standings" && !showStandingsTab ? "home" : requestedTab;
   const [activeFixtureTab, setActiveFixtureTab] = useState("upcoming");
   const [scoresOn, setScoresOn] = useState(true);
   const [isTeamSettingsOpen, setIsTeamSettingsOpen] = useState(false);
@@ -194,11 +211,13 @@ export const LeagueDetail = () => {
     const controller = new AbortController();
     const { from, to } = scheduleRange;
     const sameSeason = getScheduleSeason(league.id, from) === getScheduleSeason(league.id, to);
-    const request = SEASON_FIXTURE_LEAGUES.has(league.id) && sameSeason
-      ? getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, from), { signal: controller.signal })
-      : league.id.startsWith("kleague-")
-        ? loadScheduleDates({ from, to, signal: controller.signal, loadSchedule: (date) => loadLeagueSchedule(league, date) })
-        : getMatchesForRange(league.id, from, to, { signal: controller.signal });
+    const request = NEAREST_FIXTURE_LEAGUES.has(league.id)
+      ? loadHomeSeasonSchedule(league.id, today, { signal: controller.signal })
+      : SEASON_FIXTURE_LEAGUES.has(league.id) && sameSeason
+        ? getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, from), { signal: controller.signal })
+        : league.id.startsWith("kleague-")
+          ? loadScheduleDates({ from, to, signal: controller.signal, loadSchedule: (date) => loadLeagueSchedule(league, date) })
+          : getMatchesForRange(league.id, from, to, { signal: controller.signal });
     request
       .then((result) => {
         if (!controller.signal.aborted) {
@@ -217,10 +236,10 @@ export const LeagueDetail = () => {
       });
 
     return () => controller.abort();
-  }, [league, scheduleRange, scheduleKey, activeTab]);
+  }, [league, scheduleRange, scheduleKey, activeTab, today]);
 
   useEffect(() => {
-    if (!league || ["videos", "schedule"].includes(activeTab)) return undefined;
+    if (!league || !showStandings || ["videos", "schedule"].includes(activeTab)) return undefined;
     let isCurrent = true;
 
     const loadStandings = async () => {
@@ -241,7 +260,7 @@ export const LeagueDetail = () => {
 
     loadStandings();
     return () => { isCurrent = false; };
-  }, [league, activeTab]);
+  }, [league, activeTab, showStandings]);
 
   useEffect(() => {
     if (!league || activeTab !== "home") return undefined;
@@ -254,8 +273,8 @@ export const LeagueDetail = () => {
         const result = await loadLeagueBroadcasts({
           dateKey: today,
           loadSchedule: (dateKey) => loadLeagueSchedule(league, dateKey),
-          loadSeasonSchedule: league.id === "carabao"
-            ? () => getLeagueSeasonSchedule(league.id, getScheduleSeason(league.id, today), { signal: controller.signal })
+          loadSeasonSchedule: NEAREST_FIXTURE_LEAGUES.has(league.id)
+            ? () => loadHomeSeasonSchedule(league.id, today, { signal: controller.signal })
             : undefined,
           signal: controller.signal,
         });
@@ -270,12 +289,11 @@ export const LeagueDetail = () => {
   }, [league, today, activeTab]);
 
   const allLeagueVideos = useMemo(() => league ? getLeagueVideos(league) : [], [league]);
-  const leagueTeams = useMemo(() => SPORTS_TEAMS_BY_LEAGUE[leagueId] || [], [leagueId]);
   const selectedTeams = useMemo(
     () => leagueTeams.filter((team) => subscribedTeamIds.includes(team.id)),
     [leagueTeams, subscribedTeamIds],
   );
-  const visibleScheduleRange = useMemo(() => leagueId === "carabao" && !scheduleState.loading
+  const visibleScheduleRange = useMemo(() => NEAREST_FIXTURE_LEAGUES.has(leagueId) && !scheduleState.loading
     ? getNearestScheduleRange(scheduleState.games, today, activeFixtureTab) : scheduleRange,
   [leagueId, scheduleState.loading, scheduleState.games, today, activeFixtureTab, scheduleRange]);
   const visibleMatches = useMemo(() => selectScheduleMatches(scheduleState.games, visibleScheduleRange, activeFixtureTab), [activeFixtureTab, scheduleState.games, visibleScheduleRange]);
@@ -364,6 +382,10 @@ export const LeagueDetail = () => {
   const tableRows = standingsRows.length ? standingsRows : fallbackTeams;
   const tableNote = standingsRows.length && league.id === "nfl"
     ? `ESPN 기준 ${standingsRows[0].season || "현재"} 시즌 AFC·NFC 컨퍼런스 순위`
+    : standingsRows.length && league.id === "acle"
+    ? `ESPN 기준 ${standingsRows[0].season}-${String(standingsRows[0].season + 1).slice(-2)} 시즌 동부·서부 지역별 리그 스테이지 순위`
+    : standingsRows.length && league.id === "acl2"
+    ? `ESPN 기준 ${standingsRows[0].season}-${String(standingsRows[0].season + 1).slice(-2)} 시즌 조별 리그 순위`
     : standingsRows.length && league.id === "mls"
     ? `ESPN 기준 ${standingsRows[0].season} 시즌 동부·서부 컨퍼런스 순위`
     : standingsRows.length && supportsFootballStandings(league.id)
@@ -385,7 +407,8 @@ export const LeagueDetail = () => {
         <LeagueHeader
           league={league}
           scoresOn={scoresOn}
-          showScoreToggle={activeTab !== "standings" && (activeTab !== "home" || activeFixtureTab === "ended")}
+          showStandings={showStandingsTab}
+          showScoreToggle={activeTab === "standings" ? showTournamentStandings : activeTab !== "home" || activeFixtureTab === "ended"}
           onToggleScores={() => setScoresOn((value) => !value)}
           isMyLeague={isMyLeague}
           onToggleMyLeague={handleToggleMyLeague}
@@ -404,7 +427,14 @@ export const LeagueDetail = () => {
         selectedTeams={user ? selectedTeams : []}
         initialMatch={location.state?.scheduleMatch?.competitionCode === league.id ? location.state.scheduleMatch : null}
         expandInitialMatch={location.state?.expandScheduleMatch !== false}
-      /> : activeTab === "standings" ? <LeagueStandings
+      /> : activeTab === "standings" ? showTournamentStandings ? <LeagueTournamentBracket
+        key={league.id}
+        league={league}
+        today={today}
+        scoresOn={scoresOn}
+        startRound={32}
+        fullPage
+      /> : <LeagueStandings
         {...standingsProps}
         fullPage
         tableRows={standingsRows}
@@ -426,10 +456,12 @@ export const LeagueDetail = () => {
         selectedTeams={user ? selectedTeams : []}
         onOpenTeamSettings={handleOpenTeamSettings}
       />
-      <LeagueStandings
+      {showStandings && <LeagueStandings
         {...standingsProps}
         onShowAll={standingsRows.length > 10 ? () => changeTab("standings") : undefined}
-      />
+      />}
+      {showBracket && <LeagueTournamentBracket key={league.id} league={league} today={today} scoresOn={scoresOn}
+        onShowAll={showTournamentStandings ? () => changeTab("standings") : undefined} />}
       </>}
       <SportsSettingsModal
         isOpen={isTeamSettingsOpen}
