@@ -39,9 +39,10 @@ export const Home = () => {
 
       <ContentRail railKey="home-binge" />
 
+      <WowClipSection history={history} />
+      
       <ContentRail railKey="home-movie" />
 
-      <WowClipSection history={history} />
 
       {/* 스포츠 패스 광고 */}
 

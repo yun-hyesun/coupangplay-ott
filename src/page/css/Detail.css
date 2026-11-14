@@ -802,7 +802,7 @@
 }
 
 .detail-review-popup__list {
-  height: 320px;
+  height: 240px;
   margin-top: 24px;
   padding: 16px;
   background: #262626;
@@ -959,21 +959,21 @@
   pointer-events: none;
 }
 
-.detail-hero__actions .detail-button--watchlist {
+.detail-hero__actions .detail-button--watchlist, .detail-hero__actions .detail-button--share {
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
-.detail-hero__actions .detail-button--watchlist img {
+.detail-hero__actions .detail-button--watchlist img, .detail-hero__actions .detail-button--share img {
   transition: transform 0.2s;
 }
-.detail-hero__actions .detail-button--watchlist:hover:not(:disabled), .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled) {
+.detail-hero__actions .detail-button--watchlist:hover:not(:disabled), .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled), .detail-hero__actions .detail-button--share:hover:not(:disabled), .detail-hero__actions .detail-button--share:focus-visible:not(:disabled) {
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--detail-blue);
 }
-.detail-hero__actions .detail-button--watchlist:hover:not(:disabled) img, .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled) img {
+.detail-hero__actions .detail-button--watchlist:hover:not(:disabled) img, .detail-hero__actions .detail-button--watchlist:focus-visible:not(:disabled) img, .detail-hero__actions .detail-button--share:hover:not(:disabled) img, .detail-hero__actions .detail-button--share:focus-visible:not(:disabled) img {
   transform: scale(1.1);
 }
-.detail-hero__actions .detail-button--watchlist:disabled {
+.detail-hero__actions .detail-button--watchlist:disabled, .detail-hero__actions .detail-button--share:disabled {
   cursor: wait;
 }
 
@@ -1006,7 +1006,7 @@
 }
 .detail-review-popup__compose--draft textarea {
   min-height: 112px;
-  height: auto;
+  max-height: 240px;
   resize: vertical;
   border: 1px solid #555b63;
   background: #13161a;
@@ -1181,4 +1181,21 @@
   color: #ffb3b3;
   font-size: 13px;
   line-height: 20px;
+}
+
+.detail-review-popup > .detail-review-popup__list {
+  margin-top: 0;
+}
+
+.detail-review-popup > .detail-review-popup__compose--draft {
+  margin-top: 24px;
+}
+
+.detail-review-popup__compose--draft textarea {
+  box-sizing: border-box;
+  height: 112px;
+  min-height: 112px;
+  max-height: none;
+  resize: none;
+  overflow-y: hidden;
 }

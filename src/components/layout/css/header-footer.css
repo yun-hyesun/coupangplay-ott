@@ -67,22 +67,36 @@
   justify-content: center;
   align-items: center;
 }
+.header .inner .header-left .header-nav-menu li {
+  flex-shrink: 0;
+}
 .header .inner .header-left .header-nav-menu a {
   display: block;
-  padding: 8px 15px;
+  padding: 0.4em 1em;
   border-radius: 10px;
   color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
 }
 .header .inner .header-left .header-nav-menu a:hover {
   color: #fff;
+}
+@media (max-width: 620px) {
+  .header .inner .header-left .header-nav-menu a {
+    font-size: clamp(12px, 2.25vw, 14px);
+  }
 }
 .header .inner .header-left .header-nav-menu .active {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
 .header .inner .header-left .header-nav-menu .sports a {
-  height: 40px;
   opacity: 0.8;
+  padding: 0.6em 1em;
+}
+.header .inner .header-left .header-nav-menu .sports a img {
+  display: block;
+  width: auto;
+  height: 0.7lh;
 }
 .header .inner .header-left .header-nav-menu .sports a:hover {
   opacity: 1;
@@ -98,30 +112,41 @@
   justify-content: center;
   align-items: center;
   gap: 0.2em;
-  background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
-  padding: 0.4em 0.5em 0.3em;
-  color: #222;
+  padding: 0.4em 0.7em 0.2em;
+  color: #fff;
   font-family: "GMarketSans", sans-serif;
   font-size: 14px;
   line-height: 0.5em;
+  border: 1px solid #fff;
+  font-weight: 300;
+  opacity: 0.7;
 }
 .header .inner .header-left .header-nav-menu .wowclip a::before {
   content: "";
-  width: 50px;
+  width: 45px;
   height: 20px;
-  background: url(/images/wow.svg) no-repeat center/contain;
+  background: url(/images/wow_w.svg) no-repeat center/contain;
   margin-bottom: 0.1em;
 }
 .header .inner .header-left .header-nav-menu .wowclip a:hover {
-  background: #fff;
+  opacity: 1;
 }
 .header .inner .header-left .header-nav-menu .wowclip a.active {
   background: #0084FF;
-  color: #fff;
+  border: 1px solid #0084FF;
+  opacity: 1;
 }
 .header .inner .header-left .header-nav-menu .wowclip a.active::before {
   background-image: url(/images/wow_w.svg);
+}
+@media (max-width: 620px) {
+  .header .inner .header-left .header-nav-menu .wowclip a {
+    font-size: clamp(12px, 2.25vw, 14px);
+  }
+  .header .inner .header-left .header-nav-menu .wowclip a::before {
+    width: clamp(30px, 7.25vw, 45px);
+  }
 }
 @media (max-width: 1199px) {
   .header .inner .header-left {

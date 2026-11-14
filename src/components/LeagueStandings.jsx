@@ -6,10 +6,12 @@ export function LeagueStandings({ league, standingsState, tableRows, tableNote, 
   const limit = 20;
   const isNfl = league.id === "nfl";
   const conferenceLabels = isNfl ? { AFC: "AFC", NFC: "NFC" }
+    : league.id === "acle" ? { "East Region": "동부 지역", "West Region": "서부 지역" }
+    : league.id === "acl2" ? Object.fromEntries([..."ABCDEFGH"].map(group => [`Group ${group}`, `${group}조`]))
     : league.id === "mls" ? { East: "동부 컨퍼런스", West: "서부 컨퍼런스" } : null;
   const tables = conferenceLabels ? Object.entries(conferenceLabels).map(([conference, label]) => ({
     conference: label,
-    rows: selectLeagueStandings(tableRows.filter(row => row.conference === conference), fullPage ? (isNfl ? 16 : 15) : 10),
+    rows: selectLeagueStandings(tableRows.filter(row => row.conference === conference), fullPage ? (isNfl ? 16 : league.id === "acle" ? limit : 15) : 10),
   })).filter(table => table.rows.length) : [{
     conference: "",
     rows: selectLeagueStandings(tableRows, limit, { allowUnranked: !fullPage }),

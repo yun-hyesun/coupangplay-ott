@@ -36,3 +36,18 @@ export async function getLeagueSeasonSchedule(leagueId, season, { signal, force 
   if (!signal?.aborted) cache.set(key, { at: Date.now(), data });
   return data;
 }
+
+export async function getLeagueSeasonsSchedule(leagueId, seasons, options = {}) {
+  const years = [...new Set(seasons)];
+  const results = await Promise.allSettled(years.map(year => getLeagueSeasonSchedule(leagueId, year, options)));
+  options.signal?.throwIfAborted();
+  const data = results.filter(result => result.status === "fulfilled").map(result => result.value);
+  const warning = [...new Set(data.map(result => result.warning).filter(Boolean))].join(" ");
+  return {
+    games: [...new Map(data.flatMap(result => result.games).map(game => [game.gameId, game])).values()]
+      .sort((first, second) => String(getScheduleGameDate(first)).localeCompare(String(getScheduleGameDate(second)))),
+    errors: [...new Set(results.flatMap((result, index) => result.status === "fulfilled" ? result.value.errors || []
+      : [`${years[index]}년: ${result.reason?.message || "경기 일정을 불러오지 못했습니다."}`]))],
+    ...(warning ? { warning } : {}),
+  };
+}
