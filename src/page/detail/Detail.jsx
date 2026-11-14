@@ -388,7 +388,7 @@ export const Detail = () => {
               </button>
 
               <button
-                className="detail-button detail-button--outline"
+                className="detail-button detail-button--outline detail-button--share"
                 type="button"
                 onClick={() => setShareOpen(true)}
                 aria-haspopup="dialog"
