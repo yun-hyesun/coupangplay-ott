@@ -1,5 +1,6 @@
 import { ESPN_LEAGUE_PATHS } from "../data/espnLeagues";
 import espnTeamNames from "../data/espnTeamNames.json";
+import espnTeamLogos from "../data/espnTeamLogos.json";
 import { SPORTS_LEAGUE_BY_ID } from "../data/sportsLeagues";
 import { findSportsTeam } from "../data/sportsTeams";
 import { listScheduleDates, loadScheduleDates } from "../data/leagueScheduleRange.js";
@@ -562,7 +563,11 @@ function findEspnTeam(leagueId, team = {}) {
   // 양수 ID를 가진 미정 팀도 제외하며 NBA·NFL의 기존 팀 연결은 유지합니다.
   if (ESPN_LEAGUE_PATHS[leagueId]?.startsWith("soccer/") && Number.isInteger(sourceId) && sourceId > 0
     && sourceName && !placeholder && !mlsAllStars) {
-    return { id: `${leagueId}:espn:${team.id}`, name: name || sourceName };
+    return {
+      id: `${leagueId}:espn:${team.id}`,
+      name: name || sourceName,
+      logoPath: espnTeamLogos.soccer[String(team.id)] || "",
+    };
   }
   return null;
 }
@@ -705,6 +710,11 @@ export function normalizeEspnEvent(leagueId, event) {
     nameEn: remote.team.displayName || remote.team.name,
     crest: getCrest(local, remote.team),
     score: getScore(remote.score, status),
+    aggregateScore: getScore(remote.aggregateScore, status),
+    shootoutScore: getScore(remote.shootoutScore, status),
+    winner: status === "FINISHED" && remote.winner === true,
+    seriesWinner: competition.series?.completed === true
+      && competition.series.competitors?.some(team => String(team.id) === String(remote.team.id) && team.winner === true),
   });
   return {
     gameId: `espn:${leagueId}:${event.id}`,
@@ -717,6 +727,8 @@ export function normalizeEspnEvent(leagueId, event) {
     ...getEspnScheduleUnitFields(leagueId, event),
     status,
     statusDetail: eventStatus.type?.detail || "",
+    seriesTotalCompetitions: competition.series?.totalCompetitions ?? null,
+    seriesCompleted: competition.series?.completed === true,
     kickoffTimeConfirmed: competition.timeValid === true && !/\bTBD\b/i.test(eventStatus.type?.detail || ""),
     utcDate: date.toISOString(),
     startTime: date.toISOString(),
