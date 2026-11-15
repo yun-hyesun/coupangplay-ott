@@ -2,7 +2,7 @@
 .contentRail {$padding-block: clamp(20px ,2.77vw, 40px); padding: $padding-block $padding-main; color: $color-text-pri;
 
   &-heading {display: flex; align-items: center; justify-content: space-between; gap: 20px;}
-  &-more {color: rgba(255,255,255,.5); white-space: nowrap; text-decoration: none;   
+  &-more {color: rgba(255,255,255,.5); white-space: nowrap; text-decoration: none; font-size: clamp(12px, 1.11vw, 16px);
     &:hover {color: #fff; @include trans();}
   }
 

@@ -21,7 +21,7 @@
       text-decoration: none;
       border-radius: 10px;
       border: 1px solid transparent;
-      min-width: clamp(100px, 9.02vw ,130px) ;
+      min-width: clamp(100px, 9.02vw ,130px);
       text-align: center;
       
 
@@ -29,6 +29,12 @@
       &:focus-visible {
         background: rgba(255,255,255,.1);
         border-color: rgba(255,255,255,.1);
+      }
+
+      @include tablet {
+        font-size: clamp(14px, 1.33vw ,16px);
+        min-width: clamp(80px, 8.3vw ,100px);
+        padding: .3em 1.5em;
       }
     }
   }

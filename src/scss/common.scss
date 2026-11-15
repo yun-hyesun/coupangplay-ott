@@ -9,7 +9,8 @@
   );}
 // width: 3420px 2560px 1920px;
 // #root {background: $color-bg url(/images/guide/main.png) no-repeat right 0 / 2560px;}
-.main {min-height: 100vh;}
+.main {min-height: 100vh; overflow: hidden;}
+main {overflow: hidden;}
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;}
 
@@ -75,7 +76,10 @@
 
 // 뱃지
 .info-badges {margin-bottom: clamp(30px, 3.47vw, 50px) ; font-family: $font-title; font-weight: 500; font-size: clamp(16px, 1.38vw, 20px);
-  // &:has(.info-badge--purchase) {margin-bottom: 50px;}
+
+  @include tablet {
+    font-size: clamp(14px, 1.33vw, 16px);
+  }
 
   // 쿠팡시리즈
   .info-badge--series {@include flex-center($jc:flex-start, $gap: .3em);   line-height: 1em; text-shadow: 0 0 20px rgba(0,0,0,0.2);
@@ -85,5 +89,8 @@
   }
 
   // 개별구매
-  .info-badge--purchase {background-color: #000; color: #FF6E00; padding: .4em .5em .2em; border-radius: 7px;}
+  .info-badge--purchase {background-color: #000; color: #FF6E00; padding: .4em .5em .2em; border-radius: 7px;
+  
+    
+  }
 }
